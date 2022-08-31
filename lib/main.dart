@@ -9,7 +9,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await windowManager.ensureInitialized();
   WindowOptions windowOptions = WindowOptions(
-    minimumSize: Size(800, 200),
+    minimumSize: Size(400, 200),
     titleBarStyle: TitleBarStyle.hidden
   );
   windowManager.waitUntilReadyToShow(windowOptions, () async {

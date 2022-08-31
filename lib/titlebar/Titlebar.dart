@@ -74,30 +74,29 @@ class TitleBarState extends ConsumerState<TitleBar> with WindowListener {
               child: GestureDetector(
                 onPanUpdate: (details) => windowManager.startDragging(),
                 onDoubleTap: toggleMaximize,
-                behavior: HitTestBehavior.translucent,
                 child: Container(
                   padding: EdgeInsets.symmetric(horizontal: 15),
-                  alignment: Alignment.centerLeft,
+                  alignment: Alignment.center,
                   decoration: BoxDecoration(
                     // border: Border.all(color: Colors.cyanAccent),
                   ),
-                  child: Text(title, textScaleFactor: 1.125)
+                  child: Text(title, style: TextStyle(color: Color.fromRGBO(200, 200, 200, 1))),
                 )
               ),
             ),
             TitleBarButton(
-              icon: Icons.minimize,
+              icon: Icons.minimize_rounded,
               onPressed: windowManager.minimize,
               primaryColor: Colors.blue,
               
             ),
             TitleBarButton(
-              icon: isExpanded ? Icons.expand_more : Icons.expand_less,
+              icon: isExpanded ? Icons.expand_more_rounded : Icons.expand_less_rounded,
               onPressed: toggleMaximize,
               primaryColor: Colors.blue,
             ),
             TitleBarButton(
-              icon: Icons.close,
+              icon: Icons.close_rounded,
               onPressed: windowManager.close,
               primaryColor: Colors.redAccent,
             ),

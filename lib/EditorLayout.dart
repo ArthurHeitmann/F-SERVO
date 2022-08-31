@@ -8,21 +8,42 @@ class EditorLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Sidebar(position: Side.left, child: Text("left")),
-        Expanded(
-          child: Container(
-            decoration: BoxDecoration(
-              color: Color.fromRGBO(18, 18, 18, 1),
+    return LayoutBuilder(builder: (context, constraints) {
+      var maxColWidth = constraints.maxWidth * 0.4;
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Sidebar(
+            position: Side.left,
+            maxWidth: maxColWidth,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(child: Text("Files")),
+                ResizablePanel(
+                  dragTop: true,
+                  maxHeight: constraints.maxHeight * 0.6,
+                  child: Text("Group Editor"),
+                )
+              ],
             ),
-            child: OpenFileArea(),
-          )
-        ),
-        Sidebar(position: Side.right, child: Text("right")),
-      ],
-    );
+          ),
+          Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Color.fromRGBO(18, 18, 18, 1),
+                ),
+              child: OpenFileArea(),
+            )
+          ),
+          Sidebar(
+              position: Side.right,
+              child: Text("right"),
+              maxWidth: maxColWidth),
+        ],
+      );
+    });
   }
 }

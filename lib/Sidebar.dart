@@ -6,8 +6,9 @@ enum Side { left, right }
 class Sidebar extends StatelessWidget {
   final Widget child;
   final Side position;
+  final double maxWidth;
 
-  const Sidebar({Key? key, required this.child, required this.position}) : super(key: key);
+  const Sidebar({Key? key, required this.child, required this.position, required this.maxWidth}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -19,6 +20,7 @@ class Sidebar extends StatelessWidget {
         dragRight: position == Side.left,
         dragLeft: position == Side.right,
         initWidth: 250,
+        maxWidth: maxWidth,
         child: child
       ),
     );
