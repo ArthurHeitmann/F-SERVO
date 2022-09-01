@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:nier_scripts_editor/OpenFileArea.dart';
+import 'package:nier_scripts_editor/filesView/OpenFilesAreas.dart';
 import 'package:nier_scripts_editor/ResizablePanel.dart';
 import 'package:nier_scripts_editor/Sidebar.dart';
 
@@ -32,16 +32,15 @@ class EditorLayout extends StatelessWidget {
           ),
           Expanded(
               child: Container(
-                decoration: BoxDecoration(
-                  color: Color.fromRGBO(18, 18, 18, 1),
-                ),
-              child: OpenFileArea(),
+                // color: Color.fromRGBO(18, 18, 18, 1),
+                child: OpenFilesAreas(),
             )
           ),
           Sidebar(
               position: Side.right,
+              maxWidth: maxColWidth,
               child: Text("right"),
-              maxWidth: maxColWidth),
+            ),
         ],
       );
     });

@@ -1,9 +1,9 @@
 
 import 'package:flutter/material.dart';
-import 'package:flutter/src/foundation/key.dart';
-import 'package:flutter/src/widgets/framework.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nier_scripts_editor/titlebar/Titlebar.dart';
 
-class TitleBarButton extends StatefulWidget {
+class TitleBarButton extends ConsumerStatefulWidget {
   final IconData icon;
   final void Function() onPressed;
   final Color primaryColor;
@@ -17,10 +17,10 @@ class TitleBarButton extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<TitleBarButton> createState() => _TitleBarButtonState();
+  ConsumerState<TitleBarButton> createState() => _TitleBarButtonState();
 }
 
-class _TitleBarButtonState extends State<TitleBarButton> with SingleTickerProviderStateMixin {
+class _TitleBarButtonState extends ConsumerState<TitleBarButton> with SingleTickerProviderStateMixin {
   // bool isHovered = false;
 
   late AnimationController colorAnimationController;
@@ -49,6 +49,8 @@ class _TitleBarButtonState extends State<TitleBarButton> with SingleTickerProvid
 
   @override
   Widget build(BuildContext context) {
+    var titleBarHeight = ref.watch(titleBarHeightProvider) * 0.75;
+
     return AnimatedBuilder(
       animation: colorAnimationController,
       builder: (context, child) => MouseRegion(
@@ -57,11 +59,14 @@ class _TitleBarButtonState extends State<TitleBarButton> with SingleTickerProvid
         onHover: (_) => colorAnimationController.forward(),
         onExit: (_) => colorAnimationController.reverse(),
         child: TextButton.icon(
-          icon: Icon(widget.icon, color: colorAnimation.value),
+          icon: Icon(
+            widget.icon,
+            color: colorAnimation.value,
+            size: titleBarHeight,
+          ),
           label: Text(""),
           onPressed: widget.onPressed,
           style: TextButton.styleFrom(
-          //   primary: isHovered ? widget.activeColor : TitleBarButton._defaultColor,
             primary: colorAnimation.value,
           ),
         ),

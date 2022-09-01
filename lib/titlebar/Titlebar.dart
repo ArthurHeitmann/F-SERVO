@@ -5,6 +5,7 @@ import 'package:nier_scripts_editor/titlebar/TitlebarButton.dart';
 import 'package:window_manager/window_manager.dart';
 
 final windowTitleProvider = StateProvider<String>((ref) => "Nier Scripts Editor");
+final titleBarHeightProvider = Provider<double>((ref) => 25);
 
 class TitleBar extends ConsumerStatefulWidget {
   const TitleBar({Key? key}) : super(key: key);
@@ -57,6 +58,7 @@ class TitleBarState extends ConsumerState<TitleBar> with WindowListener {
   @override
   Widget build(BuildContext context) {
     var title = ref.watch(windowTitleProvider);
+    var height = ref.watch(titleBarHeightProvider);
 
     return Container(
       decoration: BoxDecoration(
@@ -64,8 +66,8 @@ class TitleBarState extends ConsumerState<TitleBar> with WindowListener {
       ),
       child: ConstrainedBox(
         constraints: BoxConstraints(
-          minHeight: 35,
-          maxHeight: 35,
+          minHeight: height,
+          maxHeight: height,
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
