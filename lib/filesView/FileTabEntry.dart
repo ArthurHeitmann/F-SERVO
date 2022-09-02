@@ -1,5 +1,6 @@
+import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
-import 'package:nier_scripts_editor/filesView/openFilesManager.dart';
+import 'package:nier_scripts_editor/stateManagement/openFilesManager.dart';
 import 'package:nier_scripts_editor/stateManagement/nestedNotifier.dart';
 
 
@@ -11,9 +12,8 @@ class FileTabEntry extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => area.currentFile = file,
-      child: SizedBox(
+    return logicWrapper(
+      SizedBox(
         width: 150,
         child: Material(
           color: file == area.currentFile ? Color.fromARGB(255, 36, 36, 36) : Color.fromARGB(255, 59, 59, 59),
@@ -26,7 +26,7 @@ class FileTabEntry extends StatelessWidget {
                   Text(
                     file.name,
                     overflow: TextOverflow.ellipsis,
-                  )
+                  ),
                 ),
                 IconButton(
                   padding: EdgeInsets.zero,
@@ -40,6 +40,50 @@ class FileTabEntry extends StatelessWidget {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget logicWrapper(Widget child) {
+    return ContextMenuRegion(
+      contextMenu: GenericContextMenu(
+        buttonConfigs: [
+          ContextMenuButtonConfig(
+            "Close",
+            onPressed: () => area.closeFile(file),
+          ),
+          ContextMenuButtonConfig(
+            "Close others",
+            onPressed: () => area.closeOthers(file),
+          ),
+          ContextMenuButtonConfig(
+            "Close all",
+            onPressed: () => area.closeAll(),
+          ),
+          ContextMenuButtonConfig(
+            "Close to the left",
+            onPressed: () => area.closeToTheLeft(file),
+          ),
+          ContextMenuButtonConfig(
+            "Close to the right",
+            onPressed: () => area.closeToTheRight(file),
+          ),
+          ContextMenuButtonConfig(
+            "Move to left view",
+            onPressed: () => area.moveToLeftView(file),
+          ),
+          ContextMenuButtonConfig(
+            "Move to right view",
+            onPressed: () => area.moveToRightView(file),
+          ),
+        ],
+      ),
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          onTap: () => area.currentFile = file,
+          child: child,
         ),
       ),
     );

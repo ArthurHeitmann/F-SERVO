@@ -1,3 +1,4 @@
+import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nier_scripts_editor/EditorLayout.dart';
@@ -17,7 +18,7 @@ void main() async {
     // await windowManager.focus();
   });
 
-  runApp(const ProviderScope(
+  runApp(ProviderScope(
     child: MyApp()
   ));
 }
@@ -34,12 +35,14 @@ class MyApp extends StatelessWidget {
         backgroundColor: Color.fromRGBO(18, 18, 18, 1),
       ),
       home: Scaffold(
-        body: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            TitleBar(),
-            Expanded(child: EditorLayout()),
-          ],
+        body: ContextMenuOverlay(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TitleBar(),
+              Expanded(child: EditorLayout()),
+            ],
+          ),
         ),
       ),
     );

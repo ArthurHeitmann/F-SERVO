@@ -1,11 +1,14 @@
 import 'dart:collection';
 import 'package:flutter/material.dart';
 
+import '../utils.dart';
+
 class NestedNotifier<T> extends ChangeNotifier with IterableMixin<T> {
+  final String uuid;
   final List<T> _children;
 
   NestedNotifier(List<T> children)
-    : _children = children;
+    : _children = children, uuid = uuidGen.v1();
     
   @override
   Iterator<T> get iterator => _children.iterator;
@@ -70,7 +73,7 @@ class NestedNotifier<T> extends ChangeNotifier with IterableMixin<T> {
 abstract class ChangeNotifierWidget extends StatefulWidget {
   final ChangeNotifier notifier;
   
-  const ChangeNotifierWidget({Key? key, required this.notifier}) : super(key: key);
+  ChangeNotifierWidget({Key? key, required this.notifier}) : super(key: key);
 }
 
 abstract class ChangeNotifierState<T extends ChangeNotifierWidget> extends State<T> {
