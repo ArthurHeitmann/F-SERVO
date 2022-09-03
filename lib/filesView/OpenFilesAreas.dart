@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nier_scripts_editor/ResizableWidget.dart';
 import 'package:nier_scripts_editor/filesView/fileTabView.dart';
 import 'package:nier_scripts_editor/stateManagement/openFilesManager.dart';
 import 'package:nier_scripts_editor/stateManagement/nestedNotifier.dart';
@@ -22,12 +23,11 @@ class _OpenFilesAreasState extends ChangeNotifierState<OpenFilesAreas> {
 
     return Container(
       color: Theme.of(context).backgroundColor,
-      child: Row(
-        children: areasManager.map((area) => Expanded(
-          key: Key(area.uuid),
-          child: FileTabView(area)
-        )).toList(),
-      ),
+      child: ResizableWidget(
+        axis: Axis.horizontal,
+        draggableThickness: 5,
+        children: areasManager.map((area) => FileTabView(area)).toList(),
+      )
     );
   }
 }
