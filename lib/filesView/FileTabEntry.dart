@@ -1,7 +1,6 @@
 import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 import 'package:nier_scripts_editor/stateManagement/openFilesManager.dart';
-import 'package:nier_scripts_editor/stateManagement/nestedNotifier.dart';
 
 
 class FileTabEntry extends StatelessWidget {
@@ -83,6 +82,7 @@ class FileTabEntry extends StatelessWidget {
         cursor: SystemMouseCursors.click,
         child: GestureDetector(
           onTap: () => area.currentFile = file,
+          onTertiaryTapUp: (_) => area.closeFile(file),
           child: child,
         ),
       ),

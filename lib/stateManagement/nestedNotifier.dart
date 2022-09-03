@@ -16,16 +16,14 @@ class NestedNotifier<T> extends ChangeNotifier with IterableMixin<T> {
   @override
   int get length => _children.length;
 
-  @override
   T operator [](int index) => _children[index];
 
-  int indexOf(T child) => _children.indexOf(child);
-
-  @override
   void operator []=(int index, T value) {
     _children[index] = value;
     notifyListeners();
   }
+
+  int indexOf(T child) => _children.indexOf(child);
 
   void add(T child) {
     _children.add(child);
@@ -73,7 +71,7 @@ class NestedNotifier<T> extends ChangeNotifier with IterableMixin<T> {
 abstract class ChangeNotifierWidget extends StatefulWidget {
   final ChangeNotifier notifier;
   
-  ChangeNotifierWidget({Key? key, required this.notifier}) : super(key: key);
+  const ChangeNotifierWidget({Key? key, required this.notifier}) : super(key: key);
 }
 
 abstract class ChangeNotifierState<T extends ChangeNotifierWidget> extends State<T> {

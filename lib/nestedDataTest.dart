@@ -168,7 +168,7 @@ class _XmlDataEditorState extends State<XmlDataEditor> {
     }
     List<Widget> children = widget.element.children
           .map((child) {
-            return XmlDataEditor(child, widget.isEditable) as Widget;
+            return XmlDataEditor(child, widget.isEditable);
           }).toList();
     if (widget.isEditable) {
       children.add(

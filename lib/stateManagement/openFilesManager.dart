@@ -48,24 +48,26 @@ class FilesAreaManager extends NestedNotifier<OpenFileData> {
     notifyListeners();
   }
 
-  void _updateCurrentFile() {
-    if (length == 0)
+  void switchToClosestFile() {
+    if (length <= 1) {
       currentFile = null;
-    else if (currentFile == null)
-      currentFile = this[0];
-    else {
-
+      return;
     }
+
+    var index = indexOf(currentFile!);
+    if (index + 1 == length)
+      index--;
+    else
+      index++;
+    currentFile = this[index];
   }
 
   void closeFile(OpenFileData file) {
+    if (currentFile == file)
+      switchToClosestFile();
     remove(file);
     if (fileContentsManager.isOpened(file))
       fileContentsManager.remove(fileContentsManager.getContent(file, autoCreate: false)!);
-    if (currentFile == file) {
-      currentFile = null;
-      _updateCurrentFile();
-    }
 
     if (length == 0 && areasManager.length > 1)
       areasManager.remove(this);
@@ -99,6 +101,9 @@ class FilesAreaManager extends NestedNotifier<OpenFileData> {
   }
 
   void moveToRightView(OpenFileData file) {
+    if (currentFile == file)
+      switchToClosestFile();
+      
     int areaIndex = areasManager.indexOf(this);
     FilesAreaManager rightArea;
     if (areaIndex >= areasManager.length - 1) {
@@ -112,16 +117,15 @@ class FilesAreaManager extends NestedNotifier<OpenFileData> {
     rightArea.add(file);
     rightArea.currentFile = file;
     
-    if (currentFile == file) {
-      currentFile = null;
-      _updateCurrentFile();
-    }
     if (length == 0) {
       areasManager.remove(this);
     }
   }
 
   void moveToLeftView(OpenFileData file) {
+    if (currentFile == file)
+      switchToClosestFile();
+    
     int areaIndex = areasManager.indexOf(this);
     int leftAreaIndex = areaIndex - 1;
     FilesAreaManager leftArea;
@@ -136,13 +140,23 @@ class FilesAreaManager extends NestedNotifier<OpenFileData> {
     leftArea.add(file);
     leftArea.currentFile = file;
     
-    if (currentFile == file) {
-      currentFile = null;
-      _updateCurrentFile();
-    }
     if (length == 0) {
       areasManager.remove(this);
     }
+  }
+
+  void switchToNextFile() {
+    if (length <= 1) return;
+    int nextIndex = (indexOf(currentFile!) + 1) % length;
+    currentFile = this[nextIndex];
+  }
+
+  void switchToPreviousFile() {
+    if (length <= 1) return;
+    int nextIndex = (indexOf(currentFile!) - 1) % length;
+    if (nextIndex < 0)
+      nextIndex += length;
+    currentFile = this[nextIndex];
   }
 }
 

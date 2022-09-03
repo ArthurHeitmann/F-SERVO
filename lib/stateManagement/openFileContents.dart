@@ -8,9 +8,11 @@ import 'package:nier_scripts_editor/stateManagement/openFilesManager.dart';
 
 class FileContent extends ChangeNotifier {
   final OpenFileData id;
+  final ScrollController scrollController = ScrollController();
+  final Key key;
   bool _isLoaded = false;
 
-  FileContent(this.id);
+  FileContent(this.id) : key = PageStorageKey(id.uuid);
 
   Future<void> load() async {
     _isLoaded = true;

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nier_scripts_editor/EditorLayout.dart';
 import 'package:nier_scripts_editor/titlebar/Titlebar.dart';
-import 'package:nier_scripts_editor/nestedDataTest.dart';
 import 'package:window_manager/window_manager.dart';
 
 void main() async {
@@ -15,6 +14,9 @@ void main() async {
   );
   windowManager.waitUntilReadyToShow(windowOptions, () async {
     await windowManager.show();
+    var windowPos = await windowManager.getPosition();
+    if (windowPos.dy < 50)
+      await windowManager.setPosition(windowPos.translate(0, 50));
     // await windowManager.focus();
   });
 

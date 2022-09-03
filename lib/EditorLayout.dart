@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:nier_scripts_editor/ResizableWidget.dart';
 
 import 'filesView/OpenFilesAreas.dart';
-import 'utils.dart';
 
 class EditorLayout extends StatelessWidget {
   const EditorLayout({Key? key}) : super(key: key);
@@ -10,7 +9,6 @@ class EditorLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(builder: (context, constraints) {
-      var maxColWidth = constraints.maxWidth * 0.4;
       return ResizableWidget(
         axis: Axis.horizontal,
         percentages: [0.175, 0.65, 0.175],
