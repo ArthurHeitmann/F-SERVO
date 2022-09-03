@@ -23,6 +23,7 @@ class FileTabView extends ChangeNotifierWidget {
 }
 
 class _FileTabViewState extends ChangeNotifierState<FileTabView> {
+  final FocusNode focusNode = FocusNode();
   bool isDroppingFile = false;
   Map<OpenFileData, Widget> cachedEditors = {};
 
@@ -118,21 +119,25 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
   }
 
   Widget setupShortcuts({ required Widget child }) {
-    return FocusableActionDetector(
-      shortcuts: {
-        LogicalKeySet(/*LogicalKeyboardKey.control,*/ LogicalKeyboardKey.tab): TabChangeIntent(HorizontalDirection.right, widget.viewArea),
-        LogicalKeySet(/*LogicalKeyboardKey.control,*/ LogicalKeyboardKey.shift, LogicalKeyboardKey.tab): TabChangeIntent(HorizontalDirection.left, widget.viewArea),
-        LogicalKeySet(/*LogicalKeyboardKey.control,*/ LogicalKeyboardKey.keyW): CloseTabIntent(widget.viewArea),
-        LogicalKeySet(/*LogicalKeyboardKey.control,*/ LogicalKeyboardKey.keyS): SaveTabIntent(widget.viewArea),
-      },
-        // dispatcher: LoggingActionDispatcher(),
-        actions: {
-          TabChangeIntent: TabChangeAction(),
-          CloseTabIntent: CloseTabAction(),
-          SaveTabIntent: SaveTabAction(),
+    return GestureDetector(
+      onTap: () => focusNode.requestFocus(),
+      child: FocusableActionDetector(
+        focusNode: focusNode,
+        shortcuts: {
+          LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.tab): TabChangeIntent(HorizontalDirection.right, widget.viewArea),
+          LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.shift, LogicalKeyboardKey.tab): TabChangeIntent(HorizontalDirection.left, widget.viewArea),
+          LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyW): CloseTabIntent(widget.viewArea),
+          LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyS): SaveTabIntent(widget.viewArea),
         },
-        child: child,
-      // ),
+          // dispatcher: LoggingActionDispatcher(),
+          actions: {
+            TabChangeIntent: TabChangeAction(),
+            CloseTabIntent: CloseTabAction(),
+            SaveTabIntent: SaveTabAction(),
+          },
+          child: child,
+        // ),
+      ),
     );
   }
 }
@@ -181,7 +186,7 @@ class SaveTabAction extends Action<SaveTabIntent> {
   @override
   void invoke(SaveTabIntent intent) {
     if (intent.area.currentFile != null)
-      print("Not implemented");
+      print("Saving not implemented yet");
   }
 }
 
