@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nier_scripts_editor/ResizableWidget.dart';
 
+import 'customTheme.dart';
 import 'filesView/OpenFilesAreas.dart';
 
 class EditorLayout extends StatelessWidget {

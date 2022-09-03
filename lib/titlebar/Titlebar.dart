@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nier_scripts_editor/titlebar/TitlebarButton.dart';
 import 'package:window_manager/window_manager.dart';
 
+import '../customTheme.dart';
+
 final windowTitleProvider = StateProvider<String>((ref) => "Nier Scripts Editor");
 final titleBarHeightProvider = Provider<double>((ref) => 25);
 
@@ -61,7 +63,7 @@ class TitleBarState extends ConsumerState<TitleBar> with WindowListener {
 
     return Container(
       decoration: BoxDecoration(
-        color: Color.fromRGBO(0x2d, 0x2d, 0x2d, 1),
+        color: getTheme(context).titleBarColor,
       ),
       child: ConstrainedBox(
         constraints: BoxConstraints(
@@ -78,28 +80,25 @@ class TitleBarState extends ConsumerState<TitleBar> with WindowListener {
                 child: Container(
                   padding: EdgeInsets.symmetric(horizontal: 15),
                   alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    // border: Border.all(color: Colors.cyanAccent),
-                  ),
-                  child: Text(title, style: TextStyle(color: Color.fromRGBO(200, 200, 200, 1))),
+                  child: Text(title, style: TextStyle(color: getTheme(context).titleBarTextColor)),
                 )
               ),
             ),
             TitleBarButton(
               icon: Icons.minimize_rounded,
               onPressed: windowManager.minimize,
-              primaryColor: Colors.blue,
+              primaryColor: getTheme(context).titleBarButtonPrimaryColor!,
               
             ),
             TitleBarButton(
               icon: isExpanded ? Icons.expand_more_rounded : Icons.expand_less_rounded,
               onPressed: toggleMaximize,
-              primaryColor: Colors.blue,
+              primaryColor: getTheme(context).titleBarButtonPrimaryColor!,
             ),
             TitleBarButton(
               icon: Icons.close_rounded,
               onPressed: windowManager.close,
-              primaryColor: Colors.redAccent,
+              primaryColor: getTheme(context).titleBarButtonCloseColor!,
             ),
           ],
         ),

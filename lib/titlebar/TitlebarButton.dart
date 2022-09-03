@@ -3,17 +3,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nier_scripts_editor/titlebar/Titlebar.dart';
 
+import '../customTheme.dart';
+
 class TitleBarButton extends ConsumerStatefulWidget {
   final IconData icon;
   final void Function() onPressed;
-  final Color primaryColor;
-  static const _defaultColor = Color.fromRGBO(239, 239, 239, 1);
+  final Color? primaryColor;
 
   const TitleBarButton({
     Key? key, 
     required this.icon,
     required this.onPressed,
-    this.primaryColor = _defaultColor
+    this.primaryColor
   }) : super(key: key);
 
   @override
@@ -34,7 +35,7 @@ class _TitleBarButtonState extends ConsumerState<TitleBarButton> with SingleTick
     );
 
     colorAnimation = ColorTween(
-      begin: TitleBarButton._defaultColor,
+      begin: getTheme(context).titleBarButtonDefaultColor,
       end: widget.primaryColor,
     ).animate(colorAnimationController);
 

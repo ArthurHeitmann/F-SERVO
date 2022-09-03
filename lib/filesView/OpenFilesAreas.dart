@@ -4,6 +4,8 @@ import 'package:nier_scripts_editor/filesView/fileTabView.dart';
 import 'package:nier_scripts_editor/stateManagement/openFilesManager.dart';
 import 'package:nier_scripts_editor/stateManagement/nestedNotifier.dart';
 
+import '../customTheme.dart';
+
 
 class OpenFilesAreas extends ChangeNotifierWidget {
   OpenFilesAreas({Key? key})
@@ -22,7 +24,7 @@ class _OpenFilesAreasState extends ChangeNotifierState<OpenFilesAreas> {
   Widget build(BuildContext context) {
 
     return Container(
-      color: Theme.of(context).backgroundColor,
+      color: getTheme(context).editorBackgroundColor,
       child: ResizableWidget(
         axis: Axis.horizontal,
         draggableThickness: 5,

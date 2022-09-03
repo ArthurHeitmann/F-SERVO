@@ -2,6 +2,8 @@ import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 import 'package:nier_scripts_editor/stateManagement/openFilesManager.dart';
 
+import '../customTheme.dart';
+
 
 class FileTabEntry extends StatelessWidget {
   final OpenFileData file;
@@ -15,7 +17,7 @@ class FileTabEntry extends StatelessWidget {
       SizedBox(
         width: 150,
         child: Material(
-          color: file == area.currentFile ? Color.fromARGB(255, 36, 36, 36) : Color.fromARGB(255, 59, 59, 59),
+          color: file == area.currentFile ? getTheme(context).tabSelectedColor : getTheme(context).tabColor,
           child: Padding(
             padding: const EdgeInsets.only(left: 10, right: 5),
             child: Row(
@@ -34,7 +36,7 @@ class FileTabEntry extends StatelessWidget {
                   onPressed: () => area.closeFile(file),
                   iconSize: 15,
                   splashRadius: 15,
-                  color: Color.fromRGBO(255, 255, 255, 0.5),
+                  color: getTheme(context).tabIconColor,
                 ),
               ],
             ),

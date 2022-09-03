@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:nier_scripts_editor/customTheme.dart';
 import 'package:nier_scripts_editor/utils.dart';
 
 class ResizableWidget extends StatefulWidget {
@@ -9,7 +10,7 @@ class ResizableWidget extends StatefulWidget {
   final Axis axis;
   final double draggableThickness;
   final double lineThickness;
-  final Color lineColor;
+  final Color? lineColor;
 
   ResizableWidget({
     Key? key,
@@ -18,7 +19,7 @@ class ResizableWidget extends StatefulWidget {
     required this.axis,
     this.draggableThickness = 5,
     this.lineThickness = 1.5,
-    this.lineColor = const Color.fromRGBO(255, 255, 255, 0.1)
+    this.lineColor
   }) : super(key: key) {
     if (percentages == null)
       this.percentages = List.filled(children.length, 1 / children.length);
@@ -75,8 +76,14 @@ class _ResizableWidgetState extends State<ResizableWidget> {
             children.add(_makeDraggable(i));
         }
         return widget.axis == Axis.horizontal
-          ? Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: children)
-          : Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: children);
+          ? Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: children
+          )
+          : Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: children
+          );
       },
     );
   }
@@ -104,7 +111,7 @@ class _ResizableWidgetState extends State<ResizableWidget> {
             child: Container(
               width: lineWidth,
               height: lineHeight,
-              color: widget.lineColor,
+              color: widget.lineColor ?? getTheme(context).dividerColor,
             ),
           ),
         )

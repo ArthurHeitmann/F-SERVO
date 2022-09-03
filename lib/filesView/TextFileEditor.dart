@@ -30,7 +30,6 @@ class _TextFileEditorState extends ChangeNotifierState<TextFileEditor> {
         style: TextStyle(
           fontFamily: 'FiraCode',
           fontSize: 14,
-          color: Colors.white
         ),
         text: widget.fileContent.text.replaceAll("\t", "    ")
       )

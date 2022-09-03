@@ -8,6 +8,7 @@ import 'package:nier_scripts_editor/stateManagement/openFilesManager.dart';
 import 'package:nier_scripts_editor/stateManagement/nestedNotifier.dart';
 import 'package:window_manager/window_manager.dart';
 
+import '../customTheme.dart';
 import '../stateManagement/openFileContents.dart';
 import '../utils.dart';
 
@@ -108,9 +109,33 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
               ),
             ),
             Expanded(
-              child: widget.viewArea.currentFile != null
-                ? getOrMakeFileEditor(widget.viewArea.currentFile!)
-                : Center(child: Text('No file open')),
+              child: Stack(
+                children: [
+                  widget.viewArea.currentFile != null
+                    ? getOrMakeFileEditor(widget.viewArea.currentFile!)
+                    : Center(child: Text('No file open')),
+                  if (isDroppingFile)
+                   Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: Container(
+                      color: getTheme(context).dropTargetColor,
+                      child: Center(
+                        child: Text(
+                          'Drop file here',
+                          style: TextStyle(
+                            color: getTheme(context).dropTargetTextColor,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                ],
+              ),
             ),
           ]
         ),
