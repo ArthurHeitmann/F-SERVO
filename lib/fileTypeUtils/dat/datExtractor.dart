@@ -36,7 +36,7 @@ class _DatHeader {
   }
 }
 
-List<String> extractDatFile(String datPath) {
+List<String> extractDatFiles(String datPath) {
   var datFile = File(datPath);
   ByteDataWrapper bytes = ByteDataWrapper(datFile.readAsBytesSync().buffer.asByteData());
   var header = _DatHeader(bytes);

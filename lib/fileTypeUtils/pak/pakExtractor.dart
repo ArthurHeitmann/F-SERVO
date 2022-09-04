@@ -1,5 +1,7 @@
 
+import 'dart:convert';
 import 'dart:io';
+import 'package:nier_scripts_editor/fileTypeUtils/yax/yaxToXml.dart';
 import 'package:path/path.dart' as path;
 
 import 'package:nier_scripts_editor/fileTypeUtils/utils/ByteDataWrapper.dart';
@@ -24,7 +26,7 @@ class HeaderEntry {
   }
 }
 
-void extractFile(HeaderEntry meta, int size, ByteDataWrapper bytes, String extractDir, int index) {
+void extractPak(HeaderEntry meta, int size, ByteDataWrapper bytes, String extractDir, int index) {
   bytes.position = meta.offset;
   bool isCompressed = meta.uncompressedSize > size;
   int paddingEndLength;
@@ -66,7 +68,23 @@ List<String> extractPakFile(String pakPath, { bool yaxToXml = false }) {
   var extractDir = path.join(pakDir, "pakExtracted", path.basename(pakPath));
   Directory(extractDir).createSync(recursive: true);
   for (int i = 0; i < fileCount; i++) {
-    extractFile(headerEntries[i], fileSizes[i], bytes, extractDir, i);
+    extractPak(headerEntries[i], fileSizes[i], bytes, extractDir, i);
+  }
+
+  dynamic meta = {
+    "files": List.generate(fileCount, (index) => {
+      "name": "$index.yax",
+      "type": headerEntries[index].type,
+    })
+  };
+  var pakInfoPath = path.join(extractDir, "pakInfo.json");
+  File(pakInfoPath).writeAsStringSync(JsonEncoder.withIndent("\t").convert(meta));
+
+  if (yaxToXml) {
+    for (int i = 0; i < fileCount; i++) {
+      var yaxPath = path.join(extractDir, "$i.yax");
+      yaxFileToXmlFile(yaxPath);
+    }
   }
 
   return List<String>.generate(fileCount, (index) => path.join(extractDir, "$index.yax"));

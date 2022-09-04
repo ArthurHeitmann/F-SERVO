@@ -9,10 +9,10 @@ environment:
   sdk: ">=2.17.6 <3.0.0"
 
 dependencies:
-  charset: ^1.1.0
   context_menus: ^1.0.2
   cross_file: ^0.3.3+1
   desktop_drop: ^0.3.3
+  euc: ^1.0.6+8
   ezanimation: ^0.6.0
   flutter:
     sdk: flutter

@@ -1,7 +1,7 @@
 
 import 'dart:typed_data';
 
-import 'package:charset/charset.dart';
+import 'package:euc/jis.dart';
 
 enum StringEncoding {
   utf8,
@@ -13,8 +13,6 @@ class ByteDataWrapper {
   final ByteData _data;
   Endian endian;
   int _position = 0;
-  static final ShiftJISDecoder _shiftJisDecoder = ShiftJISDecoder();
-  static final ShiftJISEncoder _shiftJisEncoder = ShiftJISEncoder();
   
   ByteBuffer get buffer => _data.buffer;
 
@@ -22,7 +20,6 @@ class ByteDataWrapper {
 
   int get position => _position;
 
-  
   set position(int value) {
     if (value < 0 || value > _data.lengthInBytes)
       throw RangeError.range(value, 0, _data.lengthInBytes);
@@ -151,17 +148,32 @@ class ByteDataWrapper {
     return list;
   }
 
-  String readString(int length, {StringEncoding encoding = StringEncoding.utf8}) {
-    var bytes = _data.buffer.asUint8List(_position, length);
-    _position += length;
+  String _decode(Uint8List bytes, StringEncoding encoding) {
     switch (encoding) {
       case StringEncoding.utf8:
         return String.fromCharCodes(bytes);
       case StringEncoding.utf16:
         return String.fromCharCodes(bytes.buffer.asUint16List());
       case StringEncoding.shiftJis:
-        return _shiftJisDecoder.convert(bytes);
+        return ShiftJIS().decode(bytes);
     }
+  }
+
+  String readString(int length, {StringEncoding encoding = StringEncoding.utf8}) {
+    var bytes = _data.buffer.asUint8List(_position, length);
+    _position += length;
+    return _decode(bytes, encoding);
+  }
+
+  String readStringZeroTerminated({StringEncoding encoding = StringEncoding.utf8}) {
+    var bytes = <int>[];
+    while (true) {
+      var byte = _data.getUint8(_position);
+      _position += 1;
+      if (byte == 0) break;
+      bytes.add(byte);
+    }
+    return _decode(Uint8List.fromList(bytes), encoding);
   }
 
   List<int> readBytes(int length) {
