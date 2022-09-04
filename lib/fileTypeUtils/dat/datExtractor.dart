@@ -1,7 +1,6 @@
 
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:path/path.dart' as path;
 
 import 'package:nier_scripts_editor/fileTypeUtils/utils/ByteDataWrapper.dart';
@@ -37,7 +36,7 @@ class _DatHeader {
   }
 }
 
-List<String> _extractDatFile(String datPath) {
+List<String> extractDatFile(String datPath) {
   var datFile = File(datPath);
   ByteDataWrapper bytes = ByteDataWrapper(datFile.readAsBytesSync().buffer.asByteData());
   var header = _DatHeader(bytes);
