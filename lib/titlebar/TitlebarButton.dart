@@ -24,51 +24,47 @@ class TitleBarButton extends ConsumerStatefulWidget {
 class _TitleBarButtonState extends ConsumerState<TitleBarButton> with SingleTickerProviderStateMixin {
   // bool isHovered = false;
 
-  late AnimationController colorAnimationController;
-  late Animation<Color?> colorAnimation;
+  AnimationController? colorAnimationController;
+  Animation<Color?>? colorAnimation;
 
-  @override
-  void initState() {
-    colorAnimationController = AnimationController(
+  void initAnimations() {
+    colorAnimationController ??= AnimationController(
       duration: const Duration(milliseconds: 125),
       vsync: this,
     );
 
-    colorAnimation = ColorTween(
+    colorAnimation ??= ColorTween(
       begin: getTheme(context).titleBarButtonDefaultColor,
       end: widget.primaryColor,
-    ).animate(colorAnimationController);
-
-    super.initState();
+    ).animate(colorAnimationController!);
   }
 
   @override
   void dispose() {
-    colorAnimationController.dispose();
+    colorAnimationController?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    initAnimations();
     var titleBarHeight = ref.watch(titleBarHeightProvider) * 0.75;
 
     return AnimatedBuilder(
-      animation: colorAnimationController,
+      animation: colorAnimationController!,
       builder: (context, child) => MouseRegion(
-        // onEnter: (_) => setState(() => isHovered = true),
-        // onExit: (_) => setState(() => isHovered = false),
-        onHover: (_) => colorAnimationController.forward(),
-        onExit: (_) => colorAnimationController.reverse(),
+        onHover: (_) => colorAnimationController!.forward(),
+        onExit: (_) => colorAnimationController!.reverse(),
         child: TextButton.icon(
           icon: Icon(
             widget.icon,
-            color: colorAnimation.value,
+            color: colorAnimation!.value,
             size: titleBarHeight,
           ),
           label: Text(""),
           onPressed: widget.onPressed,
           style: TextButton.styleFrom(
-            primary: colorAnimation.value,
+            primary: colorAnimation!.value,
           ),
         ),
       ),

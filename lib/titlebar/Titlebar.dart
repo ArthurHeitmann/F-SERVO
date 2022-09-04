@@ -77,6 +77,7 @@ class TitleBarState extends ConsumerState<TitleBar> with WindowListener {
               child: GestureDetector(
                 onPanUpdate: (details) => windowManager.startDragging(),
                 onDoubleTap: toggleMaximize,
+                behavior: HitTestBehavior.translucent,
                 child: Container(
                   padding: EdgeInsets.symmetric(horizontal: 15),
                   alignment: Alignment.center,
