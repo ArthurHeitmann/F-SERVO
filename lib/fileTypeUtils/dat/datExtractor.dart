@@ -1,6 +1,7 @@
 
 import 'dart:convert';
 import 'dart:io';
+import 'package:nier_scripts_editor/fileTypeUtils/pak/pakExtractor.dart';
 import 'package:path/path.dart' as path;
 
 import 'package:nier_scripts_editor/fileTypeUtils/utils/ByteDataWrapper.dart';
@@ -36,7 +37,7 @@ class _DatHeader {
   }
 }
 
-List<String> extractDatFiles(String datPath) {
+List<String> extractDatFiles(String datPath, { bool extractPakFiles = false }) {
   var datFile = File(datPath);
   ByteDataWrapper bytes = ByteDataWrapper(datFile.readAsBytesSync().buffer.asByteData());
   var header = _DatHeader(bytes);
@@ -76,6 +77,14 @@ List<String> extractDatFiles(String datPath) {
   };
   File(path.join(extractDir, "dat_info.json"))
     .writeAsStringSync(JsonEncoder.withIndent("\t").convert(jsonMetadata));
+
+  if (extractPakFiles) {
+    var pakFiles = fileNames.where((file) => file.endsWith(".pak"));
+    for (var pakFile in pakFiles) {
+      var pakPath = path.join(extractDir, pakFile);
+      extractPakFile(pakPath, yaxToXml: true);
+    }
+  }
 
   return fileNames;
 }
