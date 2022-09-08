@@ -15,8 +15,10 @@ class HierarchyEntry extends NestedNotifier {
   final bool isSelectable;
   bool _isSelected = false;
   final bool isCollapsible;
+  bool _isCollapsed = false;
+  final bool isOpenable;
 
-  HierarchyEntry(this._name, this.isSelectable, this.isCollapsible, { this.icon })
+  HierarchyEntry(this._name, this.isSelectable, this.isCollapsible, this.isOpenable, { this.icon })
     : super([]);
 
   String get name => _name;
@@ -32,40 +34,51 @@ class HierarchyEntry extends NestedNotifier {
     _isSelected = value;
     notifyListeners();
   }
+
+  bool get isCollapsed => _isCollapsed;
+
+  set isCollapsed(bool value) {
+    _isCollapsed = value;
+    notifyListeners();
+  }
+
+  void onOpen() {
+    print("Not implemented!");
+  }
 }
 
 class FileHierarchyEntry extends HierarchyEntry {
   final String path;
 
-  FileHierarchyEntry(String name, this.path, bool isCollapsible, { IconData? icon })
-    : super(name, true, isCollapsible, icon: icon);
+  FileHierarchyEntry(String name, this.path, bool isCollapsible, bool isOpenable, { IconData? icon })
+    : super(name, true, isCollapsible, isOpenable, icon: icon);
 }
 
 class ExtractableHierarchyEntry extends FileHierarchyEntry {
   final String extractedPath;
 
-  ExtractableHierarchyEntry(String name, String filePath, this.extractedPath, bool isCollapsible, { IconData? icon })
-    : super(name, filePath, isCollapsible, icon: icon);
+  ExtractableHierarchyEntry(String name, String filePath, this.extractedPath, bool isCollapsible, bool isOpenable, { IconData? icon })
+    : super(name, filePath, isCollapsible, isOpenable, icon: icon);
 }
 
 class DatHierarchyEntry extends ExtractableHierarchyEntry {
   DatHierarchyEntry(String name, String path, String extractedPath)
-    : super(name, path, extractedPath, true, icon: Icons.folder);
+    : super(name, path, extractedPath, true, false, icon: Icons.folder);
 }
 
 class PakHierarchyEntry extends ExtractableHierarchyEntry {
   PakHierarchyEntry(String name, String path, String extractedPath)
-    : super(name, path, extractedPath, true, icon: Icons.source);
+    : super(name, path, extractedPath, true, false, icon: Icons.source);
 }
 
 class HapGroupHierarchyEntry extends FileHierarchyEntry {
   HapGroupHierarchyEntry(String name, String path)
-    : super(name, path, true, icon: Icons.workspaces);
+    : super(name, path, true, false, icon: Icons.workspaces);
 }
 
 class XmlScriptHierarchyEntry extends FileHierarchyEntry {
   XmlScriptHierarchyEntry(String name, String path)
-    : super(name, path, false, icon: Icons.code);
+    : super(name, path, false, true, icon: Icons.code);
 }
 
 class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> {

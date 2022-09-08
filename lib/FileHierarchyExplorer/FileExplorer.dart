@@ -1,6 +1,5 @@
 
 import 'package:flutter/src/widgets/container.dart';
-import 'package:flutter/src/widgets/framework.dart';
 import 'package:nier_scripts_editor/stateManagement/FileHierarchy.dart';
 import 'package:nier_scripts_editor/stateManagement/nestedNotifier.dart';
 
