@@ -1,8 +1,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:nier_scripts_editor/customTheme.dart';
-import 'package:nier_scripts_editor/utils.dart';
+
+import '../customTheme.dart';
+import '../utils.dart';
 
 class ResizableWidget extends StatefulWidget {
   final List<Widget> children;

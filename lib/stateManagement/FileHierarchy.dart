@@ -3,10 +3,10 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:nier_scripts_editor/fileTypeUtils/dat/datExtractor.dart';
-import 'package:nier_scripts_editor/stateManagement/nestedNotifier.dart';
 import 'package:path/path.dart' as path;
 
+import '../fileTypeUtils/dat/datExtractor.dart';
+import 'nestedNotifier.dart';
 import '../fileTypeUtils/pak/pakExtractor.dart';
 
 class HierarchyEntry extends NestedNotifier {

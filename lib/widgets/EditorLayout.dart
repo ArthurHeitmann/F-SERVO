@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:nier_scripts_editor/FileHierarchyExplorer/FileExplorer.dart';
-import 'package:nier_scripts_editor/ResizableWidget.dart';
 
-import 'customTheme.dart';
 import 'filesView/OpenFilesAreas.dart';
+import 'FileHierarchyExplorer/FileExplorer.dart';
+import 'ResizableWidget.dart';
 
 class EditorLayout extends StatelessWidget {
   const EditorLayout({Key? key}) : super(key: key);

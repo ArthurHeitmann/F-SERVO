@@ -1,12 +1,12 @@
 
 import 'dart:convert';
 import 'dart:io';
-import 'package:nier_scripts_editor/fileTypeUtils/yax/hashToStringMap.dart';
-import 'package:nier_scripts_editor/fileTypeUtils/yax/japToEng.dart';
 import 'package:path/path.dart' as path;
 import 'package:xml/xml.dart';
 
-import 'package:nier_scripts_editor/fileTypeUtils/utils/ByteDataWrapper.dart';
+import 'hashToStringMap.dart';
+import 'japToEng.dart';
+import '../utils/ByteDataWrapper.dart';
 
 bool isStringAscii(String s) {
   return utf8.encode(s).every((byte) => byte < 128);

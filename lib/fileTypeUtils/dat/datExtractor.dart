@@ -1,10 +1,10 @@
 
 import 'dart:convert';
 import 'dart:io';
-import 'package:nier_scripts_editor/fileTypeUtils/pak/pakExtractor.dart';
 import 'package:path/path.dart' as path;
 
-import 'package:nier_scripts_editor/fileTypeUtils/utils/ByteDataWrapper.dart';
+import '../pak/pakExtractor.dart';
+import '../utils/ByteDataWrapper.dart';
 
 /*
 struct {

@@ -1,9 +1,9 @@
 
 import 'package:flutter/material.dart';
-import 'package:nier_scripts_editor/stateManagement/FileHierarchy.dart';
-import 'package:nier_scripts_editor/stateManagement/nestedNotifier.dart';
 
-import '../customTheme.dart';
+import '../../customTheme.dart';
+import '../../stateManagement/FileHierarchy.dart';
+import '../../stateManagement/nestedNotifier.dart';
 
 class HierarchyEntryWidget extends ChangeNotifierWidget {
   final HierarchyEntry entry;

@@ -1,10 +1,11 @@
 import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:nier_scripts_editor/EditorLayout.dart';
-import 'package:nier_scripts_editor/customTheme.dart';
-import 'package:nier_scripts_editor/titlebar/Titlebar.dart';
 import 'package:window_manager/window_manager.dart';
+
+import 'customTheme.dart';
+import 'widgets/EditorLayout.dart';
+import 'widgets/titlebar/Titlebar.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

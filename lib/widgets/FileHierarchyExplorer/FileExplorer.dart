@@ -3,11 +3,10 @@ import 'dart:io';
 
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
-import 'package:path/path.dart' as path;
 
-import '../customTheme.dart';
-import '../stateManagement/FileHierarchy.dart';
-import '../stateManagement/nestedNotifier.dart';
+import '../../customTheme.dart';
+import '../../stateManagement/FileHierarchy.dart';
+import '../../stateManagement/nestedNotifier.dart';
 import 'HierarchyEntryWidget.dart';
 
 class FileExplorer extends ChangeNotifierWidget {

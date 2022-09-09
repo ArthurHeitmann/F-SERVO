@@ -1,9 +1,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:nier_scripts_editor/titlebar/Titlebar.dart';
 
-import '../customTheme.dart';
+import '../../customTheme.dart';
+import 'Titlebar.dart';
 
 class TitleBarButton extends ConsumerStatefulWidget {
   final IconData icon;
@@ -64,7 +64,7 @@ class _TitleBarButtonState extends ConsumerState<TitleBarButton> with SingleTick
           label: Text(""),
           onPressed: widget.onPressed,
           style: TextButton.styleFrom(
-            primary: colorAnimation!.value,
+            foregroundColor: colorAnimation!.value,
           ),
         ),
       ),

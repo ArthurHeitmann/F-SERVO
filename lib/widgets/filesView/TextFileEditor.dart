@@ -1,8 +1,8 @@
 
 import 'package:flutter/material.dart';
-import 'package:nier_scripts_editor/stateManagement/openFileContents.dart';
 
-import '../stateManagement/nestedNotifier.dart';
+import '../../stateManagement/openFileContents.dart';
+import '../../stateManagement/nestedNotifier.dart';
 
 class TextFileEditor extends ChangeNotifierWidget {
   late final FileTextContent fileContent;

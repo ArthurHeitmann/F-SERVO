@@ -1,8 +1,8 @@
 import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
-import 'package:nier_scripts_editor/stateManagement/openFilesManager.dart';
 
-import '../customTheme.dart';
+import '../../customTheme.dart';
+import '../../stateManagement/openFilesManager.dart';
 
 
 class FileTabEntry extends StatelessWidget {

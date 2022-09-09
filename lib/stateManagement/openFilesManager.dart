@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../filesView/FileType.dart';
 import '../utils.dart';
+import '../widgets/filesView/FileType.dart';
 import 'nestedNotifier.dart';
 import 'openFileContents.dart';
 

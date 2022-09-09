@@ -1,10 +1,10 @@
 
 import 'dart:convert';
 import 'dart:io';
-import 'package:nier_scripts_editor/fileTypeUtils/yax/yaxToXml.dart';
 import 'package:path/path.dart' as path;
 
-import 'package:nier_scripts_editor/fileTypeUtils/utils/ByteDataWrapper.dart';
+import '../yax/yaxToXml.dart';
+import '../utils/ByteDataWrapper.dart';
 
 /*
 struct HeaderEntry

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:nier_scripts_editor/ResizableWidget.dart';
-import 'package:nier_scripts_editor/filesView/fileTabView.dart';
-import 'package:nier_scripts_editor/stateManagement/openFilesManager.dart';
-import 'package:nier_scripts_editor/stateManagement/nestedNotifier.dart';
 
-import '../customTheme.dart';
+import 'fileTabView.dart';
+import '../../stateManagement/openFilesManager.dart';
+import '../../stateManagement/nestedNotifier.dart';
+import '../../customTheme.dart';
+import '../../widgets/ResizableWidget.dart';
 
 
 class OpenFilesAreas extends ChangeNotifierWidget {

@@ -3,16 +3,15 @@ import 'dart:math';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
 import 'package:cross_file/cross_file.dart';
-import 'package:flutter/services.dart';
-import 'package:nier_scripts_editor/filesView/FileTabEntry.dart';
-import 'package:nier_scripts_editor/filesView/TextFileEditor.dart';
-import 'package:nier_scripts_editor/stateManagement/openFilesManager.dart';
-import 'package:nier_scripts_editor/stateManagement/nestedNotifier.dart';
+import 'FileTabEntry.dart';
+import 'TextFileEditor.dart';
 import 'package:window_manager/window_manager.dart';
 
-import '../customTheme.dart';
-import '../stateManagement/openFileContents.dart';
-import '../utils.dart';
+import '../../stateManagement/openFilesManager.dart';
+import '../../stateManagement/nestedNotifier.dart';
+import '../../customTheme.dart';
+import '../../stateManagement/openFileContents.dart';
+import '../../utils.dart';
 
 
 class FileTabView extends ChangeNotifierWidget {
@@ -122,7 +121,6 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
             SizedBox(
               height: 30,
               child: ReorderableListView(
-                itemExtent: 150,
                 scrollController: tabBarScrollController,
                 scrollDirection: Axis.horizontal,
                 onReorder: (int oldIndex, int newIndex) => widget.viewArea.move(oldIndex, newIndex),
@@ -178,22 +176,13 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
   Widget setupShortcuts({ required Widget child }) {
     return GestureDetector(
       onTap: () => focusNode.requestFocus(),
-      child: FocusableActionDetector(
-        focusNode: focusNode,
-        shortcuts: {
-          LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.tab): TabChangeIntent(HorizontalDirection.right, widget.viewArea),
-          LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.shift, LogicalKeyboardKey.tab): TabChangeIntent(HorizontalDirection.left, widget.viewArea),
-          LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyW): CloseTabIntent(widget.viewArea),
-          LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyS): SaveTabIntent(widget.viewArea),
+      child: Actions(
+        actions: {
+          TabChangeIntent: TabChangeAction(),
+          CloseTabIntent: CloseTabAction(),
+          SaveTabIntent: SaveTabAction(),
         },
-          // dispatcher: LoggingActionDispatcher(),
-          actions: {
-            TabChangeIntent: TabChangeAction(),
-            CloseTabIntent: CloseTabAction(),
-            SaveTabIntent: SaveTabAction(),
-          },
-          child: child,
-        // ),
+        child: child,
       ),
     );
   }

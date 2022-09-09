@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:nier_scripts_editor/titlebar/TitlebarButton.dart';
 import 'package:window_manager/window_manager.dart';
 
-import '../customTheme.dart';
+import '../../customTheme.dart';
+import 'TitlebarButton.dart';
+
 
 final windowTitleProvider = StateProvider<String>((ref) => "Nier Scripts Editor");
 final titleBarHeightProvider = Provider<double>((ref) => 25);

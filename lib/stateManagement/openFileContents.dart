@@ -1,10 +1,10 @@
 
 import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:nier_scripts_editor/filesView/FileType.dart';
-import 'package:nier_scripts_editor/stateManagement/nestedNotifier.dart';
-import 'package:nier_scripts_editor/stateManagement/openFilesManager.dart';
+
+import '../widgets/filesView/FileType.dart';
+import 'nestedNotifier.dart';
+import 'openFilesManager.dart';
 
 class FileContent extends ChangeNotifier {
   final OpenFileData id;
