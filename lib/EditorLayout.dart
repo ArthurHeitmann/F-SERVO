@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nier_scripts_editor/FileHierarchyExplorer/FileExplorer.dart';
 import 'package:nier_scripts_editor/ResizableWidget.dart';
 
 import 'customTheme.dart';
@@ -21,7 +22,7 @@ class EditorLayout extends StatelessWidget {
             percentages: [0.55, 0.45],
             draggableThickness: 5,
             children: [
-              Center(child: Text("Files")),
+              FileExplorer(),
               Center(child: Text("Group Editor"))
             ],
           ),

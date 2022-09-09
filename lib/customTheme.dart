@@ -16,6 +16,10 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
   final Color? titleBarButtonDefaultColor;
   final Color? titleBarButtonPrimaryColor;
   final Color? titleBarButtonCloseColor;
+  final Color? hierarchyEntryHovered;
+  final Color? hierarchyEntrySelected;
+  final Color? hierarchyEntryClicked;
+
 
   NierThemeExtension({
     this.editorBackgroundColor,
@@ -32,6 +36,9 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
     this.titleBarButtonDefaultColor,
     this.titleBarButtonPrimaryColor,
     this.titleBarButtonCloseColor,
+    this.hierarchyEntryHovered,
+    this.hierarchyEntrySelected,
+    this.hierarchyEntryClicked,
   });
   
   @override
@@ -50,6 +57,9 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
     Color? titleBarButtonDefaultColor,
     Color? titleBarButtonPrimaryColor,
     Color? titleBarButtonCloseColor,
+    Color? hierarchyEntryHovered,
+    Color? hierarchyEntrySelected,
+    Color? hierarchyEntryClicked,
   }) {
     return NierThemeExtension(
       editorBackgroundColor: editorBackgroundColor ?? this.editorBackgroundColor,
@@ -66,6 +76,9 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
       titleBarButtonDefaultColor: titleBarButtonDefaultColor ?? this.titleBarButtonDefaultColor,
       titleBarButtonPrimaryColor: titleBarButtonPrimaryColor ?? this.titleBarButtonPrimaryColor,
       titleBarButtonCloseColor: titleBarButtonCloseColor ?? this.titleBarButtonCloseColor,
+      hierarchyEntryHovered: hierarchyEntryHovered ?? this.hierarchyEntryHovered,
+      hierarchyEntrySelected: hierarchyEntrySelected ?? this.hierarchyEntrySelected,
+      hierarchyEntryClicked: hierarchyEntryClicked ?? this.hierarchyEntryClicked,
     );
   }
   
@@ -89,6 +102,9 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
       titleBarButtonDefaultColor: Color.lerp(titleBarButtonDefaultColor, other.titleBarButtonDefaultColor, t),
       titleBarButtonPrimaryColor: Color.lerp(titleBarButtonPrimaryColor, other.titleBarButtonPrimaryColor, t),
       titleBarButtonCloseColor: Color.lerp(titleBarButtonCloseColor, other.titleBarButtonCloseColor, t),
+      hierarchyEntryHovered: Color.lerp(hierarchyEntryHovered, other.hierarchyEntryHovered, t),
+      hierarchyEntrySelected: Color.lerp(hierarchyEntrySelected, other.hierarchyEntrySelected, t),
+      hierarchyEntryClicked: Color.lerp(hierarchyEntryClicked, other.hierarchyEntryClicked, t),
     );
   }
 }
@@ -108,12 +124,17 @@ class NierDarkThemeExtension extends NierThemeExtension {
       titleBarTextColor: Color.fromRGBO(200, 200, 200, 1),
       titleBarButtonDefaultColor: Color.fromRGBO(239, 239, 239, 1),
       titleBarButtonPrimaryColor: Colors.blue,
-      titleBarButtonCloseColor: Colors.redAccent
+      titleBarButtonCloseColor: Colors.redAccent,
+      hierarchyEntryHovered: Color.fromRGBO(255, 255, 255, 0.075),
+      hierarchyEntrySelected: Color.fromRGBO(255, 255, 255, 0.125),
+      hierarchyEntryClicked: Color.fromRGBO(255, 255, 255, 0.2),
     );
 
   static ThemeData makeTheme() {
-    return ThemeData.dark().copyWith(
+    return ThemeData(
+      brightness: Brightness.dark,
       extensions: [NierDarkThemeExtension()],
+      fontFamily: ""
     );
   } 
 }

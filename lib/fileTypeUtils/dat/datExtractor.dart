@@ -38,6 +38,8 @@ class _DatHeader {
 }
 
 List<String> extractDatFiles(String datPath, { bool extractPakFiles = false }) {
+  print("Extracting dat files from $datPath");
+
   var datFile = File(datPath);
   ByteDataWrapper bytes = ByteDataWrapper(datFile.readAsBytesSync().buffer.asByteData());
   var header = _DatHeader(bytes);

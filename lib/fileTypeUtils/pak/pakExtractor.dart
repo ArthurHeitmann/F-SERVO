@@ -46,6 +46,8 @@ void extractPak(HeaderEntry meta, int size, ByteDataWrapper bytes, String extrac
 }
 
 List<String> extractPakFile(String pakPath, { bool yaxToXml = false }) {
+  print("Extracting pak files from $pakPath");
+
   var pakFile = File(pakPath);
   ByteDataWrapper bytes = ByteDataWrapper(pakFile.readAsBytesSync().buffer.asByteData());
 

@@ -78,7 +78,7 @@ class HapGroupHierarchyEntry extends FileHierarchyEntry {
 
 class XmlScriptHierarchyEntry extends FileHierarchyEntry {
   XmlScriptHierarchyEntry(String name, String path)
-    : super(name, path, false, true, icon: Icons.code);
+    : super(name, path, false, true, icon: null);
 }
 
 class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> {
@@ -91,13 +91,14 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> {
     if (!Directory(datExtractDir).existsSync()) {   // TODO: check if extracted folder actually contains all dat files
       extractDatFiles(datPath, extractPakFiles: true);
     }
-    add(DatHierarchyEntry(fileName, datPath, datExtractDir));
+    var datEntry = DatHierarchyEntry(fileName, datPath, datExtractDir);
+    add(datEntry);
 
     // TODO: search based on dat metadata
     for (var file in Directory(datExtractDir).listSync()) {
       if (file is File && file.path.endsWith(".pak")) {
         var pakPath = file.path;
-        openPak(pakPath);
+        openPak(pakPath, parent: datEntry);
       }
     }
   }
@@ -108,13 +109,17 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> {
     openDat(srcDatPath);
   }
 
-  void openPak(String pakPath) {
+  void openPak(String pakPath, { HierarchyEntry? parent }) {
     var pakFolder = path.dirname(pakPath);
     var pakExtractDir = path.join(pakFolder, "pakExtracted", path.basename(pakPath));
     if (!Directory(pakExtractDir).existsSync()) {
       extractPakFile(pakPath, yaxToXml: true);
     }
-    add(PakHierarchyEntry(pakPath.split(Platform.pathSeparator).last, pakPath, pakExtractDir));
+    var pakEntry = PakHierarchyEntry(pakPath.split(Platform.pathSeparator).last, pakPath, pakExtractDir);
+    if (parent != null)
+      parent.add(pakEntry);
+    else
+      add(pakEntry);
 
     var pakInfoJsonPath = path.join(pakExtractDir, "pakInfo.json");
     var pakInfoJson = json.decode(File(pakInfoJsonPath).readAsStringSync());
@@ -124,12 +129,43 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> {
       if (!File(xmlFilePath).existsSync()) {
         // TODO: display error message
       }
-      add(XmlScriptHierarchyEntry(xmlFile, xmlFilePath));
+      pakEntry.add(XmlScriptHierarchyEntry(xmlFile, xmlFilePath));
     }
   }
 
-  void openXmlScript(String xmlFilePath) {
-    add(XmlScriptHierarchyEntry(path.basename(xmlFilePath), xmlFilePath));
+  void openExtractedPak(String pakDirPath, { HierarchyEntry? parent }) {
+    var srcPakDir = path.dirname(path.dirname(pakDirPath));
+    var srcPakPath = path.join(srcPakDir, path.basename(pakDirPath));
+    openPak(srcPakPath, parent: parent);
+  }
+
+  void openXmlScript(String xmlFilePath, { HierarchyEntry? parent }) {
+    if (parent != null)
+      parent.add(XmlScriptHierarchyEntry(path.basename(xmlFilePath), xmlFilePath));
+    else
+      add(XmlScriptHierarchyEntry(path.basename(xmlFilePath), xmlFilePath));
+  }
+
+  void expandAll() {
+    var stack = toList();
+    while (stack.isNotEmpty) {
+      var entry = stack.removeLast();
+      if (entry.isCollapsible)
+        entry.isCollapsed = false;
+      for (var child in entry)
+        stack.add(child);
+    }
+  }
+  
+  void collapseAll() {
+    var stack = toList();
+    while (stack.isNotEmpty) {
+      var entry = stack.removeLast();
+      if (entry.isCollapsible)
+        entry.isCollapsed = true;
+      for (var child in entry)
+        stack.add(child);
+    }
   }
 }
 

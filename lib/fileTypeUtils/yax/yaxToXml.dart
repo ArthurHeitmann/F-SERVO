@@ -93,6 +93,8 @@ XmlElement yaxToXml(ByteDataWrapper bytes) {
 }
 
 void yaxFileToXmlFile(String yaxFilePath) {
+  print("Converting $yaxFilePath to xml");
+
   var bytes = ByteDataWrapper(File(yaxFilePath).readAsBytesSync().buffer.asByteData());
   var xml = yaxToXml(bytes);
   var xmlString = xml.toXmlString(pretty: true, indent: "\t");

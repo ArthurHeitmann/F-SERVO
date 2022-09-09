@@ -1,44 +1,112 @@
 
-import 'package:flutter/src/widgets/container.dart';
+import 'package:flutter/material.dart';
 import 'package:nier_scripts_editor/stateManagement/FileHierarchy.dart';
 import 'package:nier_scripts_editor/stateManagement/nestedNotifier.dart';
 
+import '../customTheme.dart';
+
 class HierarchyEntryWidget extends ChangeNotifierWidget {
   final HierarchyEntry entry;
+  final int depth;
 
-  HierarchyEntryWidget(this.entry {super.key}) : super(notifier: entry);
+  const HierarchyEntryWidget(this.entry, {super.key, this.depth = 0}) : super(notifier: entry);
 
   @override
   State<HierarchyEntryWidget> createState() => _HierarchyEntryState();
 }
 
 class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
+  bool isHovered = false;
+  bool isClicked = false;
+
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        GestrueDetector(
-          onDoubleTap: widget.entry.isOpenable ? widget.entry.onOpen : null,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center
-            children: [
-              if (widget.entry.isCollapsible)
-                IconButton(
-                  icon: widget.entry.isCollapsed ? Icons.lol : Icons.lol2,
-                  onPressed: () => widget.entry.isCollapsed = !widget.entry.isCollapsed
-                ),
-              if (widget.entry.icon)
-                Icon(icon: widget.entry.icon!),
-              Text(widget.entry.name)
-            ]
+        optionallySetupSelectable(
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 3),
+            height: 30,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                SizedBox(width: 15.0 * widget.depth,),
+                if (widget.entry.isCollapsible)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 4, left: 2),
+                    child: IconButton(
+                      padding: EdgeInsets.zero,
+                      constraints: BoxConstraints(),
+                      splashRadius: 13,
+                      onPressed: toggleCollapsed,
+                      icon: Icon(widget.entry.isCollapsed ? Icons.chevron_right : Icons.expand_more, size: 17),
+                    ),
+                  ),
+                if (widget.entry.icon != null)
+                  Icon(widget.entry.icon!, size: 15),
+                SizedBox(width: 5),
+                Expanded(
+                  child: Text(widget.entry.name, overflow: TextOverflow.ellipsis,)
+                )
+              ]
+            ),
           ),
         ),
-        for (var child in widget.entry)
-          Padding(
-            padding: EdgeInserts.only(left: 10),
-            child: HierarchyEntryWidget(child)
-          )
+        if (widget.entry.isCollapsible && !widget.entry.isCollapsed)
+          for (var child in widget.entry)
+            HierarchyEntryWidget(child, depth: widget.depth + 1,)
       ]
 	  );
+  }
+
+  Widget optionallySetupSelectable(Widget child) {
+    if (!widget.entry.isSelectable && !widget.entry.isCollapsible)
+      return child;
+    
+    Color bgColor;
+    if (widget.entry.isSelectable && widget.entry.isSelected)
+      bgColor = getTheme(context).hierarchyEntrySelected!;
+    else if (isClicked)
+      bgColor = getTheme(context).hierarchyEntryClicked!;
+    else if (isHovered)
+      bgColor = getTheme(context).hierarchyEntryHovered!;
+    else
+      bgColor = Colors.transparent;
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => isHovered = true),
+      onExit: (_) {
+        isHovered = false;
+        isClicked = false;
+        setState(() {});
+      },
+      child: GestureDetector(
+        onTap: onClick,
+        onTapDown: (_) => setState(() => isClicked = true),
+        onTapUp: (_) => setState(() => isClicked = false),
+        child: AnimatedContainer(
+          color: bgColor,
+          duration: Duration(milliseconds: 75),
+          child: child
+        ),
+      ),
+    );
+  }
+
+  void onClick() {
+    if (widget.entry.isOpenable)
+      onOpenFile();
+    if (widget.entry.isCollapsible)
+      toggleCollapsed();
+  }
+
+  void onOpenFile() {
+    // Future.delayed(Duration(milliseconds: 75), () => setState(() => isClicked = false));
+    // print("double");
+  }
+
+  void toggleCollapsed() {
+    widget.entry.isCollapsed = !widget.entry.isCollapsed;
   }
 }
