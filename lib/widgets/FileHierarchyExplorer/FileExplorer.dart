@@ -68,6 +68,10 @@ class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
                     .map((element) => HierarchyEntryWidget(element))
                     .toList(),
                 ),
+                if (openHierarchyManager.isEmpty)
+                  Center(
+                    child: Text("No files open"),
+                  ),
                 if (isDroppingFile)
                   makeItemHoveredIndicator()
               ],

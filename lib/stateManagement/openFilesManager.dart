@@ -161,6 +161,8 @@ class FilesAreaManager extends NestedNotifier<OpenFileData> {
 }
 
 class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
+  FilesAreaManager? _activeArea;
+
   OpenFilesAreasManager() : super([]);
 
   bool isFileOpened(String path) {
@@ -171,6 +173,36 @@ class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
       }
     }
     return false;
+  }
+
+  FilesAreaManager? get activeArea => _activeArea;
+
+  set activeArea(FilesAreaManager? value) {
+    assert(value == null || contains(value));
+    if (value == _activeArea)
+      return;
+    _activeArea = value;
+    notifyListeners();
+  }
+
+  @override
+  void remove(child) {
+    if (child == _activeArea)
+      _activeArea = this[0];
+    super.remove(child);
+  }
+
+  @override
+  void removeAt(int index) {
+    if (this[index] == _activeArea)
+      _activeArea = this[0];
+    super.removeAt(index);
+  }
+
+  @override
+  void clear() {
+    _activeArea = null;
+    super.clear();
   }
 }
 

@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:desktop_drop/desktop_drop.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:cross_file/cross_file.dart';
 import 'FileTabEntry.dart';
@@ -27,7 +28,6 @@ class FileTabView extends ChangeNotifierWidget {
 class _FileTabViewState extends ChangeNotifierState<FileTabView> {
   ScrollController tabBarScrollController = ScrollController();
   String? prevActiveUuid;
-  final FocusNode focusNode = FocusNode();
   bool isDroppingFile = false;
   Map<OpenFileData, Widget> cachedEditors = {};
 
@@ -120,22 +120,38 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
           children: [
             SizedBox(
               height: 30,
-              child: ReorderableListView(
-                scrollController: tabBarScrollController,
-                scrollDirection: Axis.horizontal,
-                onReorder: (int oldIndex, int newIndex) => widget.viewArea.move(oldIndex, newIndex),
-                buildDefaultDragHandles: false,
-                children: widget.viewArea
-                  .map((file,) => ReorderableDragStartListener(
-                    key: Key(file.uuid),
-                    index: widget.viewArea.indexOf(file),
-                    child: FileTabEntry(
-                      file: file,
-                      area: widget.viewArea
-                    ),
-                  )
-                  )
-                  .toList(),
+              child: Listener(
+                onPointerSignal: (event) {
+                  if (event is! PointerScrollEvent)
+                    return;
+                  PointerScrollEvent scrollEvent = event;
+                  var delta = scrollEvent.scrollDelta.dy != 0 ? scrollEvent.scrollDelta.dy : scrollEvent.scrollDelta.dx;
+                  var newOffset = tabBarScrollController.offset + delta;
+                  newOffset = clamp(newOffset, 0, tabBarScrollController.position.maxScrollExtent);
+                  tabBarScrollController.jumpTo(
+                    newOffset,
+                    // duration: Duration(milliseconds: 3000 ~/ 60),
+                    // curve: Curves.linear
+                  );
+                },
+                child: ReorderableListView(
+                  scrollController: tabBarScrollController,
+                  scrollDirection: Axis.horizontal,
+                  onReorder: (int oldIndex, int newIndex) => widget.viewArea.move(oldIndex, newIndex),
+                  buildDefaultDragHandles: false,
+                  physics: const NeverScrollableScrollPhysics(),
+                  children: widget.viewArea
+                    .map((file,) => ReorderableDragStartListener(
+                      key: Key(file.uuid),
+                      index: widget.viewArea.indexOf(file),
+                      child: FileTabEntry(
+                        file: file,
+                        area: widget.viewArea
+                      ),
+                    )
+                    )
+                    .toList(),
+                ),
               ),
             ),
             Expanded(
@@ -175,7 +191,7 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
 
   Widget setupShortcuts({ required Widget child }) {
     return GestureDetector(
-      onTap: () => focusNode.requestFocus(),
+      onTap: () => areasManager.activeArea = widget.viewArea,
       child: Actions(
         actions: {
           TabChangeIntent: TabChangeAction(),
