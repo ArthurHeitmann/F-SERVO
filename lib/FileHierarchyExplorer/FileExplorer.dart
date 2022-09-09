@@ -59,42 +59,7 @@ class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
-                  child: Text("FILE EXPLORER", 
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w300
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ),
-              Row(
-                children: [
-                  IconButton(
-                    padding: EdgeInsets.all(5),
-                    constraints: BoxConstraints(),
-                    iconSize: 20,
-                    splashRadius: 20,
-                    icon: Icon(Icons.unfold_more),
-                    onPressed: openHierarchyManager.expandAll,
-                  ),
-                  IconButton(
-                    padding: EdgeInsets.all(5),
-                    constraints: BoxConstraints(),
-                    iconSize: 20,
-                    splashRadius: 20,
-                    icon: Icon(Icons.unfold_less),
-                    onPressed: openHierarchyManager.collapseAll,
-                  ),
-                ],
-              ),
-            ],
-          ),
+          makeTopRow(),
           Divider(height: 1),
           Expanded(
             child: Stack(
@@ -105,29 +70,80 @@ class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
                     .toList(),
                 ),
                 if (isDroppingFile)
-                  Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: Container(
-                    color: getTheme(context).dropTargetColor,
-                    child: Center(
-                      child: Text(
-                        'Drop file here',
-                        style: TextStyle(
-                          color: getTheme(context).dropTargetTextColor,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold
-                        ),
-                      ),
-                    ),
-                  ),
-                )
+                  makeItemHoveredIndicator()
               ],
             ),
           )
         ],
+      ),
+    );
+  }
+
+  Widget makeTopRow() {
+    return Row(
+      children: [
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+            child: Text("FILE EXPLORER", 
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w300
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ),
+        Row(
+          children: [
+            Tooltip(
+              message: "Expand all",
+              waitDuration: Duration(milliseconds: 500),
+              child: IconButton(
+                padding: EdgeInsets.all(5),
+                constraints: BoxConstraints(),
+                iconSize: 20,
+                splashRadius: 20,
+                icon: Icon(Icons.unfold_more),
+                onPressed: openHierarchyManager.expandAll,
+              ),
+            ),
+            Tooltip(
+              message: "Collapse all",
+              waitDuration: Duration(milliseconds: 500),
+              child: IconButton(
+                padding: EdgeInsets.all(5),
+                constraints: BoxConstraints(),
+                iconSize: 20,
+                splashRadius: 20,
+                icon: Icon(Icons.unfold_less),
+                onPressed: openHierarchyManager.collapseAll,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget makeItemHoveredIndicator() {
+    return Positioned(
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      child: Container(
+        color: getTheme(context).dropTargetColor,
+        child: Center(
+          child: Text(
+            'Drop file here',
+            style: TextStyle(
+              color: getTheme(context).dropTargetTextColor,
+              fontSize: 20,
+              fontWeight: FontWeight.bold
+            ),
+          ),
+        ),
       ),
     );
   }

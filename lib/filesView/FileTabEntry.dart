@@ -25,7 +25,7 @@ class FileTabEntry extends StatelessWidget {
               children: [
                 Expanded(child:
                   Text(
-                    file.name,
+                    file.name + (file.unsavedChanges ? "*" : ""),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -48,6 +48,7 @@ class FileTabEntry extends StatelessWidget {
 
   Widget logicWrapper(Widget child) {
     return ContextMenuRegion(
+      enableLongPress: false,
       contextMenu: GenericContextMenu(
         buttonConfigs: [
           ContextMenuButtonConfig(

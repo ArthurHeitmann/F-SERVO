@@ -75,19 +75,19 @@ abstract class ChangeNotifierWidget extends StatefulWidget {
 }
 
 abstract class ChangeNotifierState<T extends ChangeNotifierWidget> extends State<T> {
-  void _onChange() {
+  void onNotified() {
     setState(() {});
   }
 
   @override
   void initState() {
     super.initState();
-    widget.notifier.addListener(_onChange);
+    widget.notifier.addListener(onNotified);
   }
 
   @override
   void dispose() {
-    widget.notifier.removeListener(_onChange);
+    widget.notifier.removeListener(onNotified);
     super.dispose();
   }
 }

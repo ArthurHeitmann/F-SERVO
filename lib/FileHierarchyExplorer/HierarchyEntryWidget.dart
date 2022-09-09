@@ -95,6 +95,8 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
   }
 
   void onClick() {
+    if (widget.entry.isSelectable)
+      openHierarchyManager.selectedEntry = widget.entry;
     if (widget.entry.isOpenable)
       onOpenFile();
     if (widget.entry.isCollapsible)

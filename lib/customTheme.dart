@@ -126,7 +126,7 @@ class NierDarkThemeExtension extends NierThemeExtension {
       titleBarButtonPrimaryColor: Colors.blue,
       titleBarButtonCloseColor: Colors.redAccent,
       hierarchyEntryHovered: Color.fromRGBO(255, 255, 255, 0.075),
-      hierarchyEntrySelected: Color.fromRGBO(255, 255, 255, 0.125),
+      hierarchyEntrySelected: Color.fromRGBO(255, 255, 255, 0.175),
       hierarchyEntryClicked: Color.fromRGBO(255, 255, 255, 0.2),
     );
 
@@ -134,7 +134,6 @@ class NierDarkThemeExtension extends NierThemeExtension {
     return ThemeData(
       brightness: Brightness.dark,
       extensions: [NierDarkThemeExtension()],
-      fontFamily: ""
     );
   } 
 }

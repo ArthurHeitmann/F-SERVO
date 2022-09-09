@@ -82,6 +82,8 @@ class XmlScriptHierarchyEntry extends FileHierarchyEntry {
 }
 
 class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> {
+  HierarchyEntry? _selectedEntry;
+
   OpenHierarchyManager() : super([]);
 
   void openDat(String datPath) {
@@ -166,6 +168,16 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> {
       for (var child in entry)
         stack.add(child);
     }
+  }
+
+  HierarchyEntry? get selectedEntry => _selectedEntry;
+
+  set selectedEntry(HierarchyEntry? value) {
+    _selectedEntry?.isSelected = false;
+    assert(value == null || value.isSelectable);
+    _selectedEntry = value;
+    _selectedEntry?.isSelected = true;
+    notifyListeners();
   }
 }
 

@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
 import 'package:cross_file/cross_file.dart';
@@ -24,9 +26,38 @@ class FileTabView extends ChangeNotifierWidget {
 }
 
 class _FileTabViewState extends ChangeNotifierState<FileTabView> {
+  ScrollController tabBarScrollController = ScrollController();
+  String? prevActiveUuid;
   final FocusNode focusNode = FocusNode();
   bool isDroppingFile = false;
   Map<OpenFileData, Widget> cachedEditors = {};
+
+  @override
+  void onNotified() {
+    var newActiveUuid = widget.viewArea.currentFile?.uuid;
+    if (prevActiveUuid != newActiveUuid && newActiveUuid != null)
+      scrollTabIntoView(newActiveUuid);
+    prevActiveUuid = newActiveUuid;
+
+    super.onNotified();
+  }
+
+  void scrollTabIntoView(String uuid) {
+    var viewWidth = (context.findRenderObject() as RenderBox).size.width;
+    
+    var fileData = widget.viewArea.firstWhere((f) => f.uuid == uuid);
+    var index = widget.viewArea.indexOf(fileData);
+    var tabPos = max(0.0, index * 150.0 - 15);
+    var tabEnd = tabPos + 150.0 + 30;
+
+    var scrollAreaStart = tabBarScrollController.offset;
+    var scrollAreaEnd = tabBarScrollController.offset + viewWidth;
+
+    if (tabPos < scrollAreaStart)
+      tabBarScrollController.animateTo(tabPos, duration: Duration(milliseconds: 250), curve: Curves.ease);
+    else if (tabEnd > scrollAreaEnd)
+      tabBarScrollController.animateTo(tabEnd - viewWidth, duration: Duration(milliseconds: 250), curve: Curves.ease);
+  }
 
   void openFiles(List<XFile> files) async {
     if (files.isEmpty)
@@ -91,7 +122,8 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
             SizedBox(
               height: 30,
               child: ReorderableListView(
-                scrollController: ScrollController(),
+                itemExtent: 150,
+                scrollController: tabBarScrollController,
                 scrollDirection: Axis.horizontal,
                 onReorder: (int oldIndex, int newIndex) => widget.viewArea.move(oldIndex, newIndex),
                 buildDefaultDragHandles: false,
