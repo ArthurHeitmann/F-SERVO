@@ -26,20 +26,21 @@ class HeaderEntry {
   }
 }
 
-void extractPak(HeaderEntry meta, int size, ByteDataWrapper bytes, String extractDir, int index) {
+void _extractPakYax(HeaderEntry meta, int size, ByteDataWrapper bytes, String extractDir, int index) {
   bytes.position = meta.offset;
   bool isCompressed = meta.uncompressedSize > size;
-  int paddingEndLength;
+  int readSize;
   if (isCompressed) {
     int compressedSize = bytes.readUint32();
-    paddingEndLength = size - compressedSize - 4;
+    readSize = compressedSize;
   }
   else {
-    paddingEndLength = (4 - (meta.uncompressedSize % 4)) % 4;
+    int paddingEndLength = (4 - (meta.uncompressedSize % 4)) % 4;
+    readSize = size - paddingEndLength;
   }
   
   var extractedFile = File(path.join(extractDir, "$index.yax"));
-  var fileBytes = bytes.readUint8List(size - paddingEndLength);
+  var fileBytes = bytes.readUint8List(readSize);
   if (isCompressed)
     fileBytes = zlib.decode(fileBytes);
   extractedFile.writeAsBytesSync(fileBytes);
@@ -70,7 +71,7 @@ List<String> extractPakFile(String pakPath, { bool yaxToXml = false }) {
   var extractDir = path.join(pakDir, "pakExtracted", path.basename(pakPath));
   Directory(extractDir).createSync(recursive: true);
   for (int i = 0; i < fileCount; i++) {
-    extractPak(headerEntries[i], fileSizes[i], bytes, extractDir, i);
+    _extractPakYax(headerEntries[i], fileSizes[i], bytes, extractDir, i);
   }
 
   dynamic meta = {
