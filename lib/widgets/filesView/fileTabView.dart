@@ -189,63 +189,8 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
   Widget setupShortcuts({ required Widget child }) {
     return GestureDetector(
       onTap: () => areasManager.activeArea = widget.viewArea,
-      child: Actions(
-        actions: {
-          TabChangeIntent: TabChangeAction(),
-          CloseTabIntent: CloseTabAction(),
-          SaveTabIntent: SaveTabAction(),
-        },
-        child: child,
-      ),
+      child: child,
     );
-  }
-}
-
-class TabChangeIntent extends Intent {
-  final HorizontalDirection direction;
-  final FilesAreaManager area;
-  const TabChangeIntent(this.direction, this.area);
-}
-
-class CloseTabIntent extends Intent {
-  final FilesAreaManager area;
-  const CloseTabIntent(this.area);
-}
-
-class SaveTabIntent extends Intent {
-  final FilesAreaManager area;
-  const SaveTabIntent(this.area);
-}
-
-class TabChangeAction extends Action<TabChangeIntent> {
-  TabChangeAction();
-
-  @override
-  void invoke(TabChangeIntent intent) {
-    if (intent.direction == HorizontalDirection.right)
-      intent.area.switchToNextFile();
-    else
-      intent.area.switchToPreviousFile();
-  }
-}
-
-class CloseTabAction extends Action<CloseTabIntent> {
-  CloseTabAction();
-
-  @override
-  void invoke(CloseTabIntent intent) {
-    if (intent.area.currentFile != null)
-      intent.area.closeFile(intent.area.currentFile!);
-  }
-}
-
-class SaveTabAction extends Action<SaveTabIntent> {
-  SaveTabAction();
-
-  @override
-  void invoke(SaveTabIntent intent) {
-    if (intent.area.currentFile != null)
-      print("Saving not implemented yet");
   }
 }
 

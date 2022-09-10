@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'customTheme.dart';
+import 'keyboardEvents/globalShortcutsWrapper.dart';
 import 'widgets/EditorLayout.dart';
 import 'widgets/titlebar/Titlebar.dart';
 
@@ -24,9 +25,7 @@ void main() async {
     // await windowManager.focus();
   });
 
-  runApp(ProviderScope(
-    child: MyApp()
-  ));
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -34,19 +33,23 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: "Nier Scripts Editor",
-      debugShowCheckedModeBanner: false,
-      darkTheme: NierDarkThemeExtension.makeTheme(),
-      themeMode: ThemeMode.dark,
-      home: Scaffold(
-        body: ContextMenuOverlay(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TitleBar(),
-              Expanded(child: EditorLayout()),
-            ],
+    return ProviderScope(
+      child: globalShortcutsWrapper(
+        child: MaterialApp(
+          title: "Nier Scripts Editor",
+          debugShowCheckedModeBanner: false,
+          darkTheme: NierDarkThemeExtension.makeTheme(),
+          themeMode: ThemeMode.dark,
+          home: Scaffold(
+            body: ContextMenuOverlay(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  TitleBar(),
+                  Expanded(child: EditorLayout()),
+                ],
+              ),
+            ),
           ),
         ),
       ),

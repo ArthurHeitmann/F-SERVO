@@ -134,6 +134,9 @@ class NierDarkThemeExtension extends NierThemeExtension {
     return ThemeData(
       brightness: Brightness.dark,
       extensions: [NierDarkThemeExtension()],
+      scrollbarTheme: ScrollbarThemeData(
+        radius: Radius.zero
+      )
     );
   } 
 }
