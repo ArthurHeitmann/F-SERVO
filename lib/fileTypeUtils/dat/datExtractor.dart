@@ -37,11 +37,12 @@ class _DatHeader {
   }
 }
 
-List<String> extractDatFiles(String datPath, { bool extractPakFiles = false }) {
+Future<List<String>> extractDatFiles(String datPath, { bool shouldExtractPakFiles = false }) async {
   print("Extracting dat files from $datPath");
 
   var datFile = File(datPath);
-  ByteDataWrapper bytes = ByteDataWrapper(datFile.readAsBytesSync().buffer.asByteData());
+  var rawBytes = await datFile.readAsBytes();
+  ByteDataWrapper bytes = ByteDataWrapper(rawBytes.buffer.asByteData());
   var header = _DatHeader(bytes);
   bytes.position = header.fileOffsetsOffset;
   var fileOffsets = bytes.readUint32List(header.fileNumber);
@@ -56,11 +57,11 @@ List<String> extractDatFiles(String datPath, { bool extractPakFiles = false }) {
   // extract dir is file path --> /nier2blender_extracted/[filename]/
   var datDir = path.dirname(datPath);
   var extractDir = path.join(datDir, "nier2blender_extracted", path.basename(datPath));
-  Directory(extractDir).createSync(recursive: true);
+  await Directory(extractDir).create(recursive: true);
   for (int i = 0; i < header.fileNumber; i++) {
     bytes.position = fileOffsets[i];
     var extractedFile = File(path.join(extractDir, fileNames[i]));
-    extractedFile.writeAsBytesSync(bytes.readUint8List(fileSizes[i]));
+    await extractedFile.writeAsBytes(bytes.readUint8List(fileSizes[i]));
   }
 
   fileNames.sort(((a, b) {
@@ -77,15 +78,15 @@ List<String> extractDatFiles(String datPath, { bool extractPakFiles = false }) {
     "basename": path.basename(datPath).split(".")[0],
     "ext": path.basename(datPath).split(".")[1],
   };
-  File(path.join(extractDir, "dat_info.json"))
-    .writeAsStringSync(JsonEncoder.withIndent("\t").convert(jsonMetadata));
+  await File(path.join(extractDir, "dat_info.json"))
+    .writeAsString(JsonEncoder.withIndent("\t").convert(jsonMetadata));
 
-  if (extractPakFiles) {
+  if (shouldExtractPakFiles) {
     var pakFiles = fileNames.where((file) => file.endsWith(".pak"));
-    for (var pakFile in pakFiles) {
+    await Future.wait(pakFiles.map<Future<void>>((pakFile) async {
       var pakPath = path.join(extractDir, pakFile);
-      extractPakFile(pakPath, yaxToXml: true);
-    }
+      await extractPakFiles(pakPath, yaxToXml: true);
+    }));
   }
 
   return fileNames;

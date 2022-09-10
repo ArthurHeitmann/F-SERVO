@@ -141,7 +141,7 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> {
       throw FileSystemException("Unsupported file type: $filePath");
   }
 
-  void openDat(String datPath, { HierarchyEntry? parent }) {
+  Future<void> openDat(String datPath, { HierarchyEntry? parent }) async {
     if (findRecWhere((entry) => entry is DatHierarchyEntry && entry.path == datPath) != null)
       return;
 
@@ -149,7 +149,7 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> {
     var datFolder = path.dirname(datPath);
     var datExtractDir = path.join(datFolder, "nier2blender_extracted", fileName);
     if (!Directory(datExtractDir).existsSync()) {   // TODO: check if extracted folder actually contains all dat files
-      extractDatFiles(datPath, extractPakFiles: true);
+      await extractDatFiles(datPath, shouldExtractPakFiles: true);
     }
     var datEntry = DatHierarchyEntry(fileName, datPath, datExtractDir);
     if (parent != null)
@@ -182,14 +182,14 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> {
     openDat(srcDatPath, parent: parent);
   }
 
-  void openPak(String pakPath, { HierarchyEntry? parent }) {
+  void openPak(String pakPath, { HierarchyEntry? parent }) async {
     if (findRecWhere((entry) => entry is PakHierarchyEntry && entry.path == pakPath) != null)
       return;
 
     var pakFolder = path.dirname(pakPath);
     var pakExtractDir = path.join(pakFolder, "pakExtracted", path.basename(pakPath));
     if (!Directory(pakExtractDir).existsSync()) {
-      extractPakFile(pakPath, yaxToXml: true);
+      await extractPakFiles(pakPath, yaxToXml: true);
     }
     var pakEntry = PakHierarchyEntry(pakPath.split(Platform.pathSeparator).last, pakPath, pakExtractDir);
     if (parent != null)

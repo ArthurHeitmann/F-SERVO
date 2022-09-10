@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../stateManagement/openFilesManager.dart';
 import '../utils.dart';
 import 'actions.dart';
 import 'intents.dart';

@@ -26,7 +26,7 @@ class HeaderEntry {
   }
 }
 
-void _extractPakYax(HeaderEntry meta, int size, ByteDataWrapper bytes, String extractDir, int index) {
+Future<void> _extractPakYax(HeaderEntry meta, int size, ByteDataWrapper bytes, String extractDir, int index) async {
   bytes.position = meta.offset;
   bool isCompressed = meta.uncompressedSize > size;
   int readSize;
@@ -43,14 +43,15 @@ void _extractPakYax(HeaderEntry meta, int size, ByteDataWrapper bytes, String ex
   var fileBytes = bytes.readUint8List(readSize);
   if (isCompressed)
     fileBytes = zlib.decode(fileBytes);
-  extractedFile.writeAsBytesSync(fileBytes);
+  await extractedFile.writeAsBytes(fileBytes);
 }
 
-List<String> extractPakFile(String pakPath, { bool yaxToXml = false }) {
+Future<List<String>> extractPakFiles(String pakPath, { bool yaxToXml = false }) async {
   print("Extracting pak files from $pakPath");
 
   var pakFile = File(pakPath);
-  ByteDataWrapper bytes = ByteDataWrapper(pakFile.readAsBytesSync().buffer.asByteData());
+  var rawBytes = await pakFile.readAsBytes();
+  ByteDataWrapper bytes = ByteDataWrapper(rawBytes.buffer.asByteData());
 
   bytes.position = 8;
   var firstOffset = bytes.readUint32();
@@ -69,9 +70,9 @@ List<String> extractPakFile(String pakPath, { bool yaxToXml = false }) {
   // extract dir is file path --> /pakExtracted/[index]/
   var pakDir = path.dirname(pakPath);
   var extractDir = path.join(pakDir, "pakExtracted", path.basename(pakPath));
-  Directory(extractDir).createSync(recursive: true);
+  await Directory(extractDir).create(recursive: true);
   for (int i = 0; i < fileCount; i++) {
-    _extractPakYax(headerEntries[i], fileSizes[i], bytes, extractDir, i);
+    await _extractPakYax(headerEntries[i], fileSizes[i], bytes, extractDir, i);
   }
 
   dynamic meta = {
@@ -81,13 +82,13 @@ List<String> extractPakFile(String pakPath, { bool yaxToXml = false }) {
     })
   };
   var pakInfoPath = path.join(extractDir, "pakInfo.json");
-  File(pakInfoPath).writeAsStringSync(JsonEncoder.withIndent("\t").convert(meta));
+  await File(pakInfoPath).writeAsString(JsonEncoder.withIndent("\t").convert(meta));
 
   if (yaxToXml) {
-    for (int i = 0; i < fileCount; i++) {
+    await Future.wait(Iterable<int>.generate(fileCount).map<Future<void>>((i) async {
       var yaxPath = path.join(extractDir, "$i.yax");
-      yaxFileToXmlFile(yaxPath);
-    }
+      await yaxFileToXmlFile(yaxPath);
+    }));
   }
 
   return List<String>.generate(fileCount, (index) => path.join(extractDir, "$index.yax"));

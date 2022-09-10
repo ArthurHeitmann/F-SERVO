@@ -92,15 +92,16 @@ XmlElement yaxToXml(ByteDataWrapper bytes) {
   return XmlElement(XmlName("root"), [], root.map((e) => e.toXml()));
 }
 
-void yaxFileToXmlFile(String yaxFilePath) {
+Future<void> yaxFileToXmlFile(String yaxFilePath) async {
   print("Converting $yaxFilePath to xml");
 
-  var bytes = ByteDataWrapper(File(yaxFilePath).readAsBytesSync().buffer.asByteData());
+  var rawBytes = await File(yaxFilePath).readAsBytes();
+  var bytes = ByteDataWrapper(rawBytes.buffer.asByteData());
   var xml = yaxToXml(bytes);
   var xmlString = xml.toXmlString(pretty: true, indent: "\t");
   var xmlFilePath = "${path.withoutExtension(yaxFilePath)}.xml";
   var xmlFile = File(xmlFilePath);
-  xmlFile.writeAsStringSync('<?xml version="1.0" encoding="utf-8"?>\n');
-  xmlFile.writeAsStringSync(xmlString, mode: FileMode.append);
-  xmlFile.writeAsStringSync("\n", mode: FileMode.append);
+  await xmlFile.writeAsString('<?xml version="1.0" encoding="utf-8"?>\n');
+  await xmlFile.writeAsString(xmlString, mode: FileMode.append);
+  await xmlFile.writeAsString("\n", mode: FileMode.append);
 }

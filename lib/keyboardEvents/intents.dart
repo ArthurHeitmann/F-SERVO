@@ -1,7 +1,6 @@
 
 import 'package:flutter/material.dart';
 
-import '../stateManagement/openFilesManager.dart';
 import '../utils.dart';
 
 class TabChangeIntent extends Intent {
