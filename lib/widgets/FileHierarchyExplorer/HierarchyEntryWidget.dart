@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../customTheme.dart';
 import '../../stateManagement/FileHierarchy.dart';
 import '../../stateManagement/nestedNotifier.dart';
+import '../../stateManagement/openFilesManager.dart';
 
 class HierarchyEntryWidget extends ChangeNotifierWidget {
   final HierarchyEntry entry;
@@ -104,8 +105,7 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
   }
 
   void onOpenFile() {
-    // Future.delayed(Duration(milliseconds: 75), () => setState(() => isClicked = false));
-    // print("double");
+    areasManager.openFile((widget.entry as FileHierarchyEntry).path);
   }
 
   void toggleCollapsed() {

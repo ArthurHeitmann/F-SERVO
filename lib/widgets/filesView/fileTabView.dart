@@ -63,10 +63,7 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
       return;
     OpenFileData? firstFile;
     for (var file in files) {
-      if (areasManager.isFileOpened(file.path))
-        continue;
-      var newFileData = OpenFileData(file.name, file.path);
-      widget.viewArea.add(newFileData);
+      var newFileData = areasManager.openFile(file.path, toArea: widget.viewArea);
       firstFile ??= newFileData;
     }
     if (firstFile != null)

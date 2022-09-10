@@ -1,6 +1,4 @@
 
-import 'dart:io';
-
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
 
@@ -21,28 +19,7 @@ class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
 
   void openFile(DropDoneDetails details) {
     for (var file in details.files) {
-      if (file.path.endsWith(".pak")) {
-        if (File(file.path).existsSync())
-          openHierarchyManager.openPak(file.path);
-        else if (Directory(file.path).existsSync())
-          openHierarchyManager.openExtractedPak(file.path);
-        else
-          throw Exception("File not found: ${file.path}");
-      }
-      else if (file.path.endsWith(".dat")) {
-        if (File(file.path).existsSync())
-          openHierarchyManager.openDat(file.path);
-        else if (Directory(file.path).existsSync())
-          openHierarchyManager.openExtractedDat(file.path);
-        else
-          throw Exception("File not found: ${file.path}");
-      }
-      else if (file.path.endsWith(".xml")) {
-        openHierarchyManager.openXmlScript(file.path);
-      }
-      else {
-        print("Unsupported file type: ${file.path}");  // TODO show error message
-      }
+      openHierarchyManager.openFile(file.path);
     }
   }
 

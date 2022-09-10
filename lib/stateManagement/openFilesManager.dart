@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:path/path.dart' as path;
 
 import '../utils.dart';
 import '../widgets/filesView/FileType.dart';
@@ -175,6 +176,24 @@ class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
     return false;
   }
 
+  OpenFileData? getFile(String path) {
+    for (var area in this) {
+      for (var file in area) {
+        if (file.path == path)
+          return file;
+      }
+    }
+    return null;
+  }
+
+  FilesAreaManager? getAreaOfFile(OpenFileData searchFile) {
+    for (var area in this) {
+      if (area.contains(searchFile))
+        return area;
+    }
+    return null;
+  }
+
   FilesAreaManager? get activeArea => _activeArea;
 
   set activeArea(FilesAreaManager? value) {
@@ -183,6 +202,21 @@ class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
       return;
     _activeArea = value;
     notifyListeners();
+  }
+
+  OpenFileData openFile(String filePath, { FilesAreaManager? toArea, bool focusIfOpen = true }) {
+    if (isFileOpened(filePath)) {
+      var openFile = getFile(filePath)!;
+      if (focusIfOpen)
+        getAreaOfFile(openFile)!.currentFile = openFile;
+      return openFile;
+    }
+
+    toArea ??= activeArea ?? this[0];
+    OpenFileData file = OpenFileData(path.basename(filePath), filePath);
+    toArea.add(file);
+    toArea.currentFile = file;
+    return file;
   }
 
   @override

@@ -9,10 +9,12 @@ import 'widgets/titlebar/Titlebar.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   await windowManager.ensureInitialized();
   WindowOptions windowOptions = WindowOptions(
     minimumSize: Size(400, 200),
-    titleBarStyle: TitleBarStyle.hidden
+    titleBarStyle: TitleBarStyle.hidden,
+    backgroundColor: Color.fromRGBO(18, 18, 18, 1),
   );
   windowManager.waitUntilReadyToShow(windowOptions, () async {
     await windowManager.show();

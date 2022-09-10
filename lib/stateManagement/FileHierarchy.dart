@@ -114,7 +114,34 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> {
     return findRecWhere((e) => e.contains(entry)) ?? this;
   }
 
-  void openDat(String datPath) {
+  void openFile(String filePath, { HierarchyEntry? parent }) {
+    if (filePath.endsWith(".dat")) {
+      if (File(filePath).existsSync())
+        openDat(filePath, parent: parent);
+      else if (Directory(filePath).existsSync())
+        openExtractedDat(filePath, parent: parent);
+      else
+        throw FileSystemException("File not found: $filePath");
+    }
+    else if (filePath.endsWith(".pak")) {
+      if (File(filePath).existsSync())
+        openPak(filePath, parent: parent);
+      else if (Directory(filePath).existsSync())
+        openExtractedPak(filePath, parent: parent);
+      else
+        throw FileSystemException("File not found: $filePath");
+    }
+    else if (filePath.endsWith(".xml")) {
+      if (File(filePath).existsSync())
+        openXmlScript(filePath, parent: parent);
+      else
+        throw FileSystemException("File not found: $filePath");
+    }
+    else
+      throw FileSystemException("Unsupported file type: $filePath");
+  }
+
+  void openDat(String datPath, { HierarchyEntry? parent }) {
     if (findRecWhere((entry) => entry is DatHierarchyEntry && entry.path == datPath) != null)
       return;
 
@@ -125,7 +152,10 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> {
       extractDatFiles(datPath, extractPakFiles: true);
     }
     var datEntry = DatHierarchyEntry(fileName, datPath, datExtractDir);
-    add(datEntry);
+    if (parent != null)
+      parent.add(datEntry);
+    else
+      add(datEntry);
 
     var existingEntries = findAllRecWhere((entry) => 
       entry is PakHierarchyEntry && entry.path.startsWith(datExtractDir));
@@ -146,10 +176,10 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> {
     }
   }
 
-  void openExtractedDat(String datDirPath) {
+  void openExtractedDat(String datDirPath, { HierarchyEntry? parent }) {
     var srcDatDir = path.dirname(path.dirname(datDirPath));
     var srcDatPath = path.join(srcDatDir, path.basename(datDirPath));
-    openDat(srcDatPath);
+    openDat(srcDatPath, parent: parent);
   }
 
   void openPak(String pakPath, { HierarchyEntry? parent }) {
