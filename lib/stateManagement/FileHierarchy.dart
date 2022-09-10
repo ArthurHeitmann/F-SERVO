@@ -1,4 +1,3 @@
-
 import 'dart:convert';
 import 'dart:io';
 
@@ -9,7 +8,7 @@ import '../fileTypeUtils/dat/datExtractor.dart';
 import 'nestedNotifier.dart';
 import '../fileTypeUtils/pak/pakExtractor.dart';
 
-class HierarchyEntry extends NestedNotifier {
+class HierarchyEntry extends NestedNotifier<HierarchyEntry> {
   String _name;
   final IconData? icon;
   final bool isSelectable;
@@ -17,8 +16,9 @@ class HierarchyEntry extends NestedNotifier {
   final bool isCollapsible;
   bool _isCollapsed = false;
   final bool isOpenable;
+  final int priority;
 
-  HierarchyEntry(this._name, this.isSelectable, this.isCollapsible, this.isOpenable, { this.icon })
+  HierarchyEntry(this._name, this.priority, this.isSelectable, this.isCollapsible, this.isOpenable, { this.icon })
     : super([]);
 
   String get name => _name;
@@ -50,35 +50,35 @@ class HierarchyEntry extends NestedNotifier {
 class FileHierarchyEntry extends HierarchyEntry {
   final String path;
 
-  FileHierarchyEntry(String name, this.path, bool isCollapsible, bool isOpenable, { IconData? icon })
-    : super(name, true, isCollapsible, isOpenable, icon: icon);
+  FileHierarchyEntry(String name, this.path, int priority, bool isCollapsible, bool isOpenable, { IconData? icon })
+    : super(name, priority, true, isCollapsible, isOpenable, icon: icon);
 }
 
 class ExtractableHierarchyEntry extends FileHierarchyEntry {
   final String extractedPath;
 
-  ExtractableHierarchyEntry(String name, String filePath, this.extractedPath, bool isCollapsible, bool isOpenable, { IconData? icon })
-    : super(name, filePath, isCollapsible, isOpenable, icon: icon);
+  ExtractableHierarchyEntry(String name, String filePath, this.extractedPath, int priority, bool isCollapsible, bool isOpenable, { IconData? icon })
+    : super(name, filePath, priority, isCollapsible, isOpenable, icon: icon);
 }
 
 class DatHierarchyEntry extends ExtractableHierarchyEntry {
   DatHierarchyEntry(String name, String path, String extractedPath)
-    : super(name, path, extractedPath, true, false, icon: Icons.folder);
+    : super(name, path, extractedPath, 10, true, false, icon: Icons.folder);
 }
 
 class PakHierarchyEntry extends ExtractableHierarchyEntry {
   PakHierarchyEntry(String name, String path, String extractedPath)
-    : super(name, path, extractedPath, true, false, icon: Icons.source);
+    : super(name, path, extractedPath, 7, true, false, icon: Icons.source);
 }
 
 class HapGroupHierarchyEntry extends FileHierarchyEntry {
   HapGroupHierarchyEntry(String name, String path)
-    : super(name, path, true, false, icon: Icons.workspaces);
+    : super(name, path, 5, true, false, icon: Icons.workspaces);
 }
 
 class XmlScriptHierarchyEntry extends FileHierarchyEntry {
   XmlScriptHierarchyEntry(String name, String path)
-    : super(name, path, false, true, icon: null);
+    : super(name, path, 2, false, true, icon: null);
 }
 
 class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> {
@@ -86,7 +86,38 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> {
 
   OpenHierarchyManager() : super([]);
 
+  HierarchyEntry? findRecWhere(bool Function(HierarchyEntry) test, { Iterable<HierarchyEntry>? children }) {
+    children ??= this;
+    for (var child in children) {
+      if (test(child))
+        return child;
+      var result = findRecWhere(test, children: child);
+      if (result != null) {
+        return result;
+      }
+    }
+    return null;
+  }
+
+  List<HierarchyEntry> findAllRecWhere(bool Function(HierarchyEntry) test, { Iterable<HierarchyEntry>? children }) {
+    children ??= this;
+    var result = <HierarchyEntry>[];
+    for (var child in children) {
+      if (test(child))
+        result.add(child);
+      result.addAll(findAllRecWhere(test, children: child));
+    }
+    return result;
+  }
+
+  NestedNotifier parentOf(HierarchyEntry entry) {
+    return findRecWhere((e) => e.contains(entry)) ?? this;
+  }
+
   void openDat(String datPath) {
+    if (findRecWhere((entry) => entry is DatHierarchyEntry && entry.path == datPath) != null)
+      return;
+
     var fileName = path.basename(datPath);
     var datFolder = path.dirname(datPath);
     var datExtractDir = path.join(datFolder, "nier2blender_extracted", fileName);
@@ -96,12 +127,22 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> {
     var datEntry = DatHierarchyEntry(fileName, datPath, datExtractDir);
     add(datEntry);
 
+    var existingEntries = findAllRecWhere((entry) => 
+      entry is PakHierarchyEntry && entry.path.startsWith(datExtractDir));
+    for (var entry in existingEntries)
+      parentOf(entry).remove(entry);
+    
     // TODO: search based on dat metadata
     for (var file in Directory(datExtractDir).listSync()) {
-      if (file is File && file.path.endsWith(".pak")) {
-        var pakPath = file.path;
-        openPak(pakPath, parent: datEntry);
+      if (file is! File || !file.path.endsWith(".pak"))
+        continue;
+      var pakPath = file.path;
+      int existingEntryI = existingEntries.indexWhere((entry) => (entry as FileHierarchyEntry).path == pakPath);
+      if (existingEntryI != -1) {
+        datEntry.add(existingEntries[existingEntryI]);
+        continue;
       }
+      openPak(pakPath, parent: datEntry);
     }
   }
 
@@ -112,6 +153,9 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> {
   }
 
   void openPak(String pakPath, { HierarchyEntry? parent }) {
+    if (findRecWhere((entry) => entry is PakHierarchyEntry && entry.path == pakPath) != null)
+      return;
+
     var pakFolder = path.dirname(pakPath);
     var pakExtractDir = path.join(pakFolder, "pakExtracted", path.basename(pakPath));
     if (!Directory(pakExtractDir).existsSync()) {
@@ -123,11 +167,21 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> {
     else
       add(pakEntry);
 
+    var existingEntries = findAllRecWhere((entry) =>
+      entry is XmlScriptHierarchyEntry && entry.path.startsWith(pakExtractDir));
+    for (var childXml in existingEntries)
+      parentOf(childXml).remove(childXml);
+
     var pakInfoJsonPath = path.join(pakExtractDir, "pakInfo.json");
     var pakInfoJson = json.decode(File(pakInfoJsonPath).readAsStringSync());
     for (var yaxFile in pakInfoJson["files"]) {
       var xmlFile = yaxFile["name"].replaceAll(".yax", ".xml");
       var xmlFilePath = path.join(pakExtractDir, xmlFile);
+      int existingEntryI = existingEntries.indexWhere((entry) => (entry as FileHierarchyEntry).path == xmlFilePath);
+      if (existingEntryI != -1) {
+        pakEntry.add(existingEntries[existingEntryI]);
+        continue;
+      }
       if (!File(xmlFilePath).existsSync()) {
         // TODO: display error message
       }
@@ -142,6 +196,9 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> {
   }
 
   void openXmlScript(String xmlFilePath, { HierarchyEntry? parent }) {
+    if (findRecWhere((entry) => entry is XmlScriptHierarchyEntry && entry.path == xmlFilePath) != null)
+      return;
+
     if (parent != null)
       parent.add(XmlScriptHierarchyEntry(path.basename(xmlFilePath), xmlFilePath));
     else
