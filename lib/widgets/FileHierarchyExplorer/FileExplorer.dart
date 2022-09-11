@@ -3,8 +3,9 @@ import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
 
 import '../../customTheme.dart';
+import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/FileHierarchy.dart';
-import '../../stateManagement/nestedNotifier.dart';
+import '../../stateManagement/miscValues.dart';
 import 'HierarchyEntryWidget.dart';
 
 class FileExplorer extends ChangeNotifierWidget {
@@ -76,6 +77,25 @@ class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
         ),
         Row(
           children: [
+            Tooltip(
+              message: "Auo translate Jap to Eng",
+              waitDuration: Duration(milliseconds: 500),
+              child: ValueListenableBuilder(
+                valueListenable: shouldAutoTranslate,
+                builder: (_, __, ___) => Opacity(
+                  opacity: shouldAutoTranslate.value ? 1.0 : 0.25,
+                  child: IconButton(
+                    padding: EdgeInsets.all(5),
+                    constraints: BoxConstraints(),
+                    iconSize: 20,
+                    splashRadius: 20,
+                    icon: Icon(Icons.translate),
+                    isSelected: shouldAutoTranslate.value,
+                    onPressed: () => shouldAutoTranslate.value ^= true,
+                  ),
+                ),
+              ),
+            ),
             Tooltip(
               message: "Expand all",
               waitDuration: Duration(milliseconds: 500),

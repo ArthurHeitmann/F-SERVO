@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'fileTabView.dart';
+import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/openFilesManager.dart';
-import '../../stateManagement/nestedNotifier.dart';
 import '../../customTheme.dart';
 import '../../widgets/ResizableWidget.dart';
 

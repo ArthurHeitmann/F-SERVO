@@ -1,11 +1,10 @@
 
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../customTheme.dart';
-import 'Titlebar.dart';
+import '../../utils.dart';
 
-class TitleBarButton extends ConsumerStatefulWidget {
+class TitleBarButton extends StatefulWidget {
   final IconData icon;
   final void Function() onPressed;
   final Color? primaryColor;
@@ -18,10 +17,10 @@ class TitleBarButton extends ConsumerStatefulWidget {
   }) : super(key: key);
 
   @override
-  ConsumerState<TitleBarButton> createState() => _TitleBarButtonState();
+  State<TitleBarButton> createState() => _TitleBarButtonState();
 }
 
-class _TitleBarButtonState extends ConsumerState<TitleBarButton> with SingleTickerProviderStateMixin {
+class _TitleBarButtonState extends State<TitleBarButton> with SingleTickerProviderStateMixin {
   // bool isHovered = false;
 
   AnimationController? colorAnimationController;
@@ -48,7 +47,6 @@ class _TitleBarButtonState extends ConsumerState<TitleBarButton> with SingleTick
   @override
   Widget build(BuildContext context) {
     initAnimations();
-    var titleBarHeight = ref.watch(titleBarHeightProvider) * 0.75;
 
     return AnimatedBuilder(
       animation: colorAnimationController!,
@@ -59,7 +57,7 @@ class _TitleBarButtonState extends ConsumerState<TitleBarButton> with SingleTick
           icon: Icon(
             widget.icon,
             color: colorAnimation!.value,
-            size: titleBarHeight,
+            size: titleBarHeight * 0.75,
           ),
           label: Text(""),
           onPressed: widget.onPressed,

@@ -8,8 +8,8 @@ import 'FileTabEntry.dart';
 import 'TextFileEditor.dart';
 import 'package:window_manager/window_manager.dart';
 
+import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/openFilesManager.dart';
-import '../../stateManagement/nestedNotifier.dart';
 import '../../customTheme.dart';
 import '../../stateManagement/openFileContents.dart';
 import '../../utils.dart';
@@ -18,7 +18,7 @@ import '../../utils.dart';
 class FileTabView extends ChangeNotifierWidget {
   final FilesAreaManager viewArea;
   
-  const FileTabView(this.viewArea, {Key? key}) : 
+  FileTabView(this.viewArea, {Key? key}) : 
     super(key: key, notifier: viewArea);
 
   @override
@@ -89,7 +89,7 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
       return cachedEditors[file]!;
     var fileContent = fileContentsManager.getContent(file) as FileTextContent;
     Widget newEntry = TextFileEditor(
-      file: fileContent
+      fileContent: fileContent
     );
     newEntry = SingleChildScrollView(
       key: fileContent.key,
@@ -131,23 +131,29 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
                     // curve: Curves.linear
                   );
                 },
-                child: ReorderableListView(
-                  scrollController: tabBarScrollController,
-                  scrollDirection: Axis.horizontal,
-                  onReorder: (int oldIndex, int newIndex) => widget.viewArea.move(oldIndex, newIndex),
-                  buildDefaultDragHandles: false,
-                  physics: const NeverScrollableScrollPhysics(),
-                  children: widget.viewArea
-                    .map((file,) => ReorderableDragStartListener(
-                      key: Key(file.uuid),
-                      index: widget.viewArea.indexOf(file),
-                      child: FileTabEntry(
-                        file: file,
-                        area: widget.viewArea
-                      ),
-                    )
-                    )
-                    .toList(),
+                child: Theme(
+                  data: Theme.of(context).copyWith(
+                    canvasColor: Colors.transparent,
+                  ),
+                  child: ReorderableListView(
+                    scrollController: tabBarScrollController,
+                    scrollDirection: Axis.horizontal,
+                    onReorder: (int oldIndex, int newIndex) => widget.viewArea.move(oldIndex, newIndex),
+                    buildDefaultDragHandles: false,
+                    physics: const NeverScrollableScrollPhysics(),
+                    
+                    children: widget.viewArea
+                      .map((file,) => ReorderableDragStartListener(
+                        key: Key(file.uuid),
+                        index: widget.viewArea.indexOf(file),
+                        child: FileTabEntry(
+                          file: file,
+                          area: widget.viewArea
+                        ),
+                      )
+                      )
+                      .toList(),
+                  ),
                 ),
               ),
             ),

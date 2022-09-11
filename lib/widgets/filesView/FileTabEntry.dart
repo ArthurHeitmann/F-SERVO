@@ -16,29 +16,33 @@ class FileTabEntry extends StatelessWidget {
     return logicWrapper(
       SizedBox(
         width: 150,
-        child: Material(
-          color: file == area.currentFile ? getTheme(context).tabSelectedColor : getTheme(context).tabColor,
-          child: Padding(
-            padding: const EdgeInsets.only(left: 10, right: 5),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Expanded(child:
-                  Text(
-                    file.name + (file.unsavedChanges ? "*" : ""),
-                    overflow: TextOverflow.ellipsis,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 2.5, right: 2.5, bottom: 3),
+          child: Material(
+            color: file == area.currentFile ? getTheme(context).tabSelectedColor : getTheme(context).tabColor,
+            borderRadius: BorderRadius.only(bottomLeft: Radius.circular(10), bottomRight: Radius.circular(10)),
+            child: Padding(
+              padding: const EdgeInsets.only(left: 10, right: 5),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(child:
+                    Text(
+                      file.name + (file.unsavedChanges ? "*" : ""),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
-                IconButton(
-                  padding: EdgeInsets.zero,
-                  constraints: BoxConstraints(),
-                  icon: Icon(Icons.close),
-                  onPressed: () => area.closeFile(file),
-                  iconSize: 15,
-                  splashRadius: 15,
-                  color: getTheme(context).tabIconColor,
-                ),
-              ],
+                  IconButton(
+                    padding: EdgeInsets.zero,
+                    constraints: BoxConstraints(),
+                    icon: Icon(Icons.close),
+                    onPressed: () => area.closeFile(file),
+                    iconSize: 15,
+                    splashRadius: 15,
+                    color: getTheme(context).tabIconColor,
+                  ),
+                ],
+              ),
             ),
           ),
         ),

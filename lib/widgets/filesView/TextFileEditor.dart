@@ -1,16 +1,13 @@
 
 import 'package:flutter/material.dart';
 
+import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/openFileContents.dart';
-import '../../stateManagement/nestedNotifier.dart';
 
 class TextFileEditor extends ChangeNotifierWidget {
   late final FileTextContent fileContent;
 
-  TextFileEditor({Key? key, required FileTextContent file}) : super(key: key, notifier: file) {
-    assert(notifier is FileTextContent);
-    fileContent = notifier as FileTextContent;
-  }
+  TextFileEditor({Key? key, required this.fileContent}) : super(key: key, notifier: fileContent);
 
   @override
   ChangeNotifierState<TextFileEditor> createState() => _TextFileEditorState();

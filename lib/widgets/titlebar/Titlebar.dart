@@ -1,22 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../../customTheme.dart';
+import '../../stateManagement/ChangeNotifierWidget.dart';
+import '../../stateManagement/miscValues.dart';
+import '../../utils.dart';
 import 'TitlebarButton.dart';
 
 
-final windowTitleProvider = StateProvider<String>((ref) => "Nier Scripts Editor");
-final titleBarHeightProvider = Provider<double>((ref) => 25);
-
-class TitleBar extends ConsumerStatefulWidget {
-  const TitleBar({Key? key}) : super(key: key);
+class TitleBar extends ChangeNotifierWidget {
+  TitleBar({Key? key}) : super(key: key, notifier: windowTitle);
 
   @override
   TitleBarState createState() => TitleBarState();
 }
 
-class TitleBarState extends ConsumerState<TitleBar> with WindowListener {
+class TitleBarState extends ChangeNotifierState<TitleBar> with WindowListener {
   bool isExpanded = false;
 
   @override
@@ -28,9 +27,8 @@ class TitleBarState extends ConsumerState<TitleBar> with WindowListener {
 
   void init() async {
     isExpanded = await windowManager.isMaximized();
-    var titleProvider = ref.read(windowTitleProvider.notifier);
-    await windowManager.setTitle(titleProvider.state);
-    titleProvider.state = await windowManager.getTitle();
+    await windowManager.setTitle(windowTitle.value);
+    windowTitle.value = await windowManager.getTitle();
   }
 
   @override
@@ -59,17 +57,14 @@ class TitleBarState extends ConsumerState<TitleBar> with WindowListener {
 
   @override
   Widget build(BuildContext context) {
-    var title = ref.watch(windowTitleProvider);
-    var height = ref.watch(titleBarHeightProvider);
-
     return Container(
       decoration: BoxDecoration(
         color: getTheme(context).titleBarColor,
       ),
       child: ConstrainedBox(
         constraints: BoxConstraints(
-          minHeight: height,
-          maxHeight: height,
+          minHeight: titleBarHeight,
+          maxHeight: titleBarHeight,
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -82,7 +77,7 @@ class TitleBarState extends ConsumerState<TitleBar> with WindowListener {
                 child: Container(
                   padding: EdgeInsets.symmetric(horizontal: 15),
                   alignment: Alignment.center,
-                  child: Text(title, style: TextStyle(color: getTheme(context).titleBarTextColor)),
+                  child: Text(windowTitle.value, style: TextStyle(color: getTheme(context).titleBarTextColor)),
                 )
               ),
             ),

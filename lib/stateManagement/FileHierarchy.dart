@@ -3,8 +3,10 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as path;
+import 'package:xml/xml.dart';
 
 import '../fileTypeUtils/dat/datExtractor.dart';
+import '../utils.dart';
 import 'nestedNotifier.dart';
 import '../fileTypeUtils/pak/pakExtractor.dart';
 
@@ -67,18 +69,96 @@ class DatHierarchyEntry extends ExtractableHierarchyEntry {
 }
 
 class PakHierarchyEntry extends ExtractableHierarchyEntry {
+  final Map<int, HapGroupHierarchyEntry> _flatGroups = {};
+
   PakHierarchyEntry(String name, String path, String extractedPath)
     : super(name, path, extractedPath, 7, true, false, icon: Icons.source);
+
+  Future<void> readGroups(String groupsXmlPath) async {
+    var groupsFile = File(groupsXmlPath);
+    var groupsXmlContents = await groupsFile.readAsString();
+    var xmlDoc = XmlDocument.parse(groupsXmlContents);
+    var groups = xmlDoc.firstElementChild!.childElements
+      .where((element) => element.name.toString() == "group");
+    
+    for (var group in groups) {
+      String groupIdStr = group.findElements("id").first.text;
+      int groupId = int.parse(groupIdStr);
+      String groupName = group.findElements("name").first.text;
+      int parentId = int.parse(group.findElements("parent").first.text);
+      HapGroupHierarchyEntry groupEntry = HapGroupHierarchyEntry(groupName, groupId);
+      
+      _flatGroups[groupId] = groupEntry;
+      if (_flatGroups.containsKey(parentId))
+        _flatGroups[parentId]!.add(groupEntry);
+      else
+        add(groupEntry);
+    }
+  }
+
+  @override
+  void add(HierarchyEntry child) {
+    if (child is! XmlScriptHierarchyEntry) {
+      super.add(child);
+      return;
+    }
+    int parentGroup = child.groupId;
+    if (_flatGroups.containsKey(parentGroup))
+      _flatGroups[parentGroup]!.add(child);
+    else
+      super.add(child);
+  }
 }
 
 class HapGroupHierarchyEntry extends FileHierarchyEntry {
-  HapGroupHierarchyEntry(String name, String path)
-    : super(name, path, 5, true, false, icon: Icons.workspaces);
+  final int id;
+  
+  HapGroupHierarchyEntry(String name, this.id)
+    : super(name, "", 5, true, false, icon: Icons.workspaces);
+  
+  String get name => tryToTranslate(super.name);
 }
 
 class XmlScriptHierarchyEntry extends FileHierarchyEntry {
+  int groupId = -1;
+  bool _hasReadMeta = false;
+  String _hapName = "";
+
   XmlScriptHierarchyEntry(String name, String path)
     : super(name, path, 2, false, true, icon: null);
+  
+  bool get hasReadMeta => _hasReadMeta;
+
+  String get hapName => _hapName;
+
+  set hapName(String value) {
+    _hapName = value;
+    notifyListeners();
+  }
+
+  @override
+  String get name {
+    if (_hapName.isNotEmpty)
+      return "$_name - ${tryToTranslate(_hapName)}";
+    return _name;
+  }
+
+  Future<void> readMeta() async {
+    if (_hasReadMeta) return;
+
+    var scriptFile = File(this.path);
+    var scriptContents = await scriptFile.readAsString();
+    var xmlRoot = XmlDocument.parse(scriptContents).firstElementChild!;
+    var group = xmlRoot.findElements("group");
+    if (group.isNotEmpty && group.first.text.startsWith("0x"))
+      groupId = int.parse(group.first.text);
+    
+    var name = xmlRoot.findElements("name");
+    if (name.isNotEmpty)
+      _hapName = name.first.text;
+    
+    _hasReadMeta = true;
+  }
 }
 
 class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> {
@@ -196,6 +276,7 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> {
       parent.add(pakEntry);
     else
       add(pakEntry);
+    await pakEntry.readGroups(path.join(pakExtractDir, "0.xml"));
 
     var existingEntries = findAllRecWhere((entry) =>
       entry is XmlScriptHierarchyEntry && entry.path.startsWith(pakExtractDir));
@@ -215,7 +296,10 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> {
       if (!File(xmlFilePath).existsSync()) {
         // TODO: display error message
       }
-      pakEntry.add(XmlScriptHierarchyEntry(xmlFile, xmlFilePath));
+
+      var xmlEntry = XmlScriptHierarchyEntry(xmlFile, xmlFilePath);
+      await xmlEntry.readMeta();
+      pakEntry.add(xmlEntry);
     }
   }
 
@@ -228,11 +312,11 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> {
   void openXmlScript(String xmlFilePath, { HierarchyEntry? parent }) {
     if (findRecWhere((entry) => entry is XmlScriptHierarchyEntry && entry.path == xmlFilePath) != null)
       return;
-
+    var entry = XmlScriptHierarchyEntry(path.basename(xmlFilePath), xmlFilePath);
     if (parent != null)
-      parent.add(XmlScriptHierarchyEntry(path.basename(xmlFilePath), xmlFilePath));
+      parent.add(entry);
     else
-      add(XmlScriptHierarchyEntry(path.basename(xmlFilePath), xmlFilePath));
+      add(entry);
   }
 
   void expandAll() {

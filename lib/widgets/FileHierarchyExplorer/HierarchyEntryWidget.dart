@@ -2,15 +2,17 @@
 import 'package:flutter/material.dart';
 
 import '../../customTheme.dart';
+import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/FileHierarchy.dart';
-import '../../stateManagement/nestedNotifier.dart';
+import '../../stateManagement/miscValues.dart';
 import '../../stateManagement/openFilesManager.dart';
 
 class HierarchyEntryWidget extends ChangeNotifierWidget {
   final HierarchyEntry entry;
   final int depth;
 
-  HierarchyEntryWidget(this.entry, {this.depth = 0}) : super(key: Key(entry.uuid), notifier: entry);
+  HierarchyEntryWidget(this.entry, {this.depth = 0})
+    : super(key: Key(entry.uuid), notifiers: [entry, shouldAutoTranslate]);
 
   @override
   State<HierarchyEntryWidget> createState() => _HierarchyEntryState();
@@ -27,7 +29,7 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
         optionallySetupSelectable(
           Container(
             padding: const EdgeInsets.symmetric(vertical: 3),
-            height: 30,
+            height: 25,
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -37,7 +39,9 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
                     padding: const EdgeInsets.only(right: 4, left: 2),
                     child: IconButton(
                       padding: EdgeInsets.zero,
-                      constraints: BoxConstraints(),
+                      constraints: BoxConstraints(
+                        maxWidth: 14
+                      ),
                       splashRadius: 13,
                       onPressed: toggleCollapsed,
                       icon: Icon(widget.entry.isCollapsed ? Icons.chevron_right : Icons.expand_more, size: 17),
@@ -47,7 +51,11 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
                   Icon(widget.entry.icon!, size: 15),
                 SizedBox(width: 5),
                 Expanded(
-                  child: Text(widget.entry.name, overflow: TextOverflow.ellipsis,)
+                  child: Text(
+                    widget.entry.name,
+                    overflow: TextOverflow.ellipsis,
+                    textScaleFactor: 0.85,
+                  )
                 )
               ]
             ),

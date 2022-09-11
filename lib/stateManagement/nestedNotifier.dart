@@ -67,27 +67,3 @@ class NestedNotifier<T> extends ChangeNotifier with IterableMixin<T> {
     super.dispose();
   }
 }
-
-abstract class ChangeNotifierWidget extends StatefulWidget {
-  final ChangeNotifier notifier;
-  
-  const ChangeNotifierWidget({Key? key, required this.notifier}) : super(key: key);
-}
-
-abstract class ChangeNotifierState<T extends ChangeNotifierWidget> extends State<T> {
-  void onNotified() {
-    setState(() {});
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    widget.notifier.addListener(onNotified);
-  }
-
-  @override
-  void dispose() {
-    widget.notifier.removeListener(onNotified);
-    super.dispose();
-  }
-}

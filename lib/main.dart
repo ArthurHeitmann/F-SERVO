@@ -1,6 +1,5 @@
 import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'customTheme.dart';
@@ -33,22 +32,20 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ProviderScope(
-      child: globalShortcutsWrapper(
-        child: MaterialApp(
-          title: "Nier Scripts Editor",
-          debugShowCheckedModeBanner: false,
-          darkTheme: NierDarkThemeExtension.makeTheme(),
-          themeMode: ThemeMode.dark,
-          home: Scaffold(
-            body: ContextMenuOverlay(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  TitleBar(),
-                  Expanded(child: EditorLayout()),
-                ],
-              ),
+    return globalShortcutsWrapper(
+      child: MaterialApp(
+        title: "Nier Scripts Editor",
+        debugShowCheckedModeBanner: false,
+        darkTheme: NierDarkThemeExtension.makeTheme(),
+        themeMode: ThemeMode.dark,
+        home: Scaffold(
+          body: ContextMenuOverlay(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TitleBar(),
+                Expanded(child: EditorLayout()),
+              ],
             ),
           ),
         ),

@@ -42,7 +42,7 @@ class YaxNode {
     if (text != null) {
       childElements.add(XmlText(text!));
       if (text!.startsWith("0x") && text!.length > 2) {
-        var hash = int.parse(text!.substring(2), radix: 16);
+        var hash = int.parse(text!);
         if (hash != 0) {
           String? hashLookup = hashToStringMap[hash];
           if (hashLookup != null)
