@@ -4,6 +4,7 @@ import 'dart:collection';
 import 'package:flutter/material.dart';
 
 import '../fileTypeUtils/yax/hashToStringMap.dart';
+import '../utils.dart';
 
 enum PropType {
   int, hexInt, double, vector, string
@@ -28,6 +29,8 @@ bool _isVector(String str) {
 mixin Prop<T> implements Listenable {
   abstract final PropType type;
 
+  void updateWith(String str);
+
   static Prop fromString(String str) {
     if (_isInt(str))
       return IntProp(int.parse(str));
@@ -51,6 +54,11 @@ class IntProp extends ValueProp<int> {
   final PropType type = PropType.int;
 
   IntProp(super.value);
+  
+  @override
+  void updateWith(String str) {
+    value = int.parse(str);
+  }
 }
 
 class HexProp extends ValueProp<int> {
@@ -73,6 +81,17 @@ class HexProp extends ValueProp<int> {
 
   @override
   String toString() => "0x${value.toRadixString(16)}";
+  
+  @override
+  void updateWith(String str, { bool isStr = false }) {
+    if (isStr) {
+      value = crc32(str);
+      _strVal = str;
+    }
+    else {
+      value = int.parse(str.substring(2), radix: 16);
+    }
+  }
 }
 
 class DoubleProp extends ValueProp<double> {
@@ -80,6 +99,11 @@ class DoubleProp extends ValueProp<double> {
   final PropType type = PropType.double;
 
   DoubleProp(super.value);
+  
+  @override
+  void updateWith(String str) {
+    value = double.parse(str);
+  }
 }
 
 class VectorProp extends ChangeNotifier with Prop<List<double>>, IterableMixin<double> {
@@ -104,11 +128,27 @@ class VectorProp extends ChangeNotifier with Prop<List<double>>, IterableMixin<d
 
   @override
   String toString() => _values.join(" ");
+  
+  @override
+  void updateWith(String str) {
+    _values = str.split(" ").map((val) => double.parse(val)).toList();
+    notifyListeners();
+  }
 }
 
 class StringProp extends ValueProp<String> {
   @override
   final PropType type = PropType.string;
+  
+  String Function(String) transform = (str) => str;
 
   StringProp(super.value);
+  
+  @override
+  void updateWith(String str) {
+    value = str;
+  }
+
+  @override
+  String toString() => transform(value);
 }

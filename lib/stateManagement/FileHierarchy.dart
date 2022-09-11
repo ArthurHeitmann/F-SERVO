@@ -9,11 +9,12 @@ import 'package:xml/xml.dart';
 import '../fileTypeUtils/dat/datExtractor.dart';
 import '../utils.dart';
 import 'Property.dart';
+import 'miscValues.dart';
 import 'nestedNotifier.dart';
 import '../fileTypeUtils/pak/pakExtractor.dart';
 
 class HierarchyEntry extends NestedNotifier<HierarchyEntry> {
-  String _name;
+  StringProp name;
   final IconData? icon;
   final bool isSelectable;
   bool _isSelected = false;
@@ -22,15 +23,8 @@ class HierarchyEntry extends NestedNotifier<HierarchyEntry> {
   final bool isOpenable;
   final int priority;
 
-  HierarchyEntry(this._name, this.priority, this.isSelectable, this.isCollapsible, this.isOpenable, { this.icon })
-    : super([]);
-
-  String get name => _name;
-
-  set name(String value) {
-    _name = value;
-    notifyListeners();
-  }
+  HierarchyEntry(String name, this.priority, this.isSelectable, this.isCollapsible, this.isOpenable, { this.icon })
+    : name = StringProp(name), super([]);
 
   bool get isSelected => _isSelected;
 
@@ -128,8 +122,11 @@ class HapGroupHierarchyEntry extends FileHierarchyEntry {
   final NestedNotifier<Token> tokens = NestedNotifier([]);
   
   HapGroupHierarchyEntry(String name, this.id)
-    : super(name, "", 5, true, false, icon: Icons.workspaces) {
+    : super(name, "", 5, true, false, icon: Icons.workspaces)
+  {
     tokens.addListener(notifyListeners);
+    
+    this.name.transform = (str) => shouldAutoTranslate.value ? tryToTranslate(str) : str;
   }
 
   @override
@@ -137,9 +134,6 @@ class HapGroupHierarchyEntry extends FileHierarchyEntry {
     tokens.removeListener(notifyListeners);
     super.dispose();
   }
-  
-  @override
-  String get name => tryToTranslate(super.name);
 }
 
 class XmlScriptHierarchyEntry extends FileHierarchyEntry {
@@ -148,7 +142,14 @@ class XmlScriptHierarchyEntry extends FileHierarchyEntry {
   String _hapName = "";
 
   XmlScriptHierarchyEntry(String name, String path)
-    : super(name, path, 2, false, true, icon: null);
+    : super(name, path, 2, false, true, icon: null)
+  {
+    this.name.transform = (str) {
+      if (_hapName.isNotEmpty)
+        return "$str - ${tryToTranslate(_hapName)}";
+      return str;
+    };
+  }
   
   bool get hasReadMeta => _hasReadMeta;
 
@@ -157,13 +158,6 @@ class XmlScriptHierarchyEntry extends FileHierarchyEntry {
   set hapName(String value) {
     _hapName = value;
     notifyListeners();
-  }
-
-  @override
-  String get name {
-    if (_hapName.isNotEmpty)
-      return "$_name - ${tryToTranslate(_hapName)}";
-    return _name;
   }
 
   Future<void> readMeta() async {

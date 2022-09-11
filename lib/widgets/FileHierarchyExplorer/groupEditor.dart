@@ -1,9 +1,9 @@
 
 import 'package:flutter/material.dart';
 
-import '../../customTheme.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/FileHierarchy.dart';
+import '../propEditors/genericTextField.dart';
 
 class GroupEditor extends ChangeNotifierWidget {
   GroupEditor({super.key}) : super(notifier: openHierarchyManager);
@@ -21,27 +21,19 @@ class _GroupEditorState extends ChangeNotifierState<GroupEditor> {
         makeTopRow(),
         Divider(height: 1),
         Expanded(
-          key: Key(openHierarchyManager.selectedEntry?.name ?? "noGroup"),
+          key: Key(openHierarchyManager.selectedEntry?.name.value ?? "noGroup"),
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: ListView(
               children: openHierarchyManager.selectedEntry is HapGroupHierarchyEntry ? [
-                Container(
-                  decoration: BoxDecoration(
-                    color: getTheme(context).textFieldBgColor,
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                  child: TextFormField(
-                    initialValue: openHierarchyManager.selectedEntry!.name,
-                  ),
-                ),
+                PropTextField(context, openHierarchyManager.selectedEntry!.name),
                 Text("Tokens:"),
                 for (var token in (openHierarchyManager.selectedEntry as HapGroupHierarchyEntry).tokens)
                   Row(
                     children: [
-                      Text(token.item1.toString()),
+                      Expanded(child: PropTextField(context, token.item1)),
                       SizedBox(width: 5),
-                      Text(token.item2.toString()),
+                      Expanded(child: PropTextField(context, token.item2)),
                     ],
                   ),
               ]

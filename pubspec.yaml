@@ -10,6 +10,7 @@ environment:
 
 dependencies:
   context_menus: ^1.0.2
+  crclib: ^3.0.0
   cross_file: ^0.3.3+1
   desktop_drop: ^0.3.3
   euc: ^1.0.6+8

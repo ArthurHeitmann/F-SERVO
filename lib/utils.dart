@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'dart:math';
 
+import 'package:crclib/catalog.dart';
 import 'package:uuid/uuid.dart';
 
 import 'fileTypeUtils/yax/japToEng.dart';
@@ -20,4 +22,8 @@ String tryToTranslate(String jap) {
     return jap;
   var eng = japToEng[jap];
   return eng ?? jap;
+}
+
+int crc32(String str) {
+  return Crc32().convert(utf8.encode(str)).toBigInt().toInt();
 }
