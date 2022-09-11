@@ -133,7 +133,7 @@ class NierDarkThemeExtension extends NierThemeExtension {
       hierarchyEntryHovered: Color.fromRGBO(255, 255, 255, 0.075),
       hierarchyEntrySelected: Color.fromRGBO(255, 255, 255, 0.175),
       hierarchyEntryClicked: Color.fromRGBO(255, 255, 255, 0.2),
-      textFieldBgColor: Color.fromRGBO(42, 42, 42, 1),
+      textFieldBgColor: Color.fromRGBO(37, 37, 37, 1),
     );
 
   static ThemeData makeTheme() {
@@ -145,8 +145,8 @@ class NierDarkThemeExtension extends NierThemeExtension {
       ),
       inputDecorationTheme: InputDecorationTheme(
         border: InputBorder.none,
-        contentPadding: EdgeInsets.all(8),
-        isDense: true
+        contentPadding: EdgeInsets.symmetric(vertical: 8),
+        isDense: true,
       ),
       
     );

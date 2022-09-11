@@ -26,14 +26,22 @@ class _GroupEditorState extends ChangeNotifierState<GroupEditor> {
             padding: const EdgeInsets.all(8.0),
             child: ListView(
               children: openHierarchyManager.selectedEntry is HapGroupHierarchyEntry ? [
-                PropTextField(context, openHierarchyManager.selectedEntry!.name),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Flexible(flex: 1, child: Text("Name:")),
+                    Flexible(flex: 3, child: PropTextField(prop: openHierarchyManager.selectedEntry!.name)),
+                  ],
+                ),
+                SizedBox(height: 5),
                 Text("Tokens:"),
+                SizedBox(height: 5),
                 for (var token in (openHierarchyManager.selectedEntry as HapGroupHierarchyEntry).tokens)
                   Row(
                     children: [
-                      Expanded(child: PropTextField(context, token.item1)),
+                      Expanded(child: makePropEditor(token.item1)),
                       SizedBox(width: 5),
-                      Expanded(child: PropTextField(context, token.item2)),
+                      Expanded(child: makePropEditor(token.item2)),
                     ],
                   ),
               ]

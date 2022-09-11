@@ -7,6 +7,7 @@ import 'package:tuple/tuple.dart';
 import 'package:xml/xml.dart';
 
 import '../fileTypeUtils/dat/datExtractor.dart';
+import '../fileTypeUtils/yax/yaxToXml.dart';
 import '../utils.dart';
 import 'Property.dart';
 import 'miscValues.dart';
@@ -72,6 +73,13 @@ class PakHierarchyEntry extends ExtractableHierarchyEntry {
 
   Future<void> readGroups(String groupsXmlPath) async {
     var groupsFile = File(groupsXmlPath);
+    if (!await groupsFile.exists()) {
+      var yaxPath = groupsXmlPath.replaceAll(".xml", ".yax");
+      if (await File(yaxPath).exists())
+        await yaxFileToXmlFile(yaxPath);
+      else
+        return;
+    }
     var groupsXmlContents = await groupsFile.readAsString();
     var xmlDoc = XmlDocument.parse(groupsXmlContents);
     var xmlRoot = xmlDoc.firstElementChild!;
@@ -315,7 +323,14 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> {
       }
 
       var xmlEntry = XmlScriptHierarchyEntry(xmlFile, xmlFilePath);
-      await xmlEntry.readMeta();
+      if (await File(xmlFilePath).exists())
+        await xmlEntry.readMeta();
+      else if (await File(path.join(pakExtractDir, yaxFile["name"])).exists()) {
+        await yaxFileToXmlFile(path.join(pakExtractDir, yaxFile["name"]));
+        await xmlEntry.readMeta();
+      }
+      else
+        throw FileSystemException("File not found: ${xmlFilePath}");
       pakEntry.add(xmlEntry);
     }
   }

@@ -10,35 +10,19 @@ enum PropType {
   int, hexInt, double, vector, string
 }
 
-bool _isInt(String str) {
-  return int.tryParse(str) != null;
-}
-
-bool _isHexInt(String str) {
-  return str.startsWith("0x") && int.tryParse(str, radix: 16) != null;
-}
-
-bool _isDouble(String str) {
-  return double.tryParse(str) != null;
-}
-
-bool _isVector(String str) {
- return str.split(" ").every((val) => _isDouble(val));
-}
-
 mixin Prop<T> implements Listenable {
   abstract final PropType type;
 
   void updateWith(String str);
 
   static Prop fromString(String str) {
-    if (_isInt(str))
+    if (isInt(str))
       return IntProp(int.parse(str));
-    else if (_isHexInt(str))
+    else if (isHexInt(str))
       return HexProp(int.parse(str, radix: 16));
-    else if (_isDouble(str))
+    else if (isDouble(str))
       return DoubleProp(double.parse(str));
-    else if (_isVector(str))
+    else if (isVector(str))
       return VectorProp(str.split(" ").map((val) => double.parse(val)).toList());
     else
       return StringProp(str);

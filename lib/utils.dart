@@ -27,3 +27,19 @@ String tryToTranslate(String jap) {
 int crc32(String str) {
   return Crc32().convert(utf8.encode(str)).toBigInt().toInt();
 }
+
+bool isInt(String str) {
+  return int.tryParse(str) != null;
+}
+
+bool isHexInt(String str) {
+  return str.startsWith("0x") && int.tryParse(str, radix: 16) != null;
+}
+
+bool isDouble(String str) {
+  return double.tryParse(str) != null;
+}
+
+bool isVector(String str) {
+ return str.split(" ").every((val) => isDouble(val));
+}
