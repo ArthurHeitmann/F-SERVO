@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'FileHierarchyExplorer/groupEditor.dart';
 import 'filesView/OpenFilesAreas.dart';
 import 'FileHierarchyExplorer/FileExplorer.dart';
 import 'ResizableWidget.dart';
@@ -22,7 +23,7 @@ class EditorLayout extends StatelessWidget {
             draggableThickness: 5,
             children: [
               FileExplorer(),
-              Center(child: Text("Group Editor"))
+              GroupEditor()
             ],
           ),
           OpenFilesAreas(),

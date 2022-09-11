@@ -19,6 +19,7 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
   final Color? hierarchyEntryHovered;
   final Color? hierarchyEntrySelected;
   final Color? hierarchyEntryClicked;
+  final Color? textFieldBgColor;
 
 
   NierThemeExtension({
@@ -39,6 +40,7 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
     this.hierarchyEntryHovered,
     this.hierarchyEntrySelected,
     this.hierarchyEntryClicked,
+    this.textFieldBgColor,
   });
   
   @override
@@ -60,6 +62,7 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
     Color? hierarchyEntryHovered,
     Color? hierarchyEntrySelected,
     Color? hierarchyEntryClicked,
+    Color? textFieldBgColor,
   }) {
     return NierThemeExtension(
       editorBackgroundColor: editorBackgroundColor ?? this.editorBackgroundColor,
@@ -79,6 +82,7 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
       hierarchyEntryHovered: hierarchyEntryHovered ?? this.hierarchyEntryHovered,
       hierarchyEntrySelected: hierarchyEntrySelected ?? this.hierarchyEntrySelected,
       hierarchyEntryClicked: hierarchyEntryClicked ?? this.hierarchyEntryClicked,
+      textFieldBgColor: textFieldBgColor ?? this.textFieldBgColor,
     );
   }
   
@@ -105,6 +109,7 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
       hierarchyEntryHovered: Color.lerp(hierarchyEntryHovered, other.hierarchyEntryHovered, t),
       hierarchyEntrySelected: Color.lerp(hierarchyEntrySelected, other.hierarchyEntrySelected, t),
       hierarchyEntryClicked: Color.lerp(hierarchyEntryClicked, other.hierarchyEntryClicked, t),
+      textFieldBgColor: Color.lerp(textFieldBgColor, other.textFieldBgColor, t),
     );
   }
 }
@@ -128,6 +133,7 @@ class NierDarkThemeExtension extends NierThemeExtension {
       hierarchyEntryHovered: Color.fromRGBO(255, 255, 255, 0.075),
       hierarchyEntrySelected: Color.fromRGBO(255, 255, 255, 0.175),
       hierarchyEntryClicked: Color.fromRGBO(255, 255, 255, 0.2),
+      textFieldBgColor: Color.fromRGBO(42, 42, 42, 1),
     );
 
   static ThemeData makeTheme() {
@@ -136,7 +142,13 @@ class NierDarkThemeExtension extends NierThemeExtension {
       extensions: [NierDarkThemeExtension()],
       scrollbarTheme: ScrollbarThemeData(
         radius: Radius.zero
-      )
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        border: InputBorder.none,
+        contentPadding: EdgeInsets.all(8),
+        isDense: true
+      ),
+      
     );
   } 
 }

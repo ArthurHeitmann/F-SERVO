@@ -3,10 +3,12 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as path;
+import 'package:tuple/tuple.dart';
 import 'package:xml/xml.dart';
 
 import '../fileTypeUtils/dat/datExtractor.dart';
 import '../utils.dart';
+import 'Property.dart';
 import 'nestedNotifier.dart';
 import '../fileTypeUtils/pak/pakExtractor.dart';
 
@@ -78,7 +80,8 @@ class PakHierarchyEntry extends ExtractableHierarchyEntry {
     var groupsFile = File(groupsXmlPath);
     var groupsXmlContents = await groupsFile.readAsString();
     var xmlDoc = XmlDocument.parse(groupsXmlContents);
-    var groups = xmlDoc.firstElementChild!.childElements
+    var xmlRoot = xmlDoc.firstElementChild!;
+    var groups = xmlRoot.childElements
       .where((element) => element.name.toString() == "group");
     
     for (var group in groups) {
@@ -87,6 +90,15 @@ class PakHierarchyEntry extends ExtractableHierarchyEntry {
       String groupName = group.findElements("name").first.text;
       int parentId = int.parse(group.findElements("parent").first.text);
       HapGroupHierarchyEntry groupEntry = HapGroupHierarchyEntry(groupName, groupId);
+
+      var tokens = group.findElements("tokens");
+      if (tokens.isNotEmpty) {
+        for (var token in tokens.first.findElements("value")) {
+          var code = int.parse(token.findElements("code").first.text);
+          var id = int.parse(token.findElements("id").first.text);
+          groupEntry.tokens.add(Token(HexProp(code), HexProp(id)));
+        }
+      }
       
       _flatGroups[groupId] = groupEntry;
       if (_flatGroups.containsKey(parentId))
@@ -110,12 +122,23 @@ class PakHierarchyEntry extends ExtractableHierarchyEntry {
   }
 }
 
+typedef Token = Tuple2<HexProp, HexProp>;
 class HapGroupHierarchyEntry extends FileHierarchyEntry {
   final int id;
+  final NestedNotifier<Token> tokens = NestedNotifier([]);
   
   HapGroupHierarchyEntry(String name, this.id)
-    : super(name, "", 5, true, false, icon: Icons.workspaces);
+    : super(name, "", 5, true, false, icon: Icons.workspaces) {
+    tokens.addListener(notifyListeners);
+  }
+
+  @override
+  void dispose() {
+    tokens.removeListener(notifyListeners);
+    super.dispose();
+  }
   
+  @override
   String get name => tryToTranslate(super.name);
 }
 

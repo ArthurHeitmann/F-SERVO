@@ -42,7 +42,7 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
                       constraints: BoxConstraints(
                         maxWidth: 14
                       ),
-                      splashRadius: 13,
+                      splashRadius: 14,
                       onPressed: toggleCollapsed,
                       icon: Icon(widget.entry.isCollapsed ? Icons.chevron_right : Icons.expand_more, size: 17),
                     ),
@@ -103,13 +103,22 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
     );
   }
 
+  int lastClickAt = 0;
+
+  bool isDoubleClick({ int intervalMs = 500 }) {
+    int time = DateTime.now().millisecondsSinceEpoch;
+    return time - lastClickAt < intervalMs;
+  }
+
   void onClick() {
     if (widget.entry.isSelectable)
       openHierarchyManager.selectedEntry = widget.entry;
-    if (widget.entry.isOpenable)
-      onOpenFile();
-    if (widget.entry.isCollapsible)
+    if (widget.entry.isCollapsible && (!widget.entry.isSelectable || isDoubleClick()))
       toggleCollapsed();
+    if (widget.entry.isOpenable && (!widget.entry.isSelectable || isDoubleClick()))
+      onOpenFile();
+
+    lastClickAt = DateTime.now().millisecondsSinceEpoch;
   }
 
   void onOpenFile() {
