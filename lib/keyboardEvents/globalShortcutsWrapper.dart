@@ -17,25 +17,20 @@ Widget globalShortcutsWrapper({ required Widget child }) {
         CloseTabIntent(),
       LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyS):
         SaveTabIntent(),
+      LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyZ):
+        UndoIntent(),
+      LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyY):
+        RedoIntent(),
     },
     child: Actions(
       actions: {
         TabChangeIntent: TabChangeAction(),
         CloseTabIntent: CloseTabAction(),
         SaveTabIntent: SaveTabAction(),
+        UndoIntent: UndoAction(),
+        RedoIntent:RedoAction(),
       },
       child: child
     )
   );
-}
-
-class TestIntent extends Intent {
-  const TestIntent();
-}
-
-class TestAction extends Action<TestIntent> {
-  @override
-  void invoke(Intent intent) {
-    print('Beep Boop');
-  }
 }

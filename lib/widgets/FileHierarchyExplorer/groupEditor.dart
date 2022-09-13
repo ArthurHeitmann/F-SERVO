@@ -39,9 +39,9 @@ class _GroupEditorState extends ChangeNotifierState<GroupEditor> {
                 for (var token in (openHierarchyManager.selectedEntry as HapGroupHierarchyEntry).tokens)
                   Row(
                     children: [
-                      Expanded(child: makePropEditor(token.item1)),
+                      Expanded(child: makePropEditor(token.code)),
                       SizedBox(width: 5),
-                      Expanded(child: makePropEditor(token.item2)),
+                      Expanded(child: makePropEditor(token.id)),
                     ],
                   ),
               ]

@@ -6,7 +6,7 @@ import '../../utils.dart';
 
 class TitleBarButton extends StatefulWidget {
   final IconData icon;
-  final void Function() onPressed;
+  final void Function()? onPressed;
   final Color? primaryColor;
 
   const TitleBarButton({

@@ -5,9 +5,10 @@ import '../utils.dart';
 import '../widgets/filesView/FileType.dart';
 import 'nestedNotifier.dart';
 import 'openFileContents.dart';
+import 'undoable.dart';
 
-class OpenFileData extends ChangeNotifier {
-  final String uuid;
+class OpenFileData extends ChangeNotifier with Undoable {
+  String _uuid;
   String _name;
   String _path;
   bool _unsavedChanges = false;
@@ -15,27 +16,51 @@ class OpenFileData extends ChangeNotifier {
 
   OpenFileData(this._name, this._path)
     : type = FileType.text,
-      uuid = uuidGen.v1();
+      _uuid = uuidGen.v1();
 
+  String get uuid => _uuid;
   String get name => _name;
   String get path => _path;
   bool get unsavedChanges => _unsavedChanges;
 
   set name(String value) {
+    if (value == _name) return;
     _name = value;
     notifyListeners();
   }
   set path(String value) {
+    if (value == _path) return;
     _path = value;
     notifyListeners();
   }
   set unsavedChanges(bool value) {
+    if (value == _unsavedChanges) return;
     _unsavedChanges = value;
     notifyListeners();
   }
+  
+  @override
+  Undoable takeSnapshot() {
+    var content = OpenFileData(_name, _path);
+    content._unsavedChanges = _unsavedChanges;
+    content.overrideUuidForUndoable(uuid);
+    return content;
+  }
+  
+  @override
+  void restoreWith(Undoable snapshot) {
+    var content = snapshot as OpenFileData;
+    name = content._name;
+    path = content._path;
+    unsavedChanges = content._unsavedChanges;
+  }
+
+  void overrideUuidForUndoable(String uuid) {
+    _uuid = uuid;
+  }
 }
 
-class FilesAreaManager extends NestedNotifier<OpenFileData> {
+class FilesAreaManager extends NestedNotifier<OpenFileData> implements Undoable {
   OpenFileData? _currentFile;
 
   FilesAreaManager() : super([]);
@@ -159,6 +184,25 @@ class FilesAreaManager extends NestedNotifier<OpenFileData> {
       nextIndex += length;
     currentFile = this[nextIndex];
   }
+  
+  @override
+  Undoable takeSnapshot() {
+    var snapshot = FilesAreaManager();
+    snapshot.overrideUuidForUndoable(uuid);
+    snapshot.replaceWith(map((entry) => entry.takeSnapshot() as OpenFileData).toList());
+    snapshot._currentFile = _currentFile != null ? _currentFile!.takeSnapshot() as OpenFileData : null;
+    return snapshot;
+  }
+  
+  @override
+  void restoreWith(Undoable snapshot) {
+    var entry = snapshot as FilesAreaManager;
+    updateOrReplaceWith(entry.toList(), (obj) => obj.takeSnapshot() as OpenFileData);
+    if (entry._currentFile != null)
+      currentFile = where((file) => file.uuid == entry._currentFile!.uuid).first;
+    else
+      currentFile = null;
+  }
 }
 
 class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
@@ -237,6 +281,24 @@ class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
   void clear() {
     _activeArea = null;
     super.clear();
+  }
+
+  @override
+  Undoable takeSnapshot() {
+    var snapshot = OpenFilesAreasManager();
+    snapshot.replaceWith(map((area) => area.takeSnapshot() as FilesAreaManager).toList());
+    snapshot._activeArea = _activeArea != null ? _activeArea!.takeSnapshot() as FilesAreaManager : null;
+    return snapshot;
+  }
+  
+  @override
+  void restoreWith(Undoable snapshot) {
+    var entry = snapshot as OpenFilesAreasManager;
+    updateOrReplaceWith(entry.toList(), (obj) => obj.takeSnapshot() as FilesAreaManager);
+    if (entry._activeArea != null)
+      activeArea = where((area) => area.uuid == entry._activeArea!.uuid).first;
+    else
+      activeArea = null;
   }
 }
 

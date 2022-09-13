@@ -15,3 +15,11 @@ class CloseTabIntent extends Intent {
 class SaveTabIntent extends Intent {
   const SaveTabIntent();
 }
+
+class UndoIntent extends Intent {
+  const UndoIntent();
+}
+
+class RedoIntent extends Intent {
+  const RedoIntent();
+}

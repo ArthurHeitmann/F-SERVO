@@ -1,16 +1,17 @@
 
 import 'dart:collection';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 
 import '../fileTypeUtils/yax/hashToStringMap.dart';
 import '../utils.dart';
+import 'undoable.dart';
 
 enum PropType {
   int, hexInt, double, vector, string
 }
 
-mixin Prop<T> implements Listenable {
+mixin Prop<T> implements Listenable, Undoable {
   abstract final PropType type;
 
   void updateWith(String str);
@@ -31,6 +32,18 @@ mixin Prop<T> implements Listenable {
 
 abstract class ValueProp<T> extends ValueNotifier<T> with Prop<T> {
   ValueProp(super.value);
+
+  @override
+  void restoreWith(Undoable snapshot) {
+    value = (snapshot as ValueProp).value;
+  }
+
+  @override
+  set value(T value) {
+    if (value == this.value) return;
+    super.value = value;
+    undoHistoryManager.onUndoableEvent();
+  }
 }
 
 class IntProp extends ValueProp<int> {
@@ -42,6 +55,11 @@ class IntProp extends ValueProp<int> {
   @override
   void updateWith(String str) {
     value = int.parse(str);
+  }
+  
+  @override
+  Undoable takeSnapshot() {
+    return IntProp(value);
   }
 }
 
@@ -59,8 +77,13 @@ class HexProp extends ValueProp<int> {
 
   @override
   set value(value) {
-    super.value = value;
     _strVal = hashToStringMap[value];
+    super.value = value;
+  }
+
+  void setValueAndStr(int value, String? str) {
+    _strVal = str;
+    super.value = value;
   }
 
   @override
@@ -69,12 +92,25 @@ class HexProp extends ValueProp<int> {
   @override
   void updateWith(String str, { bool isStr = false }) {
     if (isStr) {
-      value = crc32(str);
-      _strVal = str;
+      int strHash = crc32(str);
+      setValueAndStr(strHash, str);
     }
     else {
       value = int.parse(str.substring(2), radix: 16);
     }
+  }
+  
+  @override
+  Undoable takeSnapshot() {
+    var prop = HexProp(value);
+    prop._strVal = _strVal;
+    return prop;
+  }
+
+  @override
+  void restoreWith(Undoable snapshot) {
+    var prop = snapshot as HexProp;
+    setValueAndStr(prop.value, prop.strVal);
   }
 }
 
@@ -87,6 +123,11 @@ class DoubleProp extends ValueProp<double> {
   @override
   void updateWith(String str) {
     value = double.parse(str);
+  }
+
+  @override
+  Undoable takeSnapshot() {
+    return DoubleProp(value);
   }
 }
 
@@ -106,8 +147,10 @@ class VectorProp extends ChangeNotifier with Prop<List<double>>, IterableMixin<d
   double operator [](int index) => _values[index];
 
   void operator []=(int index, double value) {
+    if (value == _values[index]) return;
     _values[index] = value;
     notifyListeners();
+    undoHistoryManager.onUndoableEvent();
   }
 
   @override
@@ -116,6 +159,20 @@ class VectorProp extends ChangeNotifier with Prop<List<double>>, IterableMixin<d
   @override
   void updateWith(String str) {
     _values = str.split(" ").map((val) => double.parse(val)).toList();
+    notifyListeners();
+    undoHistoryManager.onUndoableEvent();
+  }
+
+  @override
+  Undoable takeSnapshot() {
+    return VectorProp(_values);
+  }
+
+  @override
+  void restoreWith(Undoable snapshot) {
+    var prop = snapshot as VectorProp;
+    if (listEquals(_values, prop._values)) return;
+    _values = List<double>.from(prop._values);
     notifyListeners();
   }
 }
@@ -135,4 +192,9 @@ class StringProp extends ValueProp<String> {
 
   @override
   String toString() => transform(value);
+
+  @override
+  Undoable takeSnapshot() {
+    return StringProp(value);
+  }
 }

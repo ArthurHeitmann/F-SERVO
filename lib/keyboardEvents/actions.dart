@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 
 import '../stateManagement/openFilesManager.dart';
+import '../stateManagement/undoable.dart';
 import '../utils.dart';
 import 'intents.dart';
 
@@ -34,5 +35,23 @@ class SaveTabAction extends Action<SaveTabIntent> {
   void invoke(SaveTabIntent intent) {
     if (areasManager.activeArea?.currentFile != null)
       print("Saving not implemented yet");
+  }
+}
+
+class UndoAction extends Action<UndoIntent> {
+  UndoAction();
+
+  @override
+  void invoke(UndoIntent intent) {
+    undoHistoryManager.undo();
+  }
+}
+
+class RedoAction extends Action<RedoIntent> {
+  RedoAction();
+
+  @override
+  void invoke(RedoIntent intent) {
+    undoHistoryManager.redo();
   }
 }

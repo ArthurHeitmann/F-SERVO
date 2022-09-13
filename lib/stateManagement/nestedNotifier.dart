@@ -1,14 +1,18 @@
 import 'dart:collection';
-import 'package:flutter/material.dart';
+import 'dart:math';
+import 'package:flutter/foundation.dart';
 
 import '../utils.dart';
+import 'undoable.dart';
 
-class NestedNotifier<T> extends ChangeNotifier with IterableMixin<T> {
-  final String uuid;
+abstract class NestedNotifier<T> extends ChangeNotifier with IterableMixin<T>, Undoable {
+  String _uuid;
   final List<T> _children;
 
   NestedNotifier(List<T> children)
-    : _children = children, uuid = uuidGen.v1();
+    : _children = children, _uuid = uuidGen.v1();
+
+  String get uuid => _uuid;
     
   @override
   Iterator<T> get iterator => _children.iterator;
@@ -19,6 +23,7 @@ class NestedNotifier<T> extends ChangeNotifier with IterableMixin<T> {
   T operator [](int index) => _children[index];
 
   void operator []=(int index, T value) {
+    if (value == _children[index]) return;
     _children[index] = value;
     notifyListeners();
   }
@@ -27,6 +32,12 @@ class NestedNotifier<T> extends ChangeNotifier with IterableMixin<T> {
 
   void add(T child) {
     _children.add(child);
+    notifyListeners();
+  }
+
+  void addAll(Iterable<T> children) {
+    if (children.isEmpty) return;
+    _children.addAll(children);
     notifyListeners();
   }
 
@@ -46,6 +57,7 @@ class NestedNotifier<T> extends ChangeNotifier with IterableMixin<T> {
   }
 
   void move(int from, int to) {
+    if (from == to) return;
     if (to > from)
       to--;
     var child = _children.removeAt(from);
@@ -54,8 +66,52 @@ class NestedNotifier<T> extends ChangeNotifier with IterableMixin<T> {
   }
 
   void clear() {
+    if (_children.isEmpty) return;
     _children.clear();
     notifyListeners();
+  }
+
+  void replaceWith(List<T> newChildren) {
+    if (listEquals(newChildren, _children)) return;
+    _children.clear();
+    _children.addAll(newChildren);
+    notifyListeners();
+  }
+
+  void updateOrReplaceWith(List<Undoable> newChildren, T Function(Undoable) copy) {
+    bool hasChanged = false;
+    // try to update same type children first
+    for (int i = 0; i < min(_children.length, newChildren.length); i++) {
+      if (_children[i].runtimeType == newChildren[i].runtimeType && _children[i] is Undoable) {
+        (_children[i] as Undoable).restoreWith(newChildren[i]);
+        hasChanged = true;
+      }
+      else {
+        _children[i] = copy(newChildren[i]);
+        hasChanged = true;
+      }
+    }
+    // add new children
+    if (_children.length < newChildren.length) {
+      _children.addAll(
+        newChildren.sublist(_children.length)
+        .map(copy)
+        .toList()
+      );
+      hasChanged = true;
+    }
+    // remove extra children
+    else if (_children.length > newChildren.length) {
+      _children.removeRange(newChildren.length, _children.length);
+      hasChanged = true;
+    }
+
+    if (hasChanged)
+      notifyListeners();
+  }
+
+  void overrideUuidForUndoable(String uuid) {
+    _uuid = uuid;
   }
 
   @override
@@ -65,5 +121,21 @@ class NestedNotifier<T> extends ChangeNotifier with IterableMixin<T> {
         child.dispose();
     }
     super.dispose();
+  }
+}
+
+class ValueNestedNotifier<T> extends NestedNotifier<T> {
+  
+  ValueNestedNotifier(super.children);
+
+  @override
+  Undoable takeSnapshot() {
+    return ValueNestedNotifier<T>(toList());
+  }
+
+  @override
+  void restoreWith(Undoable snapshot) {
+    var snapshotCopy = snapshot as ValueNestedNotifier<T>;
+    replaceWith(snapshotCopy._children);
   }
 }

@@ -4,12 +4,13 @@ import 'package:window_manager/window_manager.dart';
 import '../../customTheme.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/miscValues.dart';
+import '../../stateManagement/undoable.dart';
 import '../../utils.dart';
 import 'TitlebarButton.dart';
 
 
 class TitleBar extends ChangeNotifierWidget {
-  TitleBar({Key? key}) : super(key: key, notifier: windowTitle);
+  TitleBar({Key? key}) : super(key: key, notifiers: [windowTitle, undoHistoryManager]);
 
   @override
   TitleBarState createState() => TitleBarState();
@@ -57,10 +58,8 @@ class TitleBarState extends ChangeNotifierState<TitleBar> with WindowListener {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: getTheme(context).titleBarColor,
-      ),
+    return Material(
+      color: getTheme(context).titleBarColor,
       child: ConstrainedBox(
         constraints: BoxConstraints(
           minHeight: titleBarHeight,
@@ -69,6 +68,18 @@ class TitleBarState extends ChangeNotifierState<TitleBar> with WindowListener {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            IconButton(
+              padding: EdgeInsets.zero,
+              splashRadius: 14,
+              icon: Icon(Icons.undo, size: 17),
+              onPressed: undoHistoryManager.canUndo ? undoHistoryManager.undo : null,
+            ),
+            IconButton(
+              padding: EdgeInsets.zero,
+              splashRadius: 14,
+              icon: Icon(Icons.redo, size: 17),
+              onPressed: undoHistoryManager.canRedo ? undoHistoryManager.redo : null,
+            ),
             Expanded(
               child: GestureDetector(
                 onPanUpdate: (details) => windowManager.startDragging(),
@@ -85,7 +96,6 @@ class TitleBarState extends ChangeNotifierState<TitleBar> with WindowListener {
               icon: Icons.minimize_rounded,
               onPressed: windowManager.minimize,
               primaryColor: getTheme(context).titleBarButtonPrimaryColor!,
-              
             ),
             TitleBarButton(
               icon: isExpanded ? Icons.expand_more_rounded : Icons.expand_less_rounded,

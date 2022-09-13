@@ -2,35 +2,48 @@
 import 'package:flutter/material.dart';
 
 import '../../customTheme.dart';
+import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/Property.dart';
 import '../../utils.dart';
 
-class HexPropTextField extends StatefulWidget {
+class HexPropTextField extends ChangeNotifierWidget {
   final HexProp prop;
 
-  const HexPropTextField({super.key, required this.prop});
+  HexPropTextField({super.key, required this.prop}) : super(notifier: prop);
 
   @override
   State<HexPropTextField> createState() => _HexPropTextFieldState();
 }
 
-class _HexPropTextFieldState extends State<HexPropTextField> {
+class _HexPropTextFieldState extends ChangeNotifierState<HexPropTextField> {
   final _controller = TextEditingController();
   bool showHashString = false;
-
+  String? errorMsg;
+  
+  String getDisplayText() => widget.prop.isHashed && showHashString ? widget.prop.strVal! : widget.prop.toString();
+  
   @override
   void initState() {
     showHashString = widget.prop.isHashed;
 
-    _controller.text = widget.prop.isHashed ? widget.prop.strVal! : widget.prop.toString();
+    _controller.text = getDisplayText();
 
     super.initState();
   }
 
-  void onTextChange(String str) {
-    if (!isHexInt(str))
+  @override
+  void onNotified() {
+    _controller.value = _controller.value.copyWith(text: getDisplayText());
+    super.onNotified();
+  }
+
+  void onTextChange() {
+    if (!showHashString && !isHexInt(_controller.text)) {
+      setState(() => errorMsg = "Not a valid hex value");
       return;
-    widget.prop.updateWith(str, isStr: showHashString);
+    }
+    setState(() => errorMsg = null);
+    widget.prop.updateWith(_controller.text, isStr: showHashString);
   }
 
   void toggleHashString() {
@@ -63,11 +76,14 @@ class _HexPropTextFieldState extends State<HexPropTextField> {
                 ),
               ),
               Expanded(
-                child: TextFormField(
+                child: TextField(
                   controller: _controller,
-                  onChanged: onTextChange,
+                  onChanged: (_) => onTextChange(),
                   style: TextStyle(
                     fontSize: 13
+                  ),
+                  decoration: InputDecoration(
+                    errorText: errorMsg,
                   ),
                 ),
               ),

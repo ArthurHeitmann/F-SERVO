@@ -48,7 +48,7 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
                     ),
                   ),
                 if (widget.entry.icon != null)
-                  Icon(widget.entry.icon!, size: 15),
+                  Icon(widget.entry.icon!, size: 15, color: widget.entry.iconColor,),
                 SizedBox(width: 5),
                 Expanded(
                   child: ValueListenableBuilder(

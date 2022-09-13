@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as path;
-import 'package:tuple/tuple.dart';
 import 'package:xml/xml.dart';
 
 import '../fileTypeUtils/dat/datExtractor.dart';
@@ -13,10 +12,12 @@ import 'Property.dart';
 import 'miscValues.dart';
 import 'nestedNotifier.dart';
 import '../fileTypeUtils/pak/pakExtractor.dart';
+import 'undoable.dart';
 
-class HierarchyEntry extends NestedNotifier<HierarchyEntry> {
+class HierarchyEntry extends NestedNotifier<HierarchyEntry> with Undoable {
   StringProp name;
   final IconData? icon;
+  final Color? iconColor;
   final bool isSelectable;
   bool _isSelected = false;
   final bool isCollapsible;
@@ -24,12 +25,13 @@ class HierarchyEntry extends NestedNotifier<HierarchyEntry> {
   final bool isOpenable;
   final int priority;
 
-  HierarchyEntry(String name, this.priority, this.isSelectable, this.isCollapsible, this.isOpenable, { this.icon })
+  HierarchyEntry(String name, this.priority, this.isSelectable, this.isCollapsible, this.isOpenable, { this.icon, this.iconColor })
     : name = StringProp(name), super([]);
 
   bool get isSelected => _isSelected;
 
   set isSelected(bool value) {
+    if (value == _isSelected) return;
     _isSelected = value;
     notifyListeners();
   }
@@ -37,6 +39,7 @@ class HierarchyEntry extends NestedNotifier<HierarchyEntry> {
   bool get isCollapsed => _isCollapsed;
 
   set isCollapsed(bool value) {
+    if (value == _isCollapsed) return;
     _isCollapsed = value;
     notifyListeners();
   }
@@ -44,32 +47,100 @@ class HierarchyEntry extends NestedNotifier<HierarchyEntry> {
   void onOpen() {
     print("Not implemented!");
   }
+  
+  @override
+  Undoable takeSnapshot() {
+    var snapshot = HierarchyEntry(name.value, priority, isSelectable, isCollapsible, isOpenable, icon: icon);
+    snapshot.overrideUuidForUndoable(uuid);
+    snapshot._isSelected = _isSelected;
+    snapshot._isCollapsed = _isCollapsed;
+    snapshot.replaceWith(map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
+    return snapshot;
+  }
+
+  HierarchyEntry clone() => takeSnapshot() as HierarchyEntry;
+  
+  @override
+  void restoreWith(Undoable snapshot) {
+    var entry = snapshot as HierarchyEntry;
+    name.value = entry.name.value;
+    _isSelected = entry._isSelected;
+    _isCollapsed = entry._isCollapsed;
+    updateOrReplaceWith(entry.toList(), (obj) => (obj as HierarchyEntry).clone());
+  }
 }
 
 class FileHierarchyEntry extends HierarchyEntry {
   final String path;
 
-  FileHierarchyEntry(String name, this.path, int priority, bool isCollapsible, bool isOpenable, { IconData? icon })
-    : super(name, priority, true, isCollapsible, isOpenable, icon: icon);
+  FileHierarchyEntry(String name, this.path, int priority, bool isCollapsible, bool isOpenable, { IconData? icon, Color? iconColor })
+    : super(name, priority, true, isCollapsible, isOpenable, icon: icon, iconColor: iconColor);
+  
+  @override
+  Undoable takeSnapshot() {
+    var snapshot = FileHierarchyEntry(name.value, path, priority, isCollapsible, isOpenable, icon: icon);
+    snapshot.overrideUuidForUndoable(uuid);
+    snapshot._isSelected = _isSelected;
+    snapshot._isCollapsed = _isCollapsed;
+    snapshot.replaceWith(map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
+    return snapshot;
+  }
+  
+  @override
+  void restoreWith(Undoable snapshot) {
+    var entry = snapshot as FileHierarchyEntry;
+    name.value = entry.name.value;
+    _isSelected = entry._isSelected;
+    _isCollapsed = entry._isCollapsed;
+    updateOrReplaceWith(entry.toList(), (obj) => (obj as HierarchyEntry).clone());
+  }
 }
 
 class ExtractableHierarchyEntry extends FileHierarchyEntry {
   final String extractedPath;
 
-  ExtractableHierarchyEntry(String name, String filePath, this.extractedPath, int priority, bool isCollapsible, bool isOpenable, { IconData? icon })
-    : super(name, filePath, priority, isCollapsible, isOpenable, icon: icon);
+  ExtractableHierarchyEntry(String name, String filePath, this.extractedPath, int priority, bool isCollapsible, bool isOpenable, { IconData? icon, Color? iconColor })
+    : super(name, filePath, priority, isCollapsible, isOpenable, icon: icon, iconColor: iconColor);
+  
+  @override
+  Undoable takeSnapshot() {
+    var snapshot = ExtractableHierarchyEntry(name.value, this.path, extractedPath, priority, isCollapsible, isOpenable, icon: icon);
+    snapshot.overrideUuidForUndoable(uuid);
+    snapshot._isSelected = _isSelected;
+    snapshot._isCollapsed = _isCollapsed;
+    snapshot.replaceWith(map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
+    return snapshot;
+  }
+  
+  @override
+  void restoreWith(Undoable snapshot) {
+    var entry = snapshot as ExtractableHierarchyEntry;
+    name.value = entry.name.value;
+    _isSelected = entry._isSelected;
+    _isCollapsed = entry._isCollapsed;
+    updateOrReplaceWith(entry.toList(), (obj) => (obj as HierarchyEntry).clone());
+  }
 }
 
 class DatHierarchyEntry extends ExtractableHierarchyEntry {
   DatHierarchyEntry(String name, String path, String extractedPath)
     : super(name, path, extractedPath, 10, true, false, icon: Icons.folder);
+
+  @override
+  HierarchyEntry clone() {
+    var entry = DatHierarchyEntry(name.value, this.path, extractedPath);
+    entry._isSelected = _isSelected;
+    entry._isCollapsed = _isCollapsed;
+    entry.replaceWith(map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
+    return entry;
+  }
 }
 
 class PakHierarchyEntry extends ExtractableHierarchyEntry {
   final Map<int, HapGroupHierarchyEntry> _flatGroups = {};
 
   PakHierarchyEntry(String name, String path, String extractedPath)
-    : super(name, path, extractedPath, 7, true, false, icon: Icons.source);
+    : super(name, path, extractedPath, 7, true, false, icon: Icons.source, iconColor: Colors.orange);
 
   Future<void> readGroups(String groupsXmlPath) async {
     var groupsFile = File(groupsXmlPath);
@@ -98,7 +169,7 @@ class PakHierarchyEntry extends ExtractableHierarchyEntry {
         for (var token in tokens.first.findElements("value")) {
           var code = int.parse(token.findElements("code").first.text);
           var id = int.parse(token.findElements("id").first.text);
-          groupEntry.tokens.add(Token(HexProp(code), HexProp(id)));
+          groupEntry.tokens.add(GroupToken(HexProp(code), HexProp(id)));
         }
       }
       
@@ -122,15 +193,51 @@ class PakHierarchyEntry extends ExtractableHierarchyEntry {
     else
       super.add(child);
   }
+  
+  @override
+  Undoable takeSnapshot() {
+    var snapshot = PakHierarchyEntry(name.value, this.path, extractedPath);
+    snapshot.overrideUuidForUndoable(uuid);
+    snapshot._isSelected = _isSelected;
+    snapshot._isCollapsed = _isCollapsed;
+    snapshot._flatGroups.addAll(_flatGroups);
+    snapshot.replaceWith(map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
+    return snapshot;
+  }
+  
+  @override
+  void restoreWith(Undoable snapshot) {
+    var entry = snapshot as PakHierarchyEntry;
+    name.value = entry.name.value;
+    _isSelected = entry._isSelected;
+    _isCollapsed = entry._isCollapsed;
+    updateOrReplaceWith(entry.toList(), (obj) => (obj as HierarchyEntry).clone());
+  }
 }
 
-typedef Token = Tuple2<HexProp, HexProp>;
+class GroupToken with Undoable {
+  final HexProp code;
+  final HexProp id;
+  GroupToken(this.code, this.id);
+
+  @override
+  Undoable takeSnapshot() {
+    return GroupToken(code.takeSnapshot() as HexProp, id.takeSnapshot() as HexProp);
+  }
+
+  @override
+  void restoreWith(Undoable snapshot) {
+    var entry = snapshot as GroupToken;
+    code.restoreWith(entry.code);
+    id.restoreWith(entry.id);
+  }
+}
 class HapGroupHierarchyEntry extends FileHierarchyEntry {
   final int id;
-  final NestedNotifier<Token> tokens = NestedNotifier([]);
+  final tokens = ValueNestedNotifier<GroupToken>([]);
   
   HapGroupHierarchyEntry(String name, this.id)
-    : super(name, "", 5, true, false, icon: Icons.workspaces)
+    : super(name, "", 5, true, false, icon: Icons.workspaces, iconColor: Colors.blue)
   {
     tokens.addListener(notifyListeners);
     
@@ -142,6 +249,27 @@ class HapGroupHierarchyEntry extends FileHierarchyEntry {
     tokens.removeListener(notifyListeners);
     super.dispose();
   }
+  
+  @override
+  Undoable takeSnapshot() {
+    var snapshot = HapGroupHierarchyEntry(name.value, id);
+    snapshot.overrideUuidForUndoable(uuid);
+    snapshot._isSelected = _isSelected;
+    snapshot._isCollapsed = _isCollapsed;
+    snapshot.tokens.addAll(tokens.map((token) => token.takeSnapshot() as GroupToken));
+    snapshot.replaceWith(map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
+    return snapshot;
+  }
+  
+  @override
+  void restoreWith(Undoable snapshot) {
+    var entry = snapshot as HapGroupHierarchyEntry;
+    name.value = entry.name.value;
+    _isSelected = entry._isSelected;
+    _isCollapsed = entry._isCollapsed;
+    tokens.updateOrReplaceWith(entry.tokens.toList(), (obj) => obj.takeSnapshot() as GroupToken);
+    updateOrReplaceWith(entry.toList(), (obj) => (obj as HierarchyEntry).clone());
+  }
 }
 
 class XmlScriptHierarchyEntry extends FileHierarchyEntry {
@@ -150,7 +278,7 @@ class XmlScriptHierarchyEntry extends FileHierarchyEntry {
   String _hapName = "";
 
   XmlScriptHierarchyEntry(String name, String path)
-    : super(name, path, 2, false, true, icon: null)
+    : super(name, path, 2, false, true, icon: Icons.description, iconColor: Colors.green)
   {
     this.name.transform = (str) {
       if (_hapName.isNotEmpty)
@@ -164,6 +292,7 @@ class XmlScriptHierarchyEntry extends FileHierarchyEntry {
   String get hapName => _hapName;
 
   set hapName(String value) {
+    if (value == _hapName) return;
     _hapName = value;
     notifyListeners();
   }
@@ -184,9 +313,33 @@ class XmlScriptHierarchyEntry extends FileHierarchyEntry {
     
     _hasReadMeta = true;
   }
+  
+  @override
+  Undoable takeSnapshot() {
+    var snapshot = XmlScriptHierarchyEntry(name.value, this.path);
+    snapshot.overrideUuidForUndoable(uuid);
+    snapshot._isSelected = _isSelected;
+    snapshot._isCollapsed = _isCollapsed;
+    snapshot._hasReadMeta = _hasReadMeta;
+    snapshot.hapName = _hapName;
+    snapshot.groupId = groupId;
+    snapshot.replaceWith(map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
+    return snapshot;
+  }
+  
+  @override
+  void restoreWith(Undoable snapshot) {
+    var entry = snapshot as XmlScriptHierarchyEntry;
+    name.value = entry.name.value;
+    _isSelected = entry._isSelected;
+    _isCollapsed = entry._isCollapsed;
+    _hasReadMeta = entry._hasReadMeta;
+    hapName = entry.hapName;
+    updateOrReplaceWith(entry.toList(), (obj) => (obj as HierarchyEntry).clone());
+  }
 }
 
-class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> {
+class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable {
   HierarchyEntry? _selectedEntry;
 
   OpenHierarchyManager() : super([]);
@@ -219,20 +372,20 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> {
     return findRecWhere((e) => e.contains(entry)) ?? this;
   }
 
-  void openFile(String filePath, { HierarchyEntry? parent }) {
+  Future<void> openFile(String filePath, { HierarchyEntry? parent }) async {
     if (filePath.endsWith(".dat")) {
       if (File(filePath).existsSync())
-        openDat(filePath, parent: parent);
+        await openDat(filePath, parent: parent);
       else if (Directory(filePath).existsSync())
-        openExtractedDat(filePath, parent: parent);
+        await openExtractedDat(filePath, parent: parent);
       else
         throw FileSystemException("File not found: $filePath");
     }
     else if (filePath.endsWith(".pak")) {
       if (File(filePath).existsSync())
-        openPak(filePath, parent: parent);
+        await openPak(filePath, parent: parent);
       else if (Directory(filePath).existsSync())
-        openExtractedPak(filePath, parent: parent);
+        await openExtractedPak(filePath, parent: parent);
       else
         throw FileSystemException("File not found: $filePath");
     }
@@ -244,6 +397,8 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> {
     }
     else
       throw FileSystemException("Unsupported file type: $filePath");
+    
+    undoHistoryManager.onUndoableEvent();
   }
 
   Future<void> openDat(String datPath, { HierarchyEntry? parent }) async {
@@ -281,13 +436,13 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> {
     }
   }
 
-  void openExtractedDat(String datDirPath, { HierarchyEntry? parent }) {
+  Future<void> openExtractedDat(String datDirPath, { HierarchyEntry? parent }) {
     var srcDatDir = path.dirname(path.dirname(datDirPath));
     var srcDatPath = path.join(srcDatDir, path.basename(datDirPath));
-    openDat(srcDatPath, parent: parent);
+    return openDat(srcDatPath, parent: parent);
   }
 
-  void openPak(String pakPath, { HierarchyEntry? parent }) async {
+  Future<void> openPak(String pakPath, { HierarchyEntry? parent }) async {
     if (findRecWhere((entry) => entry is PakHierarchyEntry && entry.path == pakPath) != null)
       return;
 
@@ -330,15 +485,15 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> {
         await xmlEntry.readMeta();
       }
       else
-        throw FileSystemException("File not found: ${xmlFilePath}");
+        throw FileSystemException("File not found: $xmlFilePath");
       pakEntry.add(xmlEntry);
     }
   }
 
-  void openExtractedPak(String pakDirPath, { HierarchyEntry? parent }) {
+  Future<void> openExtractedPak(String pakDirPath, { HierarchyEntry? parent }) {
     var srcPakDir = path.dirname(path.dirname(pakDirPath));
     var srcPakPath = path.join(srcPakDir, path.basename(pakDirPath));
-    openPak(srcPakPath, parent: parent);
+    return openPak(srcPakPath, parent: parent);
   }
 
   void openXmlScript(String xmlFilePath, { HierarchyEntry? parent }) {
@@ -376,11 +531,31 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> {
   HierarchyEntry? get selectedEntry => _selectedEntry;
 
   set selectedEntry(HierarchyEntry? value) {
+    if (value == _selectedEntry)
+      return;
     _selectedEntry?.isSelected = false;
     assert(value == null || value.isSelectable);
     _selectedEntry = value;
     _selectedEntry?.isSelected = true;
     notifyListeners();
+  }
+
+  @override
+  Undoable takeSnapshot() {
+    var snapshot = OpenHierarchyManager();
+    snapshot.replaceWith(map((entry) => entry.clone()).toList());
+    snapshot._selectedEntry = _selectedEntry != null ? _selectedEntry?.takeSnapshot() as HierarchyEntry : null;
+    return snapshot;
+  }
+  
+  @override
+  void restoreWith(Undoable snapshot) {
+    var entry = snapshot as OpenHierarchyManager;
+    updateOrReplaceWith(entry.toList(), (obj) => (obj as HierarchyEntry).clone());
+    if (entry.selectedEntry != null)
+      selectedEntry = findRecWhere((e) => entry.selectedEntry!.uuid == e.uuid);
+    else
+      selectedEntry = null;
   }
 }
 
