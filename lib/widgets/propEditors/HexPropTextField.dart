@@ -60,7 +60,7 @@ class _HexPropTextFieldState extends ChangeNotifierState<HexPropTextField> {
       builder: (context, value, child) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 3),
         child: Material(
-          color: getTheme(context).textFieldBgColor,
+          color: getTheme(context).formElementBgColor,
           borderRadius: BorderRadius.circular(8.0),
           child: Row(
             children: [

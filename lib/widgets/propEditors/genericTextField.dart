@@ -12,7 +12,7 @@ Widget genericTextField(BuildContext context, {
 }) {
   return Material(
     // decoration: BoxDecoration(
-      color: getTheme(context).textFieldBgColor,
+      color: getTheme(context).formElementBgColor,
       borderRadius: BorderRadius.circular(8.0),
     // ),
     child: Row(

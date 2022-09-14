@@ -19,7 +19,7 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
   final Color? hierarchyEntryHovered;
   final Color? hierarchyEntrySelected;
   final Color? hierarchyEntryClicked;
-  final Color? textFieldBgColor;
+  final Color? formElementBgColor;
 
 
   NierThemeExtension({
@@ -40,7 +40,7 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
     this.hierarchyEntryHovered,
     this.hierarchyEntrySelected,
     this.hierarchyEntryClicked,
-    this.textFieldBgColor,
+    this.formElementBgColor,
   });
   
   @override
@@ -62,7 +62,7 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
     Color? hierarchyEntryHovered,
     Color? hierarchyEntrySelected,
     Color? hierarchyEntryClicked,
-    Color? textFieldBgColor,
+    Color? formElementBgColor,
   }) {
     return NierThemeExtension(
       editorBackgroundColor: editorBackgroundColor ?? this.editorBackgroundColor,
@@ -82,7 +82,7 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
       hierarchyEntryHovered: hierarchyEntryHovered ?? this.hierarchyEntryHovered,
       hierarchyEntrySelected: hierarchyEntrySelected ?? this.hierarchyEntrySelected,
       hierarchyEntryClicked: hierarchyEntryClicked ?? this.hierarchyEntryClicked,
-      textFieldBgColor: textFieldBgColor ?? this.textFieldBgColor,
+      formElementBgColor: formElementBgColor ?? this.formElementBgColor,
     );
   }
   
@@ -109,7 +109,7 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
       hierarchyEntryHovered: Color.lerp(hierarchyEntryHovered, other.hierarchyEntryHovered, t),
       hierarchyEntrySelected: Color.lerp(hierarchyEntrySelected, other.hierarchyEntrySelected, t),
       hierarchyEntryClicked: Color.lerp(hierarchyEntryClicked, other.hierarchyEntryClicked, t),
-      textFieldBgColor: Color.lerp(textFieldBgColor, other.textFieldBgColor, t),
+      formElementBgColor: Color.lerp(formElementBgColor, other.formElementBgColor, t),
     );
   }
 }
@@ -133,7 +133,7 @@ class NierDarkThemeExtension extends NierThemeExtension {
       hierarchyEntryHovered: Color.fromRGBO(255, 255, 255, 0.075),
       hierarchyEntrySelected: Color.fromRGBO(255, 255, 255, 0.175),
       hierarchyEntryClicked: Color.fromRGBO(255, 255, 255, 0.2),
-      textFieldBgColor: Color.fromRGBO(37, 37, 37, 1),
+      formElementBgColor: Color.fromRGBO(37, 37, 37, 1),
     );
 
   static ThemeData makeTheme() {

@@ -30,7 +30,7 @@ class FileContent extends ChangeNotifier with Undoable {
   
   @override
   void restoreWith(Undoable snapshot) {
-    var content = snapshot as FileContent;
+    // var content = snapshot as FileContent;
     // _isLoaded = content._isLoaded;
   }
   

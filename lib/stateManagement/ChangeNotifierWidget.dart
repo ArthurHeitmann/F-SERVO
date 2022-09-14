@@ -31,3 +31,20 @@ abstract class ChangeNotifierState<T extends ChangeNotifierWidget> extends State
     super.dispose();
   }
 }
+
+class ChangeNotifierBuilder extends ChangeNotifierWidget {
+  final Widget Function(BuildContext context) builder;
+
+  ChangeNotifierBuilder({super.key, required ChangeNotifier notifier, required this.builder })
+    : super(notifier: notifier);
+
+  @override
+  State<ChangeNotifierBuilder> createState() => _ChangeNotifierBuilderState();
+}
+
+class _ChangeNotifierBuilderState extends ChangeNotifierState<ChangeNotifierBuilder> {
+  @override
+  Widget build(BuildContext context) {
+    return widget.builder(context);
+  }
+}

@@ -1,4 +1,5 @@
 
+import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 
 import '../../customTheme.dart';
@@ -26,41 +27,43 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        optionallySetupSelectable(
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 3),
-            height: 25,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                SizedBox(width: 15.0 * widget.depth,),
-                if (widget.entry.isCollapsible)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 4, left: 2),
-                    child: IconButton(
-                      padding: EdgeInsets.zero,
-                      constraints: BoxConstraints(
-                        maxWidth: 14
+        setupContextMenu(
+          child: optionallySetupSelectable(
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 3),
+              height: 25,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  SizedBox(width: 15.0 * widget.depth,),
+                  if (widget.entry.isCollapsible)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 4, left: 2),
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        constraints: BoxConstraints(
+                          maxWidth: 14
+                        ),
+                        splashRadius: 14,
+                        onPressed: toggleCollapsed,
+                        icon: Icon(widget.entry.isCollapsed ? Icons.chevron_right : Icons.expand_more, size: 17),
                       ),
-                      splashRadius: 14,
-                      onPressed: toggleCollapsed,
-                      icon: Icon(widget.entry.isCollapsed ? Icons.chevron_right : Icons.expand_more, size: 17),
                     ),
-                  ),
-                if (widget.entry.icon != null)
-                  Icon(widget.entry.icon!, size: 15, color: widget.entry.iconColor,),
-                SizedBox(width: 5),
-                Expanded(
-                  child: ValueListenableBuilder(
-                    valueListenable: widget.entry.name,
-                    builder: (context, name, child) =>  Text(
-                      widget.entry.name.toString(),
-                      overflow: TextOverflow.ellipsis,
-                      textScaleFactor: 0.85,
-                    ),
+                  if (widget.entry.icon != null)
+                    Icon(widget.entry.icon!, size: 15, color: widget.entry.iconColor,),
+                  SizedBox(width: 5),
+                  Expanded(
+                    child: ValueListenableBuilder(
+                      valueListenable: widget.entry.name,
+                      builder: (context, name, child) =>  Text(
+                        widget.entry.name.toString(),
+                        overflow: TextOverflow.ellipsis,
+                        textScaleFactor: 0.85,
+                      ),
+                    )
                   )
-                )
-              ]
+                ]
+              ),
             ),
           ),
         ),
@@ -69,6 +72,22 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
             HierarchyEntryWidget(child, depth: widget.depth + 1,)
       ]
 	  );
+  }
+
+  Widget setupContextMenu({ required Widget child }) {
+    return ContextMenuRegion(
+      enableLongPress: false,
+      contextMenu: GenericContextMenu(
+        buttonConfigs: [
+          if (openHierarchyManager.contains(widget.entry))
+            ContextMenuButtonConfig(
+              "Close",
+              onPressed: () => openHierarchyManager.remove(widget.entry),
+            ),
+        ],
+      ),
+      child: child,
+    );
   }
 
   Widget optionallySetupSelectable(Widget child) {
