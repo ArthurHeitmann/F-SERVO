@@ -19,12 +19,20 @@ class HierarchyEntryWidget extends ChangeNotifierWidget {
   State<HierarchyEntryWidget> createState() => _HierarchyEntryState();
 }
 
+const entryIcons = {
+  DatHierarchyEntry: Icon(Icons.folder, color: Color.fromRGBO(0xfd, 0xd8, 0x35, 1), size: 15),
+  PakHierarchyEntry: Icon(Icons.source, color: Color.fromRGBO(0xff, 0x98, 0x00, 1), size: 15),
+  HapGroupHierarchyEntry: Icon(Icons.workspaces, color: Color.fromRGBO(0x00, 0xbc, 0xd4, 1), size: 15),
+  XmlScriptHierarchyEntry: Icon(Icons.description, color: Color.fromRGBO(0xff, 0x70, 0x43, 1), size: 15),
+};
+
 class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
   bool isHovered = false;
   bool isClicked = false;
 
   @override
   Widget build(BuildContext context) {
+    Icon? icon = entryIcons[widget.entry.runtimeType];
     return Column(
       children: [
         setupContextMenu(
@@ -49,8 +57,8 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
                         icon: Icon(widget.entry.isCollapsed ? Icons.chevron_right : Icons.expand_more, size: 17),
                       ),
                     ),
-                  if (widget.entry.icon != null)
-                    Icon(widget.entry.icon!, size: 15, color: widget.entry.iconColor,),
+                  if (icon != null)
+                    icon,
                   SizedBox(width: 5),
                   Expanded(
                     child: ValueListenableBuilder(

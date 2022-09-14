@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter/material.dart';
 import 'package:path/path.dart' as path;
 import 'package:xml/xml.dart';
 
@@ -16,8 +15,6 @@ import 'undoable.dart';
 
 class HierarchyEntry extends NestedNotifier<HierarchyEntry> with Undoable {
   StringProp name;
-  final IconData? icon;
-  final Color? iconColor;
   final bool isSelectable;
   bool _isSelected = false;
   final bool isCollapsible;
@@ -25,7 +22,7 @@ class HierarchyEntry extends NestedNotifier<HierarchyEntry> with Undoable {
   final bool isOpenable;
   final int priority;
 
-  HierarchyEntry(String name, this.priority, this.isSelectable, this.isCollapsible, this.isOpenable, { this.icon, this.iconColor })
+  HierarchyEntry(String name, this.priority, this.isSelectable, this.isCollapsible, this.isOpenable)
     : name = StringProp(name), super([]);
 
   bool get isSelected => _isSelected;
@@ -50,7 +47,7 @@ class HierarchyEntry extends NestedNotifier<HierarchyEntry> with Undoable {
   
   @override
   Undoable takeSnapshot() {
-    var snapshot = HierarchyEntry(name.value, priority, isSelectable, isCollapsible, isOpenable, icon: icon);
+    var snapshot = HierarchyEntry(name.value, priority, isSelectable, isCollapsible, isOpenable);
     snapshot.overrideUuidForUndoable(uuid);
     snapshot._isSelected = _isSelected;
     snapshot._isCollapsed = _isCollapsed;
@@ -73,12 +70,12 @@ class HierarchyEntry extends NestedNotifier<HierarchyEntry> with Undoable {
 class FileHierarchyEntry extends HierarchyEntry {
   final String path;
 
-  FileHierarchyEntry(String name, this.path, int priority, bool isCollapsible, bool isOpenable, { IconData? icon, Color? iconColor })
-    : super(name, priority, true, isCollapsible, isOpenable, icon: icon, iconColor: iconColor);
+  FileHierarchyEntry(String name, this.path, int priority, bool isCollapsible, bool isOpenable)
+    : super(name, priority, true, isCollapsible, isOpenable);
   
   @override
   Undoable takeSnapshot() {
-    var snapshot = FileHierarchyEntry(name.value, path, priority, isCollapsible, isOpenable, icon: icon);
+    var snapshot = FileHierarchyEntry(name.value, path, priority, isCollapsible, isOpenable);
     snapshot.overrideUuidForUndoable(uuid);
     snapshot._isSelected = _isSelected;
     snapshot._isCollapsed = _isCollapsed;
@@ -99,12 +96,12 @@ class FileHierarchyEntry extends HierarchyEntry {
 class ExtractableHierarchyEntry extends FileHierarchyEntry {
   final String extractedPath;
 
-  ExtractableHierarchyEntry(String name, String filePath, this.extractedPath, int priority, bool isCollapsible, bool isOpenable, { IconData? icon, Color? iconColor })
-    : super(name, filePath, priority, isCollapsible, isOpenable, icon: icon, iconColor: iconColor);
+  ExtractableHierarchyEntry(String name, String filePath, this.extractedPath, int priority, bool isCollapsible, bool isOpenable)
+    : super(name, filePath, priority, isCollapsible, isOpenable);
   
   @override
   Undoable takeSnapshot() {
-    var snapshot = ExtractableHierarchyEntry(name.value, this.path, extractedPath, priority, isCollapsible, isOpenable, icon: icon);
+    var snapshot = ExtractableHierarchyEntry(name.value, this.path, extractedPath, priority, isCollapsible, isOpenable);
     snapshot.overrideUuidForUndoable(uuid);
     snapshot._isSelected = _isSelected;
     snapshot._isCollapsed = _isCollapsed;
@@ -124,7 +121,7 @@ class ExtractableHierarchyEntry extends FileHierarchyEntry {
 
 class DatHierarchyEntry extends ExtractableHierarchyEntry {
   DatHierarchyEntry(String name, String path, String extractedPath)
-    : super(name, path, extractedPath, 10, true, false, icon: Icons.folder);
+    : super(name, path, extractedPath, 10, true, false);
 
   @override
   HierarchyEntry clone() {
@@ -140,7 +137,7 @@ class PakHierarchyEntry extends ExtractableHierarchyEntry {
   final Map<int, HapGroupHierarchyEntry> _flatGroups = {};
 
   PakHierarchyEntry(String name, String path, String extractedPath)
-    : super(name, path, extractedPath, 7, true, false, icon: Icons.source, iconColor: Colors.orange);
+    : super(name, path, extractedPath, 7, true, false);
 
   Future<void> readGroups(String groupsXmlPath) async {
     var groupsFile = File(groupsXmlPath);
@@ -237,7 +234,7 @@ class HapGroupHierarchyEntry extends FileHierarchyEntry {
   final tokens = ValueNestedNotifier<GroupToken>([]);
   
   HapGroupHierarchyEntry(String name, this.id)
-    : super(name, "", 5, true, false, icon: Icons.workspaces, iconColor: Colors.blue)
+    : super(name, "", 5, true, false)
   {
     tokens.addListener(notifyListeners);
     
@@ -278,7 +275,7 @@ class XmlScriptHierarchyEntry extends FileHierarchyEntry {
   String _hapName = "";
 
   XmlScriptHierarchyEntry(String name, String path)
-    : super(name, path, 2, false, true, icon: Icons.description, iconColor: Colors.green)
+    : super(name, path, 2, false, true)
   {
     this.name.transform = (str) {
       if (_hapName.isNotEmpty)
