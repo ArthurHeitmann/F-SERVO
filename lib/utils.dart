@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:crclib/catalog.dart';
-import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 
 import 'fileTypeUtils/yax/japToEng.dart';
@@ -35,7 +34,7 @@ bool isInt(String str) {
 }
 
 bool isHexInt(String str) {
-  return str.startsWith("0x") && int.tryParse(str.substring(2), radix: 16) != null;
+  return str.startsWith("0x") && int.tryParse(str) != null;
 }
 
 bool isDouble(String str) {

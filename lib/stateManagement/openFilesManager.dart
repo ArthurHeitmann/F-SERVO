@@ -15,8 +15,15 @@ class OpenFileData extends ChangeNotifier with Undoable {
   late final FileType type;
 
   OpenFileData(this._name, this._path)
-    : type = FileType.text,
+    : type = OpenFileData.getFileType(_path),
       _uuid = uuidGen.v1();
+
+  static FileType getFileType(String path) {
+    if (path.endsWith(".xml"))
+      return FileType.xml;
+    else
+      return FileType.text;
+  }
 
   String get uuid => _uuid;
   String get name => _name;

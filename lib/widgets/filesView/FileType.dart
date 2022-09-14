@@ -1,3 +1,20 @@
+import 'package:flutter/material.dart';
+
+import '../../stateManagement/openFileContents.dart';
+import 'TextFileEditor.dart';
+import 'XmlActionsEditor.dart';
+
 enum FileType {
-  text
+  text,
+  xml,
+}
+
+Widget makeFileEditor(FileContent content) {
+  switch (content.id.type) {
+    case FileType.xml:
+      return XmlActionsEditor(fileContent: content as XmlFileContent);
+    // case FileType.text:
+    default:
+      return TextFileEditor(fileContent: content as TextFileContent);
+  }
 }

@@ -17,10 +17,10 @@ mixin Prop<T> implements Listenable, Undoable {
   void updateWith(String str);
 
   static Prop fromString(String str) {
-    if (isInt(str))
+    if (isHexInt(str))
+      return HexProp(int.parse(str));
+    else if (isInt(str))
       return IntProp(int.parse(str));
-    else if (isHexInt(str))
-      return HexProp(int.parse(str, radix: 16));
     else if (isDouble(str))
       return DoubleProp(double.parse(str));
     else if (isVector(str))
@@ -44,6 +44,9 @@ abstract class ValueProp<T> extends ValueNotifier<T> with Prop<T> {
     super.value = value;
     undoHistoryManager.onUndoableEvent();
   }
+
+  @override
+  String toString() => value.toString();
 }
 
 class IntProp extends ValueProp<int> {
@@ -96,7 +99,7 @@ class HexProp extends ValueProp<int> {
       setValueAndStr(strHash, str);
     }
     else {
-      value = int.parse(str.substring(2), radix: 16);
+      value = int.parse(str);
     }
   }
   

@@ -5,7 +5,7 @@ import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/openFileContents.dart';
 
 class TextFileEditor extends ChangeNotifierWidget {
-  late final FileTextContent fileContent;
+  late final TextFileContent fileContent;
 
   TextFileEditor({Key? key, required this.fileContent}) : super(key: key, notifier: fileContent);
 

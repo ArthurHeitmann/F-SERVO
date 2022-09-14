@@ -5,7 +5,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:cross_file/cross_file.dart';
 import 'FileTabEntry.dart';
-import 'TextFileEditor.dart';
+import 'FileType.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../../stateManagement/ChangeNotifierWidget.dart';
@@ -87,10 +87,8 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
   Widget getOrMakeFileEditor(OpenFileData file) {
     if (cachedEditors.containsKey(file))
       return cachedEditors[file]!;
-    var fileContent = fileContentsManager.getContent(file) as FileTextContent;
-    Widget newEntry = TextFileEditor(
-      fileContent: fileContent
-    );
+    var fileContent = fileContentsManager.getContent(file)!;
+    Widget newEntry = makeFileEditor(fileContent);
     newEntry = SingleChildScrollView(
       key: fileContent.key,
       controller: fileContent.scrollController,

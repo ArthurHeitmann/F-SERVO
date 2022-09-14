@@ -1,11 +1,13 @@
 
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:xml/xml.dart';
 
 import '../widgets/filesView/FileType.dart';
 import 'nestedNotifier.dart';
 import 'openFilesManager.dart';
 import 'undoable.dart';
+import 'xmlProp.dart';
 
 class FileContent extends ChangeNotifier with Undoable {
   final OpenFileData id;
@@ -21,8 +23,10 @@ class FileContent extends ChangeNotifier with Undoable {
 
   factory FileContent.fromFile(OpenFileData file) {
     switch (file.type) {
+      case FileType.xml:
+        return XmlFileContent(file);
       case FileType.text:
-        return FileTextContent(file);
+        return TextFileContent(file);
       default:
         throw UnsupportedError("File type ${file.type} is not supported");
     }
@@ -42,10 +46,10 @@ class FileContent extends ChangeNotifier with Undoable {
   }
 }
 
-class FileTextContent extends FileContent {
+class TextFileContent extends FileContent {
   String _text = "Loading...";
 
-  FileTextContent(super.id);
+  TextFileContent(super.id);
 
   @override
   Future<void> load() async {
@@ -65,17 +69,40 @@ class FileTextContent extends FileContent {
 
   @override
   void restoreWith(Undoable snapshot) {
-    var content = snapshot as FileTextContent;
+    var content = snapshot as TextFileContent;
     // _isLoaded = content._isLoaded;
     text = content.text;
   }
 
   @override
   Undoable takeSnapshot() {
-    var content = FileTextContent(id);
+    var content = TextFileContent(id);
     content._isLoaded = _isLoaded;
     content.text = text;
     return content;
+  }
+}
+
+class XmlFileContent extends FileContent {
+  XmlProp? root;
+
+  XmlFileContent(super.id);
+
+  @override
+  Future<void> load() async {
+    if (_isLoaded) return;
+    var text = await File(id.path).readAsString();
+    var doc = XmlDocument.parse(text);
+    root = XmlProp.fromXml(doc.firstElementChild!);
+    root!.addListener(notifyListeners);
+    _isLoaded = true;
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    root?.removeListener(notifyListeners);
+    super.dispose();
   }
 }
 
