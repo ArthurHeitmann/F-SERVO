@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../stateManagement/openFileContents.dart';
 import 'TextFileEditor.dart';
-import 'XmlActionsEditor.dart';
+import 'XmlFileEditor.dart';
 
 enum FileType {
   text,
@@ -12,7 +12,7 @@ enum FileType {
 Widget makeFileEditor(FileContent content) {
   switch (content.id.type) {
     case FileType.xml:
-      return XmlActionsEditor(fileContent: content as XmlFileContent);
+      return XmlFileEditor(fileContent: content as XmlFileContent);
     // case FileType.text:
     default:
       return TextFileEditor(fileContent: content as TextFileContent);

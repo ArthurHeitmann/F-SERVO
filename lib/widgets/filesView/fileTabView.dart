@@ -89,7 +89,7 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
       return cachedEditors[file]!;
     var fileContent = fileContentsManager.getContent(file)!;
     Widget newEntry = makeFileEditor(fileContent);
-    newEntry = SingleChildScrollView(
+    newEntry = PrimaryScrollController(
       key: fileContent.key,
       controller: fileContent.scrollController,
       child: newEntry,
