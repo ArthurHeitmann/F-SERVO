@@ -4,6 +4,7 @@ import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:cross_file/cross_file.dart';
+import '../misc/SmoothSingleChildScrollView.dart';
 import 'FileTabEntry.dart';
 import 'FileType.dart';
 import 'package:window_manager/window_manager.dart';
@@ -85,11 +86,11 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
   }
 
   Widget getOrMakeFileEditor(OpenFileData file) {
-    if (cachedEditors.containsKey(file))
-      return cachedEditors[file]!;
+    // if (cachedEditors.containsKey(file)) // TODO enable again
+    //   return cachedEditors[file]!;
     var fileContent = fileContentsManager.getContent(file)!;
     Widget newEntry = makeFileEditor(fileContent);
-    newEntry = SingleChildScrollView(
+    newEntry = SmoothSingleChildScrollView(
       key: fileContent.key,
       controller: fileContent.scrollController,
       child: newEntry,

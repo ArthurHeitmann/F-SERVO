@@ -6,6 +6,7 @@ import '../../customTheme.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/FileHierarchy.dart';
 import '../../stateManagement/miscValues.dart';
+import '../misc/SmoothSingleChildScrollView.dart';
 import 'HierarchyEntryWidget.dart';
 
 class FileExplorer extends ChangeNotifierWidget {
@@ -41,10 +42,14 @@ class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
           Expanded(
             child: Stack(
               children: [
-                ListView(
-                  children: openHierarchyManager
-                    .map((element) => HierarchyEntryWidget(element))
-                    .toList(),
+                SmoothSingleChildScrollView(
+                  controller: ScrollController(),
+                  stepSize: 60,
+                  child: Column(
+                    children: openHierarchyManager
+                      .map((element) => HierarchyEntryWidget(element))
+                      .toList(),
+                  ),
                 ),
                 if (openHierarchyManager.isEmpty)
                   Center(
