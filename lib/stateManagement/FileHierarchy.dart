@@ -13,6 +13,8 @@ import 'nestedNotifier.dart';
 import '../fileTypeUtils/pak/pakExtractor.dart';
 import 'undoable.dart';
 
+final _pakGroupIdMatcher = RegExp(r"^\w+_([a-f0-9]+)_grp\.pak$", caseSensitive: false);
+
 class HierarchyEntry extends NestedNotifier<HierarchyEntry> with Undoable {
   StringProp name;
   final bool isSelectable;
@@ -139,7 +141,7 @@ class PakHierarchyEntry extends ExtractableHierarchyEntry {
   PakHierarchyEntry(String name, String path, String extractedPath)
     : super(name, path, extractedPath, 7, true, false);
 
-  Future<void> readGroups(String groupsXmlPath) async {
+  Future<void> readGroups(String groupsXmlPath, HierarchyEntry? parent) async {
     var groupsFile = File(groupsXmlPath);
     if (!await groupsFile.exists()) {
       var yaxPath = groupsXmlPath.replaceAll(".xml", ".yax");
@@ -170,11 +172,33 @@ class PakHierarchyEntry extends ExtractableHierarchyEntry {
         }
       }
       
+      _findAndAddChildPak(parent, groupId, groupEntry);
+
       _flatGroups[groupId] = groupEntry;
       if (_flatGroups.containsKey(parentId))
         _flatGroups[parentId]!.add(groupEntry);
       else
         add(groupEntry);
+    }
+  }
+
+  void _findAndAddChildPak(HierarchyEntry? parent, int groupId, HierarchyEntry groupEntry) {
+    if (parent == null)
+      return;
+    if (parent is! DatHierarchyEntry)
+      return;
+    
+    var childPak = parent.findRecWhere((entry) {
+      if (entry is! PakHierarchyEntry)
+        return false;
+      var pakGroupId = _pakGroupIdMatcher.firstMatch(entry.name.value);
+      if (pakGroupId == null)
+        return false;
+      return int.parse(pakGroupId.group(1)!, radix: 16) == groupId;
+    });
+    if (childPak != null) {
+      openHierarchyManager.parentOf(childPak).remove(childPak);
+      groupEntry.add(childPak);
     }
   }
 
@@ -341,30 +365,6 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
 
   OpenHierarchyManager() : super([]);
 
-  HierarchyEntry? findRecWhere(bool Function(HierarchyEntry) test, { Iterable<HierarchyEntry>? children }) {
-    children ??= this;
-    for (var child in children) {
-      if (test(child))
-        return child;
-      var result = findRecWhere(test, children: child);
-      if (result != null) {
-        return result;
-      }
-    }
-    return null;
-  }
-
-  List<HierarchyEntry> findAllRecWhere(bool Function(HierarchyEntry) test, { Iterable<HierarchyEntry>? children }) {
-    children ??= this;
-    var result = <HierarchyEntry>[];
-    for (var child in children) {
-      if (test(child))
-        result.add(child);
-      result.addAll(findAllRecWhere(test, children: child));
-    }
-    return result;
-  }
-
   NestedNotifier parentOf(HierarchyEntry entry) {
     return findRecWhere((e) => e.contains(entry)) ?? this;
   }
@@ -439,6 +439,16 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
     return openDat(srcDatPath, parent: parent);
   }
 
+  
+  HapGroupHierarchyEntry? findPakParentGroup(String fileName) {
+    var match = _pakGroupIdMatcher.firstMatch(fileName);
+    if (match == null)
+      return null;
+    var groupId = int.parse(match.group(1)!, radix: 16);
+    var parentGroup = findRecWhere((entry) => entry is HapGroupHierarchyEntry && entry.id == groupId) as HapGroupHierarchyEntry?;
+    return parentGroup;
+  }
+
   Future<void> openPak(String pakPath, { HierarchyEntry? parent }) async {
     if (findRecWhere((entry) => entry is PakHierarchyEntry && entry.path == pakPath) != null)
       return;
@@ -449,11 +459,12 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
       await extractPakFiles(pakPath, yaxToXml: true);
     }
     var pakEntry = PakHierarchyEntry(pakPath.split(Platform.pathSeparator).last, pakPath, pakExtractDir);
-    if (parent != null)
-      parent.add(pakEntry);
+    var parentEntry = findPakParentGroup(path.basename(pakPath)) ?? parent;
+    if (parentEntry != null)
+      parentEntry.add(pakEntry);
     else
       add(pakEntry);
-    await pakEntry.readGroups(path.join(pakExtractDir, "0.xml"));
+    await pakEntry.readGroups(path.join(pakExtractDir, "0.xml"), parent);
 
     var existingEntries = findAllRecWhere((entry) =>
       entry is XmlScriptHierarchyEntry && entry.path.startsWith(pakExtractDir));
