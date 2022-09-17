@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/openFileContents.dart';
 import '../../stateManagement/xmlProp.dart';
-import '../propEditors/XmlPropEditor.dart';
+import '../propEditors/simpleProps/XmlPropEditor.dart';
 import 'XmlActionsEditor.dart';
 
 class XmlFileEditor extends ChangeNotifierWidget {

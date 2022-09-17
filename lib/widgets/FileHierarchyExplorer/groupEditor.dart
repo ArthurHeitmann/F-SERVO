@@ -5,8 +5,8 @@ import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/FileHierarchy.dart';
 import '../../stateManagement/Property.dart';
 import '../misc/smallButton.dart';
-import '../propEditors/genericTextField.dart';
-import '../propEditors/propTextField.dart';
+import '../propEditors/simpleProps/propEditorFactory.dart';
+import '../propEditors/simpleProps/propTextField.dart';
 
 class GroupEditor extends ChangeNotifierWidget {
   GroupEditor({super.key}) : super(notifier: openHierarchyManager);

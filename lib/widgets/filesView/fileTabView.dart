@@ -89,7 +89,7 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
       return cachedEditors[file]!;
     var fileContent = fileContentsManager.getContent(file)!;
     Widget newEntry = makeFileEditor(fileContent);
-    newEntry = PrimaryScrollController(
+    newEntry = SingleChildScrollView(
       key: fileContent.key,
       controller: fileContent.scrollController,
       child: newEntry,
@@ -159,7 +159,12 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
               child: Stack(
                 children: [
                   widget.viewArea.currentFile != null
-                    ? getOrMakeFileEditor(widget.viewArea.currentFile!)
+                    ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(child: getOrMakeFileEditor(widget.viewArea.currentFile!)),
+                      ],
+                    )
                     : Center(child: Text('No file open')),
                   if (isDroppingFile)
                    Positioned(

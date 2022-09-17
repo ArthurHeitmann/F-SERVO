@@ -1,10 +1,7 @@
 
 import 'package:flutter/material.dart';
 
-import '../../customTheme.dart';
-import '../../stateManagement/Property.dart';
-import 'HexPropTextField.dart';
-import 'propTextField.dart';
+import '../../../customTheme.dart';
 
 Widget genericTextField(BuildContext context, {
   Widget? left,
@@ -35,13 +32,4 @@ Widget genericTextField(BuildContext context, {
       ],
     ),
   );
-}
-
-Widget makePropEditor(Prop prop) {
-  switch (prop.type) {
-    case PropType.hexInt:
-      return HexPropTextField(prop: prop as HexProp);
-    default:
-      return PropTextField(prop: prop);
-  }
 }

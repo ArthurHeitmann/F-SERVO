@@ -1,4 +1,6 @@
 
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 
 class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
@@ -20,6 +22,8 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
   final Color? hierarchyEntrySelected;
   final Color? hierarchyEntryClicked;
   final Color? formElementBgColor;
+  final Color? actionBgColor;
+  final double? actionBorderRadius;
 
 
   NierThemeExtension({
@@ -41,6 +45,8 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
     this.hierarchyEntrySelected,
     this.hierarchyEntryClicked,
     this.formElementBgColor,
+    this.actionBgColor,
+    this.actionBorderRadius,
   });
   
   @override
@@ -63,6 +69,8 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
     Color? hierarchyEntrySelected,
     Color? hierarchyEntryClicked,
     Color? formElementBgColor,
+    Color? actionBgColor,
+    double? actionBorderRadius,
   }) {
     return NierThemeExtension(
       editorBackgroundColor: editorBackgroundColor ?? this.editorBackgroundColor,
@@ -83,6 +91,8 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
       hierarchyEntrySelected: hierarchyEntrySelected ?? this.hierarchyEntrySelected,
       hierarchyEntryClicked: hierarchyEntryClicked ?? this.hierarchyEntryClicked,
       formElementBgColor: formElementBgColor ?? this.formElementBgColor,
+      actionBgColor: actionBgColor ?? this.actionBgColor,
+      actionBorderRadius: actionBorderRadius ?? this.actionBorderRadius,
     );
   }
   
@@ -110,6 +120,8 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
       hierarchyEntrySelected: Color.lerp(hierarchyEntrySelected, other.hierarchyEntrySelected, t),
       hierarchyEntryClicked: Color.lerp(hierarchyEntryClicked, other.hierarchyEntryClicked, t),
       formElementBgColor: Color.lerp(formElementBgColor, other.formElementBgColor, t),
+      actionBgColor: Color.lerp(actionBgColor, other.actionBgColor, t),
+      actionBorderRadius: lerpDouble(actionBorderRadius, other.actionBorderRadius, t),
     );
   }
 }
@@ -134,6 +146,8 @@ class NierDarkThemeExtension extends NierThemeExtension {
       hierarchyEntrySelected: Color.fromRGBO(255, 255, 255, 0.175),
       hierarchyEntryClicked: Color.fromRGBO(255, 255, 255, 0.2),
       formElementBgColor: Color.fromRGBO(37, 37, 37, 1),
+      actionBgColor: Color.fromARGB(255, 53, 53, 53),
+      actionBorderRadius: 10,
     );
 
   static ThemeData makeTheme() {

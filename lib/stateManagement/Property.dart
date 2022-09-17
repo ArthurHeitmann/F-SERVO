@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 
 import '../fileTypeUtils/yax/hashToStringMap.dart';
 import '../utils.dart';
+import 'miscValues.dart';
 import 'undoable.dart';
 
 enum PropType {
@@ -72,15 +73,21 @@ class HexProp extends ValueProp<int> {
 
   String? _strVal;
 
-  HexProp(super.value) : _strVal = hashToStringMap[value];
+  HexProp(super.value) {
+    _strVal = getReverseHash(value);
+  }
 
   String? get strVal => _strVal;
 
   bool get isHashed => _strVal != null;
 
+  String? getReverseHash(int hash) {
+    return hash != 0 ? hashToStringMap[hash] : null;
+  }
+
   @override
   set value(value) {
-    _strVal = hashToStringMap[value];
+    _strVal = getReverseHash(value);
     super.value = value;
   }
 
@@ -184,9 +191,17 @@ class StringProp extends ValueProp<String> {
   @override
   final PropType type = PropType.string;
   
-  String Function(String) transform = (str) => str;
+  String Function(String) transform = tryToTranslate;
 
-  StringProp(super.value);
+  StringProp(super.value) {
+    shouldAutoTranslate.addListener(notifyListeners);
+  }
+
+  @override
+  void dispose() {
+    shouldAutoTranslate.removeListener(notifyListeners);
+    super.dispose();
+  }
   
   @override
   void updateWith(String str) {

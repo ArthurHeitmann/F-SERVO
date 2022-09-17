@@ -2,9 +2,9 @@
 
 import 'package:flutter/material.dart';
 
-import '../../stateManagement/ChangeNotifierWidget.dart';
-import '../../stateManagement/xmlProp.dart';
-import 'propTextField.dart';
+import '../../../stateManagement/ChangeNotifierWidget.dart';
+import '../../../stateManagement/xmlProp.dart';
+import 'propEditorFactory.dart';
 
 class XmlPropEditor extends ChangeNotifierWidget {
   final XmlProp prop;
@@ -23,10 +23,11 @@ class _XmlPropEditorState extends ChangeNotifierState<XmlPropEditor> {
         Row(
           children: [
             Text(widget.prop.tagName),
+            SizedBox(width: 10),
             if (widget.prop.value.toString().isNotEmpty)
               ConstrainedBox(
                 constraints: BoxConstraints(maxWidth: 200),
-                child: PropTextField(prop: widget.prop.value)
+                child: makePropEditor(widget.prop.value)
               ),
           ],
         ),

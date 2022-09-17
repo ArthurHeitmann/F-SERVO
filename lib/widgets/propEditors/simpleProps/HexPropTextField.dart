@@ -1,10 +1,10 @@
 
 import 'package:flutter/material.dart';
 
-import '../../customTheme.dart';
-import '../../stateManagement/ChangeNotifierWidget.dart';
-import '../../stateManagement/Property.dart';
-import '../../utils.dart';
+import '../../../customTheme.dart';
+import '../../../stateManagement/ChangeNotifierWidget.dart';
+import '../../../stateManagement/Property.dart';
+import '../../../utils.dart';
 
 class HexPropTextField extends ChangeNotifierWidget {
   final HexProp prop;

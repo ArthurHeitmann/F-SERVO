@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
 
-import '../../stateManagement/Property.dart';
+import '../../../stateManagement/Property.dart';
 import 'genericTextField.dart';
 
 class PropTextField<P extends Prop> extends StatelessWidget {

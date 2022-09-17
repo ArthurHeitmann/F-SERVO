@@ -1,31 +1,39 @@
 
 import 'package:flutter/material.dart';
 
-import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/xmlProp.dart';
-import '../propEditors/XmlPropEditor.dart';
+import '../../stateManagement/xmlPropWrappers/xmlActionProp.dart';
+import '../misc/ColumnSeparated.dart';
+import '../propEditors/xmlActions/XmlActionEditorFactory.dart';
+import '../propEditors/xmlActions/xmlArrayEditor.dart';
 
 
-class XmlActionsEditor extends ChangeNotifierWidget {
+class XmlActionsEditor extends XmlArrayEditor {
   final XmlProp root;
 
-  XmlActionsEditor({super.key, required this.root}) : super(notifier: root);
+  XmlActionsEditor({super.key, required this.root})
+    : super(root, root.where((element) => element.tagName == "size").first, "action");
 
   @override
-  State<XmlActionsEditor> createState() => _XmlActionsEditorState();
+  XmlArrayEditorState createState() => _XmlActionsEditorState();
 }
 
-class _XmlActionsEditorState extends ChangeNotifierState<XmlActionsEditor> {
+class _XmlActionsEditorState extends XmlArrayEditorState {
   @override
   Widget build(BuildContext context) {
-    var actions = widget.root.where((element) => element.tagName == "action").toList();
-    return ListView.builder(
-      itemCount: actions.length,
-      itemBuilder: (context, index) => 
-        XmlPropEditor(
-          key: ValueKey(actions[index]),
-          prop: actions[index],
-        ),
+    var actions = getChildProps().toList();
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: ColumnSeparated(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        separatorHeight: 20,
+        children: actions
+          .map((child) => makeXmlActionEditor(
+            key: ValueKey(child),
+            action: XmlActionProp(child),
+          ))
+          .toList()
+      ),
     );
   }
 }
