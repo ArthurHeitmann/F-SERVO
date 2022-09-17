@@ -48,14 +48,30 @@ class _SmoothSingleChildScrollViewState extends State<SmoothSingleChildScrollVie
     widget.controller.animateTo(targetOffset, duration: widget.duration, curve: Curves.linear);
   }
 
+  void onContinueScroll(double dy) {
+    widget.controller.jumpTo(widget.controller.offset - dy);
+    var velocity = dy / (1 / 60);
+    const drag = 0.1;
+    var secondsToStop = velocity.abs() / drag;
+    var distance = (velocity * secondsToStop) / 2;
+    // TODO fix this formula
+    // widget.controller.animateTo(widget.controller.offset - distance, duration: Duration(milliseconds: (secondsToStop * 1000).round()), curve: Curves.easeOut);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Listener(
-      onPointerSignal: (event) => event is PointerScrollEvent ? onScroll(event) : null,
-      child: SingleChildScrollView(
-        controller: widget.controller,
-        physics: const _SmoothScrollNoScrollPhysics(),
-        child: widget.child,
+    return GestureDetector(
+      onPanUpdate: (event) => onContinueScroll(event.delta.dy),
+      child: Listener(
+        onPointerSignal: (event) {
+          print(event);
+          event is PointerScrollEvent ? onScroll(event) : null;
+        },
+        child: SingleChildScrollView(
+          controller: widget.controller,
+          physics: const _SmoothScrollNoScrollPhysics(),
+          child: widget.child,
+        ),
       ),
     );
   }
