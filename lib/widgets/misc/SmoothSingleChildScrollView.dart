@@ -25,6 +25,7 @@ class SmoothSingleChildScrollView extends StatefulWidget {
 
 class _SmoothSingleChildScrollViewState extends State<SmoothSingleChildScrollView> {
   double targetOffset = 0;
+  bool overrideScrollBehavior = true;
 
   @override
   void initState() {
@@ -40,7 +41,9 @@ class _SmoothSingleChildScrollViewState extends State<SmoothSingleChildScrollVie
     targetOffset = widget.controller.offset;
   }
 
-  void onScroll(PointerScrollEvent event) {
+  void onWheelScroll(PointerScrollEvent event) {
+    if (!overrideScrollBehavior)
+      setState(() => overrideScrollBehavior = true);
     targetOffset += widget.stepSize * event.scrollDelta.dy.sign;
     targetOffset = clamp(targetOffset, 0, widget.controller.position.maxScrollExtent);
     if (targetOffset == widget.controller.offset)
@@ -48,46 +51,23 @@ class _SmoothSingleChildScrollViewState extends State<SmoothSingleChildScrollVie
     widget.controller.animateTo(targetOffset, duration: widget.duration, curve: Curves.linear);
   }
 
-  void onContinueScroll(double dy) {
-    widget.controller.jumpTo(widget.controller.offset - dy);
-    var velocity = dy / (1 / 60);
-    const drag = 0.1;
-    var secondsToStop = velocity.abs() / drag;
-    var distance = (velocity * secondsToStop) / 2;
-    // TODO fix this formula
-    // widget.controller.animateTo(widget.controller.offset - distance, duration: Duration(milliseconds: (secondsToStop * 1000).round()), curve: Curves.easeOut);
+  void onContinuosScroll(double dy) {
+    if (overrideScrollBehavior)
+      setState(() => overrideScrollBehavior = false);
   }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onPanUpdate: (event) => onContinueScroll(event.delta.dy),
+      onPanUpdate: (event) => onContinuosScroll(event.delta.dy),
       child: Listener(
-        onPointerSignal: (event) {
-          print(event);
-          event is PointerScrollEvent ? onScroll(event) : null;
-        },
+        onPointerSignal: (event) => event is PointerScrollEvent ? onWheelScroll(event) : null,
         child: SingleChildScrollView(
           controller: widget.controller,
-          physics: const _SmoothScrollNoScrollPhysics(),
+          physics: overrideScrollBehavior ? NeverScrollableScrollPhysics() : null,
           child: widget.child,
         ),
       ),
     );
   }
-}
-
-class _SmoothScrollNoScrollPhysics extends ScrollPhysics {
-  const _SmoothScrollNoScrollPhysics({ super.parent });
-
-  @override
-  _SmoothScrollNoScrollPhysics applyTo(ScrollPhysics? ancestor) { // TODO check platform
-    return _SmoothScrollNoScrollPhysics(parent: buildParent(ancestor));
-  }
-
-  @override
-  bool shouldAcceptUserOffset(ScrollMetrics position) => false;
-
-  @override
-  bool get allowImplicitScrolling => false;
 }
