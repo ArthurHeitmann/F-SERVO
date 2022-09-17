@@ -15,7 +15,10 @@ class XmlProp extends NestedNotifier<XmlProp> {
   XmlProp({ required this.tagId, String? tagName, Prop? value, String? strValue, List<XmlProp>? children }) :
     tagName = tagName ?? hashToStringMap[tagId] ?? "UNKNOWN",
     value = value ?? Prop.fromString(strValue ?? ""),
-    super(children ?? []);
+    super(children ?? [])
+  {
+    this.value.addListener(notifyListeners);
+  }
   
   XmlProp.fromXml(XmlElement root) :
     tagId = crc32(root.localName),
@@ -23,6 +26,12 @@ class XmlProp extends NestedNotifier<XmlProp> {
     value = Prop.fromString(root.childElements.isEmpty ? root.text : ""),
     super(root.childElements.map((XmlElement child) => XmlProp.fromXml(child)).toList());
 
+  @override
+  void dispose() {
+    value.removeListener(notifyListeners);
+    super.dispose();
+  }
+  
   @override
   Undoable takeSnapshot() {
     return XmlProp(

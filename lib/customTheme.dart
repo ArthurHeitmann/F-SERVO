@@ -155,7 +155,9 @@ class NierDarkThemeExtension extends NierThemeExtension {
       brightness: Brightness.dark,
       extensions: [NierDarkThemeExtension()],
       scrollbarTheme: ScrollbarThemeData(
-        radius: Radius.zero
+        radius: Radius.zero,
+        crossAxisMargin: 0,
+        thickness: MaterialStateProperty.all(12),
       ),
       inputDecorationTheme: InputDecorationTheme(
         border: InputBorder.none,
