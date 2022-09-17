@@ -93,7 +93,7 @@ class XmlFileContent extends FileContent {
     if (_isLoaded) return;
     var text = await File(id.path).readAsString();
     var doc = XmlDocument.parse(text);
-    root = XmlProp.fromXml(doc.firstElementChild!);
+    root = XmlProp.fromXml(doc.firstElementChild!, file: this);
     root!.addListener(notifyListeners);
     _isLoaded = true;
     notifyListeners();

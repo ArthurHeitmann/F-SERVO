@@ -7,6 +7,7 @@ import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/FileHierarchy.dart';
 import '../../stateManagement/miscValues.dart';
 import '../misc/SmoothSingleChildScrollView.dart';
+import '../misc/confirmDialog.dart';
 import 'HierarchyEntryWidget.dart';
 
 class FileExplorer extends ChangeNotifierWidget {
@@ -82,6 +83,14 @@ class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
         ),
         Row(
           children: [
+            IconButton(
+              padding: EdgeInsets.all(5),
+              constraints: BoxConstraints(),
+              iconSize: 20,
+              splashRadius: 20,
+              icon: Icon(Icons.run_circle, size: 17),
+              onPressed: () => showOptionsDialog(context, title: "test lmao"),
+            ),
             Tooltip(
               message: "Auo translate Jap to Eng",
               waitDuration: Duration(milliseconds: 500),

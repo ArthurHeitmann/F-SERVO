@@ -28,7 +28,7 @@ class OpenFileData extends ChangeNotifier with Undoable {
   String get uuid => _uuid;
   String get name => _name;
   String get path => _path;
-  bool get unsavedChanges => _unsavedChanges;
+  bool get hasUnsavedChanges => _unsavedChanges;
 
   set name(String value) {
     if (value == _name) return;
@@ -40,7 +40,7 @@ class OpenFileData extends ChangeNotifier with Undoable {
     _path = value;
     notifyListeners();
   }
-  set unsavedChanges(bool value) {
+  set hasUnsavedChanges(bool value) {
     if (value == _unsavedChanges) return;
     _unsavedChanges = value;
     notifyListeners();
@@ -59,7 +59,7 @@ class OpenFileData extends ChangeNotifier with Undoable {
     var content = snapshot as OpenFileData;
     name = content._name;
     path = content._path;
-    unsavedChanges = content._unsavedChanges;
+    hasUnsavedChanges = content._unsavedChanges;
   }
 
   void overrideUuidForUndoable(String uuid) {
