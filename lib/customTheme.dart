@@ -24,6 +24,8 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
   final Color? formElementBgColor;
   final Color? actionBgColor;
   final double? actionBorderRadius;
+  final ButtonStyle? dialogPrimaryButtonStyle;
+  final ButtonStyle? dialogSecondaryButtonStyle;
 
 
   NierThemeExtension({
@@ -47,6 +49,8 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
     this.formElementBgColor,
     this.actionBgColor,
     this.actionBorderRadius,
+    this.dialogPrimaryButtonStyle,
+    this.dialogSecondaryButtonStyle,
   });
   
   @override
@@ -71,6 +75,8 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
     Color? formElementBgColor,
     Color? actionBgColor,
     double? actionBorderRadius,
+    ButtonStyle? dialogPrimaryButtonStyle,
+    ButtonStyle? dialogSecondaryButtonStyle,
   }) {
     return NierThemeExtension(
       editorBackgroundColor: editorBackgroundColor ?? this.editorBackgroundColor,
@@ -93,6 +99,8 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
       formElementBgColor: formElementBgColor ?? this.formElementBgColor,
       actionBgColor: actionBgColor ?? this.actionBgColor,
       actionBorderRadius: actionBorderRadius ?? this.actionBorderRadius,
+      dialogPrimaryButtonStyle: dialogPrimaryButtonStyle ?? this.dialogPrimaryButtonStyle,
+      dialogSecondaryButtonStyle: dialogSecondaryButtonStyle ?? this.dialogSecondaryButtonStyle,
     );
   }
   
@@ -122,6 +130,8 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
       formElementBgColor: Color.lerp(formElementBgColor, other.formElementBgColor, t),
       actionBgColor: Color.lerp(actionBgColor, other.actionBgColor, t),
       actionBorderRadius: lerpDouble(actionBorderRadius, other.actionBorderRadius, t),
+      dialogPrimaryButtonStyle: ButtonStyle.lerp(dialogPrimaryButtonStyle, other.dialogPrimaryButtonStyle, t),
+      dialogSecondaryButtonStyle: ButtonStyle.lerp(dialogSecondaryButtonStyle, other.dialogSecondaryButtonStyle, t),
     );
   }
 }
@@ -148,6 +158,16 @@ class NierDarkThemeExtension extends NierThemeExtension {
       formElementBgColor: Color.fromRGBO(37, 37, 37, 1),
       actionBgColor: Color.fromARGB(255, 53, 53, 53),
       actionBorderRadius: 10,
+      dialogPrimaryButtonStyle: ButtonStyle(
+        backgroundColor: MaterialStateProperty.all(Colors.blue),
+        foregroundColor: MaterialStateProperty.all(Colors.white),
+      ),
+      dialogSecondaryButtonStyle: ButtonStyle(
+        backgroundColor: MaterialStateProperty.all(Colors.transparent),
+        foregroundColor: MaterialStateProperty.all(Colors.white),
+        side: MaterialStateProperty.all(BorderSide(color: Colors.grey)),
+        shadowColor: MaterialStateProperty.all(Colors.transparent),
+      ),
     );
 
   static ThemeData makeTheme() {

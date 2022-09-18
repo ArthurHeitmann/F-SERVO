@@ -3,7 +3,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-Future<bool> showOptionsDialog(BuildContext context, { required String title, String? body }) {
+Future<bool> confirmDialog(BuildContext context, { required String title, String? body }) {
   var result = Completer<bool>();
 
   showDialog(

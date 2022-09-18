@@ -6,7 +6,7 @@ import '../utils.dart';
 import 'actions.dart';
 import 'intents.dart';
 
-Widget globalShortcutsWrapper({ required Widget child }) {
+Widget globalShortcutsWrapper(BuildContext context, { required Widget child }) {
   return Shortcuts(
     shortcuts: {
       LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.tab):

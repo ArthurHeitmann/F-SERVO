@@ -1,5 +1,7 @@
 import 'package:path/path.dart' as path;
 
+import '../main.dart';
+import '../widgets/misc/confirmCancelDialog.dart';
 import 'nestedNotifier.dart';
 import 'openFileTypes.dart';
 import 'undoable.dart';
@@ -32,7 +34,19 @@ class FilesAreaManager extends NestedNotifier<OpenFileData> implements Undoable 
     currentFile = this[index];
   }
 
-  void closeFile(OpenFileData file) {
+  Future<void> closeFile(OpenFileData file) async {
+    if (file.hasUnsavedChanges) {
+      var answer = await confirmOrCancelDialog(
+        getGlobalContext(),
+        title: "Save changes?",
+        body: "${file.name} has unsaved changes",
+      );
+      if (answer == true)
+        await file.save();
+      else if (answer == null)
+        return;
+    }
+
     if (currentFile == file)
       switchToClosestFile();
     remove(file);

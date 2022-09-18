@@ -27,18 +27,23 @@ void main() async {
   runApp(MyApp());
 }
 
+final _rootKey = GlobalKey<ScaffoldState>();
+
+BuildContext getGlobalContext() => _rootKey.currentContext!;
+
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return globalShortcutsWrapper(
+    return globalShortcutsWrapper(context,
       child: MaterialApp(
         title: "Nier Scripts Editor",
         debugShowCheckedModeBanner: false,
         darkTheme: NierDarkThemeExtension.makeTheme(),
         themeMode: ThemeMode.dark,
         home: Scaffold(
+          key: _rootKey,
           body: ContextMenuOverlay(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
