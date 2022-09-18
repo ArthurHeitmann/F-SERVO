@@ -2,13 +2,13 @@
 import 'package:flutter/material.dart';
 
 import '../../stateManagement/ChangeNotifierWidget.dart';
-import '../../stateManagement/openFileContents.dart';
+import '../../stateManagement/openFileTypes.dart';
 import '../../stateManagement/xmlProp.dart';
 import '../propEditors/simpleProps/XmlPropEditor.dart';
 import 'XmlActionsEditor.dart';
 
 class XmlFileEditor extends ChangeNotifierWidget {
-  late final XmlFileContent fileContent;
+  late final XmlFileData fileContent;
 
   XmlFileEditor({Key? key, required this.fileContent}) : super(key: key, notifier: fileContent);
 

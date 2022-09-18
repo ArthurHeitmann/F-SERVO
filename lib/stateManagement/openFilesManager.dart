@@ -1,71 +1,8 @@
-import 'package:flutter/material.dart';
 import 'package:path/path.dart' as path;
 
-import '../utils.dart';
-import '../widgets/filesView/FileType.dart';
 import 'nestedNotifier.dart';
-import 'openFileContents.dart';
+import 'openFileTypes.dart';
 import 'undoable.dart';
-
-class OpenFileData extends ChangeNotifier with Undoable {
-  String _uuid;
-  String _name;
-  String _path;
-  bool _unsavedChanges = false;
-  late final FileType type;
-
-  OpenFileData(this._name, this._path)
-    : type = OpenFileData.getFileType(_path),
-      _uuid = uuidGen.v1();
-
-  static FileType getFileType(String path) {
-    if (path.endsWith(".xml"))
-      return FileType.xml;
-    else
-      return FileType.text;
-  }
-
-  String get uuid => _uuid;
-  String get name => _name;
-  String get path => _path;
-  bool get hasUnsavedChanges => _unsavedChanges;
-
-  set name(String value) {
-    if (value == _name) return;
-    _name = value;
-    notifyListeners();
-  }
-  set path(String value) {
-    if (value == _path) return;
-    _path = value;
-    notifyListeners();
-  }
-  set hasUnsavedChanges(bool value) {
-    if (value == _unsavedChanges) return;
-    _unsavedChanges = value;
-    notifyListeners();
-  }
-  
-  @override
-  Undoable takeSnapshot() {
-    var content = OpenFileData(_name, _path);
-    content._unsavedChanges = _unsavedChanges;
-    content.overrideUuidForUndoable(uuid);
-    return content;
-  }
-  
-  @override
-  void restoreWith(Undoable snapshot) {
-    var content = snapshot as OpenFileData;
-    name = content._name;
-    path = content._path;
-    hasUnsavedChanges = content._unsavedChanges;
-  }
-
-  void overrideUuidForUndoable(String uuid) {
-    _uuid = uuid;
-  }
-}
 
 class FilesAreaManager extends NestedNotifier<OpenFileData> implements Undoable {
   OpenFileData? _currentFile;
@@ -99,8 +36,6 @@ class FilesAreaManager extends NestedNotifier<OpenFileData> implements Undoable 
     if (currentFile == file)
       switchToClosestFile();
     remove(file);
-    if (fileContentsManager.isOpened(file))
-      fileContentsManager.remove(fileContentsManager.getContent(file, autoCreate: false)!);
 
     if (length == 0 && areasManager.length > 1)
       areasManager.remove(this);
@@ -192,6 +127,12 @@ class FilesAreaManager extends NestedNotifier<OpenFileData> implements Undoable 
     currentFile = this[nextIndex];
   }
   
+  Future<void> saveAll() async {
+    await Future.wait(
+      where((file) => file.hasUnsavedChanges)
+      .map((file) => file.save()));
+  }
+
   @override
   Undoable takeSnapshot() {
     var snapshot = FilesAreaManager();
@@ -264,7 +205,7 @@ class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
     }
 
     toArea ??= activeArea ?? this[0];
-    OpenFileData file = OpenFileData(path.basename(filePath), filePath);
+    OpenFileData file = OpenFileData.from(path.basename(filePath), filePath);
     toArea.add(file);
     toArea.currentFile = file;
     return file;
@@ -288,6 +229,10 @@ class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
   void clear() {
     _activeArea = null;
     super.clear();
+  }
+  
+  Future<void> saveAll() {
+    return Future.wait(map((area) => area.saveAll()));
   }
 
   @override

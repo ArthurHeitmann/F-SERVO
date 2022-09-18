@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 
 import '../utils.dart';
 import 'FileHierarchy.dart';
-import 'openFileContents.dart';
 import 'openFilesManager.dart';
 
 mixin Undoable {
@@ -13,20 +12,17 @@ mixin Undoable {
 
 class _UndoSnapshot {
   late final Undoable fileAreasSnapshot;
-  late final Undoable fileContentsSnapshot;
   late final Undoable openHierarchySnapshot;
 
-  _UndoSnapshot(this.fileAreasSnapshot, this.fileContentsSnapshot, this.openHierarchySnapshot);
+  _UndoSnapshot(this.fileAreasSnapshot, this.openHierarchySnapshot);
 
   _UndoSnapshot.take() {
     fileAreasSnapshot = areasManager.takeSnapshot();
-    fileContentsSnapshot = fileContentsManager.takeSnapshot();
     openHierarchySnapshot = openHierarchyManager.takeSnapshot();
   }
 
   void restore() {
     areasManager.restoreWith(fileAreasSnapshot);
-    fileContentsManager.restoreWith(fileContentsSnapshot);
     openHierarchyManager.restoreWith(openHierarchySnapshot);
   }
 }

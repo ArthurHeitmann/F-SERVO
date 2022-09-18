@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../stateManagement/openFileContents.dart';
+import '../../stateManagement/openFileTypes.dart';
 import 'TextFileEditor.dart';
 import 'XmlFileEditor.dart';
 
@@ -9,12 +9,12 @@ enum FileType {
   xml,
 }
 
-Widget makeFileEditor(FileContent content) {
-  switch (content.id.type) {
+Widget makeFileEditor(OpenFileData content) {
+  switch (content.type) {
     case FileType.xml:
-      return XmlFileEditor(fileContent: content as XmlFileContent);
+      return XmlFileEditor(fileContent: content as XmlFileData);
     // case FileType.text:
     default:
-      return TextFileEditor(fileContent: content as TextFileContent);
+      return TextFileEditor(fileContent: content as TextFileData);
   }
 }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../customTheme.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';
+import '../../stateManagement/openFileTypes.dart';
 import '../../stateManagement/openFilesManager.dart';
 
 

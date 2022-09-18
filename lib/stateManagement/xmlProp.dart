@@ -1,18 +1,19 @@
 
+import 'package:flutter/material.dart';
 import 'package:xml/xml.dart';
 
 import '../fileTypeUtils/yax/hashToStringMap.dart';
 import '../utils.dart';
 import 'Property.dart';
 import 'nestedNotifier.dart';
-import 'openFileContents.dart';
+import 'openFileTypes.dart';
 import 'undoable.dart';
 
 class XmlProp extends NestedNotifier<XmlProp> {
   final int tagId;
   final String tagName;
   final Prop value;
-  final XmlFileContent? file;
+  final OpenFileData? file;
 
   XmlProp({ required this.file, required this.tagId, String? tagName, Prop? value, String? strValue, List<XmlProp>? children }) :
     tagName = tagName ?? hashToStringMap[tagId] ?? "UNKNOWN",
@@ -34,11 +35,13 @@ class XmlProp extends NestedNotifier<XmlProp> {
   @override
   void dispose() {
     value.removeListener(_onValueChange);
+    if (value is ChangeNotifier)
+      (value as ChangeNotifier).dispose();
     super.dispose();
   }
   
 void _onValueChange() {
-  file?.id.hasUnsavedChanges = true;
+  file?.hasUnsavedChanges = true;
   notifyListeners();
 }
 

@@ -2,10 +2,10 @@
 import 'package:flutter/material.dart';
 
 import '../../stateManagement/ChangeNotifierWidget.dart';
-import '../../stateManagement/openFileContents.dart';
+import '../../stateManagement/openFileTypes.dart';
 
 class TextFileEditor extends ChangeNotifierWidget {
-  late final TextFileContent fileContent;
+  late final TextFileData fileContent;
 
   TextFileEditor({Key? key, required this.fileContent}) : super(key: key, notifier: fileContent);
 
