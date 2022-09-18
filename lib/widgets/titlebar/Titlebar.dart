@@ -4,6 +4,7 @@ import 'package:window_manager/window_manager.dart';
 import '../../customTheme.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/miscValues.dart';
+import '../../stateManagement/openFilesManager.dart';
 import '../../stateManagement/undoable.dart';
 import '../../utils.dart';
 import 'TitlebarButton.dart';
@@ -79,6 +80,12 @@ class TitleBarState extends ChangeNotifierState<TitleBar> with WindowListener {
               splashRadius: 14,
               icon: Icon(Icons.redo, size: 17),
               onPressed: undoHistoryManager.canRedo ? undoHistoryManager.redo : null,
+            ),
+            IconButton(
+              padding: EdgeInsets.zero,
+              splashRadius: 14,
+              icon: Icon(Icons.save, size: 15),
+              onPressed: () => areasManager.saveAll(),
             ),
             Expanded(
               child: GestureDetector(

@@ -33,8 +33,7 @@ class SaveTabAction extends Action<SaveTabIntent> {
 
   @override
   void invoke(SaveTabIntent intent) {
-    if (areasManager.activeArea?.currentFile != null)
-      print("Saving not implemented yet");
+    areasManager.saveAll();
   }
 }
 

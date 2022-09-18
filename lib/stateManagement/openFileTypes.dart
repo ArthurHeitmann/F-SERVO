@@ -153,6 +153,20 @@ class XmlFileData extends OpenFileData {
   }
 
   @override
+  Future<void> save() async {
+    if (_root == null) {
+      await super.save();
+      return;
+    }
+    var doc = XmlDocument();
+    doc.children.add(XmlDeclaration([XmlAttribute(XmlName("version"), "1.0"), XmlAttribute(XmlName("encoding"), "utf-8")]));
+    doc.children.add(_root!.toXml());
+    var xmlStr = "${doc.toXmlString(pretty: true, indent: '\t')}\n";
+    await File(path).writeAsString(xmlStr);
+    await super.save();
+  }
+
+  @override
   void dispose() {
     _root?.removeListener(notifyListeners);
     _root?.dispose();

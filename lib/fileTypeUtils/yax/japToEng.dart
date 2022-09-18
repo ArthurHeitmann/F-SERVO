@@ -6153,7 +6153,6 @@ const Map<String, String> japToEng = {
   "レジスタンスキャンプのリーダーから支援要請を": "Request for help from the leader of the Resistance Camp",
   "受けた。": "I received it.",
   "私と９Sで現地へ向かい支援を行う。": "I will go to the site with 9 S and provide support.",
-  "": "",
   "今回も９Sとバディを組むことになった。": ", I decided to form a buddy with 9 S.",
   "心強い限りだ。": "As far as reassuring.",
   "レジスタンスキャンプ主要スクリプト": "Resistance camp main script",

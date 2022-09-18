@@ -85,3 +85,10 @@ void Function() debounce(void Function() func, int waitMs, { bool leading = fals
       func();
 	};
 }
+
+String doubleToStr(double d) {
+  var int = d.toInt();
+    return int == d
+      ? int.toString()
+      : d.toString();
+}

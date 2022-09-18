@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:xml/xml.dart';
 
 import '../../fileTypeUtils/yax/hashToStringMap.dart';
+import '../../fileTypeUtils/yax/japToEng.dart';
 import '../../utils.dart';
 import '../Property.dart';
 import '../nestedNotifier.dart';
@@ -58,6 +59,33 @@ class XmlProp extends NestedNotifier<XmlProp> {
   void _onValueChange() {
     file?.hasUnsavedChanges = true;
     notifyListeners();
+  }
+
+  XmlElement toXml() {
+    var element = XmlElement(XmlName(tagName));
+    
+    // special attributes
+    if (value is StringProp && (value as StringProp).value.isNotEmpty) {
+      var translated = japToEng[(value as StringProp).value];
+      if (translated != null)
+        element.setAttribute("eng", translated);
+    }
+    else if (value is HexProp && (value as HexProp).isHashed) {
+      element.setAttribute("str", (value as HexProp).strVal);
+    }
+    // text
+    String text;
+    if (value is StringProp)
+      text = (value as StringProp).toString(shouldTransform: false);
+    else
+      text = value.toString();
+    if (text.isNotEmpty)
+      element.children.add(XmlText(text));
+    // children
+    for (var child in this)
+      element.children.add(child.toXml());
+    
+    return element;
   }
 
   @override

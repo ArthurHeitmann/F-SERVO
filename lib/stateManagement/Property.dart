@@ -129,6 +129,9 @@ class DoubleProp extends ValueProp<double> {
   final PropType type = PropType.double;
 
   DoubleProp(super.value);
+
+  @override
+  String toString() => doubleToStr(value);
   
   @override
   void updateWith(String str) {
@@ -164,7 +167,7 @@ class VectorProp extends ChangeNotifier with Prop<List<double>>, IterableMixin<d
   }
 
   @override
-  String toString() => _values.join(" ");
+  String toString() => _values.map(doubleToStr).join(" ");
   
   @override
   void updateWith(String str) {
@@ -209,7 +212,8 @@ class StringProp extends ValueProp<String> {
   }
 
   @override
-  String toString() => transform(value);
+  String toString({ bool shouldTransform = true }) 
+    => shouldTransform ? transform(value) : value;
 
   @override
   Undoable takeSnapshot() {
