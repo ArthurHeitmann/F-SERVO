@@ -7,7 +7,7 @@ import 'package:xml/xml.dart';
 import '../utils.dart';
 import '../widgets/filesView/FileType.dart';
 import 'undoable.dart';
-import 'xmlProp.dart';
+import 'xmlProps/xmlProp.dart';
 
 class OpenFileData extends ChangeNotifier with Undoable {
   String _uuid;

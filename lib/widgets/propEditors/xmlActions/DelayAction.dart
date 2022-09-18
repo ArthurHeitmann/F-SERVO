@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 
-import '../../../stateManagement/xmlPropWrappers/xmlActionProp.dart';
+import '../../../stateManagement/xmlProps/xmlActionProp.dart';
 import '../simpleProps/propEditorFactory.dart';
 import 'XmlActionEditor.dart';
 

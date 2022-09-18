@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/openFileTypes.dart';
-import '../../stateManagement/xmlProp.dart';
+import '../../stateManagement/xmlProps/xmlProp.dart';
 import '../propEditors/simpleProps/XmlPropEditor.dart';
 import 'XmlActionsEditor.dart';
 

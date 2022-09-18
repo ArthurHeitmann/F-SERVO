@@ -2,12 +2,13 @@
 import 'package:flutter/material.dart';
 import 'package:xml/xml.dart';
 
-import '../fileTypeUtils/yax/hashToStringMap.dart';
-import '../utils.dart';
-import 'Property.dart';
-import 'nestedNotifier.dart';
-import 'openFileTypes.dart';
-import 'undoable.dart';
+import '../../fileTypeUtils/yax/hashToStringMap.dart';
+import '../../utils.dart';
+import '../Property.dart';
+import '../nestedNotifier.dart';
+import '../openFileTypes.dart';
+import '../undoable.dart';
+import 'xmlActionProp.dart';
 
 class XmlProp extends NestedNotifier<XmlProp> {
   final int tagId;
@@ -22,14 +23,28 @@ class XmlProp extends NestedNotifier<XmlProp> {
   {
     this.value.addListener(_onValueChange);
   }
-  
-  XmlProp.fromXml(XmlElement root, { required this.file }) :
+
+  XmlProp._fromXml(XmlElement root, { required this.file }) :
     tagId = crc32(root.localName),
     tagName = root.localName,
     value = Prop.fromString(root.childElements.isEmpty ? root.text : ""),
     super(root.childElements.map((XmlElement child) => XmlProp.fromXml(child, file: file)).toList())
   {
     value.addListener(_onValueChange);
+  }
+  
+  factory XmlProp.fromXml(XmlElement root, { OpenFileData? file })
+  {
+    var prop = XmlProp._fromXml(root, file: file);
+    if (root.localName == "action")
+      return XmlActionProp(prop);
+    
+    return prop;
+  }
+
+  XmlProp? get(String tag) {
+    var child = where((child) => child.tagName == tag);
+    return child.isEmpty ? null : child.first;
   }
 
   @override
@@ -40,10 +55,10 @@ class XmlProp extends NestedNotifier<XmlProp> {
     super.dispose();
   }
   
-void _onValueChange() {
-  file?.hasUnsavedChanges = true;
-  notifyListeners();
-}
+  void _onValueChange() {
+    file?.hasUnsavedChanges = true;
+    notifyListeners();
+  }
 
   @override
   Undoable takeSnapshot() {

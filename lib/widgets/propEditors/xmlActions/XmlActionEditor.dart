@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../customTheme.dart';
 import '../../../stateManagement/ChangeNotifierWidget.dart';
-import '../../../stateManagement/xmlPropWrappers/xmlActionProp.dart';
+import '../../../stateManagement/xmlProps/xmlActionProp.dart';
 import '../../../utils.dart';
 import '../simpleProps/XmlPropEditorFactory.dart';
 

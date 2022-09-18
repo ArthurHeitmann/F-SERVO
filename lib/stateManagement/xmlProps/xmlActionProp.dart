@@ -1,5 +1,5 @@
 import '../Property.dart';
-import '../xmlProp.dart';
+import 'xmlProp.dart';
 
 class XmlActionProp extends XmlProp {
   late final HexProp code;

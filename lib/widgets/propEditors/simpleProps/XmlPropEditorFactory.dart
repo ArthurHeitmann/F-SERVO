@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 
-import '../../../stateManagement/xmlProp.dart';
+import '../../../stateManagement/xmlProps/xmlProp.dart';
 import 'XmlPropEditor.dart';
 
 Widget makeXmlPropEditor(XmlProp prop) {

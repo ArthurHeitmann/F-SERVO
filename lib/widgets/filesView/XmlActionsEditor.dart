@@ -1,8 +1,8 @@
 
 import 'package:flutter/material.dart';
 
-import '../../stateManagement/xmlProp.dart';
-import '../../stateManagement/xmlPropWrappers/xmlActionProp.dart';
+import '../../stateManagement/xmlProps/xmlProp.dart';
+import '../../stateManagement/xmlProps/xmlActionProp.dart';
 import '../misc/ColumnSeparated.dart';
 import '../propEditors/xmlActions/XmlActionEditorFactory.dart';
 import '../propEditors/xmlActions/xmlArrayEditor.dart';
@@ -30,7 +30,7 @@ class _XmlActionsEditorState extends XmlArrayEditorState {
         children: actions
           .map((child) => makeXmlActionEditor(
             key: ValueKey(child),
-            action: XmlActionProp(child),
+            action: child as XmlActionProp,
           ))
           .toList()
       ),

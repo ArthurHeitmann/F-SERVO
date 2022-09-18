@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../stateManagement/ChangeNotifierWidget.dart';
-import '../../../stateManagement/xmlProp.dart';
+import '../../../stateManagement/xmlProps/xmlProp.dart';
 import '../../misc/smallButton.dart';
 import '../simpleProps/XmlPropEditorFactory.dart';
 
