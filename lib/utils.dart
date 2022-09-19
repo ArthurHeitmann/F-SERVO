@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:crclib/catalog.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:uuid/uuid.dart';
 
 import 'fileTypeUtils/yax/japToEng.dart';
@@ -91,4 +93,35 @@ String doubleToStr(num d) {
     return int == d
       ? int.toString()
       : d.toString();
+}
+
+Future<void> scrollIntoView(BuildContext context, {
+  double viewOffset = 0,
+  Duration duration = const Duration(milliseconds: 300),
+  Curve curve = Curves.easeInOut,
+  ScrollPositionAlignmentPolicy alignment = ScrollPositionAlignmentPolicy.keepVisibleAtStart,
+}) async {
+  assert(alignment != ScrollPositionAlignmentPolicy.explicit, "ScrollPositionAlignmentPolicy.explicit is not supported");
+  final ScrollableState? scrollState = Scrollable.of(context);
+  final RenderObject? renderObject = context.findRenderObject();
+  if (scrollState == null)
+    return;
+  if (renderObject == null)
+    return;
+  final RenderAbstractViewport? viewport = RenderAbstractViewport.of(renderObject);
+  if (viewport == null)
+    return;
+  final position = scrollState.position;
+  double target;
+  if (alignment == ScrollPositionAlignmentPolicy.keepVisibleAtStart) {
+    target = clamp(viewport.getOffsetToReveal(renderObject, 0.0).offset - viewOffset, position.minScrollExtent, position.maxScrollExtent);
+  }
+  else {
+    target = clamp(viewport.getOffsetToReveal(renderObject, 1.0).offset + viewOffset, position.minScrollExtent, position.maxScrollExtent);
+  }
+
+  if (target == position.pixels)
+    return;
+
+  await position.animateTo(target, duration: duration, curve: curve);
 }

@@ -6,13 +6,13 @@ import '../../../utils.dart';
 import 'DelayAction.dart';
 import 'XmlActionEditor.dart';
 
-final Map<int, Widget Function(Key?, XmlActionProp)> actionsFactories = {
-  crc32("DelayAction"): (key, action) => DelayActionEditor(key: key, action: action),
+final Map<int, Widget Function(XmlActionProp)> actionsFactories = {
+  crc32("DelayAction"): (action) => DelayActionEditor(action: action),
 };
 
-Widget makeXmlActionEditor({ Key? key, required XmlActionProp action }) {
+Widget makeXmlActionEditor({ required XmlActionProp action }) {
   var factory = actionsFactories[action.code.value];
   if (factory != null)
-    return factory(key, action);
-  return XmlActionEditor(key: key, action: action);
+    return factory(action);
+  return XmlActionEditor(action: action);
 }

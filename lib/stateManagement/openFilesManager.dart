@@ -226,6 +226,12 @@ class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
   }
 
   @override
+  void add(FilesAreaManager child) {
+    super.add(child);
+    activeArea ??= child;
+  }
+
+  @override
   void remove(child) {
     if (child == _activeArea)
       _activeArea = this[0];

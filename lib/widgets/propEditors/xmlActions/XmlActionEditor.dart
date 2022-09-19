@@ -8,6 +8,21 @@ import '../../../stateManagement/xmlProps/xmlActionProp.dart';
 import '../../../utils.dart';
 import '../simpleProps/XmlPropEditorFactory.dart';
 
+final Map<int, GlobalKey<XmlActionEditorState>> _actionKeys = {};
+
+GlobalKey<XmlActionEditorState>? getActionKey(int id) {
+  return _actionKeys[id];
+}
+GlobalKey<XmlActionEditorState> _getOrMakeKey(int id) {
+  if (_actionKeys.containsKey(id))
+    return _actionKeys[id]!;
+  else {
+    var key = GlobalKey<XmlActionEditorState>();
+    _actionKeys[id] = key;
+    return key;
+  }
+}
+
 final Set<String> ignoreTagNames = {
   "code",
   "name",
@@ -27,7 +42,8 @@ final Set<int> spawningActionCodes = {
 class XmlActionEditor extends ChangeNotifierWidget {
   final XmlActionProp action;
 
-  XmlActionEditor({super.key, required this.action}) : super(notifier: action);
+  XmlActionEditor({required this.action})
+    : super(key: _getOrMakeKey(action.id.value), notifier: action);
 
   @override
   State<XmlActionEditor> createState() => XmlActionEditorState();

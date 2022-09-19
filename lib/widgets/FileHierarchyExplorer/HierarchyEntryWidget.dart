@@ -41,7 +41,6 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
               padding: const EdgeInsets.symmetric(vertical: 3),
               height: 25,
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   SizedBox(width: 15.0 * widget.depth,),
                   if (widget.entry.isCollapsible)

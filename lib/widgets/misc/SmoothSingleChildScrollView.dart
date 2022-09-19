@@ -1,5 +1,7 @@
 // ignore_for_file: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
 
+import 'dart:async';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
@@ -15,7 +17,7 @@ class SmoothSingleChildScrollView extends StatefulWidget {
     super.key,
     required this.controller,
     required this.child,
-    this.duration = const Duration(milliseconds: 200),
+    this.duration = const Duration(milliseconds: 150),
     this.stepSize = 100,
   });
 
@@ -26,6 +28,8 @@ class SmoothSingleChildScrollView extends StatefulWidget {
 class _SmoothSingleChildScrollViewState extends State<SmoothSingleChildScrollView> {
   double targetOffset = 0;
   bool overrideScrollBehavior = true;
+  bool isScrolling = false;
+  Timer? isScrollingTimer;
 
   @override
   void initState() {
@@ -36,7 +40,7 @@ class _SmoothSingleChildScrollViewState extends State<SmoothSingleChildScrollVie
   }
 
   void onScrollChange() {
-    if (widget.controller.position.activity is! IdleScrollActivity)
+    if (isScrolling)
       return;
     targetOffset = widget.controller.offset;
   }
@@ -48,7 +52,11 @@ class _SmoothSingleChildScrollViewState extends State<SmoothSingleChildScrollVie
     targetOffset = clamp(targetOffset, 0, widget.controller.position.maxScrollExtent);
     if (targetOffset == widget.controller.offset)
       return;
+    isScrolling = true;
     widget.controller.animateTo(targetOffset, duration: widget.duration, curve: Curves.linear);
+    isScrolling = true;
+    isScrollingTimer?.cancel();
+    isScrollingTimer = Timer(widget.duration, () => isScrolling = false);
   }
 
   void onContinuosScroll(double dy) {

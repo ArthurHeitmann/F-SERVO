@@ -29,7 +29,6 @@ class _XmlActionsEditorState extends XmlArrayEditorState {
         separatorHeight: 20,
         children: actions
           .map((child) => makeXmlActionEditor(
-            key: ValueKey(child),
             action: child as XmlActionProp,
           ))
           .toList()

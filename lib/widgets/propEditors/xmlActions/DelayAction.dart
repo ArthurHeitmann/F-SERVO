@@ -7,7 +7,7 @@ import '../simpleProps/propEditorFactory.dart';
 import 'XmlActionEditor.dart';
 
 class DelayActionEditor extends XmlActionEditor {
-  DelayActionEditor({super.key, required XmlActionProp action}) : super(action: action);
+  DelayActionEditor({ required XmlActionProp action}) : super(action: action);
 
   @override
   XmlActionEditorState createState() => _DelayActionEditorState();

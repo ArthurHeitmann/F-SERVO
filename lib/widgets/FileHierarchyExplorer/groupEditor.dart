@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/FileHierarchy.dart';
 import '../../stateManagement/Property.dart';
+import '../misc/SmoothSingleChildScrollView.dart';
 import '../misc/smallButton.dart';
 import '../propEditors/simpleProps/propEditorFactory.dart';
 import '../propEditors/simpleProps/propTextField.dart';
@@ -29,7 +30,9 @@ class _GroupEditorState extends ChangeNotifierState<GroupEditor> {
         Divider(height: 1),
         Expanded(
           key: Key(openHierarchyManager.selectedEntry?.name.value ?? "noGroup"),
-          child: SingleChildScrollView(
+          child: SmoothSingleChildScrollView(
+            stepSize: 60,
+            controller: ScrollController(),
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: groupEntry != null ? makeGroupEditor(groupEntry) : makeFallback(),

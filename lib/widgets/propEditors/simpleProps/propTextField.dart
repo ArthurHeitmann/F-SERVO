@@ -54,19 +54,24 @@ class _PropTextFieldState<P extends Prop> extends ChangeNotifierState<PropTextFi
       text: newText,
       selection: TextSelection.collapsed(offset: clamp(_controller.selection.baseOffset, 0, newText.length)),
     );
-    onTextChange(_controller.text);
+    runValidator(_controller.text);
     super.onNotified();
   }
 
-  void onTextChange(String text) {
+  bool runValidator(String text) {
     if (widget.validatorOnChange != null) {
       var err = widget.validatorOnChange!(text);
       if (err != null) {
         setState(() => errorMsg = err);
-        return;
+        return false;
       }
     }
-    setState(() => errorMsg = null);
+    return true;
+  }
+
+  void onTextChange(String text) {
+    if (!runValidator(text))
+      return;
     widget.onValid?.call(text);
   }
 

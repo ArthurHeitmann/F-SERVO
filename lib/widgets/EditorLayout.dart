@@ -4,6 +4,7 @@ import 'FileHierarchyExplorer/groupEditor.dart';
 import 'filesView/OpenFilesAreas.dart';
 import 'FileHierarchyExplorer/FileExplorer.dart';
 import 'ResizableWidget.dart';
+import 'filesView/outliner.dart';
 
 class EditorLayout extends StatelessWidget {
   const EditorLayout({Key? key}) : super(key: key);
@@ -27,7 +28,14 @@ class EditorLayout extends StatelessWidget {
             ],
           ),
           OpenFilesAreas(),
-          Center(child: Text("right")),
+          ResizableWidget(
+            axis: Axis.vertical,
+            percentages: [0.4, 0.6],
+            children: [
+              Outliner(),
+              Center(child: Text("Properties"))
+            ],
+          ),
         ],
       );
     });

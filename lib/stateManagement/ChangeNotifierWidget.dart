@@ -35,8 +35,8 @@ abstract class ChangeNotifierState<T extends ChangeNotifierWidget> extends State
 class ChangeNotifierBuilder extends ChangeNotifierWidget {
   final Widget Function(BuildContext context) builder;
 
-  ChangeNotifierBuilder({super.key, required Listenable notifier, required this.builder })
-    : super(notifier: notifier);
+  ChangeNotifierBuilder({super.key, Listenable? notifier, List<Listenable>? notifiers, required this.builder })
+    : super(notifier: notifier, notifiers: notifiers);
 
   @override
   State<ChangeNotifierBuilder> createState() => _ChangeNotifierBuilderState();
