@@ -127,49 +127,62 @@ class NumberProp extends ValueProp<num> {
   }
 }
 
-class VectorProp extends ChangeNotifier with Prop<List<double>>, IterableMixin<double> {
+class VectorProp extends ChangeNotifier with Prop<List<num>>, IterableMixin<NumberProp> {
   @override
   final PropType type = PropType.vector;
-  late final List<double> _values;
+  late final List<NumberProp> _values;
 
-  VectorProp(List<double> values) : _values = List<double>.from(values);
+  VectorProp(List<num> values)
+    : _values = List.from(values.map((v) => NumberProp(v, false)), growable: false)
+  {
+    for (var prop in _values)
+      prop.addListener(notifyListeners);
+  }
   
   @override
-  Iterator<double> get iterator => _values.iterator;
+  void dispose() {
+    for (var prop in _values)
+      prop.removeListener(notifyListeners);
+    super.dispose();
+  }
+
+  @override
+  Iterator<NumberProp> get iterator => _values.iterator;
 
   @override
   int get length => _values.length;
 
-  double operator [](int index) => _values[index];
+  NumberProp operator [](int index) => _values[index];
 
-  void operator []=(int index, double value) {
-    if (value == _values[index]) return;
-    _values[index] = value;
-    notifyListeners();
+  void operator []=(int index, num value) {
+    if (value == _values[index].value) return;
+    _values[index].value = value;
     undoHistoryManager.onUndoableEvent();
   }
 
   @override
-  String toString() => _values.map(doubleToStr).join(" ");
+  String toString() => _values.map((p) => doubleToStr(p.value)).join(" ");
   
   @override
   void updateWith(String str) {
-    _values = str.split(" ").map((val) => double.parse(val)).toList();
-    notifyListeners();
+    var newValues = str.split(" ").map((val) => double.parse(val)).toList();
+    for (int i = 0; i < length; i++) {
+      _values[i].value = newValues[i];
+    }
     undoHistoryManager.onUndoableEvent();
   }
 
   @override
   Undoable takeSnapshot() {
-    return VectorProp(_values);
+    return VectorProp(_values.map((p) => p.value).toList());
   }
 
   @override
   void restoreWith(Undoable snapshot) {
     var prop = snapshot as VectorProp;
     if (listEquals(_values, prop._values)) return;
-    _values = List<double>.from(prop._values);
-    notifyListeners();
+    for (int i = 0; i < length; i++)
+      _values[i].value = prop._values[i].value;
   }
 }
 

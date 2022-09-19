@@ -96,8 +96,8 @@ class _GroupEditorState extends ChangeNotifierState<GroupEditor> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Flexible(flex: 1, child: Text("Name:")),
-              Flexible(flex: 3, child: PropTextField(prop: groupEntry.name)),
+              Expanded(flex: 1, child: Text("Name:")),
+              Expanded(flex: 3, child: PropTextField(prop: groupEntry.name)),
             ],
           ),
           SizedBox(height: 5),

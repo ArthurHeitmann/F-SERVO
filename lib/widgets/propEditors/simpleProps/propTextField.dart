@@ -4,11 +4,12 @@ import 'package:flutter/material.dart';
 import '../../../customTheme.dart';
 import '../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
+import '../../../utils.dart';
 
 class PropTextField<P extends Prop> extends ChangeNotifierWidget {
   final P prop;
   final Widget? left;
-  final double minWidth;
+  final BoxConstraints constraints;
   final String? Function(String str)? validatorOnChange;
   final void Function(String)? onValid;
   final TextEditingController? controller;
@@ -18,13 +19,14 @@ class PropTextField<P extends Prop> extends ChangeNotifierWidget {
     super.key,
     required this.prop,
     this.left,
-    this.minWidth = 100,
+    BoxConstraints? constraints,
     this.validatorOnChange,
     this.onValid,
     this.controller,
     this.getDisplayText,
   })
-    : super(notifier: prop);
+    : constraints = constraints ?? BoxConstraints(minWidth: 50),
+    super(notifier: prop);
 
   @override
   State<PropTextField<P>> createState() => _PropTextFieldState<P>();
@@ -47,7 +49,11 @@ class _PropTextFieldState<P extends Prop> extends ChangeNotifierState<PropTextFi
 
   @override
   void onNotified() {
-    _controller.value = _controller.value.copyWith(text: getDisplayText());
+    var newText = getDisplayText();
+    _controller.value = _controller.value.copyWith(
+      text: newText,
+      selection: TextSelection.collapsed(offset: clamp(_controller.selection.baseOffset, 0, newText.length)),
+    );
     onTextChange(_controller.text);
     super.onNotified();
   }
@@ -75,19 +81,20 @@ class _PropTextFieldState<P extends Prop> extends ChangeNotifierState<PropTextFi
           borderRadius: BorderRadius.circular(8.0),
           child: IntrinsicWidth(
             child: ConstrainedBox(
-              constraints: BoxConstraints(minWidth: widget.minWidth),
+              constraints: widget.constraints,
               child: Row(
                 children: [
                   if (widget.left != null)
                     widget.left!,
                   if (widget.left == null)
                     const SizedBox(width: 8),
-                  Expanded(
+                  Flexible(
                     child: TextField(
                       controller: _controller,
                       onChanged: onTextChange,
                       style: TextStyle(
-                        fontSize: 13
+                        fontSize: 13,
+                        fontFamily: "FiraCode",
                       ),
                     ),
                   ),

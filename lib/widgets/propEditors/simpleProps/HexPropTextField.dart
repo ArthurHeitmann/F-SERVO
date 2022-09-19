@@ -8,8 +8,9 @@ import 'propTextField.dart';
 
 class HexPropTextField extends ChangeNotifierWidget {
   final HexProp prop;
+  final BoxConstraints? constraints;
 
-  HexPropTextField({super.key, required this.prop}) : super(notifier: prop);
+  HexPropTextField({super.key, required this.prop, this.constraints}) : super(notifier: prop);
 
   @override
   State<HexPropTextField> createState() => _HexPropTextFieldState();
@@ -59,6 +60,7 @@ class _HexPropTextFieldState extends ChangeNotifierState<HexPropTextField> {
           isSelected: showHashString,
         ),
       ),
+      constraints: widget.constraints,
       validatorOnChange: textValidator,
       onValid: onValidUpdateProp,
       controller: _controller,

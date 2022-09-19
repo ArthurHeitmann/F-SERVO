@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 
 class RowSeparated extends StatelessWidget {
+  final MainAxisSize? mainAxisSize;
   final MainAxisAlignment? mainAxisAlignment;
   final CrossAxisAlignment? crossAxisAlignment;
 
@@ -10,7 +11,15 @@ class RowSeparated extends StatelessWidget {
   late final Widget Function(BuildContext context)? separator;
   final double? separatorWidth;
 
-  RowSeparated({super.key, required this.children, Widget Function(BuildContext context)? separator, this.separatorWidth, this.mainAxisAlignment, this.crossAxisAlignment}) {
+  RowSeparated({
+    super.key,
+    required this.children,
+    Widget Function(BuildContext context)? separator,
+    this.separatorWidth,
+    this.mainAxisAlignment,
+    this.mainAxisSize,
+    this.crossAxisAlignment
+  }) {
     this.separator = separator ?? (context) => SizedBox(width: separatorWidth ?? 10);
   }
 
@@ -25,6 +34,7 @@ class RowSeparated extends StatelessWidget {
     return Row(
       mainAxisAlignment: mainAxisAlignment ?? MainAxisAlignment.start,
       crossAxisAlignment: crossAxisAlignment ?? CrossAxisAlignment.start,
+      mainAxisSize: mainAxisSize ?? MainAxisSize.max,
       children: children,
     );
   }

@@ -9,8 +9,15 @@ import 'propTextField.dart';
 class NumberPropTextField extends StatelessWidget {
   final NumberProp prop;
   final bool isInteger;
+  final BoxConstraints? constraints;
+  final Widget? left;
 
-  NumberPropTextField({super.key, required this.prop}) : isInteger = prop.isInteger;
+  NumberPropTextField({
+    super.key,
+    required this.prop,
+    this.constraints,
+    this.left,
+  }) : isInteger = prop.isInteger;
 
   String? textValidator(String str) {
     if (isInteger)
@@ -27,6 +34,8 @@ class NumberPropTextField extends StatelessWidget {
   Widget build(BuildContext context) {
     return PropTextField(
       prop: prop,
+      left: left,
+      constraints: constraints,
       validatorOnChange: textValidator,
       onValid: onValidUpdateProp,
     );
