@@ -25,9 +25,8 @@ class _XmlPropEditorState extends ChangeNotifierState<XmlPropEditor> {
             Text(widget.prop.tagName),
             SizedBox(width: 10),
             if (widget.prop.value.toString().isNotEmpty)
-              ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: 200),
-                child: makePropEditor(widget.prop.value)
+              Flexible(
+                child: makePropEditor(widget.prop.value),
               ),
           ],
         ),

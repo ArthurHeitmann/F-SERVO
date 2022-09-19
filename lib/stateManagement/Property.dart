@@ -9,7 +9,7 @@ import 'miscValues.dart';
 import 'undoable.dart';
 
 enum PropType {
-  int, hexInt, double, vector, string
+  number, hexInt, vector, string
 }
 
 mixin Prop<T> implements Listenable, Undoable {
@@ -17,13 +17,11 @@ mixin Prop<T> implements Listenable, Undoable {
 
   void updateWith(String str);
 
-  static Prop fromString(String str) {
+  static Prop fromString(String str, { bool isInteger = false }) {
     if (isHexInt(str))
       return HexProp(int.parse(str));
-    else if (isInt(str))
-      return IntProp(int.parse(str));
     else if (isDouble(str))
-      return DoubleProp(double.parse(str));
+      return NumberProp(double.parse(str), isInteger);
     else if (isVector(str))
       return VectorProp(str.split(" ").map((val) => double.parse(val)).toList());
     else
@@ -48,23 +46,6 @@ abstract class ValueProp<T> extends ValueNotifier<T> with Prop<T> {
 
   @override
   String toString() => value.toString();
-}
-
-class IntProp extends ValueProp<int> {
-  @override
-  final PropType type = PropType.int;
-
-  IntProp(super.value);
-  
-  @override
-  void updateWith(String str) {
-    value = int.parse(str);
-  }
-  
-  @override
-  Undoable takeSnapshot() {
-    return IntProp(value);
-  }
 }
 
 class HexProp extends ValueProp<int> {
@@ -124,11 +105,13 @@ class HexProp extends ValueProp<int> {
   }
 }
 
-class DoubleProp extends ValueProp<double> {
-  @override
-  final PropType type = PropType.double;
+class NumberProp extends ValueProp<num> {
+  final bool isInteger;
 
-  DoubleProp(super.value);
+  @override
+  final PropType type = PropType.number;
+
+  NumberProp(super.value, this.isInteger);
 
   @override
   String toString() => doubleToStr(value);
@@ -140,7 +123,7 @@ class DoubleProp extends ValueProp<double> {
 
   @override
   Undoable takeSnapshot() {
-    return DoubleProp(value);
+    return NumberProp(value, isInteger);
   }
 }
 

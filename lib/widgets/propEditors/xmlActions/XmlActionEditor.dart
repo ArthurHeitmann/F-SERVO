@@ -83,7 +83,7 @@ class XmlActionEditorState extends ChangeNotifierState<XmlActionEditor> {
               )
             ),
             SizedBox(height: 5),
-            Text(widget.action.name.toString()),
+            Text(widget.action.name.toString(), overflow: TextOverflow.ellipsis,),
           ],
         ),
       ),

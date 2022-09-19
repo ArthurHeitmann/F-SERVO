@@ -28,6 +28,7 @@ class XmlProp extends NestedNotifier<XmlProp> {
   XmlProp._fromXml(XmlElement root, { required this.file }) :
     tagId = crc32(root.localName),
     tagName = root.localName,
+    // TODO check if number is always int
     value = Prop.fromString(root.childElements.isEmpty ? root.text : ""),
     super(root.childElements.map((XmlElement child) => XmlProp.fromXml(child, file: file)).toList())
   {

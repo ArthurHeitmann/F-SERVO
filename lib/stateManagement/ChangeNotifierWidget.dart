@@ -2,9 +2,9 @@
 import 'package:flutter/material.dart';
 
 abstract class ChangeNotifierWidget extends StatefulWidget {
-  final List<ChangeNotifier> _notifiers = [];
+  final List<Listenable> _notifiers = [];
   
-  ChangeNotifierWidget({super.key, ChangeNotifier? notifier, List<ChangeNotifier>? notifiers }) {
+  ChangeNotifierWidget({super.key, Listenable? notifier, List<Listenable>? notifiers }) {
     if (notifier != null)
       _notifiers.add(notifier);
     if (notifiers != null)
@@ -35,7 +35,7 @@ abstract class ChangeNotifierState<T extends ChangeNotifierWidget> extends State
 class ChangeNotifierBuilder extends ChangeNotifierWidget {
   final Widget Function(BuildContext context) builder;
 
-  ChangeNotifierBuilder({super.key, required ChangeNotifier notifier, required this.builder })
+  ChangeNotifierBuilder({super.key, required Listenable notifier, required this.builder })
     : super(notifier: notifier);
 
   @override

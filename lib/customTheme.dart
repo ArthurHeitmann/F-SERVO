@@ -184,7 +184,16 @@ class NierDarkThemeExtension extends NierThemeExtension {
         contentPadding: EdgeInsets.symmetric(vertical: 8),
         isDense: true,
       ),
-      
+      tooltipTheme: TooltipThemeData(
+        decoration: BoxDecoration(
+          color: Colors.black.withOpacity(0.75),
+          borderRadius: BorderRadius.circular(4),
+        ),
+        textStyle: TextStyle(
+          color: Colors.white,
+          fontSize: 12,
+        ),
+      ),
     );
   } 
 }
