@@ -25,30 +25,52 @@ class _FileTabEntryState extends ChangeNotifierState<FileTabEntry> {
         width: 150,
         child: Padding(
           padding: const EdgeInsets.only(left: 2.5, right: 2.5, bottom: 3),
-          child: Material(
-            color: widget.file == widget.area.currentFile ? getTheme(context).tabSelectedColor : getTheme(context).tabColor,
-            borderRadius: BorderRadius.only(bottomLeft: Radius.circular(10), bottomRight: Radius.circular(10)),
-            child: Padding(
-              padding: const EdgeInsets.only(left: 10, right: 5),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(child:
-                    Text(
-                      widget.file.name + (widget.file.hasUnsavedChanges ? "*" : ""),
-                      overflow: TextOverflow.ellipsis,
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.only(bottomLeft: Radius.circular(10), bottomRight: Radius.circular(10)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.3),
+                  blurRadius: 2,
+                  offset: Offset(0, 2),
+                ),
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.35),
+                  blurRadius: 4,
+                  offset: Offset(0, 4),
+                ),
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.4),
+                  blurRadius: 6,
+                  offset: Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Material(
+              color: widget.file == widget.area.currentFile ? getTheme(context).tabSelectedColor : getTheme(context).tabColor,
+              borderRadius: BorderRadius.only(bottomLeft: Radius.circular(10), bottomRight: Radius.circular(10)),
+              child: Padding(
+                padding: const EdgeInsets.only(left: 10, right: 5),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(child:
+                      Text(
+                        widget.file.name + (widget.file.hasUnsavedChanges ? "*" : ""),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                  ),
-                  IconButton(
-                    padding: EdgeInsets.zero,
-                    constraints: BoxConstraints(),
-                    icon: Icon(Icons.close),
-                    onPressed: () => widget.area.closeFile(widget.file),
-                    iconSize: 15,
-                    splashRadius: 15,
-                    color: getTheme(context).tabIconColor,
-                  ),
-                ],
+                    IconButton(
+                      padding: EdgeInsets.zero,
+                      constraints: BoxConstraints(),
+                      icon: Icon(Icons.close),
+                      onPressed: () => widget.area.closeFile(widget.file),
+                      iconSize: 15,
+                      splashRadius: 15,
+                      color: getTheme(context).tabIconColor,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

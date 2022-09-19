@@ -89,10 +89,15 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
     // if (cachedEditors.containsKey(file)) // TODO enable again
     //   return cachedEditors[file]!;
     Widget newEntry = makeFileEditor(file);
-    newEntry = SmoothSingleChildScrollView(
+    newEntry = Positioned.fill(
       key: ValueKey(file),
-      controller: file.scrollController,
-      child: newEntry,
+      child: SmoothSingleChildScrollView(
+        controller: file.scrollController,
+        child: Padding(
+          padding: const EdgeInsets.only(top: 30),
+          child: newEntry,
+        ),
+      ),
     );
     cachedEditors[file] = newEntry;
     return newEntry;
@@ -110,86 +115,33 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
         openFiles(details.files);
       },
       child: setupShortcuts(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        child: Stack(
           children: [
-            SizedBox(
-              height: 30,
-              child: Listener(
-                onPointerSignal: (event) {
-                  if (event is! PointerScrollEvent)
-                    return;
-                  PointerScrollEvent scrollEvent = event;
-                  var delta = scrollEvent.scrollDelta.dy != 0 ? scrollEvent.scrollDelta.dy : scrollEvent.scrollDelta.dx;
-                  var newOffset = tabBarScrollController.offset + delta;
-                  newOffset = clamp(newOffset, 0, tabBarScrollController.position.maxScrollExtent);
-                  tabBarScrollController.jumpTo(
-                    newOffset,
-                    // duration: Duration(milliseconds: 3000 ~/ 60),
-                    // curve: Curves.linear
-                  );
-                },
-                child: Theme(
-                  data: Theme.of(context).copyWith(
-                    canvasColor: Colors.transparent,
-                  ),
-                  child: ReorderableListView(
-                    scrollController: tabBarScrollController,
-                    scrollDirection: Axis.horizontal,
-                    onReorder: (int oldIndex, int newIndex) => widget.viewArea.move(oldIndex, newIndex),
-                    buildDefaultDragHandles: false,
-                    physics: const NeverScrollableScrollPhysics(),
-                    
-                    children: widget.viewArea
-                      .map((file,) => ReorderableDragStartListener(
-                        key: Key(file.uuid),
-                        index: widget.viewArea.indexOf(file),
-                        child: FileTabEntry(
-                          file: file,
-                          area: widget.viewArea
-                        ),
-                      )
-                      )
-                      .toList(),
+            widget.viewArea.currentFile != null
+              ? getOrMakeFileEditor(widget.viewArea.currentFile!)
+              : Center(child: Text('No file open')),
+            makeTabBar(),
+            if (isDroppingFile)
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Container(
+                  color: getTheme(context).dropTargetColor,
+                  child: Center(
+                    child: Text(
+                      'Drop file here',
+                      style: TextStyle(
+                        color: getTheme(context).dropTargetTextColor,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
-            Expanded(
-              child: Stack(
-                children: [
-                  widget.viewArea.currentFile != null
-                    ? Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Expanded(child: getOrMakeFileEditor(widget.viewArea.currentFile!)),
-                      ],
-                    )
-                    : Center(child: Text('No file open')),
-                  if (isDroppingFile)
-                   Positioned(
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    child: Container(
-                      color: getTheme(context).dropTargetColor,
-                      child: Center(
-                        child: Text(
-                          'Drop file here',
-                          style: TextStyle(
-                            color: getTheme(context).dropTargetTextColor,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold
-                          ),
-                        ),
-                      ),
-                    ),
-                  )
-                ],
-              ),
-            ),
-          ]
+          ],
         ),
       ),
     );
@@ -199,6 +151,56 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
     return GestureDetector(
       onTap: () => areasManager.activeArea = widget.viewArea,
       child: child,
+    );
+  }
+
+  Widget makeTabBar() {
+    return Positioned(
+      left: 0,
+      top: 0,
+      right: 0,
+      child: SizedBox(
+        height: 30,
+        child: Listener(
+          onPointerSignal: (event) {
+            if (event is! PointerScrollEvent)
+              return;
+            PointerScrollEvent scrollEvent = event;
+            var delta = scrollEvent.scrollDelta.dy != 0 ? scrollEvent.scrollDelta.dy : scrollEvent.scrollDelta.dx;
+            var newOffset = tabBarScrollController.offset + delta;
+            newOffset = clamp(newOffset, 0, tabBarScrollController.position.maxScrollExtent);
+            tabBarScrollController.jumpTo(
+              newOffset,
+              // duration: Duration(milliseconds: 3000 ~/ 60),
+              // curve: Curves.linear
+            );
+          },
+          child: Theme(
+            data: Theme.of(context).copyWith(
+              canvasColor: Colors.transparent,
+            ),
+            child: ReorderableListView(
+              scrollController: tabBarScrollController,
+              scrollDirection: Axis.horizontal,
+              onReorder: (int oldIndex, int newIndex) => widget.viewArea.move(oldIndex, newIndex),
+              buildDefaultDragHandles: false,
+              physics: const NeverScrollableScrollPhysics(),
+              
+              children: widget.viewArea
+                .map((file,) => ReorderableDragStartListener(
+                  key: Key(file.uuid),
+                  index: widget.viewArea.indexOf(file),
+                  child: FileTabEntry(
+                    file: file,
+                    area: widget.viewArea
+                  ),
+                )
+                )
+                .toList(),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

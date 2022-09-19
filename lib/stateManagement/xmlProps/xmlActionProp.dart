@@ -1,4 +1,5 @@
 import '../Property.dart';
+import '../undoable.dart';
 import 'xmlProp.dart';
 
 class XmlActionProp extends XmlProp {
@@ -12,5 +13,15 @@ class XmlActionProp extends XmlProp {
     name = this[1].value as StringProp;
     id = this[2].value as HexProp;
     attribute = this[3].value as HexProp;
+  }
+  @override
+  Undoable takeSnapshot() {
+    return XmlActionProp(XmlProp(
+      tagId: tagId,
+      tagName: tagName,
+      value: value.takeSnapshot() as Prop,
+      file: null,
+      children: map((child) => child.takeSnapshot() as XmlProp).toList()
+    ));
   }
 }
