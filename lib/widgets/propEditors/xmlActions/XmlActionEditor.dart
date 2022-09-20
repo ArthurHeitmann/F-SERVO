@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 
 import '../../../customTheme.dart';
 import '../../../stateManagement/ChangeNotifierWidget.dart';
+import '../../../stateManagement/openFilesManager.dart';
 import '../../../stateManagement/xmlProps/xmlActionProp.dart';
 import '../../../utils.dart';
+import '../../misc/Selectable.dart';
 import '../simpleProps/XmlPropEditorFactory.dart';
 
 final Map<int, GlobalKey<XmlActionEditorState>> _actionKeys = {};
@@ -52,14 +54,19 @@ class XmlActionEditor extends ChangeNotifierWidget {
 class XmlActionEditorState extends ChangeNotifierState<XmlActionEditor> {
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 450,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          makeActionHeader(),
-          makeActionBody(),
-        ],
+    return SelectableWidget<XmlActionProp>(
+      area: areasManager.getAreaOfFile(widget.action.file!),
+      data: widget.action,
+      color: getActionPrimaryColor().withOpacity(0.5),
+      child: SizedBox(
+        width: 450,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            makeActionHeader(),
+            makeActionBody(),
+          ],
+        ),
       ),
     );
   }

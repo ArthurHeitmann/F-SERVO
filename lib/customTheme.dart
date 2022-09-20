@@ -26,6 +26,7 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
   final double? actionBorderRadius;
   final ButtonStyle? dialogPrimaryButtonStyle;
   final ButtonStyle? dialogSecondaryButtonStyle;
+  final Color? selectedColor;
 
 
   NierThemeExtension({
@@ -51,6 +52,7 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
     this.actionBorderRadius,
     this.dialogPrimaryButtonStyle,
     this.dialogSecondaryButtonStyle,
+    this.selectedColor,
   });
   
   @override
@@ -77,6 +79,7 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
     double? actionBorderRadius,
     ButtonStyle? dialogPrimaryButtonStyle,
     ButtonStyle? dialogSecondaryButtonStyle,
+    Color? selectedColor,
   }) {
     return NierThemeExtension(
       editorBackgroundColor: editorBackgroundColor ?? this.editorBackgroundColor,
@@ -101,6 +104,7 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
       actionBorderRadius: actionBorderRadius ?? this.actionBorderRadius,
       dialogPrimaryButtonStyle: dialogPrimaryButtonStyle ?? this.dialogPrimaryButtonStyle,
       dialogSecondaryButtonStyle: dialogSecondaryButtonStyle ?? this.dialogSecondaryButtonStyle,
+      selectedColor: selectedColor ?? this.selectedColor,
     );
   }
   
@@ -132,6 +136,7 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
       actionBorderRadius: lerpDouble(actionBorderRadius, other.actionBorderRadius, t),
       dialogPrimaryButtonStyle: ButtonStyle.lerp(dialogPrimaryButtonStyle, other.dialogPrimaryButtonStyle, t),
       dialogSecondaryButtonStyle: ButtonStyle.lerp(dialogSecondaryButtonStyle, other.dialogSecondaryButtonStyle, t),
+      selectedColor: Color.lerp(selectedColor, other.selectedColor, t),
     );
   }
 }
@@ -168,6 +173,7 @@ class NierDarkThemeExtension extends NierThemeExtension {
         side: MaterialStateProperty.all(BorderSide(color: Colors.grey)),
         shadowColor: MaterialStateProperty.all(Colors.transparent),
       ),
+      selectedColor: Colors.blue.shade500.withOpacity(0.5),
     );
 
   static ThemeData makeTheme() {

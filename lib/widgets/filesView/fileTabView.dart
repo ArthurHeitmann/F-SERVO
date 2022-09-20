@@ -1,10 +1,12 @@
 import 'dart:math';
 
 import 'package:desktop_drop/desktop_drop.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:cross_file/cross_file.dart';
 import '../../stateManagement/openFileTypes.dart';
+import '../misc/Selectable.dart';
 import '../misc/SmoothSingleChildScrollView.dart';
 import 'FileTabEntry.dart';
 import 'FileType.dart';
@@ -86,8 +88,10 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
   }
 
   Widget getOrMakeFileEditor(OpenFileData file) {
-    // if (cachedEditors.containsKey(file)) // TODO enable again
-    //   return cachedEditors[file]!;
+    if (!kDebugMode) {
+      if (cachedEditors.containsKey(file)) // TODO enable again
+        return cachedEditors[file]!;
+    }
     Widget newEntry = makeFileEditor(file);
     newEntry = Positioned.fill(
       key: ValueKey(file),
@@ -117,30 +121,13 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
       child: setupShortcuts(
         child: Stack(
           children: [
+            makeBackgroundClickArea(),
             widget.viewArea.currentFile != null
               ? getOrMakeFileEditor(widget.viewArea.currentFile!)
               : Center(child: Text('No file open')),
             makeTabBar(),
             if (isDroppingFile)
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: Container(
-                  color: getTheme(context).dropTargetColor,
-                  child: Center(
-                    child: Text(
-                      'Drop file here',
-                      style: TextStyle(
-                        color: getTheme(context).dropTargetTextColor,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+              makeDropIndicator(),
           ],
         ),
       ),
@@ -149,7 +136,7 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
 
   Widget setupShortcuts({ required Widget child }) {
     return GestureDetector(
-      onTap: () => areasManager.activeArea = widget.viewArea,
+      onTapDown: (_) => areasManager.activeArea = widget.viewArea,
       child: child,
     );
   }
@@ -203,19 +190,37 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
       ),
     );
   }
-}
 
-/// An ActionDispatcher that logs all the actions that it invokes.
-class LoggingActionDispatcher extends ActionDispatcher {
-  @override
-  Object? invokeAction(
-    covariant Action<Intent> action,
-    covariant Intent intent, [
-    BuildContext? context,
-  ]) {
-    print('Action invoked: $action($intent) from $context');
-    super.invokeAction(action, intent, context);
+  Widget makeBackgroundClickArea() {
+    // TODO fix
+    return Positioned.fill(
+      child: GestureDetector(
+        onTapDown: (_) {
+          selectable.deselectAll(widget.viewArea);
+        },
+      ),
+    );
+  }
 
-    return null;
+  Widget makeDropIndicator() {
+    return Positioned(
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      child: Container(
+        color: getTheme(context).dropTargetColor,
+        child: Center(
+          child: Text(
+            'Drop file here',
+            style: TextStyle(
+              color: getTheme(context).dropTargetTextColor,
+              fontSize: 20,
+              fontWeight: FontWeight.bold
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

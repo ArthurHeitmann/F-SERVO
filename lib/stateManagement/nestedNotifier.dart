@@ -2,17 +2,14 @@ import 'dart:collection';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
 
-import '../utils.dart';
+import 'hasUuid.dart';
 import 'undoable.dart';
 
-abstract class NestedNotifier<T> extends ChangeNotifier with IterableMixin<T>, Undoable {
-  String _uuid;
+abstract class NestedNotifier<T> extends ChangeNotifier with IterableMixin<T>, Undoable, HasUuid {
   final List<T> _children;
 
   NestedNotifier(List<T> children)
-    : _children = children, _uuid = uuidGen.v1();
-
-  String get uuid => _uuid;
+    : _children = children;
     
   @override
   Iterator<T> get iterator => _children.iterator;
@@ -136,10 +133,6 @@ abstract class NestedNotifier<T> extends ChangeNotifier with IterableMixin<T>, U
 
     if (hasChanged)
       notifyListeners();
-  }
-
-  void overrideUuidForUndoable(String uuid) {
-    _uuid = uuid;
   }
 
   @override

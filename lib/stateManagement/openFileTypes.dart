@@ -4,13 +4,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:xml/xml.dart';
 
-import '../utils.dart';
 import '../widgets/filesView/FileType.dart';
+import 'hasUuid.dart';
 import 'undoable.dart';
 import 'xmlProps/xmlProp.dart';
 
-class OpenFileData extends ChangeNotifier with Undoable {
-  String _uuid;
+class OpenFileData extends ChangeNotifier with Undoable, HasUuid {
   String _name;
   String _path;
   bool _unsavedChanges = false;
@@ -19,8 +18,7 @@ class OpenFileData extends ChangeNotifier with Undoable {
   late final FileType type;
 
   OpenFileData(this._name, this._path)
-    : type = OpenFileData.getFileType(_path),
-      _uuid = uuidGen.v1();
+    : type = OpenFileData.getFileType(_path);
 
   factory OpenFileData.from(String name, String path) {
     if (path.endsWith(".xml"))
@@ -36,7 +34,6 @@ class OpenFileData extends ChangeNotifier with Undoable {
       return FileType.text;
   }
 
-  String get uuid => _uuid;
   String get name => _name;
   String get path => _path;
   bool get hasUnsavedChanges => _unsavedChanges;
@@ -86,10 +83,6 @@ void dispose() {
     name = content._name;
     path = content._path;
     hasUnsavedChanges = content._unsavedChanges;
-  }
-
-  void overrideUuidForUndoable(String uuid) {
-    _uuid = uuid;
   }
 }
 
