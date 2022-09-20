@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../../../customTheme.dart';
 import '../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
 import 'propEditorFactory.dart';
@@ -22,7 +23,7 @@ class _XmlPropEditorState extends ChangeNotifierState<XmlPropEditor> {
       children: [
         Row(
           children: [
-            Text(widget.prop.tagName),
+            Text(widget.prop.tagName, style: getTheme(context).propInputTextStyle,),
             SizedBox(width: 10),
             if (widget.prop.value.toString().isNotEmpty)
               Flexible(

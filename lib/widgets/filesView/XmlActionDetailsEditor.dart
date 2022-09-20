@@ -31,7 +31,9 @@ class _XmlActionDetailsEditorState extends ChangeNotifierState<XmlActionDetailsE
             controller: ScrollController(),
             child: Padding(
               padding: const EdgeInsets.all(8.0),
-              child: action != null ? XmlActionDetails(action: action) : Container(),
+              child: action != null
+                ? XmlActionDetails(key: ValueKey(action), action: action)
+                : Container(),
             ),
           ),
         ),

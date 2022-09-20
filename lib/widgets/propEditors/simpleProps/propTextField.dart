@@ -39,6 +39,8 @@ class _PropTextFieldState<P extends Prop> extends ChangeNotifierState<PropTextFi
   String _getDisplayText() => widget.prop.toString();
   String getDisplayText() => (widget.getDisplayText ?? _getDisplayText).call();
 
+  void Function(String) get onValid => widget.onValid ?? widget.prop.updateWith;
+
   @override
   void initState() {
     _controller = widget.controller ?? TextEditingController();
@@ -62,17 +64,20 @@ class _PropTextFieldState<P extends Prop> extends ChangeNotifierState<PropTextFi
     if (widget.validatorOnChange != null) {
       var err = widget.validatorOnChange!(text);
       if (err != null) {
-        setState(() => errorMsg = err);
+        if (errorMsg != err)
+          setState(() => errorMsg = err);
         return false;
       }
     }
+    if (errorMsg != null)
+      setState(() => errorMsg = null);
     return true;
   }
 
   void onTextChange(String text) {
     if (!runValidator(text))
       return;
-    widget.onValid?.call(text);
+    onValid(text);
   }
 
   @override
@@ -97,10 +102,7 @@ class _PropTextFieldState<P extends Prop> extends ChangeNotifierState<PropTextFi
                     child: TextField(
                       controller: _controller,
                       onChanged: onTextChange,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontFamily: "FiraCode",
-                      ),
+                      style: getTheme(context).propInputTextStyle,
                     ),
                   ),
                   if (errorMsg != null)

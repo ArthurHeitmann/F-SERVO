@@ -27,6 +27,7 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
   final ButtonStyle? dialogPrimaryButtonStyle;
   final ButtonStyle? dialogSecondaryButtonStyle;
   final Color? selectedColor;
+  final TextStyle? propInputTextStyle;
 
 
   NierThemeExtension({
@@ -53,6 +54,7 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
     this.dialogPrimaryButtonStyle,
     this.dialogSecondaryButtonStyle,
     this.selectedColor,
+    this.propInputTextStyle,
   });
   
   @override
@@ -80,6 +82,7 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
     ButtonStyle? dialogPrimaryButtonStyle,
     ButtonStyle? dialogSecondaryButtonStyle,
     Color? selectedColor,
+    TextStyle? propInputTextStyle,
   }) {
     return NierThemeExtension(
       editorBackgroundColor: editorBackgroundColor ?? this.editorBackgroundColor,
@@ -105,6 +108,7 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
       dialogPrimaryButtonStyle: dialogPrimaryButtonStyle ?? this.dialogPrimaryButtonStyle,
       dialogSecondaryButtonStyle: dialogSecondaryButtonStyle ?? this.dialogSecondaryButtonStyle,
       selectedColor: selectedColor ?? this.selectedColor,
+      propInputTextStyle: propInputTextStyle ?? this.propInputTextStyle,
     );
   }
   
@@ -137,6 +141,7 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
       dialogPrimaryButtonStyle: ButtonStyle.lerp(dialogPrimaryButtonStyle, other.dialogPrimaryButtonStyle, t),
       dialogSecondaryButtonStyle: ButtonStyle.lerp(dialogSecondaryButtonStyle, other.dialogSecondaryButtonStyle, t),
       selectedColor: Color.lerp(selectedColor, other.selectedColor, t),
+      propInputTextStyle: TextStyle.lerp(propInputTextStyle, other.propInputTextStyle, t),
     );
   }
 }
@@ -174,6 +179,11 @@ class NierDarkThemeExtension extends NierThemeExtension {
         shadowColor: MaterialStateProperty.all(Colors.transparent),
       ),
       selectedColor: Colors.blue.shade500.withOpacity(0.5),
+      propInputTextStyle: TextStyle(
+        color: Colors.white,
+        fontSize: 12,
+        fontFamily: "FiraCode",
+      ),
     );
 
   static ThemeData makeTheme() {

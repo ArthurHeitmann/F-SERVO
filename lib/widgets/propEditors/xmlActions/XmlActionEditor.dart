@@ -8,6 +8,7 @@ import '../../../stateManagement/openFilesManager.dart';
 import '../../../stateManagement/xmlProps/xmlActionProp.dart';
 import '../../../utils.dart';
 import '../../misc/Selectable.dart';
+import '../simpleProps/TextProp.dart';
 import '../simpleProps/XmlPropEditorFactory.dart';
 
 final Map<int, GlobalKey<XmlActionEditorState>> _actionKeys = {};
@@ -45,7 +46,7 @@ class XmlActionEditor extends ChangeNotifierWidget {
   final XmlActionProp action;
 
   XmlActionEditor({required this.action})
-    : super(key: _getOrMakeKey(action.id.value), notifier: action);
+    : super(key: _getOrMakeKey(action.id.value), notifiers: [action, action.attribute]);
 
   @override
   State<XmlActionEditor> createState() => XmlActionEditorState();
@@ -106,7 +107,7 @@ class XmlActionEditorState extends ChangeNotifierState<XmlActionEditor> {
               )
             ),
             SizedBox(height: 5),
-            Text(widget.action.name.toString(), overflow: TextOverflow.ellipsis,),
+            TextProp(prop: widget.action.name, overflow: TextOverflow.ellipsis,),
           ],
         ),
       ),
