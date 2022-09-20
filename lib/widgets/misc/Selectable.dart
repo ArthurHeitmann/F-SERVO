@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../customTheme.dart';
+import '../../utils.dart';
 
 class _SelectedData<T> {
   final T? data;
@@ -11,12 +12,14 @@ class _SelectedData<T> {
   _SelectedData(this.data, this.state);
 }
 
-class _Selectable {
+class _Selectable extends ChangeNotifier {
   final Map<dynamic, Map<Type, _SelectedData>> _selectedData = {};
 
   void select<T>(dynamic area, T? data, _SelectableWidgetState state) {
     if (!_selectedData.containsKey(area))
       _selectedData[area] = {};
+    else if (_selectedData[area]![T]?.state == state)
+      return;
 
     _selectedData[area]![T]?.state.deselect();
     _selectedData[area]![T]?.state.onDispose = null;
@@ -24,12 +27,19 @@ class _Selectable {
     _selectedData[area]![T] = _SelectedData(data, state);
     state.onDispose = () => _selectedData.remove(T);
     state.select();
+
+    notifyListeners();
   }
 
   void deselect<T>(dynamic area) {
+    if (!_selectedData.containsKey(area) || !_selectedData[area]!.containsKey(T))
+      return;
+
     _selectedData[area]![T]?.state.deselect();
     _selectedData[area]![T]?.state.onDispose = null;
     _selectedData[area]!.remove(T);
+
+    notifyListeners();
   }
 
   void deselectAll(dynamic area) {
@@ -38,10 +48,12 @@ class _Selectable {
       value.state.onDispose = null;
     });
     _selectedData.remove(area);
+
+    notifyListeners();
   }
 
   T? get<T>(dynamic area) {
-    return _selectedData[area]![T]?.data;
+    return _selectedData[area]?[T]?.data;
   }
 }
 
@@ -105,17 +117,10 @@ class _SelectableWidgetState<T> extends State<SelectableWidget> {
         ),
         GestureDetector(
             onTap: () {
-              if ((
-                  RawKeyboard.instance.keysPressed.contains(LogicalKeyboardKey.control) ||
-                  RawKeyboard.instance.keysPressed.contains(LogicalKeyboardKey.shift)
-                )
-                && isSelected
-              ) {
+              if ((isCtrlPressed() || isShiftPressed()) && isSelected)
                 selectable.deselect<T>(widget.area);
-              }
-              else {
+              else
                 selectable.select<T>(widget.area, widget.data, this);
-              }
             },
             child: widget.child,
           ),

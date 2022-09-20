@@ -4,6 +4,7 @@ import 'FileHierarchyExplorer/groupEditor.dart';
 import 'filesView/OpenFilesAreas.dart';
 import 'FileHierarchyExplorer/FileExplorer.dart';
 import 'ResizableWidget.dart';
+import 'filesView/XmlActionDetailsEditor.dart';
 import 'filesView/outliner.dart';
 
 class EditorLayout extends StatelessWidget {
@@ -33,7 +34,7 @@ class EditorLayout extends StatelessWidget {
             percentages: [0.4, 0.6],
             children: [
               Outliner(),
-              Center(child: Text("Properties"))
+              XmlActionDetailsEditor(),
             ],
           ),
         ],

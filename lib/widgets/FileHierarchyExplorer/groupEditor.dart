@@ -60,30 +60,6 @@ class _GroupEditorState extends ChangeNotifierState<GroupEditor> {
         ),
         Row(
           children: [
-            // Tooltip(
-            //   message: "Expand all",
-            //   waitDuration: Duration(milliseconds: 500),
-            //   child: IconButton(
-            //     padding: EdgeInsets.all(5),
-            //     constraints: BoxConstraints(),
-            //     iconSize: 20,
-            //     splashRadius: 20,
-            //     icon: Icon(Icons.unfold_more),
-            //     onPressed: openHierarchyManager.expandAll,
-            //   ),
-            // ),
-            // Tooltip(
-            //   message: "Collapse all",
-            //   waitDuration: Duration(milliseconds: 500),
-            //   child: IconButton(
-            //     padding: EdgeInsets.all(5),
-            //     constraints: BoxConstraints(),
-            //     iconSize: 20,
-            //     splashRadius: 20,
-            //     icon: Icon(Icons.unfold_less),
-            //     onPressed: openHierarchyManager.collapseAll,
-            //   ),
-            // ),
           ],
         ),
       ],

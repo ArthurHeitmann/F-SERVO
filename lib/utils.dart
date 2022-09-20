@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:crclib/catalog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:uuid/uuid.dart';
 
 import 'fileTypeUtils/yax/japToEng.dart';
@@ -124,4 +125,20 @@ Future<void> scrollIntoView(BuildContext context, {
     return;
 
   await position.animateTo(target, duration: duration, curve: curve);
+}
+
+bool isShiftPressed() {
+  return (
+    RawKeyboard.instance.keysPressed.contains(LogicalKeyboardKey.shift) ||
+    RawKeyboard.instance.keysPressed.contains(LogicalKeyboardKey.shiftLeft) ||
+    RawKeyboard.instance.keysPressed.contains(LogicalKeyboardKey.shiftRight)
+  );
+}
+
+bool isCtrlPressed() {
+  return (
+    RawKeyboard.instance.keysPressed.contains(LogicalKeyboardKey.control) ||
+    RawKeyboard.instance.keysPressed.contains(LogicalKeyboardKey.controlLeft) ||
+    RawKeyboard.instance.keysPressed.contains(LogicalKeyboardKey.controlRight)
+  );
 }
