@@ -6,6 +6,7 @@ import 'package:xml/xml.dart';
 
 import '../widgets/filesView/FileType.dart';
 import 'hasUuid.dart';
+import 'miscValues.dart';
 import 'undoable.dart';
 import 'xmlProps/xmlProp.dart';
 
@@ -50,6 +51,7 @@ class OpenFileData extends ChangeNotifier with Undoable, HasUuid {
   }
   set hasUnsavedChanges(bool value) {
     if (value == _unsavedChanges) return;
+    if (disableFileChanges) return;
     _unsavedChanges = value;
     notifyListeners();
   }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../utils.dart';
 import 'FileHierarchy.dart';
+import 'miscValues.dart';
 import 'openFilesManager.dart';
 
 mixin Undoable {
@@ -40,6 +41,7 @@ class UndoHistoryManager with ChangeNotifier {
 
   void onUndoableEvent() {
     if (_isRestoring) return;
+    if (disableFileChanges) return;
     _pushSnapshotThrottled();
   }
   
