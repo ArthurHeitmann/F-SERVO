@@ -2,6 +2,7 @@
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
 
+import '../../background/IdLookup.dart';
 import '../../customTheme.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/FileHierarchy.dart';
@@ -124,6 +125,18 @@ class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
                 icon: Icon(Icons.unfold_less, size: 17),
                 onPressed: openHierarchyManager.collapseAll,
               ),
+            ),
+            IconButton(
+              padding: EdgeInsets.all(5),
+              constraints: BoxConstraints(),
+              iconSize: 20,
+              splashRadius: 20,
+              icon: Icon(Icons.code, size: 17),
+              onPressed: () async {
+                var lookup = await idLookup.lookupId(0x6978ed28);
+                print(lookup?.xmlPath);
+                print("done");
+              },
             ),
           ],
         ),

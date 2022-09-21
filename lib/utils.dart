@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 
 import 'package:crclib/catalog.dart';
@@ -7,7 +8,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:uuid/uuid.dart';
+import 'package:path/path.dart' as path;
 
+import 'fileTypeUtils/utils/ByteDataWrapper.dart';
 import 'fileTypeUtils/yax/japToEng.dart';
 import 'stateManagement/miscValues.dart';
 
@@ -141,4 +144,27 @@ bool isCtrlPressed() {
     RawKeyboard.instance.keysPressed.contains(LogicalKeyboardKey.controlLeft) ||
     RawKeyboard.instance.keysPressed.contains(LogicalKeyboardKey.controlRight)
   );
+}
+
+Future<List<String>> getDatFiles(String extractedDir) async {
+  var pakInfo = path.join(extractedDir, "dat_info.json");
+  if (await File(pakInfo).exists()) {
+    var datInfoJson = jsonDecode(await File(pakInfo).readAsString());
+    return datInfoJson["files"];
+  }
+  var fileOrderMetadata = path.join(extractedDir, "file_order.metadata");
+  if (await File(fileOrderMetadata).exists()) {
+    var filesBytes = ByteDataWrapper((await File(fileOrderMetadata).readAsBytes()).buffer.asByteData());
+    var numFiles = filesBytes.readUint32();
+    var nameLength = filesBytes.readUint32();
+    List<String> datFiles = List
+      .generate(numFiles, (i) => filesBytes.readString(nameLength)
+        .split("\u0000")[0]);
+    return datFiles;
+  }
+
+  return await (Directory(extractedDir).list())
+    .where((file) => file is File && path.extension(file.path).length <= 3)
+    .map((file) => file.path)
+    .toList();
 }

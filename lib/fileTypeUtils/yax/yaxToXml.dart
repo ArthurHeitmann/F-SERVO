@@ -35,13 +35,13 @@ class YaxNode {
     tagName = hashToStringMap[tagNameHash] ?? "UNKNOWN";
   }
 
-  XmlElement toXml() {
+  XmlElement toXml([ includeAnnotations = true ]) {
     var attributes = <XmlAttribute>[];
 
     List<XmlNode> childElements = [];
     if (text != null) {
       childElements.add(XmlText(text!));
-      if (text!.startsWith("0x") && text!.length > 2) {
+      if (includeAnnotations && text!.startsWith("0x") && text!.length > 2) {
         var hash = int.parse(text!);
         if (hash != 0) {
           String? hashLookup = hashToStringMap[hash];
@@ -49,22 +49,22 @@ class YaxNode {
             attributes.add(XmlAttribute(XmlName("str"), hashLookup));
         }
       }
-      else if (!isStringAscii(text!)) {
+      else if (includeAnnotations && !isStringAscii(text!)) {
         String? translation = japToEng[text!];
         if (translation != null)
           attributes.add(XmlAttribute(XmlName("eng"), translation));
       }
     }
-    childElements.addAll(children.map((e) => e.toXml()));
+    childElements.addAll(children.map((e) => e.toXml(includeAnnotations)));
     
-    if (tagName == "UNKNOWN")
+    if (includeAnnotations && tagName == "UNKNOWN")
       attributes.add(XmlAttribute(XmlName("id"), "0x${tagNameHash.toRadixString(16)}"));
 
     return XmlElement(XmlName(tagName), attributes, childElements);
   }
 }
 
-XmlElement yaxToXml(ByteDataWrapper bytes) {
+XmlElement yaxToXml(ByteDataWrapper bytes, { includeAnnotations = true }) {
   int nodeCount = bytes.readUint32();
   var nodes = List<YaxNode>.generate(nodeCount, (index) => YaxNode(bytes));
 
@@ -89,7 +89,7 @@ XmlElement yaxToXml(ByteDataWrapper bytes) {
     parent.children.add(node);
   }
 
-  return XmlElement(XmlName("root"), [], root.map((e) => e.toXml()));
+  return XmlElement(XmlName("root"), [], root.map((e) => e.toXml(includeAnnotations)));
 }
 
 Future<void> yaxFileToXmlFile(String yaxFilePath) async {

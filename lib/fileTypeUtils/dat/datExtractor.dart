@@ -1,6 +1,7 @@
 
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:path/path.dart' as path;
 
 import '../pak/pakExtractor.dart';
@@ -90,4 +91,37 @@ Future<List<String>> extractDatFiles(String datPath, { bool shouldExtractPakFile
   }
 
   return fileNames;
+}
+
+class ExtractedInnerFile {
+  final String path;
+  final ByteBuffer bytes;
+
+  ExtractedInnerFile(this.path, this.bytes);
+}
+
+Stream<ExtractedInnerFile> extractDatFilesAsStream(String datPath) async* {
+  try {
+    var datFile = File(datPath);
+    var rawBytes = await datFile.readAsBytes();
+    ByteDataWrapper bytes = ByteDataWrapper(rawBytes.buffer.asByteData());
+    var header = _DatHeader(bytes);
+    bytes.position = header.fileOffsetsOffset;
+    var fileOffsets = bytes.readUint32List(header.fileNumber);
+    bytes.position = header.fileSizesOffset;
+    var fileSizes = bytes.readUint32List(header.fileNumber);
+    bytes.position = header.fileNamesOffset;
+    var nameLength = bytes.readUint32();
+    var fileNames = List<String>
+      .generate(header.fileNumber, (index) => 
+      bytes.readString(nameLength).split("\u0000")[0]);
+
+    for (int i = 0; i < header.fileNumber; i++) {
+      bytes.position = fileOffsets[i];
+      yield ExtractedInnerFile(fileNames[i], bytes.readByteData(fileSizes[i]).buffer);
+    }
+  } catch (e) {
+    print("Error while extracting dat files from $datPath");
+    return;
+  }
 }

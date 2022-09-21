@@ -1,8 +1,10 @@
 
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:path/path.dart' as path;
 
+import '../dat/datExtractor.dart';
 import '../yax/yaxToXml.dart';
 import '../utils/ByteDataWrapper.dart';
 
@@ -67,7 +69,7 @@ Future<List<String>> extractPakFiles(String pakPath, { bool yaxToXml = false }) 
       : headerEntries[index + 1].offset - headerEntries[index].offset
   );
 
-  // extract dir is file path --> /pakExtracted/[index]/
+  // extract dir is file path --> /pakExtracted/pakName/[index]/
   var pakDir = path.dirname(pakPath);
   var extractDir = path.join(pakDir, "pakExtracted", path.basename(pakPath));
   await Directory(extractDir).create(recursive: true);
@@ -92,4 +94,53 @@ Future<List<String>> extractPakFiles(String pakPath, { bool yaxToXml = false }) 
   }
 
   return List<String>.generate(fileCount, (index) => path.join(extractDir, "$index.yax"));
+}
+
+Stream<ExtractedInnerFile> extractPakFilesAsStream(String pakPath) async* {
+  var pakFile = File(pakPath);
+  var rawBytes = await pakFile.readAsBytes();
+  ByteDataWrapper bytes = ByteDataWrapper(rawBytes.buffer.asByteData());
+
+  bytes.position = 8;
+  var firstOffset = bytes.readUint32();
+  var fileCount = (firstOffset - 4) ~/ 12;
+
+  bytes.position = 0;
+  var headerEntries = List<HeaderEntry>.generate(fileCount, (index) => HeaderEntry(bytes));
+
+  // calculate file sizes from offsets
+  List<int> fileSizes = List<int>.generate(fileCount, (index) =>
+    index == fileCount - 1
+      ? bytes.length - headerEntries[index].offset
+      : headerEntries[index + 1].offset - headerEntries[index].offset
+  );
+
+  // extract dir is file path --> /pakExtracted/pakName/[index]/
+  var pakDir = path.dirname(pakPath);
+  var extractDir = path.join(pakDir, "pakExtracted", path.basename(pakPath));
+  for (int i = 0; i < fileCount; i++) {
+    var meta = headerEntries[i];
+    var size = fileSizes[i];
+    bytes.position = headerEntries[i].offset;
+    bool isCompressed = meta.uncompressedSize > size;
+    int readSize;
+    if (isCompressed) {
+      int compressedSize = bytes.readUint32();
+      readSize = compressedSize;
+    }
+    else {
+      int paddingEndLength = (4 - (meta.uncompressedSize % 4)) % 4;
+      readSize = size - paddingEndLength;
+    }
+    
+    var fileBytes = bytes.readUint8List(readSize);
+    if (isCompressed)
+      fileBytes = zlib.decode(fileBytes);
+    var buffer = ByteData(fileBytes.length).buffer;
+    buffer.asUint8List().setAll(0, fileBytes);
+    yield ExtractedInnerFile(
+      path.join(extractDir, "$i.yax"),
+      buffer
+    );
+  }
 }

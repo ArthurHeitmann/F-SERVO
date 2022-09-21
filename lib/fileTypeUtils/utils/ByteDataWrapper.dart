@@ -130,6 +130,12 @@ class ByteDataWrapper {
     return list;
   }
 
+  ByteData readByteData(int length) {
+    var data = _data.buffer.asByteData(_position, length);
+    _position += length;
+    return data;
+  }
+
   List<int> readUint16List(int length) {
     var list = _data.buffer.asUint16List(_position, length);
     _position += length * 2;
