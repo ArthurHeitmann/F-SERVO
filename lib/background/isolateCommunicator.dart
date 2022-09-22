@@ -5,7 +5,7 @@ import 'dart:isolate';
 import '../utils.dart';
 import 'IdsIndexer.dart';
 import 'Initializable.dart';
-import 'indexingService.dart';
+import 'IndexingGroup.dart';
 
 // class _IsolateCommunicatorPrivate is a background worker isolate 
 // class IsolateCommunicator is a wrapper for usage from the main isolate
@@ -14,6 +14,7 @@ enum CommandTypes {
   setupSendPort,
   response,
   addIndexingPaths,
+  removeIndexingPaths,
   lookupId,
 }
 
@@ -41,7 +42,7 @@ Future<Map> _sendMessageWithCompleter(SendPort sendPort, CommandTypes command, M
 class _IsolateCommunicatorPrivate {
   final ReceivePort _receivePort = ReceivePort();
   final SendPort _sendPort;
-  final IndexingService _indexingService = IndexingService();
+  final IndexingGroup _indexingGroup = IndexingGroup();
 
   _IsolateCommunicatorPrivate(this._sendPort) {
     _receivePort.listen(handleMessage);
@@ -62,6 +63,9 @@ class _IsolateCommunicatorPrivate {
       case CommandTypes.addIndexingPaths:
         addIndexingPaths(message["paths"], uuid);
         break;
+      case CommandTypes.removeIndexingPaths:
+        removeIndexingPaths(message["paths"], uuid);
+        break;
       case CommandTypes.lookupId:
         lookupId(message["id"], uuid);
         break;
@@ -71,7 +75,17 @@ class _IsolateCommunicatorPrivate {
   }
 
   void addIndexingPaths(List<String> paths, String uuid) async {
-    await _indexingService.addPaths(paths);
+    await _indexingGroup.addPaths(paths);
+    _sendMessage(
+      _sendPort,
+      CommandTypes.response,
+      {  },
+      uuid: uuid,
+    );
+  }
+
+  void removeIndexingPaths(List<String> paths, String uuid) async {
+    _indexingGroup.removePaths(paths);
     _sendMessage(
       _sendPort,
       CommandTypes.response,
@@ -81,7 +95,7 @@ class _IsolateCommunicatorPrivate {
   }
 
   Future<void> lookupId(int id, String uuid) async {
-    var data = await _indexingService.lookupId(id);
+    var data = await _indexingGroup.lookupId(id);
     _sendMessage(
       _sendPort,
       CommandTypes.response,
@@ -135,10 +149,22 @@ class IsolateCommunicator with Initializable {
   }
 
   Future<void> addIndexingPaths(List<String> paths) async {
+    if (paths.isEmpty) return;
     await awaitInitialized();
     await _sendMessageWithCompleter(
       _sendPort!,
       CommandTypes.addIndexingPaths,
+      { "paths": paths, },
+      _awaitingResponses,
+    );
+  }
+
+  Future<void> removeIndexingPaths(List<String> paths) async {
+    if (paths.isEmpty) return;
+    await awaitInitialized();
+    await _sendMessageWithCompleter(
+      _sendPort!,
+      CommandTypes.removeIndexingPaths,
       { "paths": paths, },
       _awaitingResponses,
     );

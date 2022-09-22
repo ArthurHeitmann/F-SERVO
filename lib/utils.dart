@@ -150,11 +150,11 @@ Future<List<String>> getDatFiles(String extractedDir) async {
   var pakInfo = path.join(extractedDir, "dat_info.json");
   if (await File(pakInfo).exists()) {
     var datInfoJson = jsonDecode(await File(pakInfo).readAsString());
-    return datInfoJson["files"];
+    return datInfoJson["files"].cast<String>();
   }
   var fileOrderMetadata = path.join(extractedDir, "file_order.metadata");
   if (await File(fileOrderMetadata).exists()) {
-    var filesBytes = ByteDataWrapper((await File(fileOrderMetadata).readAsBytes()).buffer.asByteData());
+    var filesBytes = ByteDataWrapper((await File(fileOrderMetadata).readAsBytes()).buffer);
     var numFiles = filesBytes.readUint32();
     var nameLength = filesBytes.readUint32();
     List<String> datFiles = List

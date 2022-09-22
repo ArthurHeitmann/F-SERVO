@@ -1,12 +1,14 @@
 
 import 'IdsIndexer.dart';
 
-class IndexingService {
+class IndexingGroup {
   final List<IdsIndexer> _indexers = [];
 
   Future<void> addPaths(List<String> paths) async {
-    paths = paths.where((path) => !_indexers.any((indexer) => indexer.path == path)).toList();
     List<Future<void>> futures = [];
+    
+    paths = paths.where((path) => !_indexers.any((indexer) => indexer.path == path)).toList();
+    removePaths(paths);
     for (var path in paths) {
       var indexer = IdsIndexer();
       futures.add(indexer.indexPath(path));
@@ -14,6 +16,14 @@ class IndexingService {
     }
 
     await Future.wait(futures);
+  }
+
+  void removePaths(List<String> paths) {
+    var indexers = _indexers.where((indexer) => paths.contains(indexer.path));
+    for (var indexer in indexers) {
+      indexer.stop();
+      _indexers.remove(indexer);
+    }
   }
 
   Future<void> _ensureAllInitialized() {
@@ -33,5 +43,3 @@ class IndexingService {
     return null;
   }
 }
-
-

@@ -10,23 +10,34 @@ enum StringEncoding {
 }
 
 class ByteDataWrapper {
-  final ByteData _data;
+  final ByteBuffer buffer;
+  late final ByteData _data;
   Endian endian;
+  final int _parentOffset;
+  final int length;
   int _position = 0;
   
-  ByteBuffer get buffer => _data.buffer;
-
-  ByteDataWrapper(this._data, {this.endian = Endian.little});
+  ByteDataWrapper(this.buffer, {
+    this.endian = Endian.little,
+    int parentOffset = 0,
+    int? length,
+  }) :
+    _parentOffset = parentOffset,
+    length = length ?? buffer.lengthInBytes - parentOffset {
+    _data = buffer.asByteData(0, buffer.lengthInBytes);
+    _position = _parentOffset;
+  }
 
   int get position => _position;
 
   set position(int value) {
-    if (value < 0 || value > _data.lengthInBytes)
-      throw RangeError.range(value, 0, _data.lengthInBytes);
-    _position = value;
+    if (value < 0 || value > length)
+      throw RangeError.range(value, 0, _data.lengthInBytes, "View size");
+    if (value > buffer.lengthInBytes)
+      throw RangeError.range(value, 0, buffer.lengthInBytes, "Buffer size");
+    
+    _position = value + _parentOffset;
   }
-
-  int get length => _data.lengthInBytes;
 
   double readFloat32() {
     var value = _data.getFloat32(_position, endian);
@@ -89,85 +100,62 @@ class ByteDataWrapper {
   }
 
   List<double> readFloat32List(int length) {
-    var list = _data.buffer.asFloat32List(_position, length);
+    var list = List<double>.generate(length, (_) => readFloat32());
     _position += length * 4;
     return list;
   }
 
   List<double> readFloat64List(int length) {
-    var list = _data.buffer.asFloat64List(_position, length);
+    var list = List<double>.generate(length, (_) => readFloat64());
     _position += length * 8;
     return list;
   }
 
   List<int> readInt8List(int length) {
-    var list = _data.buffer.asInt8List(_position, length);
-    _position += length;
-    return list;
+    return List<int>.generate(length, (_) => readInt8());
   }
 
   List<int> readInt16List(int length) {
-    var list = _data.buffer.asInt16List(_position, length);
-    _position += length * 2;
-    return list;
+    return List<int>.generate(length, (_) => readInt16());
   }
 
   List<int> readInt32List(int length) {
-    var list = _data.buffer.asInt32List(_position, length);
-    _position += length * 4;
-    return list;
+    return List<int>.generate(length, (_) => readInt32());
   }
 
   List<int> readInt64List(int length) {
-    var list = _data.buffer.asInt64List(_position, length);
-    _position += length * 8;
-    return list;
+    return List<int>.generate(length, (_) => readInt64());
   }
 
   List<int> readUint8List(int length) {
-    var list = _data.buffer.asUint8List(_position, length);
-    _position += length;
-    return list;
-  }
-
-  ByteData readByteData(int length) {
-    var data = _data.buffer.asByteData(_position, length);
-    _position += length;
-    return data;
+    return List<int>.generate(length, (_) => readUint8());
   }
 
   List<int> readUint16List(int length) {
-    var list = _data.buffer.asUint16List(_position, length);
-    _position += length * 2;
-    return list;
+    return List<int>.generate(length, (_) => readUint16());
   }
 
   List<int> readUint32List(int length) {
-    var list = _data.buffer.asUint32List(_position, length);
-    _position += length * 4;
-    return list;
+    return List<int>.generate(length, (_) => readUint32());
   }
 
   List<int> readUint64List(int length) {
-    var list = _data.buffer.asUint64List(_position, length);
-    _position += length * 8;
-    return list;
+    return List<int>.generate(length, (_) => readUint64());
   }
 
-  String _decode(Uint8List bytes, StringEncoding encoding) {
+  String _decode(List<int> bytes, StringEncoding encoding) {
     switch (encoding) {
       case StringEncoding.utf8:
         return String.fromCharCodes(bytes);
       case StringEncoding.utf16:
-        return String.fromCharCodes(bytes.buffer.asUint16List());
+        return String.fromCharCodes(bytes); // TODO check if actually works
       case StringEncoding.shiftJis:
         return ShiftJIS().decode(bytes);
     }
   }
 
   String readString(int length, {StringEncoding encoding = StringEncoding.utf8}) {
-    var bytes = _data.buffer.asUint8List(_position, length);
-    _position += length;
+    var bytes = readUint8List(length);
     return _decode(bytes, encoding);
   }
 
@@ -179,13 +167,11 @@ class ByteDataWrapper {
       if (byte == 0) break;
       bytes.add(byte);
     }
-    return _decode(Uint8List.fromList(bytes), encoding);
+    return _decode(bytes, encoding);
   }
 
-  List<int> readBytes(int length) {
-    var bytes = _data.buffer.asUint8List(_position, length);
-    _position += length;
-    return bytes;
+  ByteDataWrapper makeSubView(int length) {
+    return ByteDataWrapper(buffer, endian: endian, parentOffset: _position, length: length);
   }
 
   void writeFloat32(double value) {
@@ -240,12 +226,16 @@ class ByteDataWrapper {
 
   void writeString(String value) {
     var bytes = value.codeUnits;
-    _data.buffer.asUint8List(_position, bytes.length).setAll(0, bytes);
-    _position += bytes.length;
+    for (var byte in bytes) {
+      _data.setUint8(_position, byte);
+      _position += 1;
+    }
   }
 
   void writeBytes(List<int> value) {
-    _data.buffer.asUint8List(_position, value.length).setAll(0, value);
-    _position += value.length;
+    for (var byte in value) {
+      _data.setUint8(_position, byte);
+      _position += 1;
+    }
   }
 }

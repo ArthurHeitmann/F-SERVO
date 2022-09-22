@@ -133,9 +133,8 @@ class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
               splashRadius: 20,
               icon: Icon(Icons.code, size: 17),
               onPressed: () async {
-                var lookup = await idLookup.lookupId(0x6978ed28);
-                print(lookup?.xmlPath);
-                print("done");
+                var lookup = await idLookup.lookupId(0x27677103);
+                print(lookup?.toString());
               },
             ),
           ],

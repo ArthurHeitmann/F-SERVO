@@ -11,12 +11,13 @@ import 'undoable.dart';
 import 'xmlProps/xmlProp.dart';
 
 class OpenFileData extends ChangeNotifier with Undoable, HasUuid {
+  late final FileType type;
   String _name;
   String _path;
   bool _unsavedChanges = false;
   bool _isLoaded = false;
+  final ChangeNotifier contentNotifier = ChangeNotifier();
   final ScrollController scrollController = ScrollController();
-  late final FileType type;
 
   OpenFileData(this._name, this._path)
     : type = OpenFileData.getFileType(_path);

@@ -52,9 +52,12 @@ class UndoHistoryManager with ChangeNotifier {
     }
     int t1 = DateTime.now().millisecondsSinceEpoch;
     _undoStack.add(_UndoSnapshot.take());
-    int t2 = DateTime.now().millisecondsSinceEpoch;
-    print("Pushing history snapshot took ${t2 - t1}ms");
     _undoIndex = clamp(_undoIndex + 1, 0, _undoStack.length - 1);
+    
+    int tD = DateTime.now().millisecondsSinceEpoch - t1;
+    if (tD > 8)
+      print("WARNING: Pushing history snapshot took ${tD}ms");
+    
     notifyListeners();
   }
 

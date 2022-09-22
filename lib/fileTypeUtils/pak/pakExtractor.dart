@@ -53,7 +53,7 @@ Future<List<String>> extractPakFiles(String pakPath, { bool yaxToXml = false }) 
 
   var pakFile = File(pakPath);
   var rawBytes = await pakFile.readAsBytes();
-  ByteDataWrapper bytes = ByteDataWrapper(rawBytes.buffer.asByteData());
+  ByteDataWrapper bytes = ByteDataWrapper(rawBytes.buffer);
 
   bytes.position = 8;
   var firstOffset = bytes.readUint32();
@@ -99,8 +99,12 @@ Future<List<String>> extractPakFiles(String pakPath, { bool yaxToXml = false }) 
 Stream<ExtractedInnerFile> extractPakFilesAsStream(String pakPath) async* {
   var pakFile = File(pakPath);
   var rawBytes = await pakFile.readAsBytes();
-  ByteDataWrapper bytes = ByteDataWrapper(rawBytes.buffer.asByteData());
+  await for (var y in extractPakBytesAsStream(pakPath, ByteDataWrapper(rawBytes.buffer))) {
+    yield y;
+  }
+}
 
+Stream<ExtractedInnerFile> extractPakBytesAsStream(String pakPath, ByteDataWrapper bytes) async* {
   bytes.position = 8;
   var firstOffset = bytes.readUint32();
   var fileCount = (firstOffset - 4) ~/ 12;
@@ -140,7 +144,7 @@ Stream<ExtractedInnerFile> extractPakFilesAsStream(String pakPath) async* {
     buffer.asUint8List().setAll(0, fileBytes);
     yield ExtractedInnerFile(
       path.join(extractDir, "$i.yax"),
-      buffer
+      ByteDataWrapper(buffer),
     );
   }
 }

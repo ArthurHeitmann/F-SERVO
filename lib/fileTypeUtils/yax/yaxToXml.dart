@@ -96,7 +96,7 @@ Future<void> yaxFileToXmlFile(String yaxFilePath) async {
   print("Converting $yaxFilePath to xml");
 
   var rawBytes = await File(yaxFilePath).readAsBytes();
-  var bytes = ByteDataWrapper(rawBytes.buffer.asByteData());
+  var bytes = ByteDataWrapper(rawBytes.buffer);
   var xml = yaxToXml(bytes);
   var xmlString = xml.toXmlString(pretty: true, indent: "\t");
   var xmlFilePath = "${path.withoutExtension(yaxFilePath)}.xml";

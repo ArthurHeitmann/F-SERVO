@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:path/path.dart' as path;
 
 import '../main.dart';
@@ -53,6 +54,8 @@ class FilesAreaManager extends NestedNotifier<OpenFileData> implements Undoable 
 
     if (length == 0 && areasManager.length > 1)
       areasManager.remove(this);
+    
+    undoHistoryManager.onUndoableEvent();
   }
 
   void closeAll() {
@@ -102,6 +105,8 @@ class FilesAreaManager extends NestedNotifier<OpenFileData> implements Undoable 
     if (length == 0) {
       areasManager.remove(this);
     }
+
+    undoHistoryManager.onUndoableEvent();
   }
 
   void moveToLeftView(OpenFileData file) {
@@ -125,6 +130,8 @@ class FilesAreaManager extends NestedNotifier<OpenFileData> implements Undoable 
     if (length == 0) {
       areasManager.remove(this);
     }
+    
+    undoHistoryManager.onUndoableEvent();
   }
 
   void switchToNextFile() {
@@ -169,8 +176,12 @@ class FilesAreaManager extends NestedNotifier<OpenFileData> implements Undoable 
 
 class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
   FilesAreaManager? _activeArea;
+  final ChangeNotifier subEvents = ChangeNotifier();
+  final ChangeNotifier onSaveAll = ChangeNotifier();
 
-  OpenFilesAreasManager() : super([]);
+  OpenFilesAreasManager() : super([]) {
+    addListener(subEvents.notifyListeners);
+  }
 
   bool isFileOpened(String path) {
     for (var area in this) {
@@ -222,6 +233,9 @@ class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
     OpenFileData file = OpenFileData.from(path.basename(filePath), filePath);
     toArea.add(file);
     toArea.currentFile = file;
+
+    undoHistoryManager.onUndoableEvent();
+
     return file;
   }
 
@@ -229,12 +243,14 @@ class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
   void add(FilesAreaManager child) {
     super.add(child);
     activeArea ??= child;
+    child.addListener(subEvents.notifyListeners);
   }
 
   @override
   void remove(child) {
     if (child == _activeArea)
       _activeArea = this[0];
+    child.removeListener(subEvents.notifyListeners);
     super.remove(child);
   }
 
@@ -242,6 +258,7 @@ class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
   void removeAt(int index) {
     if (this[index] == _activeArea)
       _activeArea = this[0];
+    this[index].removeListener(subEvents.notifyListeners);
     super.removeAt(index);
   }
 
@@ -251,8 +268,9 @@ class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
     super.clear();
   }
   
-  Future<void> saveAll() {
-    return Future.wait(map((area) => area.saveAll()));
+  Future<void> saveAll() async {
+    await Future.wait(map((area) => area.saveAll()));
+    onSaveAll.notifyListeners();
   }
 
   @override
