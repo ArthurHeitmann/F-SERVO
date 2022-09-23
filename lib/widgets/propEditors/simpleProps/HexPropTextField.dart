@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../utils.dart';
-import 'propTextField.dart';
+import 'primaryPropTextField.dart';
 
 class HexPropTextField extends ChangeNotifierWidget {
   final HexProp prop;
@@ -47,7 +47,7 @@ class _HexPropTextFieldState extends ChangeNotifierState<HexPropTextField> {
 
   @override
   Widget build(BuildContext context) {
-    return PropTextField(
+    return PrimaryPropTextField(
       prop: widget.prop,
       left: Opacity(
         opacity: showHashString ? 1.0 : 0.25,

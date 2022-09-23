@@ -6,7 +6,7 @@ import '../../../stateManagement/Property.dart';
 import 'HexPropTextField.dart';
 import 'NumberPropTextField.dart';
 import 'VectorPropEditor.dart';
-import 'propTextField.dart';
+import 'primaryPropTextField.dart';
 
 Widget makePropEditor(Prop prop, [BoxConstraints? constraints]) {
   switch (prop.type) {
@@ -17,6 +17,6 @@ Widget makePropEditor(Prop prop, [BoxConstraints? constraints]) {
     case PropType.vector:
       return VectorPropEditor(prop: prop as VectorProp);
     default:
-      return PropTextField(prop: prop, constraints: constraints);
+      return PrimaryPropTextField(prop: prop, constraints: constraints);
   }
 }

@@ -8,6 +8,7 @@ import '../../../stateManagement/openFilesManager.dart';
 import '../../../stateManagement/xmlProps/xmlActionProp.dart';
 import '../../../utils.dart';
 import '../../misc/Selectable.dart';
+import '../simpleProps/DoubleClickablePropTextField.dart';
 import '../simpleProps/TextProp.dart';
 import '../simpleProps/XmlPropEditorFactory.dart';
 
@@ -93,22 +94,31 @@ class XmlActionEditorState extends ChangeNotifierState<XmlActionEditor> {
         color: getActionPrimaryColor(),
         borderRadius: BorderRadius.only(topLeft: Radius.circular(getTheme(context).actionBorderRadius!), topRight: Radius.circular(getTheme(context).actionBorderRadius!)),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(4.0),
-        child: Column(
-          children: [
-            RichText(
-              text: TextSpan(
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16
-                ),
-                text: widget.action.code.strVal ?? "UNKNOWN ${widget.action.code.value}"
-              )
-            ),
-            SizedBox(height: 5),
-            TextProp(prop: widget.action.name, overflow: TextOverflow.ellipsis,),
-          ],
+      child: Theme(
+        data: Theme.of(context).copyWith(
+          textSelectionTheme: TextSelectionThemeData(
+            cursorColor: Colors.white,
+            selectionColor: Colors.black.withOpacity(0.5),
+            selectionHandleColor: Colors.white,
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(4.0),
+          child: Column(
+            children: [
+              RichText(
+                text: TextSpan(
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16
+                  ),
+                  text: widget.action.code.strVal ?? "UNKNOWN ${widget.action.code.value}"
+                )
+              ),
+              SizedBox(height: 5),
+              DoubleClickablePropTextField(prop: widget.action.name),
+            ],
+          ),
         ),
       ),
     );

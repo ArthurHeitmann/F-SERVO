@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../stateManagement/Property.dart';
 import '../../misc/RowSeparated.dart';
 import 'NumberPropTextField.dart';
-import 'propTextField.dart';
+import 'primaryPropTextField.dart';
 
 const List<String> _coordChars = ["X", "Y", "Z"];
 const List<Color> _coordColors = [Colors.red, Colors.green, Colors.blue];
@@ -63,7 +63,7 @@ class VectorPropEditor extends StatelessWidget {
                     ),
                 ],
               )
-              : PropTextField(prop: prop);
+              : PrimaryPropTextField(prop: prop);
             }
           ),
         );
