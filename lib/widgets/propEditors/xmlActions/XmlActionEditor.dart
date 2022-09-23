@@ -139,10 +139,10 @@ class XmlActionEditorState extends ChangeNotifierState<XmlActionEditor> {
 
   Widget makeInnerActionBody() {
     return Column(
-      children: widget.action
-        .where((prop) => !ignoreTagNames.contains(prop.tagName))
-        .map((prop) => makeXmlPropEditor(prop))
-        .toList(),
+      children: makeXmlMultiPropEditor(
+        widget.action,
+        (prop) => !ignoreTagNames.contains(prop.tagName)
+      ),
     );
   }
 }

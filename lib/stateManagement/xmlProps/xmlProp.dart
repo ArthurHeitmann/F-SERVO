@@ -56,6 +56,42 @@ class XmlProp extends NestedNotifier<XmlProp> {
       (value as ChangeNotifier).dispose();
     super.dispose();
   }
+
+  @override
+  void add(XmlProp child) {
+    super.add(child);
+    _onValueChange();
+  }
+
+  @override
+  void addAll(Iterable<XmlProp> children) {
+    super.addAll(children);
+    _onValueChange();
+  }
+
+  @override
+  void insert(int index, XmlProp child) {
+    super.insert(index, child);
+    _onValueChange();
+  }
+
+  @override
+  void remove(XmlProp child) {
+    super.remove(child);
+    _onValueChange();
+  }
+
+  @override
+  void removeAt(int index) {
+    super.removeAt(index);
+    _onValueChange();
+  }
+
+  @override
+  void clear() {
+    super.clear();
+    _onValueChange();
+  }
   
   void _onValueChange() {
     file?.hasUnsavedChanges = true;

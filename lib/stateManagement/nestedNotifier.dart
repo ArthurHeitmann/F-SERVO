@@ -27,6 +27,16 @@ abstract class NestedNotifier<T> extends ChangeNotifier with IterableMixin<T>, U
 
   int indexOf(T child) => _children.indexOf(child);
 
+  int indexWhere(bool Function(T) test) => _children.indexWhere(test);
+
+  T? find(bool Function(T) test) {
+    for (final child in _children) {
+      if (test(child))
+        return child;
+    }
+    return null;
+  }
+
   T? findRecWhere(bool Function(T) test, { Iterable<T>? children }) {
     children ??= this;
     for (var child in children) {
