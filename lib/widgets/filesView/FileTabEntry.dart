@@ -18,6 +18,8 @@ class FileTabEntry extends ChangeNotifierWidget {
 }
 
 class _FileTabEntryState extends ChangeNotifierState<FileTabEntry> {
+  bool isHoveringCloseButton = false;
+
   @override
   Widget build(BuildContext context) {
     return logicWrapper(
@@ -54,20 +56,26 @@ class _FileTabEntryState extends ChangeNotifierState<FileTabEntry> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Expanded(child:
+                    Expanded(child: 
                       Text(
-                        widget.file.name + (widget.file.hasUnsavedChanges ? "*" : ""),
+                        widget.file.name,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    IconButton(
-                      padding: EdgeInsets.zero,
-                      constraints: BoxConstraints(),
-                      icon: Icon(Icons.close),
-                      onPressed: () => widget.area.closeFile(widget.file),
-                      iconSize: 15,
-                      splashRadius: 15,
-                      color: getTheme(context).tabIconColor,
+                    MouseRegion(
+                      onEnter: (event) => setState(() => isHoveringCloseButton = true),
+                      onExit: (event) => setState(() => isHoveringCloseButton = false),
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        constraints: BoxConstraints(),
+                        icon: widget.file.hasUnsavedChanges && !isHoveringCloseButton
+                                ? Icon(Icons.circle, size: 11,)
+                                : Icon(Icons.close),
+                        onPressed: () => widget.area.closeFile(widget.file),
+                        iconSize: 15,
+                        splashRadius: 15,
+                        color: getTheme(context).tabIconColor,
+                      ),
                     ),
                   ],
                 ),
