@@ -38,6 +38,7 @@ class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          Divider(height: 1),
           makeTopRow(),
           Divider(height: 1),
           Expanded(

@@ -5,6 +5,7 @@ import 'package:window_manager/window_manager.dart';
 import 'customTheme.dart';
 import 'keyboardEvents/globalShortcutsWrapper.dart';
 import 'widgets/EditorLayout.dart';
+import 'widgets/statusbar/statusbar.dart';
 import 'widgets/titlebar/Titlebar.dart';
 
 void main() async {
@@ -50,6 +51,8 @@ class MyApp extends StatelessWidget {
               children: [
                 TitleBar(),
                 Expanded(child: EditorLayout()),
+                Divider(height: 1),
+                Statusbar(),
               ],
             ),
           ),

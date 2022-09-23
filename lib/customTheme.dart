@@ -150,14 +150,14 @@ class NierDarkThemeExtension extends NierThemeExtension {
   NierDarkThemeExtension()
     : super(
       editorBackgroundColor: const Color.fromRGBO(18, 18, 18, 1),
-      sidebarBackgroundColor: Color.fromRGBO(255, 255, 255, 0.1),
+      sidebarBackgroundColor: Color.fromARGB(255, 50, 50, 50),
       dividerColor: Color.fromRGBO(255, 255, 255, 0.1),
       tabColor: Color.fromARGB(255, 59, 59, 59),
       tabSelectedColor: Color.fromARGB(255, 36, 36, 36),
       tabIconColor: Color.fromARGB(255, 255, 255, 255),
       dropTargetColor: Colors.black.withOpacity(0.5),
       dropTargetTextColor: Colors.white,
-      titleBarColor: Color.fromRGBO(0x2d, 0x2d, 0x2d, 1),
+      titleBarColor: Color.fromARGB(255, 49, 49, 49),
       titleBarTextColor: Color.fromRGBO(200, 200, 200, 1),
       titleBarButtonDefaultColor: Color.fromRGBO(239, 239, 239, 1),
       titleBarButtonPrimaryColor: Colors.blue,

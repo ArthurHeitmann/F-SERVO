@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../customTheme.dart';
 import 'FileHierarchyExplorer/groupEditor.dart';
 import 'filesView/OpenFilesAreas.dart';
 import 'FileHierarchyExplorer/FileExplorer.dart';
@@ -19,23 +20,29 @@ class EditorLayout extends StatelessWidget {
         draggableThickness: 4,
         lineThickness: 4,
         children: [
-          ResizableWidget(
-            axis: Axis.vertical,
-            percentages: [0.55, 0.45],
-            draggableThickness: 5,
-            children: [
-              FileExplorer(),
-              GroupEditor()
-            ],
+          Container(
+            color: getTheme(context).sidebarBackgroundColor,
+            child: ResizableWidget(
+              axis: Axis.vertical,
+              percentages: [0.55, 0.45],
+              draggableThickness: 5,
+              children: [
+                FileExplorer(),
+                GroupEditor()
+              ],
+            ),
           ),
           OpenFilesAreas(),
-          ResizableWidget(
-            axis: Axis.vertical,
-            percentages: [0.4, 0.6],
-            children: [
-              Outliner(),
-              XmlActionDetailsEditor(),
-            ],
+          Container(
+            color: getTheme(context).sidebarBackgroundColor,
+            child: ResizableWidget(
+              axis: Axis.vertical,
+              percentages: [0.4, 0.6],
+              children: [
+                Outliner(),
+                XmlActionDetailsEditor(),
+              ],
+            ),
           ),
         ],
       );

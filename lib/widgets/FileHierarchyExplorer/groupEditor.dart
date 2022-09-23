@@ -7,7 +7,6 @@ import '../../stateManagement/Property.dart';
 import '../misc/SmoothSingleChildScrollView.dart';
 import '../misc/smallButton.dart';
 import '../propEditors/simpleProps/propEditorFactory.dart';
-import '../propEditors/simpleProps/propTextField.dart';
 
 class GroupEditor extends ChangeNotifierWidget {
   GroupEditor({super.key}) : super(notifier: openHierarchyManager);
@@ -76,7 +75,7 @@ class _GroupEditorState extends ChangeNotifierState<GroupEditor> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(flex: 1, child: Text("Name:")),
-              Expanded(flex: 3, child: PropTextField(prop: groupEntry.name)),
+              Expanded(flex: 3, child: makePropEditor(groupEntry.name)),
             ],
           ),
           SizedBox(height: 5),

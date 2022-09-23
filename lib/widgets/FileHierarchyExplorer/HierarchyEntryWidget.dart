@@ -91,6 +91,14 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
               "Close",
               onPressed: () => openHierarchyManager.remove(widget.entry),
             ),
+          ContextMenuButtonConfig(
+            "Collapse all",
+            onPressed: () => widget.entry.setCollapsedRecursive(true),
+          ),
+          ContextMenuButtonConfig(
+            "Expand all",
+            onPressed: () => widget.entry.setCollapsedRecursive(false),
+          ),
         ],
       ),
       child: child,

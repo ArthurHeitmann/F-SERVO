@@ -47,6 +47,14 @@ class HierarchyEntry extends NestedNotifier<HierarchyEntry> with Undoable {
     print("Not implemented!");
   }
   
+  void setCollapsedRecursive(bool value, [bool setSelf = false]) {
+    if (setSelf)
+      isCollapsed = value;
+    for (var child in this) {
+      child.setCollapsedRecursive(value, true);
+    }
+  }
+
   @override
   Undoable takeSnapshot() {
     var snapshot = HierarchyEntry(name.value, priority, isSelectable, isCollapsible, isOpenable);
@@ -515,25 +523,13 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
   }
 
   void expandAll() {
-    var stack = toList();
-    while (stack.isNotEmpty) {
-      var entry = stack.removeLast();
-      if (entry.isCollapsible)
-        entry.isCollapsed = false;
-      for (var child in entry)
-        stack.add(child);
-    }
+    for (var entry in this)
+      entry.setCollapsedRecursive(false, true);
   }
   
   void collapseAll() {
-    var stack = toList();
-    while (stack.isNotEmpty) {
-      var entry = stack.removeLast();
-      if (entry.isCollapsible)
-        entry.isCollapsed = true;
-      for (var child in entry)
-        stack.add(child);
-    }
+    for (var entry in this)
+      entry.setCollapsedRecursive(true, true);
   }
 
   HierarchyEntry? get selectedEntry => _selectedEntry;

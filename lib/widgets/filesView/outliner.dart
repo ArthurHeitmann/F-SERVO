@@ -30,6 +30,7 @@ class _OutlinerState extends ChangeNotifierState<Outliner> {
         builder: (context) => Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            Divider(height: 1),
             makeTopRow(),
             Divider(height: 1),
             Expanded(
