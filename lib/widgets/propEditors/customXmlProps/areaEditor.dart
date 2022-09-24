@@ -21,9 +21,10 @@ final _areaIcons = {
 };
 
 class AreaEditor extends ChangeNotifierWidget {
+  final bool showDetails;
   final XmlProp prop;
 
-  AreaEditor({super.key, required this.prop}) : super(notifier: prop);
+  AreaEditor({super.key, required this.prop, required this.showDetails}) : super(notifier: prop);
 
   @override
   State<AreaEditor> createState() => _AreaEditorState();
@@ -74,7 +75,7 @@ class _AreaEditorState extends ChangeNotifierState<AreaEditor> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (parent != null)
-                    makeXmlPropEditor(parent),
+                    makeXmlPropEditor(parent, widget.showDetails),
                   TransformsEditor(
                     parent: widget.prop,
                     canBeRotated: type != _typeSphereArea,

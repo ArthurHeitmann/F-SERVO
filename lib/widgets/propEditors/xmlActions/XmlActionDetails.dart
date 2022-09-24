@@ -18,6 +18,6 @@ class XmlActionDetails extends ChangeNotifierWidget {
 class _XmlActionDetailsState extends ChangeNotifierState<XmlActionDetails> {
   @override
   Widget build(BuildContext context) {
-    return makeXmlPropEditor(widget.action);
+    return makeXmlPropEditor(widget.action, true);
   }
 }

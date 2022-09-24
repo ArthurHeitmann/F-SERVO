@@ -43,9 +43,10 @@ final Set<int> spawningActionCodes = {
 };
 
 class XmlActionEditor extends ChangeNotifierWidget {
+  final bool showDetails;
   final XmlActionProp action;
 
-  XmlActionEditor({required this.action})
+  XmlActionEditor({required this.action, required this.showDetails})
     : super(key: _getOrMakeKey(action.id.value), notifiers: [action, action.attribute]);
 
   @override
@@ -140,6 +141,7 @@ class XmlActionEditorState extends ChangeNotifierState<XmlActionEditor> {
     return Column(
       children: makeXmlMultiPropEditor(
         widget.action,
+        widget.showDetails,
         (prop) => !ignoreTagNames.contains(prop.tagName)
       ),
     );

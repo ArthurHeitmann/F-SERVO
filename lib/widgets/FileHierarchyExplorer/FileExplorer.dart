@@ -134,7 +134,7 @@ class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
               splashRadius: 20,
               icon: Icon(Icons.code, size: 17),
               onPressed: () async {
-                var lookup = await idLookup.lookupId(0x27677103);
+                var lookup = await idLookup.lookupId(0xfeb12f4c);
                 print(lookup?.toString());
               },
             ),
@@ -156,7 +156,7 @@ class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
           child: Text(
             'Drop file here',
             style: TextStyle(
-              color: getTheme(context).dropTargetTextColor,
+              color: getTheme(context).textColor,
               fontSize: 20,
               fontWeight: FontWeight.bold
             ),

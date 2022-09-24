@@ -9,9 +9,10 @@ import 'XmlPropEditorFactory.dart';
 import 'propEditorFactory.dart';
 
 class XmlPropEditor extends ChangeNotifierWidget {
+  final bool showDetails;
   final XmlProp prop;
 
-  XmlPropEditor({super.key, required this.prop}) : super(notifier: prop);
+  XmlPropEditor({super.key, required this.prop, required this.showDetails}) : super(notifier: prop);
 
   @override
   State<XmlPropEditor> createState() => _XmlPropEditorState();
@@ -36,7 +37,7 @@ class _XmlPropEditorState extends ChangeNotifierState<XmlPropEditor> {
             ],
           ),
         ),
-        ...makeXmlMultiPropEditor(widget.prop)
+        ...makeXmlMultiPropEditor(widget.prop, widget.showDetails)
           .map((w) => Padding(
             padding: const EdgeInsets.only(left: 10),
             child: w,

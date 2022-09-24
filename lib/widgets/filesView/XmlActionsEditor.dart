@@ -12,7 +12,7 @@ class XmlActionsEditor extends XmlArrayEditor {
   final XmlProp root;
 
   XmlActionsEditor({super.key, required this.root})
-    : super(root, root.where((element) => element.tagName == "size").first, "action");
+    : super(root, root.where((element) => element.tagName == "size").first, "action", false);
 
   @override
   XmlArrayEditorState createState() => _XmlActionsEditorState();
@@ -30,6 +30,7 @@ class _XmlActionsEditorState extends XmlArrayEditorState {
         children: actions
           .map((child) => makeXmlActionEditor(
             action: child as XmlActionProp,
+            showDetails: false
           ))
           .toList()
       ),

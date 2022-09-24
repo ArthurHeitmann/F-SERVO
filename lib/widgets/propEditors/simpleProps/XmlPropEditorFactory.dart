@@ -9,16 +9,16 @@ import '../customXmlProps/areaEditor.dart';
 import '../customXmlProps/transformsEditor.dart';
 import 'XmlPropEditor.dart';
 
-Widget makeXmlPropEditor(XmlProp prop) {
+Widget makeXmlPropEditor(XmlProp prop, bool showDetails) {
   // area editor
   if (prop.isNotEmpty && prop[0].tagName == "code" && prop[0].value is HexProp && _areaTypes.contains((prop[0].value as HexProp).value)) {
-    return AreaEditor(prop: prop);
+    return AreaEditor(prop: prop, showDetails: showDetails,);
   }
   // fallback
-  return XmlPropEditor(prop: prop);
+  return XmlPropEditor(prop: prop, showDetails: showDetails,);
 }
 
-List<Widget> makeXmlMultiPropEditor(XmlProp parent, [bool Function(XmlProp)? filter]) {
+List<Widget> makeXmlMultiPropEditor(XmlProp parent, bool showDetails, [bool Function(XmlProp)? filter]) {
   List<Widget> widgets = [];
 
   for (var i = 0; i < parent.length; i++) {
@@ -43,7 +43,7 @@ List<Widget> makeXmlMultiPropEditor(XmlProp parent, [bool Function(XmlProp)? fil
     }
     // fallback
     else {
-      widgets.add(makeXmlPropEditor(parent[i]));
+      widgets.add(makeXmlPropEditor(parent[i], showDetails));
     }
   }
 

@@ -7,11 +7,12 @@ import '../../misc/smallButton.dart';
 import '../simpleProps/XmlPropEditorFactory.dart';
 
 class XmlArrayEditor extends ChangeNotifierWidget {
+  final bool showDetails;
   final XmlProp parent;
   final XmlProp sizeIndicator;
   final String itemsTagName;
 
-  XmlArrayEditor(this.parent, this.sizeIndicator, this.itemsTagName, {super.key}) : super(notifier: parent);
+  XmlArrayEditor(this.parent, this.sizeIndicator, this.itemsTagName, this.showDetails, {super.key}) : super(notifier: parent);
 
   @override
   State<XmlArrayEditor> createState() => XmlArrayEditorState();
@@ -27,7 +28,7 @@ class XmlArrayEditorState extends ChangeNotifierState<XmlArrayEditor> {
     return Column(
       children: widget.parent
         .where((child) => child.tagName == widget.itemsTagName)
-        .map((child) => makeXmlPropEditor(child))
+        .map((child) => makeXmlPropEditor(child, widget.showDetails))
         .toList()
         ..add(SmallButton(child: Icon(Icons.add), onPressed: () {})),
     );

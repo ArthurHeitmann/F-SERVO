@@ -35,7 +35,7 @@ Widget _makeXmlEditor(XmlProp root) {
   if (isActionsXml(root))
     return XmlActionsEditor(root: root);
   else
-    return SingleChildScrollView(child: XmlPropEditor(prop: root));
+    return SingleChildScrollView(child: XmlPropEditor(prop: root, showDetails: true,));
 }
 
 bool isActionsXml(XmlProp root) {
