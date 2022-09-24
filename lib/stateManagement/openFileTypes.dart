@@ -32,6 +32,8 @@ class OpenFileData extends ChangeNotifier with Undoable, HasUuid {
   static FileType getFileType(String path) {
     if (path.endsWith(".xml"))
       return FileType.xml;
+    else if (path == "preferences")
+      return FileType.preferences;
     else
       return FileType.text;
   }

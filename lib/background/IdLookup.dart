@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../stateManagement/openFileTypes.dart';
 import '../stateManagement/openFilesManager.dart';
+import '../utils.dart';
 import 'IdsIndexer.dart';
 import 'Initializable.dart';
 import 'isolateCommunicator.dart';
@@ -24,7 +25,6 @@ class IdLookup with Initializable {
   Future<void> init() async {
     var prefs = await SharedPreferences.getInstance();
     var paths = prefs.getStringList("indexingPaths") ?? [];
-    paths.add(r"D:\delete\mods\na\blender\extracted\");
     if (paths.isNotEmpty)
       await _heavyWorker.addIndexingPaths(paths);
     
@@ -32,6 +32,18 @@ class IdLookup with Initializable {
     areasManager.onSaveAll.addListener(_onFilesSaved);
 
     completeInitialization();
+  }
+
+  Future<void> addIndexingPaths(List<String> paths) async {
+    await _heavyWorker.addIndexingPaths(paths);
+  }
+  
+  Future<void> removeIndexingPaths(List<String> paths) async {
+    await _heavyWorker.removeIndexingPaths(paths);
+  }
+
+  Future<void> clearIndexingPaths() async {
+    await _heavyWorker.clearIndexingPaths();
   }
 
   Future<IndexedIdData?> lookupId(int id) async {
@@ -67,7 +79,7 @@ class IdLookup with Initializable {
           continue;
         if (_openFiles.contains(file))
           continue;
-        listener() => _onFileChanged(file);
+        var listener = debounce(() => _onFileChanged(file), 1000);
         _openFiles.add(file);
         _filesChangesListeners.add(listener);
         file.contentNotifier.addListener(listener);
@@ -114,5 +126,4 @@ class IdLookup with Initializable {
   }
 }
 
-final idLookup = IdLookup()
-                ..init();
+final idLookup = IdLookup();

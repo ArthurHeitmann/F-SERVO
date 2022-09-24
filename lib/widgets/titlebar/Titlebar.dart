@@ -87,6 +87,12 @@ class TitleBarState extends ChangeNotifierState<TitleBar> with WindowListener {
               icon: Icon(Icons.save, size: 15),
               onPressed: () => areasManager.saveAll(),
             ),
+            IconButton(
+              padding: EdgeInsets.zero,
+              splashRadius: 14,
+              icon: Icon(Icons.settings, size: 15),
+              onPressed: () => areasManager.openPreferences(),
+            ),
             Expanded(
               child: GestureDetector(
                 onPanUpdate: (details) => windowManager.startDragging(),

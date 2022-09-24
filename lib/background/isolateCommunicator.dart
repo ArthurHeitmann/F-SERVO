@@ -15,6 +15,7 @@ enum CommandTypes {
   response,
   addIndexingPaths,
   removeIndexingPaths,
+  clearIndexingPaths,
   lookupId,
 }
 
@@ -66,6 +67,9 @@ class _IsolateCommunicatorPrivate {
       case CommandTypes.removeIndexingPaths:
         removeIndexingPaths(message["paths"], uuid);
         break;
+      case CommandTypes.clearIndexingPaths:
+        clearIndexingPaths(uuid);
+        break;
       case CommandTypes.lookupId:
         lookupId(message["id"], uuid);
         break;
@@ -86,6 +90,16 @@ class _IsolateCommunicatorPrivate {
 
   void removeIndexingPaths(List<String> paths, String uuid) async {
     _indexingGroup.removePaths(paths);
+    _sendMessage(
+      _sendPort,
+      CommandTypes.response,
+      {  },
+      uuid: uuid,
+    );
+  }
+
+  void clearIndexingPaths(String uuid) async {
+    _indexingGroup.clearPaths();
     _sendMessage(
       _sendPort,
       CommandTypes.response,
@@ -166,6 +180,16 @@ class IsolateCommunicator with Initializable {
       _sendPort!,
       CommandTypes.removeIndexingPaths,
       { "paths": paths, },
+      _awaitingResponses,
+    );
+  }
+
+  Future<void> clearIndexingPaths() async {
+    await awaitInitialized();
+    await _sendMessageWithCompleter(
+      _sendPort!,
+      CommandTypes.clearIndexingPaths,
+      {  },
       _awaitingResponses,
     );
   }

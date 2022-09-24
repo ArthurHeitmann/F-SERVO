@@ -5,6 +5,7 @@ import '../main.dart';
 import '../widgets/misc/confirmCancelDialog.dart';
 import 'nestedNotifier.dart';
 import 'openFileTypes.dart';
+import 'preferencesData.dart';
 import 'undoable.dart';
 
 class FilesAreaManager extends NestedNotifier<OpenFileData> implements Undoable {
@@ -237,6 +238,25 @@ class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
     undoHistoryManager.onUndoableEvent();
 
     return file;
+  }
+
+  Future<void> openPreferences() async {
+    PreferencesData? prefs;
+    for (var area in this) {
+      prefs = area.find((file) => file is PreferencesData) as PreferencesData?;
+      if (prefs != null)
+        break;
+    }
+    if (prefs != null) {
+      activeArea = getAreaOfFile(prefs)!;
+      activeArea!.currentFile = prefs;
+    }
+    else {
+      prefs = PreferencesData();
+      await prefs.prefsFuture;
+      activeArea!.add(prefs);
+      activeArea!.currentFile = prefs;
+    }
   }
 
   @override

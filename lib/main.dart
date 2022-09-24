@@ -2,6 +2,7 @@ import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
+import 'background/IdLookup.dart';
 import 'customTheme.dart';
 import 'keyboardEvents/globalShortcutsWrapper.dart';
 import 'widgets/EditorLayout.dart';
@@ -24,6 +25,8 @@ void main() async {
       await windowManager.setPosition(windowPos.translate(0, 50));
     // await windowManager.focus();
   });
+
+  idLookup.init();
 
   runApp(MyApp());
 }

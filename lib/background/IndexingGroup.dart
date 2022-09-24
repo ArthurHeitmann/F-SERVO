@@ -16,14 +16,26 @@ class IndexingGroup {
     }
 
     await Future.wait(futures);
+
+    print("Indexed ${paths.length} paths");
   }
 
   void removePaths(List<String> paths) {
     var indexers = _indexers.where((indexer) => paths.contains(indexer.path));
-    for (var indexer in indexers) {
+    for (var indexer in indexers.toList()) {
       indexer.stop();
       _indexers.remove(indexer);
     }
+    print("Stopped indexing ${paths.length} paths");
+  }
+
+  void clearPaths() {
+    for (var indexer in _indexers) {
+      indexer.stop();
+    }
+    _indexers.clear();
+
+    print("Stopped indexing all paths");
   }
 
   Future<void> _ensureAllInitialized() {

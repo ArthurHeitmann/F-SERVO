@@ -91,6 +91,11 @@ abstract class NestedNotifier<T> extends ChangeNotifier with IterableMixin<T>, U
     notifyListeners();
   }
 
+  void removeWhere(bool Function(T) test) {
+    _children.removeWhere(test);
+    notifyListeners();
+  }
+
   void move(int from, int to) {
     if (from == to) return;
     if (to > from)

@@ -127,17 +127,6 @@ class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
                 onPressed: openHierarchyManager.collapseAll,
               ),
             ),
-            IconButton(
-              padding: EdgeInsets.all(5),
-              constraints: BoxConstraints(),
-              iconSize: 20,
-              splashRadius: 20,
-              icon: Icon(Icons.code, size: 17),
-              onPressed: () async {
-                var lookup = await idLookup.lookupId(0xfeb12f4c);
-                print(lookup?.toString());
-              },
-            ),
           ],
         ),
       ],
