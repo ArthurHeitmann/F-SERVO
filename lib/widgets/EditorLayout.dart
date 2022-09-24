@@ -22,26 +22,30 @@ class EditorLayout extends StatelessWidget {
         children: [
           Container(
             color: getTheme(context).sidebarBackgroundColor,
-            child: ResizableWidget(
-              axis: Axis.vertical,
-              percentages: [0.55, 0.45],
-              draggableThickness: 5,
-              children: [
-                FileExplorer(),
-                GroupEditor()
-              ],
+            child: Material(
+              child: ResizableWidget(
+                axis: Axis.vertical,
+                percentages: [0.55, 0.45],
+                draggableThickness: 5,
+                children: [
+                  FileExplorer(),
+                  GroupEditor()
+                ],
+              ),
             ),
           ),
           OpenFilesAreas(),
           Container(
             color: getTheme(context).sidebarBackgroundColor,
-            child: ResizableWidget(
-              axis: Axis.vertical,
-              percentages: [0.4, 0.6],
-              children: [
-                Outliner(),
-                XmlActionDetailsEditor(),
-              ],
+            child: Material(
+              child: ResizableWidget(
+                axis: Axis.vertical,
+                percentages: [0.4, 0.6],
+                children: [
+                  Outliner(),
+                  XmlActionDetailsEditor(),
+                ],
+              ),
             ),
           ),
         ],

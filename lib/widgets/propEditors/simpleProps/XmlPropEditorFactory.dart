@@ -2,11 +2,19 @@
 
 import 'package:flutter/material.dart';
 
+import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
+import '../../../utils.dart';
+import '../customXmlProps/areaEditor.dart';
 import '../customXmlProps/transformsEditor.dart';
 import 'XmlPropEditor.dart';
 
 Widget makeXmlPropEditor(XmlProp prop) {
+  // area editor
+  if (prop.isNotEmpty && prop[0].tagName == "code" && prop[0].value is HexProp && _areaTypes.contains((prop[0].value as HexProp).value)) {
+    return AreaEditor(prop: prop);
+  }
+  // fallback
   return XmlPropEditor(prop: prop);
 }
 
@@ -41,3 +49,9 @@ List<Widget> makeXmlMultiPropEditor(XmlProp parent, [bool Function(XmlProp)? fil
 
   return widgets;
 }
+
+final _areaTypes = [
+  crc32("app::area::BoxArea"),
+  crc32("app::area::CylinderArea"),
+  crc32("app::area::SphereArea"),
+];

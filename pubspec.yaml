@@ -18,7 +18,6 @@ dependencies:
   flutter:
     sdk: flutter
 
-  flutter_svg: ^1.1.5
   path: ^1.8.2
   shared_preferences: ^2.0.15
   tuple: ^2.0.0
@@ -37,7 +36,7 @@ flutter:
   uses-material-design: true
   
   assets:
-    - assets/svgs
+    - assets/svgs/
 
   fonts:
     - family: FiraCode
@@ -49,3 +48,6 @@ flutter:
         - asset: assets/fonts/FiraCode-Retina.ttf
         - asset: assets/fonts/FiraCode-SemiBold.ttf
           weight: 700
+    - family: CustomIconsFont
+      fonts:
+        - asset: assets/fonts/CustomIconsFont.ttf

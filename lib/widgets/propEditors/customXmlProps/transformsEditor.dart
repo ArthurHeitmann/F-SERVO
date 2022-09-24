@@ -13,9 +13,11 @@ import '../simpleProps/propEditorFactory.dart';
 
 class TransformsEditor extends ChangeNotifierWidget {
   final XmlProp parent;
+  final bool canBeRotated;
   final bool canBeScaled;
+  final bool itemsCanBeRemoved;
   
-  TransformsEditor({super.key, required this.parent, this.canBeScaled = true})
+  TransformsEditor({super.key, required this.parent, this.canBeRotated = true, this.canBeScaled = true, this.itemsCanBeRemoved = true})
     : super(notifiers: [
       parent,
       if (parent.get("location") != null)
@@ -81,46 +83,50 @@ class _TransformsEditorState extends ChangeNotifierState<TransformsEditor> {
             angle: -pi / 4,
             child: Icon(Icons.zoom_out_map, size: 18)
           ),
-          child: position == null
-            ? OptionalPropEditor(
-            onAdd: () => addProp(_positionHash, hasLocation ? widget.parent.get("location")! : widget.parent, 0, getPosInsertPos),
-            prop: position,
-            parent: location ?? widget.parent,
-          )
-            : Row(
-              children: [
-                Flexible(child: makePropEditor(position.value)),
-                SizedBox(width: 30),
-              ],
-            ),
+          onAdd: () => addProp(_positionHash, hasLocation ? widget.parent.get("location")! : widget.parent, 0, getPosInsertPos),
+          prop: position,
+          parent: location ?? widget.parent,
+          canBeRemoved: position == null && widget.itemsCanBeRemoved,
         ),
-        makeIconRow(
-          icon: Icon(Icons.flip_camera_android, size: 18),
-          child: OptionalPropEditor(
+        if (widget.canBeRotated)
+          makeIconRow(
+            icon: Icon(Icons.flip_camera_android, size: 18),
             onAdd: () => addProp(_rotationHash, hasLocation ? widget.parent.get("location")! : widget.parent, 0, getRotInsertPos),
             prop: rotation,
             parent: location ?? widget.parent,
+            canBeRemoved: widget.itemsCanBeRemoved,
           ),
-        ),
         if (widget.canBeScaled)
           makeIconRow(
             icon: Icon(Icons.open_in_full, size: 18),
-            child: OptionalPropEditor(
-              onAdd: () => addProp(_scaleHash, widget.parent, 1, getScaleInsertPos),
-              prop: scale,
-              parent: widget.parent,
-            ),
+            onAdd: () => addProp(_scaleHash, widget.parent, 1, getScaleInsertPos),
+            prop: scale,
+            parent: widget.parent,
+            canBeRemoved: widget.itemsCanBeRemoved,
           ),
       ],
     );
   }
 
-  Widget makeIconRow({ required Widget icon, required Widget child }) {
+  Widget makeIconRow({ required Widget icon, required void Function() onAdd, required XmlProp? prop, required XmlProp parent, required bool canBeRemoved }) {
+    var editor = canBeRemoved
+      ? OptionalPropEditor(
+        onAdd: onAdd,
+        prop: prop,
+        parent: parent,
+      )
+      : Row(
+        children: [
+          Flexible(child: makePropEditor(prop!.value)),
+          if (widget.itemsCanBeRemoved)
+            SizedBox(width: 30),
+        ],
+      );
     return Row(
       children: [
         icon,
         SizedBox(width: 10),
-        Flexible(child: child),
+        Flexible(child: editor),
       ],
     );
   }

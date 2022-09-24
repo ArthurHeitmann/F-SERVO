@@ -214,7 +214,7 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
           child: Text(
             'Drop file here',
             style: TextStyle(
-              color: getTheme(context).dropTargetTextColor,
+              color: getTheme(context).textColor,
               fontSize: 20,
               fontWeight: FontWeight.bold
             ),

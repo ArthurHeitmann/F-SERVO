@@ -9,7 +9,6 @@ import '../../../stateManagement/xmlProps/xmlActionProp.dart';
 import '../../../utils.dart';
 import '../../misc/Selectable.dart';
 import '../simpleProps/DoubleClickablePropTextField.dart';
-import '../simpleProps/TextProp.dart';
 import '../simpleProps/XmlPropEditorFactory.dart';
 
 final Map<int, GlobalKey<XmlActionEditorState>> _actionKeys = {};

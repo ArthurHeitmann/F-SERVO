@@ -12,7 +12,7 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
   final Color? tabIconColor;
   final Color? iconColor;
   final Color? dropTargetColor;
-  final Color? dropTargetTextColor;
+  final Color? textColor;
   final Color? titleBarColor;
   final Color? titleBarTextColor;
   final Color? titleBarButtonDefaultColor;
@@ -39,7 +39,7 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
     this.tabIconColor,
     this.iconColor,
     this.dropTargetColor,
-    this.dropTargetTextColor,
+    this.textColor,
     this.titleBarColor,
     this.titleBarTextColor,
     this.titleBarButtonDefaultColor,
@@ -67,7 +67,7 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
     Color? tabIconColor,
     Color? iconColor,
     Color? dropTargetColor,
-    Color? dropTargetTextColor,
+    Color? textColor,
     Color? titleBarColor,
     Color? titleBarTextColor,
     Color? titleBarButtonDefaultColor,
@@ -93,7 +93,7 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
       tabIconColor: tabIconColor ?? this.tabIconColor,
       iconColor: iconColor ?? this.iconColor,
       dropTargetColor: dropTargetColor ?? this.dropTargetColor,
-      dropTargetTextColor: dropTargetTextColor ?? this.dropTargetTextColor,
+      textColor: textColor ?? this.textColor,
       titleBarColor: titleBarColor ?? this.titleBarColor,
       titleBarTextColor: titleBarTextColor ?? this.titleBarTextColor,
       titleBarButtonDefaultColor: titleBarButtonDefaultColor ?? this.titleBarButtonDefaultColor,
@@ -126,7 +126,7 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
       tabIconColor: Color.lerp(tabIconColor, other.tabIconColor, t),
       iconColor: Color.lerp(iconColor, other.iconColor, t),
       dropTargetColor: Color.lerp(dropTargetColor, other.dropTargetColor, t),
-      dropTargetTextColor: Color.lerp(dropTargetTextColor, other.dropTargetTextColor, t),
+      textColor: Color.lerp(textColor, other.textColor, t),
       titleBarColor: Color.lerp(titleBarColor, other.titleBarColor, t),
       titleBarTextColor: Color.lerp(titleBarTextColor, other.titleBarTextColor, t),
       titleBarButtonDefaultColor: Color.lerp(titleBarButtonDefaultColor, other.titleBarButtonDefaultColor, t),
@@ -156,7 +156,7 @@ class NierDarkThemeExtension extends NierThemeExtension {
       tabSelectedColor: Color.fromARGB(255, 36, 36, 36),
       tabIconColor: Color.fromARGB(255, 255, 255, 255),
       dropTargetColor: Colors.black.withOpacity(0.5),
-      dropTargetTextColor: Colors.white,
+      textColor: Colors.white,
       titleBarColor: Color.fromARGB(255, 49, 49, 49),
       titleBarTextColor: Color.fromRGBO(200, 200, 200, 1),
       titleBarButtonDefaultColor: Color.fromRGBO(239, 239, 239, 1),
@@ -183,6 +183,7 @@ class NierDarkThemeExtension extends NierThemeExtension {
         color: Colors.white,
         fontSize: 12,
         fontFamily: "FiraCode",
+        overflow: TextOverflow.ellipsis,
       ),
     );
 
