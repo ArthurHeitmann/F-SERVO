@@ -3,6 +3,7 @@ import 'IdsIndexer.dart';
 
 class IndexingGroup {
   final List<IdsIndexer> _indexers = [];
+  void Function(bool)? onLoadingStateChange;
 
   Future<void> addPaths(List<String> paths) async {
     List<Future<void>> futures = [];
@@ -11,6 +12,7 @@ class IndexingGroup {
     removePaths(paths);
     for (var path in paths) {
       var indexer = IdsIndexer();
+      indexer.onLoadingStateChange = (isLoading) => onLoadingStateChange?.call(isLoading);
       futures.add(indexer.indexPath(path));
       _indexers.add(indexer);
     }
@@ -45,13 +47,13 @@ class IndexingGroup {
     return Future.wait(futures);
   }
 
-  Future<IndexedIdData?> lookupId(int id) async {
+  Future<List<IndexedIdData>> lookupId(int id) async {
     await _ensureAllInitialized();
     for (var indexer in _indexers) {
       var data = indexer.indexedIds[id];
       if (data != null)
         return data;
     }
-    return null;
+    return [];
   }
 }

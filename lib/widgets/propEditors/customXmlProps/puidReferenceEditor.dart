@@ -42,28 +42,30 @@ class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor>
             SizedBox(width: 4,),
             !widget.showDetails ? FutureBuilder(
               future: idLookup.lookupId(idProp.value),
-              builder: (context, AsyncSnapshot<IndexedIdData?> snapshot) {
+              builder: (context, AsyncSnapshot<List<IndexedIdData>> snapshot) {
                 var lookup = snapshot.data;
-                lookup ??= IndexedIdData(idProp.value, codeProp.isHashed ? codeProp.strVal! : codeProp.toString(), "", "", "");
+                if (lookup == null || lookup.isEmpty)
+                  lookup = [IndexedIdData(idProp.value, codeProp.isHashed ? codeProp.strVal! : codeProp.toString(), "", "", "")];
+                var puidRef = lookup.first;
                 return Expanded(
                   child: Column(
                     children: [
-                      Text(lookup.type, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),),
+                      Text(puidRef.type, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),),
                       SizedBox(height: 4,),
-                      if (lookup is IndexedActionIdData)
-                        Text(lookup.actionName, overflow: TextOverflow.ellipsis,),
-                      if (lookup is IndexedEntityIdData)
+                      if (puidRef is IndexedActionIdData)
+                        Text(puidRef.actionName, overflow: TextOverflow.ellipsis,),
+                      if (puidRef is IndexedEntityIdData)
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(lookup.objId),
-                            if (lookup.name != null)
-                              Flexible(child: Text(" (${lookup.name})", overflow: TextOverflow.ellipsis,)),
-                            if (lookup.level != null)
-                              Text(" (lvl ${lookup.level})"),
+                            Text(puidRef.objId),
+                            if (puidRef.name != null)
+                              Flexible(child: Text(" (${puidRef.name})", overflow: TextOverflow.ellipsis,)),
+                            if (puidRef.level != null)
+                              Text(" (lvl ${puidRef.level})"),
                           ],
                         ),
-                      if (lookup is! IndexedActionIdData && lookup is! IndexedEntityIdData)
+                      if (puidRef is! IndexedActionIdData && puidRef is! IndexedEntityIdData)
                         Text(idProp.isHashed ? idProp.strVal! : idProp.toString()),
                     ],
                   ),

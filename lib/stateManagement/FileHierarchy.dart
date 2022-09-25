@@ -11,6 +11,7 @@ import 'Property.dart';
 import 'miscValues.dart';
 import 'nestedNotifier.dart';
 import '../fileTypeUtils/pak/pakExtractor.dart';
+import 'statusInfo.dart';
 import 'undoable.dart';
 
 final _pakGroupIdMatcher = RegExp(r"^\w+_([a-f0-9]+)_grp\.pak$", caseSensitive: false);
@@ -378,32 +379,38 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
   }
 
   Future<void> openFile(String filePath, { HierarchyEntry? parent }) async {
-    if (filePath.endsWith(".dat")) {
-      if (File(filePath).existsSync())
-        await openDat(filePath, parent: parent);
-      else if (Directory(filePath).existsSync())
-        await openExtractedDat(filePath, parent: parent);
+    isLoadingStatus.pushIsLoading();
+
+    try {
+      if (filePath.endsWith(".dat")) {
+        if (await File(filePath).exists())
+          await openDat(filePath, parent: parent);
+        else if (await Directory(filePath).exists())
+          await openExtractedDat(filePath, parent: parent);
+        else
+          throw FileSystemException("File not found: $filePath");
+      }
+      else if (filePath.endsWith(".pak")) {
+        if (await File(filePath).exists())
+          await openPak(filePath, parent: parent);
+        else if (await Directory(filePath).exists())
+          await openExtractedPak(filePath, parent: parent);
+        else
+          throw FileSystemException("File not found: $filePath");
+      }
+      else if (filePath.endsWith(".xml")) {
+        if (await File(filePath).exists())
+          openXmlScript(filePath, parent: parent);
+        else
+          throw FileSystemException("File not found: $filePath");
+      }
       else
-        throw FileSystemException("File not found: $filePath");
+        throw FileSystemException("Unsupported file type: $filePath");
+      
+      undoHistoryManager.onUndoableEvent();
+    } finally {
+      isLoadingStatus.popIsLoading();
     }
-    else if (filePath.endsWith(".pak")) {
-      if (File(filePath).existsSync())
-        await openPak(filePath, parent: parent);
-      else if (Directory(filePath).existsSync())
-        await openExtractedPak(filePath, parent: parent);
-      else
-        throw FileSystemException("File not found: $filePath");
-    }
-    else if (filePath.endsWith(".xml")) {
-      if (File(filePath).existsSync())
-        openXmlScript(filePath, parent: parent);
-      else
-        throw FileSystemException("File not found: $filePath");
-    }
-    else
-      throw FileSystemException("Unsupported file type: $filePath");
-    
-    undoHistoryManager.onUndoableEvent();
   }
 
   Future<void> openDat(String datPath, { HierarchyEntry? parent }) async {
@@ -426,7 +433,8 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
       entry is PakHierarchyEntry && entry.path.startsWith(datExtractDir));
     for (var entry in existingEntries)
       parentOf(entry).remove(entry);
-    
+
+    List<Future<void>> futures = [];
     // TODO: search based on dat metadata
     for (var file in Directory(datExtractDir).listSync()) {
       if (file is! File || !file.path.endsWith(".pak"))
@@ -437,8 +445,10 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
         datEntry.add(existingEntries[existingEntryI]);
         continue;
       }
-      openPak(pakPath, parent: datEntry);
+      futures.add(openPak(pakPath, parent: datEntry));
     }
+
+    await Future.wait(futures);
   }
 
   Future<void> openExtractedDat(String datDirPath, { HierarchyEntry? parent }) {

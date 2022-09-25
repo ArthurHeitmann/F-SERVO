@@ -36,7 +36,6 @@ final Set<String> ignoreTagNames = {
 final Set<int> spawningActionCodes = {
   crc32("EntityLayoutAction"),
   crc32("EntityLayoutArea"),
-  crc32("AreaEntityAction"),
   crc32("EnemySetAction"),
   crc32("EnemySetArea"),
   crc32("EnemyGenerator"),

@@ -87,7 +87,8 @@ enum InitStatus {
 class IdsIndexer {
   String? _path;
   bool _stop = false;
-  final Map<int, IndexedIdData> indexedIds = {};
+  final Map<int, List<IndexedIdData>> indexedIds = {};
+  void Function(bool)? onLoadingStateChange;
 
   InitStatus _initStatus = InitStatus.notInitialized;
   Completer<void> _awaitInitializedCompleter = Completer<void>();
@@ -95,15 +96,19 @@ class IdsIndexer {
   String? get path => _path;
 
   Future<void> indexPath(String path) async {
+    onLoadingStateChange?.call(true);
     _path = path;
     _initStatus = InitStatus.notInitialized;
     await _init(path);
+    onLoadingStateChange?.call(false);
   }
 
   void indexXml(XmlElement xml, String path) {
+    onLoadingStateChange?.call(true);
     _path = path;
     _initStatus = InitStatus.notInitialized;
     _initXml(xml, path);
+    onLoadingStateChange?.call(false);
   }
 
   void clear() {
@@ -319,14 +324,18 @@ class IdsIndexer {
     var hapIdL = root.findElements("id");
     if (hapIdL.isNotEmpty) {
       var hapId = int.parse(hapIdL.first.text);
-      indexedIds[hapId] = IndexedIdData(hapId, "HAP", datPath, pakPath, xmlPath);
+      // if (indexedIds.containsKey(hapId))
+        // print("HAP ID $hapId already exits ($xmlPath)");
+      _addIndexedData(hapId, IndexedIdData(hapId, "HAP", datPath, pakPath, xmlPath));
     }
 
     for (var action in root.findElements("action")) {
       var actionId = int.parse(action.findElements("id").first.text);
       var actionName = action.findElements("name").first.text;
       actionName = tryToTranslate(actionName);
-      indexedIds[actionId] = IndexedActionIdData(actionId, datPath, pakPath, xmlPath, actionName);
+      // if (indexedIds.containsKey(actionId))
+        // print("Action ID $actionId already exits ($xmlPath)");
+      _addIndexedData(actionId, IndexedActionIdData(actionId, datPath, pakPath, xmlPath, actionName));
 
       for (var normal in action.findAllElements("normal")) {  // entities
         var normalLayouts = normal.findElements("layouts").first;
@@ -350,9 +359,20 @@ class IdsIndexer {
             }
           }
 
-          indexedIds[entityId] = IndexedEntityIdData(entityId, datPath, pakPath, xmlPath, objId, actionId, name, level);
+          // if (indexedIds.containsKey(entityId))
+            // print("Entity ID $entityId already exits ($xmlPath)");
+          _addIndexedData(entityId, IndexedEntityIdData(entityId, datPath, pakPath, xmlPath, objId, actionId, name, level));
         }
       }
     }
+  }
+
+  void _addIndexedData(int id, IndexedIdData data) {
+    var idList = indexedIds[id];
+    if (idList == null) {
+      idList = [];
+      indexedIds[id] = idList;
+    }
+    idList.add(data);
   }
 }

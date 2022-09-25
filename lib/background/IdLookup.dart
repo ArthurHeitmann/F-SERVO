@@ -46,29 +46,30 @@ class IdLookup with Initializable {
     await _heavyWorker.clearIndexingPaths();
   }
 
-  Future<IndexedIdData?> lookupId(int id) async {
+  Future<List<IndexedIdData>> lookupId(int id) async {
     await awaitInitialized();
-    return 
-      await _lookupIdLevel1(id) ??
-      await _lookupIdLevel2(id) ??
-      await _lookupIdLevel3(id);
+    var result = await _lookupIdLevel1(id);
+    if (result.isNotEmpty) return result;
+    result = await _lookupIdLevel2(id);
+    if (result.isNotEmpty) return result;
+    return await _lookupIdLevel3(id);
   }
 
-  Future<IndexedIdData?> _lookupIdLevel3(int id) async {
+  Future<List<IndexedIdData>> _lookupIdLevel3(int id) async {
     return _heavyWorker.lookupId(id);
   }
 
-  Future<IndexedIdData?> _lookupIdLevel2(int id) async {
+  Future<List<IndexedIdData>> _lookupIdLevel2(int id) async {
     return _coldStorage.lookupId(id);
   }
 
-  Future<IndexedIdData?> _lookupIdLevel1(int id) async {
+  Future<List<IndexedIdData>> _lookupIdLevel1(int id) async {
     for (var file in _changedFiles) {
       var data = file.indexedIds[id];
       if (data != null)
         return data;
     }
-    return null;
+    return [];
   }
 
   void _onFilesAddedOrRemoved() {

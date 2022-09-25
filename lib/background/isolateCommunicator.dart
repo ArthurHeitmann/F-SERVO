@@ -2,6 +2,7 @@
 import 'dart:async';
 import 'dart:isolate';
 
+import '../stateManagement/statusInfo.dart';
 import '../utils.dart';
 import 'IdsIndexer.dart';
 import 'Initializable.dart';
@@ -17,6 +18,7 @@ enum CommandTypes {
   removeIndexingPaths,
   clearIndexingPaths,
   lookupId,
+  onLoadingStateChange,
 }
 
 Map _makeMessage(CommandTypes command, Map data, { String? uuid }) {
@@ -51,6 +53,12 @@ class _IsolateCommunicatorPrivate {
       CommandTypes.setupSendPort,
       { "sendPort": _receivePort.sendPort, }
     ));
+
+    _indexingGroup.onLoadingStateChange = (isLoading) =>_sendMessage(
+      _sendPort,
+      CommandTypes.onLoadingStateChange,
+      { "isLoading": isLoading }
+    );
   }
 
   static entryPoint(SendPort sendPort) {
@@ -138,6 +146,9 @@ class IsolateCommunicator with Initializable {
         _sendPort = message["sendPort"];
         completeInitialization();
         break;
+      case CommandTypes.onLoadingStateChange:
+        updateLoadingStateChange(message["isLoading"]);
+        break;
       case CommandTypes.response:
         if (_awaitingResponses.containsKey(uuid)) {
           _awaitingResponses[uuid]!.complete(message);
@@ -151,7 +162,7 @@ class IsolateCommunicator with Initializable {
     }
   }
 
-  Future<IndexedIdData?> lookupId(int id) async {
+  Future<List<IndexedIdData>> lookupId(int id) async {
     await awaitInitialized();
     var response = await _sendMessageWithCompleter(
       _sendPort!,
@@ -192,5 +203,12 @@ class IsolateCommunicator with Initializable {
       {  },
       _awaitingResponses,
     );
+  }
+
+  void updateLoadingStateChange(bool isLoading) {
+    if (isLoading)
+      isLoadingStatus.pushIsLoading();
+    else
+      isLoadingStatus.popIsLoading();
   }
 }
