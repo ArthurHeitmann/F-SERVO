@@ -6,6 +6,9 @@ import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
 import '../../../utils.dart';
 import '../customXmlProps/areaEditor.dart';
+import '../customXmlProps/entitiyEditor.dart';
+import '../customXmlProps/layoutsEditor.dart';
+import '../customXmlProps/puidReferenceEditor.dart';
 import '../customXmlProps/transformsEditor.dart';
 import 'XmlPropEditor.dart';
 
@@ -14,6 +17,14 @@ Widget makeXmlPropEditor(XmlProp prop, bool showDetails) {
   if (prop.isNotEmpty && prop[0].tagName == "code" && prop[0].value is HexProp && _areaTypes.contains((prop[0].value as HexProp).value)) {
     return AreaEditor(prop: prop, showDetails: showDetails,);
   }
+  // entity editor
+  if (prop.isNotEmpty && prop.get("objId") != null) {
+    return EntityEditor(prop: prop, showDetails: showDetails,);
+  }
+  // entity layouts
+  if (prop.tagName == "layouts" && prop.get("normal")?.get("layouts") != null) {
+    return LayoutsEditor(prop: prop, showDetails: showDetails,);
+  }
   // fallback
   return XmlPropEditor(prop: prop, showDetails: showDetails,);
 }
@@ -21,17 +32,26 @@ Widget makeXmlPropEditor(XmlProp prop, bool showDetails) {
 List<Widget> makeXmlMultiPropEditor(XmlProp parent, bool showDetails, [bool Function(XmlProp)? filter]) {
   List<Widget> widgets = [];
 
+  // <id><id> ... </id></id> shortcut
+  if (parent.length == 1 && parent[0].length == 1 && parent[0].tagName == "id" && parent[0][0].tagName == "id") {
+    return makeXmlMultiPropEditor(parent[0][0], showDetails, filter);
+  }
+
   for (var i = 0; i < parent.length; i++) {
-    if (filter != null && !filter(parent[i])) {
+    var child = parent[i];
+    if (filter != null && !filter(child)) {
+      continue;
+    }
+    if (_skipPropNames.contains(child.tagName)) {
       continue;
     }
     // transformable with position, rotation (optional), scale (optional)
-    if (parent[i].tagName == "location") {
+    if (child.tagName == "location") {
       widgets.add(TransformsEditor(parent: parent));
       if (i + 1 < parent.length && parent[i + 1].tagName == "scale")
         i++;
     }
-    else if (parent[i].tagName == "position") {
+    else if (child.tagName == "position") {
       widgets.add(TransformsEditor(parent: parent));
       if (i + 1 < parent.length && parent[i + 1].tagName == "rotation") {
         i++;
@@ -41,17 +61,43 @@ List<Widget> makeXmlMultiPropEditor(XmlProp parent, bool showDetails, [bool Func
       else if (i + 1 < parent.length && parent[i + 1].tagName == "scale")
         i++;
     }
+    // puid references
+    else if (child.tagName == "code" && _puidRefCodes.contains((child.value as HexProp).value)) {
+      widgets.add(PuidReferenceEditor(prop: parent, showDetails: showDetails,));
+      if (i + 1 < parent.length && _puidRefIdTags.contains(parent[i + 1].tagName))
+        i++;
+    }
     // fallback
     else {
-      widgets.add(makeXmlPropEditor(parent[i], showDetails));
+      widgets.add(makeXmlPropEditor(child, showDetails));
     }
   }
 
   return widgets;
 }
 
-final _areaTypes = [
+const _skipPropNames = [
+  "bForwardState",
+  "bDisable"
+];
+
+final _areaTypes = {
   crc32("app::area::BoxArea"),
   crc32("app::area::CylinderArea"),
   crc32("app::area::SphereArea"),
-];
+};
+
+final _puidRefCodes = {
+  crc32("LayoutObj"),
+  crc32("app::EntityLayout"),
+  crc32("hap::Action"),
+  crc32("hap::GroupImpl"),
+  crc32("hap::Hap"),
+  crc32("hap::SceneEntities"),
+  crc32("hap::StateObject"),
+};
+
+const _puidRefIdTags = {
+  "id",
+  "value",
+};

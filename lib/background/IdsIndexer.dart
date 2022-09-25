@@ -15,19 +15,40 @@ import '../fileTypeUtils/pak/pakExtractor.dart';
 
 class IndexedIdData {
   final int id;
+  final String type;
   final String datPath;
   final String pakPath;
   final String xmlPath;
 
-  IndexedIdData(this.id, this.datPath, this.pakPath, this.xmlPath);
+  IndexedIdData(this.id, this.type, this.datPath, this.pakPath, this.xmlPath);
 
   @override
   String toString() {
     return "IndexedIdData(\n"
       "  id: $id,\n"
+      "  type: $type,\n"
       "  datPath: $datPath,\n"
       "  pakPath: $pakPath,\n"
       "  xmlPath: $xmlPath,\n"
+      ")";
+  }
+}
+
+class IndexedActionIdData extends IndexedIdData {
+  final String actionName;
+
+  IndexedActionIdData(int id, String datPath, String pakPath, String xmlPath, this.actionName)
+    : super(id, "Action", datPath, pakPath, xmlPath);
+
+  @override
+  String toString() {
+    return "IndexedActionIdData(\n"
+      "  id: $id,\n"
+      "  type: $type,\n"
+      "  datPath: $datPath,\n"
+      "  pakPath: $pakPath,\n"
+      "  xmlPath: $xmlPath,\n"
+      "  actionName: $actionName,\n"
       ")";
   }
 }
@@ -38,12 +59,14 @@ class IndexedEntityIdData extends IndexedIdData {
   final String? name;
   final int? level;
 
-  IndexedEntityIdData(int id, String datPath, String pakPath, String xmlPath, this.objId, this.actionId, this.name, this.level) : super(id, datPath, pakPath, xmlPath);
+  IndexedEntityIdData(int id, String datPath, String pakPath, String xmlPath, this.objId, this.actionId, this.name, this.level)
+    : super(id, "Entity", datPath, pakPath, xmlPath);
 
   @override
   String toString() {
     return "IndexedEntityIdData(\n"
       "  id: $id,\n"
+      "  type: $type,\n"
       "  datPath: $datPath,\n"
       "  pakPath: $pakPath,\n"
       "  xmlPath: $xmlPath,\n"
@@ -296,12 +319,14 @@ class IdsIndexer {
     var hapIdL = root.findElements("id");
     if (hapIdL.isNotEmpty) {
       var hapId = int.parse(hapIdL.first.text);
-      indexedIds[hapId] = IndexedIdData(hapId, datPath, pakPath, xmlPath);
+      indexedIds[hapId] = IndexedIdData(hapId, "HAP", datPath, pakPath, xmlPath);
     }
 
     for (var action in root.findElements("action")) {
       var actionId = int.parse(action.findElements("id").first.text);
-      indexedIds[actionId] = IndexedIdData(actionId, datPath, pakPath, xmlPath);
+      var actionName = action.findElements("name").first.text;
+      actionName = tryToTranslate(actionName);
+      indexedIds[actionId] = IndexedActionIdData(actionId, datPath, pakPath, xmlPath, actionName);
 
       for (var normal in action.findAllElements("normal")) {  // entities
         var normalLayouts = normal.findElements("layouts").first;

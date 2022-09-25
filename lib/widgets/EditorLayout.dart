@@ -16,7 +16,7 @@ class EditorLayout extends StatelessWidget {
     return LayoutBuilder(builder: (context, constraints) {
       return ResizableWidget(
         axis: Axis.horizontal,
-        percentages: [0.175, 0.65, 0.175],
+        percentages: [0.18, 0.60, 0.22],
         draggableThickness: 4,
         lineThickness: 4,
         children: [
