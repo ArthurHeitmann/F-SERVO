@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:xml/xml.dart';
 
 import '../widgets/filesView/FileType.dart';
+import 'FileHierarchy.dart';
 import 'hasUuid.dart';
 import 'miscValues.dart';
 import 'undoable.dart';
@@ -148,8 +149,14 @@ class XmlFileData extends OpenFileData {
   XmlProp? get root => _root;
   
   void _onNameChange() {
-    var nameProp = _root!.get("name")!.value;
-    secondaryName = nameProp.toString();
+    var xmlName = _root!.get("name")!.value.toString();
+
+    secondaryName = xmlName;
+
+    var hierarchyEntry = openHierarchyManager
+                        .findRecWhere((entry) => entry is XmlScriptHierarchyEntry && entry.path == path) as XmlScriptHierarchyEntry?;
+    if (hierarchyEntry != null)
+      hierarchyEntry.hapName = xmlName;
   }
 
   @override

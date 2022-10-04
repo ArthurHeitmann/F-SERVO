@@ -101,6 +101,14 @@ class XmlActionEditorState extends ChangeNotifierState<XmlActionEditor> {
             selectionColor: Colors.black.withOpacity(0.5),
             selectionHandleColor: Colors.white,
           ),
+          extensions: [getTheme(context).copyWith(
+            propInputTextStyle: TextStyle(
+            color: Colors.white,
+            fontSize: 14,
+            fontFamily: "FiraCode",
+            overflow: TextOverflow.ellipsis,
+          )
+          )]
         ),
         child: Padding(
           padding: const EdgeInsets.all(4.0),
@@ -110,12 +118,12 @@ class XmlActionEditorState extends ChangeNotifierState<XmlActionEditor> {
                 text: TextSpan(
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: 16
+                    fontSize: 14
                   ),
                   text: widget.action.code.strVal ?? "UNKNOWN ${widget.action.code.value}"
                 )
               ),
-              SizedBox(height: 5),
+              SizedBox(height: 2),
               PropTextField.make<DoubleClickablePropTextField>(prop: widget.action.name),
             ],
           ),

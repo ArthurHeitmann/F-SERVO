@@ -3,6 +3,7 @@ import 'package:path/path.dart' as path;
 
 import '../main.dart';
 import '../widgets/misc/confirmCancelDialog.dart';
+import 'miscValues.dart';
 import 'nestedNotifier.dart';
 import 'openFileTypes.dart';
 import 'preferencesData.dart';
@@ -20,6 +21,9 @@ class FilesAreaManager extends NestedNotifier<OpenFileData> implements Undoable 
     if (value == _currentFile) return;
     _currentFile = value;
     notifyListeners();
+    
+    if (this == areasManager.activeArea)
+      windowTitle.value = currentFile?.displayName ?? "";
   }
 
   void switchToClosestFile() {
@@ -220,6 +224,8 @@ class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
       return;
     _activeArea = value;
     notifyListeners();
+
+    windowTitle.value = value?.currentFile?.displayName ?? "";
   }
 
   OpenFileData openFile(String filePath, { FilesAreaManager? toArea, bool focusIfOpen = true, String? secondaryName }) {

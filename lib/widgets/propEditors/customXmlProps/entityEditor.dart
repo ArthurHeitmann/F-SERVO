@@ -43,10 +43,10 @@ class _EntityEditorState extends ChangeNotifierState<EntityEditor> {
                 .map((child) => 
                   RowSeparated(
                     children: [
-                      makePropEditor<UnderlinePropTextField>(child[0].value),
+                      Flexible(child: makePropEditor<UnderlinePropTextField>(child[0].value)),
                       if (widget.showDetails)
-                        makePropEditor<UnderlinePropTextField>(child[1].value),
-                      makePropEditor<UnderlinePropTextField>(child[2].value),
+                        Flexible(child: makePropEditor<UnderlinePropTextField>(child[1].value)),
+                      Flexible(child: makePropEditor<UnderlinePropTextField>(child[2].value)),
                     ],
                   ),
                 )
