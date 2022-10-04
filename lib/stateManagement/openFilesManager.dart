@@ -222,7 +222,7 @@ class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
     notifyListeners();
   }
 
-  OpenFileData openFile(String filePath, { FilesAreaManager? toArea, bool focusIfOpen = true }) {
+  OpenFileData openFile(String filePath, { FilesAreaManager? toArea, bool focusIfOpen = true, String? secondaryName }) {
     if (isFileOpened(filePath)) {
       var openFile = getFile(filePath)!;
       if (focusIfOpen)
@@ -231,7 +231,7 @@ class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
     }
 
     toArea ??= activeArea ?? this[0];
-    OpenFileData file = OpenFileData.from(path.basename(filePath), filePath);
+    OpenFileData file = OpenFileData.from(path.basename(filePath), filePath, secondaryName: secondaryName);
     toArea.add(file);
     toArea.currentFile = file;
 

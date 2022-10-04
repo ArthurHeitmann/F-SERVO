@@ -57,9 +57,13 @@ class _FileTabEntryState extends ChangeNotifierState<FileTabEntry> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Expanded(child: 
-                      Text(
-                        widget.file.name,
-                        overflow: TextOverflow.ellipsis,
+                      Tooltip(
+                        message: widget.file.displayName,
+                        waitDuration: Duration(milliseconds: 500),
+                        child: Text(
+                          widget.file.displayName,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ),
                     MouseRegion(

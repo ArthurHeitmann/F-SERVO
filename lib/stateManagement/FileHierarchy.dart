@@ -351,7 +351,7 @@ class XmlScriptHierarchyEntry extends FileHierarchyEntry {
     snapshot._isSelected = _isSelected;
     snapshot._isCollapsed = _isCollapsed;
     snapshot._hasReadMeta = _hasReadMeta;
-    snapshot.hapName = _hapName;
+    snapshot._hapName = _hapName;
     snapshot.groupId = groupId;
     snapshot.replaceWith(map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
     return snapshot;

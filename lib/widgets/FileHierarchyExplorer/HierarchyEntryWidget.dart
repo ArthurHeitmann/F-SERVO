@@ -7,6 +7,7 @@ import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/FileHierarchy.dart';
 import '../../stateManagement/miscValues.dart';
 import '../../stateManagement/openFilesManager.dart';
+import '../../utils.dart';
 
 class HierarchyEntryWidget extends ChangeNotifierWidget {
   final HierarchyEntry entry;
@@ -161,7 +162,11 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
   }
 
   void onOpenFile() {
-    areasManager.openFile((widget.entry as FileHierarchyEntry).path);
+    var entry = widget.entry as FileHierarchyEntry;
+    String? secondaryName = entry is XmlScriptHierarchyEntry
+      ? tryToTranslate(entry.hapName)
+      : null;
+    areasManager.openFile(entry.path, secondaryName: secondaryName);
   }
 
   void toggleCollapsed() {
