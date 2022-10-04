@@ -4,19 +4,19 @@ import 'package:flutter/material.dart';
 import '../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../utils.dart';
-import 'primaryPropTextField.dart';
+import 'propTextField.dart';
 
-class HexPropTextField extends ChangeNotifierWidget {
+class HexPropTextField<T extends PropTextField> extends ChangeNotifierWidget {
   final HexProp prop;
   final BoxConstraints? constraints;
 
   HexPropTextField({super.key, required this.prop, this.constraints}) : super(notifier: prop);
 
   @override
-  State<HexPropTextField> createState() => _HexPropTextFieldState();
+  State<HexPropTextField> createState() => _HexPropTextFieldState<T>();
 }
 
-class _HexPropTextFieldState extends ChangeNotifierState<HexPropTextField> {
+class _HexPropTextFieldState<T extends PropTextField> extends ChangeNotifierState<HexPropTextField> {
   final _controller = TextEditingController();
   bool showHashString = false;
   
@@ -47,7 +47,7 @@ class _HexPropTextFieldState extends ChangeNotifierState<HexPropTextField> {
 
   @override
   Widget build(BuildContext context) {
-    return PrimaryPropTextField(
+    return PropTextField.make<T>(
       prop: widget.prop,
       left: Opacity(
         opacity: showHashString ? 1.0 : 0.25,

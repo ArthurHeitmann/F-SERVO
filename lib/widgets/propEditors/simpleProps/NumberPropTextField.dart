@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 
 import '../../../stateManagement/Property.dart';
 import '../../../utils.dart';
-import 'primaryPropTextField.dart';
+import 'propTextField.dart';
 
 
-class NumberPropTextField extends StatelessWidget {
+class NumberPropTextField<T extends PropTextField> extends StatelessWidget {
   final NumberProp prop;
   final bool isInteger;
   final BoxConstraints? constraints;
@@ -32,7 +32,7 @@ class NumberPropTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PrimaryPropTextField(
+    return PropTextField.make<T>(
       prop: prop,
       left: left,
       constraints: constraints,

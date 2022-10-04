@@ -36,7 +36,7 @@ class _EntityEditorState extends ChangeNotifierState<EntityEditor> {
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         child: Column(
           children: [
-            if (widget.showDetails)
+            if (widget.showDetails && widget.prop.get("id") != null)
               makeXmlPropEditor(widget.prop.get("id")!, true),
             makeXmlPropEditor(widget.prop.get("objId")!, widget.showDetails),
             if (!widget.showDetails && levelParams != null && levelParams.isNotEmpty)

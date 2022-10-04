@@ -10,6 +10,7 @@ import '../../../utils.dart';
 import '../../misc/Selectable.dart';
 import '../simpleProps/DoubleClickablePropTextField.dart';
 import '../simpleProps/XmlPropEditorFactory.dart';
+import '../simpleProps/propTextField.dart';
 
 final Map<int, GlobalKey<XmlActionEditorState>> _actionKeys = {};
 
@@ -115,7 +116,7 @@ class XmlActionEditorState extends ChangeNotifierState<XmlActionEditor> {
                 )
               ),
               SizedBox(height: 5),
-              DoubleClickablePropTextField(prop: widget.action.name),
+              PropTextField.make<DoubleClickablePropTextField>(prop: widget.action.name),
             ],
           ),
         ),
