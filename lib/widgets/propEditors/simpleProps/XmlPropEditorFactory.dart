@@ -6,7 +6,7 @@ import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
 import '../../../utils.dart';
 import '../customXmlProps/areaEditor.dart';
-import '../customXmlProps/entitiyEditor.dart';
+import '../customXmlProps/entityEditor.dart';
 import '../customXmlProps/layoutsEditor.dart';
 import '../customXmlProps/puidReferenceEditor.dart';
 import '../customXmlProps/transformsEditor.dart';
