@@ -38,7 +38,7 @@ class _XmlPropEditorState<T extends PropTextField> extends ChangeNotifierState<X
             ],
           ),
         ),
-        ...makeXmlMultiPropEditor(widget.prop, widget.showDetails)
+        ...makeXmlMultiPropEditor<T>(widget.prop, widget.showDetails)
           .map((w) => Padding(
             padding: const EdgeInsets.only(left: 10),
             child: w,

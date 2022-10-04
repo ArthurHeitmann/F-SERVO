@@ -8,6 +8,7 @@ import '../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
 import '../../../utils.dart';
+import '../simpleProps/XmlPropEditorFactory.dart';
 import '../simpleProps/optionalPropEditor.dart';
 import '../simpleProps/propEditorFactory.dart';
 import '../simpleProps/propTextField.dart';
@@ -105,6 +106,8 @@ class _TransformsEditorState<T extends PropTextField> extends ChangeNotifierStat
             parent: widget.parent,
             canBeRemoved: widget.itemsCanBeRemoved,
           ),
+        if (hasLocation)
+          ...makeXmlMultiPropEditor(location, true, (prop) => !_defaultLocationTagNames.contains(prop.tagName),)
       ],
     );
   }
@@ -132,3 +135,5 @@ class _TransformsEditorState<T extends PropTextField> extends ChangeNotifierStat
     );
   }
 }
+
+const _defaultLocationTagNames = ["position", "rotation"];

@@ -12,6 +12,7 @@ import '../../fileTypeUtils/utils/ByteDataWrapper.dart';
 import '../../fileTypeUtils/yax/yaxToXml.dart';
 import '../../utils.dart';
 import '../fileTypeUtils/pak/pakExtractor.dart';
+import '../fileTypeUtils/yax/hashToStringMap.dart';
 
 class IndexedIdData {
   final int id;
@@ -37,8 +38,8 @@ class IndexedIdData {
 class IndexedActionIdData extends IndexedIdData {
   final String actionName;
 
-  IndexedActionIdData(int id, String datPath, String pakPath, String xmlPath, this.actionName)
-    : super(id, "Action", datPath, pakPath, xmlPath);
+  IndexedActionIdData(int id, String datPath, String pakPath, String xmlPath, String actionType, this.actionName)
+    : super(id, "Action # $actionType", datPath, pakPath, xmlPath);
 
   @override
   String toString() {
@@ -308,11 +309,11 @@ class IdsIndexer {
     if (await File(xmlPath).exists()) {
       var xmlDoc = XmlDocument.parse(await File(xmlPath).readAsString());
       var xmlRoot = xmlDoc.rootElement;
-      _indexXmlContents(datPath, pakPath, yaxPath, xmlRoot);
+      _indexXmlContents(datPath, pakPath, xmlPath, xmlRoot);
     }
     else {
       var xmlRoot = yaxToXml(bytes, includeAnnotations: false);
-      _indexXmlContents(datPath, pakPath, yaxPath, xmlRoot);
+      _indexXmlContents(datPath, pakPath, xmlPath, xmlRoot);
     }
   }
 
@@ -324,18 +325,15 @@ class IdsIndexer {
     var hapIdL = root.findElements("id");
     if (hapIdL.isNotEmpty) {
       var hapId = int.parse(hapIdL.first.text);
-      // if (indexedIds.containsKey(hapId))
-        // print("HAP ID $hapId already exits ($xmlPath)");
       _addIndexedData(hapId, IndexedIdData(hapId, "HAP", datPath, pakPath, xmlPath));
     }
 
     for (var action in root.findElements("action")) {
+      var actionCode = int.parse(action.findElements("code").first.text);
       var actionId = int.parse(action.findElements("id").first.text);
       var actionName = action.findElements("name").first.text;
       actionName = tryToTranslate(actionName);
-      // if (indexedIds.containsKey(actionId))
-        // print("Action ID $actionId already exits ($xmlPath)");
-      _addIndexedData(actionId, IndexedActionIdData(actionId, datPath, pakPath, xmlPath, actionName));
+      _addIndexedData(actionId, IndexedActionIdData(actionId, datPath, pakPath, xmlPath, hashToStringMap[actionCode] ?? actionCode.toString(), actionName));
 
       for (var normal in action.findAllElements("normal")) {  // entities
         var normalLayouts = normal.findElements("layouts").first;
@@ -359,8 +357,6 @@ class IdsIndexer {
             }
           }
 
-          // if (indexedIds.containsKey(entityId))
-            // print("Entity ID $entityId already exits ($xmlPath)");
           _addIndexedData(entityId, IndexedEntityIdData(entityId, datPath, pakPath, xmlPath, objId, actionId, name, level));
         }
       }

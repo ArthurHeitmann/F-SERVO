@@ -228,6 +228,12 @@ class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
     windowTitle.value = value?.currentFile?.displayName ?? "";
   }
 
+  void ensureFileIsVisible(OpenFileData file) {
+    var area = getAreaOfFile(file)!;
+    if (area.currentFile != file)
+      area.currentFile = file;
+  }
+
   OpenFileData openFile(String filePath, { FilesAreaManager? toArea, bool focusIfOpen = true, String? secondaryName }) {
     if (isFileOpened(filePath)) {
       var openFile = getFile(filePath)!;

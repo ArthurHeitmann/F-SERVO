@@ -37,21 +37,25 @@ class _EntityEditorState extends ChangeNotifierState<EntityEditor> {
             if (widget.showDetails && widget.prop.get("id") != null)
               makeXmlPropEditor<UnderlinePropTextField>(widget.prop.get("id")!, true),
             makeXmlPropEditor<UnderlinePropTextField>(widget.prop.get("objId")!, widget.showDetails),
-            Column(
-              children: paramProp
-                ?.where((child) => child.tagName == "value" && child.length == 3)
-                .map((child) => 
-                  RowSeparated(
-                    children: [
-                      Flexible(child: makePropEditor<UnderlinePropTextField>(child[0].value)),
-                      if (widget.showDetails)
-                        Flexible(child: makePropEditor<UnderlinePropTextField>(child[1].value)),
-                      Flexible(child: makePropEditor<UnderlinePropTextField>(child[2].value)),
-                    ],
-                  ),
-                )
-                .toList() ?? [],
-            ),
+            if (!widget.showDetails)
+              Column(
+                children: paramProp
+                  ?.where((child) => child.tagName == "value" && child.length == 3)
+                  .map((child) => 
+                    RowSeparated(
+                      children: [
+                        Flexible(child: makePropEditor<UnderlinePropTextField>(child[0].value)),
+                        if (widget.showDetails)
+                          Flexible(child: makePropEditor<UnderlinePropTextField>(child[1].value)),
+                        if (child[2].isEmpty)
+                          Flexible(child: makePropEditor<UnderlinePropTextField>(child[2].value))
+                        else
+                          Flexible(child: makeXmlPropEditor<UnderlinePropTextField>(child[2], false))
+                      ],
+                    ),
+                  )
+                  .toList() ?? [],
+              ),
             if (widget.showDetails)
               TransformsEditor<UnderlinePropTextField>(parent: widget.prop),
             if (widget.showDetails)
