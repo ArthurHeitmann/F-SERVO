@@ -11,8 +11,9 @@ import '../customXmlProps/layoutsEditor.dart';
 import '../customXmlProps/puidReferenceEditor.dart';
 import '../customXmlProps/transformsEditor.dart';
 import 'XmlPropEditor.dart';
+import 'propTextField.dart';
 
-Widget makeXmlPropEditor(XmlProp prop, bool showDetails) {
+Widget makeXmlPropEditor<T extends PropTextField>(XmlProp prop, bool showDetails) {
   // area editor
   if (prop.isNotEmpty && prop[0].tagName == "code" && prop[0].value is HexProp && _areaTypes.contains((prop[0].value as HexProp).value)) {
     return AreaEditor(prop: prop, showDetails: showDetails,);
@@ -26,15 +27,15 @@ Widget makeXmlPropEditor(XmlProp prop, bool showDetails) {
     return LayoutsEditor(prop: prop, showDetails: showDetails,);
   }
   // fallback
-  return XmlPropEditor(prop: prop, showDetails: showDetails,);
+  return XmlPropEditor<T>(prop: prop, showDetails: showDetails,);
 }
 
-List<Widget> makeXmlMultiPropEditor(XmlProp parent, bool showDetails, [bool Function(XmlProp)? filter]) {
+List<Widget> makeXmlMultiPropEditor<T extends PropTextField>(XmlProp parent, bool showDetails, [bool Function(XmlProp)? filter]) {
   List<Widget> widgets = [];
 
   // <id><id> ... </id></id> shortcut
   if (parent.length == 1 && parent[0].length == 1 && parent[0].tagName == "id" && parent[0][0].tagName == "id") {
-    return makeXmlMultiPropEditor(parent[0][0], showDetails, filter);
+    return makeXmlMultiPropEditor<T>(parent[0][0], showDetails, filter);
   }
 
   for (var i = 0; i < parent.length; i++) {
@@ -69,7 +70,7 @@ List<Widget> makeXmlMultiPropEditor(XmlProp parent, bool showDetails, [bool Func
     }
     // fallback
     else {
-      widgets.add(makeXmlPropEditor(child, showDetails));
+      widgets.add(makeXmlPropEditor<T>(child, showDetails));
     }
   }
 
