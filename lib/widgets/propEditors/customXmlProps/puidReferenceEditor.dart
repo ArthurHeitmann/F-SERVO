@@ -11,6 +11,7 @@ import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/openFilesManager.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
 import '../../../utils.dart';
+import '../simpleProps/UnderlinePropTextField.dart';
 import '../simpleProps/propEditorFactory.dart';
 import '../xmlActions/XmlActionEditor.dart';
 
@@ -26,6 +27,8 @@ class PuidReferenceEditor extends ChangeNotifierWidget {
 }
 
 class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor> {
+  bool showLookup = true;
+
   @override
   Widget build(BuildContext context) {
     var code = widget.prop.get("code")!;
@@ -45,7 +48,7 @@ class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor>
             children: [
               Icon(Icons.link, size: 25,),
               SizedBox(width: 4,),
-              !widget.showDetails ? FutureBuilder(
+              showLookup ? FutureBuilder(
                 future: idLookup.lookupId(idProp.value),
                 builder: (context, AsyncSnapshot<List<IndexedIdData>> snapshot) {
                   var lookup = snapshot.data;
@@ -55,7 +58,14 @@ class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor>
                   return Expanded(
                     child: Column(
                       children: [
-                        Text(puidRef.type, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),),
+                        ConstrainedBox(
+                          constraints: BoxConstraints(maxHeight: 25),
+                          child: Text(
+                            puidRef.type,
+                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
                         SizedBox(height: 4,),
                         if (puidRef is IndexedActionIdData)
                           Text(puidRef.actionName, overflow: TextOverflow.ellipsis,),
@@ -80,8 +90,8 @@ class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor>
               : Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  makePropEditor(code.value),
-                  makePropEditor(id.value),
+                  makePropEditor<UnderlinePropTextField>(code.value),
+                  makePropEditor<UnderlinePropTextField>(id.value),
                 ],
               ),
             ],
@@ -95,21 +105,37 @@ class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor>
     return ContextMenuRegion(
       contextMenu: GenericContextMenu(
         buttonConfigs: [
-          ContextMenuButtonConfig("Go to Reference", onPressed: goToReference),
+          ContextMenuButtonConfig("Go to Reference (ctrl + click)", onPressed: goToReference),
+          ContextMenuButtonConfig("Toggle Editing (double click)", onPressed: () => setState(() => showLookup = !showLookup)),
         ],
       ),
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
         child: GestureDetector(
-          onDoubleTap: goToReference,
+          onTap: onClick,
           child: child,
         ),
       )
     );
   }
 
+  int lastClickAt = 0;
+
+  bool isDoubleClick({ int intervalMs = 500 }) {
+    int time = DateTime.now().millisecondsSinceEpoch;
+    return time - lastClickAt < intervalMs;
+  }
+
+  void onClick() {
+    if (isDoubleClick())
+      setState(() => showLookup = !showLookup);
+    else if (isCtrlPressed() || isShiftPressed())
+      goToReference();
+
+    lastClickAt = DateTime.now().millisecondsSinceEpoch;
+  }
+
   Future<void> goToReference() async {
-    
     var id = widget.prop.get("id") ?? widget.prop.get("value")!;
     var idProp = id.value as HexProp;
     var indexedData = await idLookup.lookupId(idProp.value);
