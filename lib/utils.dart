@@ -31,8 +31,9 @@ String tryToTranslate(String jap) {
   return eng ?? jap;
 }
 
+final _crc32 = Crc32();
 int crc32(String str) {
-  return Crc32().convert(utf8.encode(str)).toBigInt().toInt();
+  return _crc32.convert(utf8.encode(str)).toBigInt().toInt();
 }
 
 bool isInt(String str) {
