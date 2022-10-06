@@ -28,6 +28,7 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
   final ButtonStyle? dialogSecondaryButtonStyle;
   final Color? selectedColor;
   final TextStyle? propInputTextStyle;
+  final Color? propBorderColor;
 
 
   NierThemeExtension({
@@ -55,6 +56,7 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
     this.dialogSecondaryButtonStyle,
     this.selectedColor,
     this.propInputTextStyle,
+    this.propBorderColor,
   });
   
   @override
@@ -83,6 +85,7 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
     ButtonStyle? dialogSecondaryButtonStyle,
     Color? selectedColor,
     TextStyle? propInputTextStyle,
+    Color? propBorderColor,
   }) {
     return NierThemeExtension(
       editorBackgroundColor: editorBackgroundColor ?? this.editorBackgroundColor,
@@ -109,6 +112,7 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
       dialogSecondaryButtonStyle: dialogSecondaryButtonStyle ?? this.dialogSecondaryButtonStyle,
       selectedColor: selectedColor ?? this.selectedColor,
       propInputTextStyle: propInputTextStyle ?? this.propInputTextStyle,
+      propBorderColor: propBorderColor ?? this.propBorderColor,
     );
   }
   
@@ -142,6 +146,7 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
       dialogSecondaryButtonStyle: ButtonStyle.lerp(dialogSecondaryButtonStyle, other.dialogSecondaryButtonStyle, t),
       selectedColor: Color.lerp(selectedColor, other.selectedColor, t),
       propInputTextStyle: TextStyle.lerp(propInputTextStyle, other.propInputTextStyle, t),
+      propBorderColor: Color.lerp(propBorderColor, other.propBorderColor, t),
     );
   }
 }
@@ -185,6 +190,7 @@ class NierDarkThemeExtension extends NierThemeExtension {
         fontFamily: "FiraCode",
         overflow: TextOverflow.ellipsis,
       ),
+      propBorderColor: Colors.grey.shade700,
     );
 
   static ThemeData makeTheme() {

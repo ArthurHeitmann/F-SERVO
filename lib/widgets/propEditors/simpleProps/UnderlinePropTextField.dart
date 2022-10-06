@@ -30,7 +30,7 @@ class _UnderlinePropTextFieldState extends PropTextFieldState {
         padding: const EdgeInsets.symmetric(vertical: 3),
         child: Container(
           decoration: BoxDecoration(
-            border: Border(bottom: BorderSide(color: Colors.white.withOpacity(0.5), width: 2)),
+            border: Border(bottom: BorderSide(color: getTheme(context).propBorderColor!, width: 2)),
           ),
           child: IntrinsicWidth(
             child: ConstrainedBox(

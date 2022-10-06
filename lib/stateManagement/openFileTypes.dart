@@ -166,7 +166,11 @@ class XmlFileData extends OpenFileData {
     var doc = XmlDocument.parse(text);
     _root = XmlProp.fromXml(doc.firstElementChild!, file: this);
     _root!.addListener(notifyListeners);
-    _root!.get("name")?.value.addListener(_onNameChange);
+    var nameProp = _root!.get("name");
+    if (nameProp != null) {
+      nameProp.value.addListener(_onNameChange);
+      secondaryName = nameProp.value.toString();
+    }
     _isLoaded = true;
     notifyListeners();
   }

@@ -45,6 +45,7 @@ class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor>
           ),
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           child: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
               Icon(Icons.link, size: 25,),
               SizedBox(width: 4,),

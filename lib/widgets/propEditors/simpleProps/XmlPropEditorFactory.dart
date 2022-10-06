@@ -8,6 +8,7 @@ import '../../../utils.dart';
 import '../customXmlProps/areaEditor.dart';
 import '../customXmlProps/entityEditor.dart';
 import '../customXmlProps/layoutsEditor.dart';
+import '../customXmlProps/paramEditor.dart';
 import '../customXmlProps/puidReferenceEditor.dart';
 import '../customXmlProps/transformsEditor.dart';
 import 'XmlPropEditor.dart';
@@ -25,6 +26,10 @@ Widget makeXmlPropEditor<T extends PropTextField>(XmlProp prop, bool showDetails
   // entity layouts
   if (prop.tagName == "layouts" && prop.get("normal")?.get("layouts") != null) {
     return LayoutsEditor(prop: prop, showDetails: showDetails,);
+  }
+  // param
+  if (prop.length == 3 && prop[0].tagName == "name" && prop[1].tagName == "code" && prop[2].tagName == "body") {
+    return ParamsEditor(prop: prop, showDetails: showDetails);
   }
   // fallback
   return XmlPropEditor<T>(prop: prop, showDetails: showDetails,);

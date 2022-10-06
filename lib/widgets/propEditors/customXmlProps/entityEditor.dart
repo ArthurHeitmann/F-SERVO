@@ -4,10 +4,9 @@ import 'package:flutter/material.dart';
 import '../../../customTheme.dart';
 import '../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
-import '../../misc/RowSeparated.dart';
 import '../simpleProps/UnderlinePropTextField.dart';
 import '../simpleProps/XmlPropEditorFactory.dart';
-import '../simpleProps/propEditorFactory.dart';
+import 'paramEditor.dart';
 import 'transformsEditor.dart';
 
 class EntityEditor extends ChangeNotifierWidget {
@@ -33,26 +32,17 @@ class _EntityEditorState extends ChangeNotifierState<EntityEditor> {
         ),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (widget.showDetails && widget.prop.get("id") != null)
               makeXmlPropEditor<UnderlinePropTextField>(widget.prop.get("id")!, true),
             makeXmlPropEditor<UnderlinePropTextField>(widget.prop.get("objId")!, widget.showDetails),
             if (!widget.showDetails)
               Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: paramProp
                   ?.where((child) => child.tagName == "value" && child.length == 3)
-                  .map((child) => 
-                    RowSeparated(
-                      children: [
-                        Flexible(child: makePropEditor<UnderlinePropTextField>(child[0].value)),
-                        if (widget.showDetails)
-                          Flexible(child: makePropEditor<UnderlinePropTextField>(child[1].value)),
-                        if (child[2].isEmpty)
-                          Flexible(child: makePropEditor<UnderlinePropTextField>(child[2].value))
-                        else
-                          Flexible(child: makeXmlPropEditor<UnderlinePropTextField>(child[2], false))
-                      ],
-                    ),
+                  .map((child) => ParamsEditor(prop: child, showDetails: widget.showDetails),
                   )
                   .toList() ?? [],
               ),
