@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:xml/xml.dart';
 
 import '../widgets/filesView/FileType.dart';
+import 'FileHierarchy.dart';
 import 'hasUuid.dart';
 import 'miscValues.dart';
 import 'undoable.dart';
@@ -13,20 +14,22 @@ import 'xmlProps/xmlProp.dart';
 class OpenFileData extends ChangeNotifier with Undoable, HasUuid {
   late final FileType type;
   String _name;
+  String? _secondaryName;
   String _path;
   bool _unsavedChanges = false;
   bool _isLoaded = false;
   final ChangeNotifier contentNotifier = ChangeNotifier();
   final ScrollController scrollController = ScrollController();
 
-  OpenFileData(this._name, this._path)
-    : type = OpenFileData.getFileType(_path);
+  OpenFileData(this._name, this._path, { String? secondaryName })
+    : type = OpenFileData.getFileType(_path),
+    _secondaryName = secondaryName;
 
-  factory OpenFileData.from(String name, String path) {
+  factory OpenFileData.from(String name, String path, { String? secondaryName }) {
     if (path.endsWith(".xml"))
-      return XmlFileData(name, path);
+      return XmlFileData(name, path, secondaryName: secondaryName);
     else
-      return TextFileData(name, path);
+      return TextFileData(name, path, secondaryName: secondaryName);
   }
 
   static FileType getFileType(String path) {
@@ -39,12 +42,18 @@ class OpenFileData extends ChangeNotifier with Undoable, HasUuid {
   }
 
   String get name => _name;
+  String get displayName => _secondaryName == null ? _name : "$_name - $_secondaryName";
   String get path => _path;
   bool get hasUnsavedChanges => _unsavedChanges;
 
   set name(String value) {
     if (value == _name) return;
     _name = value;
+    notifyListeners();
+  }
+  set secondaryName(String value) {
+    if (value == _secondaryName) return;
+    _secondaryName = value;
     notifyListeners();
   }
   set path(String value) {
@@ -94,7 +103,7 @@ void dispose() {
 class TextFileData extends OpenFileData {
   String _text = "Loading...";
 
-  TextFileData(super.name, super.path);
+  TextFileData(super.name, super.path, { super.secondaryName });
   
   String get text => _text;
 
@@ -135,10 +144,21 @@ class TextFileData extends OpenFileData {
 class XmlFileData extends OpenFileData {
   XmlProp? _root;
 
-  XmlFileData(super.name, super.path);
+  XmlFileData(super.name, super.path, { super.secondaryName });
 
   XmlProp? get root => _root;
   
+  void _onNameChange() {
+    var xmlName = _root!.get("name")!.value.toString();
+
+    secondaryName = xmlName;
+
+    var hierarchyEntry = openHierarchyManager
+                        .findRecWhere((entry) => entry is XmlScriptHierarchyEntry && entry.path == path) as XmlScriptHierarchyEntry?;
+    if (hierarchyEntry != null)
+      hierarchyEntry.hapName = xmlName;
+  }
+
   @override
   Future<void> load() async {
     if (_isLoaded) return;
@@ -146,6 +166,11 @@ class XmlFileData extends OpenFileData {
     var doc = XmlDocument.parse(text);
     _root = XmlProp.fromXml(doc.firstElementChild!, file: this);
     _root!.addListener(notifyListeners);
+    var nameProp = _root!.get("name");
+    if (nameProp != null) {
+      nameProp.value.addListener(_onNameChange);
+      secondaryName = nameProp.value.toString();
+    }
     _isLoaded = true;
     notifyListeners();
   }
@@ -168,6 +193,7 @@ class XmlFileData extends OpenFileData {
   void dispose() {
     _root?.removeListener(notifyListeners);
     _root?.dispose();
+    _root?.get("name")?.value.removeListener(_onNameChange);
     super.dispose();
   }
 

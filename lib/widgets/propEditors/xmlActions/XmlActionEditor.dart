@@ -10,6 +10,7 @@ import '../../../utils.dart';
 import '../../misc/Selectable.dart';
 import '../simpleProps/DoubleClickablePropTextField.dart';
 import '../simpleProps/XmlPropEditorFactory.dart';
+import '../simpleProps/propTextField.dart';
 
 final Map<int, GlobalKey<XmlActionEditorState>> _actionKeys = {};
 
@@ -36,7 +37,6 @@ final Set<String> ignoreTagNames = {
 final Set<int> spawningActionCodes = {
   crc32("EntityLayoutAction"),
   crc32("EntityLayoutArea"),
-  crc32("AreaEntityAction"),
   crc32("EnemySetAction"),
   crc32("EnemySetArea"),
   crc32("EnemyGenerator"),
@@ -101,6 +101,14 @@ class XmlActionEditorState extends ChangeNotifierState<XmlActionEditor> {
             selectionColor: Colors.black.withOpacity(0.5),
             selectionHandleColor: Colors.white,
           ),
+          extensions: [getTheme(context).copyWith(
+            propInputTextStyle: TextStyle(
+            color: Colors.white,
+            fontSize: 14,
+            fontFamily: "FiraCode",
+            overflow: TextOverflow.ellipsis,
+          )
+          )]
         ),
         child: Padding(
           padding: const EdgeInsets.all(4.0),
@@ -110,13 +118,13 @@ class XmlActionEditorState extends ChangeNotifierState<XmlActionEditor> {
                 text: TextSpan(
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: 16
+                    fontSize: 14
                   ),
                   text: widget.action.code.strVal ?? "UNKNOWN ${widget.action.code.value}"
                 )
               ),
-              SizedBox(height: 5),
-              DoubleClickablePropTextField(prop: widget.action.name),
+              SizedBox(height: 2),
+              PropTextField.make<DoubleClickablePropTextField>(prop: widget.action.name),
             ],
           ),
         ),

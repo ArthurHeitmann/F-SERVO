@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../stateManagement/Property.dart';
 import '../../misc/RowSeparated.dart';
 import 'NumberPropTextField.dart';
-import 'primaryPropTextField.dart';
+import 'propTextField.dart';
 
 const List<String> _coordChars = ["X", "Y", "Z"];
 const List<Color> _coordColors = [Colors.red, Colors.green, Colors.blue];
@@ -19,7 +19,7 @@ BoxConstraints constraintsFromCount(int count, bool compactMode) {
     return BoxConstraints(minWidth: 35, maxWidth: 60);
 }
 
-class VectorPropEditor extends StatelessWidget {
+class VectorPropEditor<T extends PropTextField> extends StatelessWidget {
   final VectorProp prop;
 
   const VectorPropEditor({super.key, required this.prop});
@@ -41,7 +41,7 @@ class VectorPropEditor extends StatelessWidget {
                 children: [
                   for (var i = 0; i < prop.length; i++)
                     Flexible(
-                      child: NumberPropTextField(
+                      child: NumberPropTextField<T>(
                         prop: prop[i],
                         constraints: constraintsFromCount(prop.length, compact),
                         left: prop.length == 3 && !compact
@@ -63,7 +63,7 @@ class VectorPropEditor extends StatelessWidget {
                     ),
                 ],
               )
-              : PrimaryPropTextField(prop: prop);
+              : PropTextField.make<T>(prop: prop);
             }
           ),
         );

@@ -1,13 +1,12 @@
 
-
 import 'package:flutter/material.dart';
 
 import '../../../customTheme.dart';
 import '../../../stateManagement/ChangeNotifierWidget.dart';
-import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
+import '../simpleProps/UnderlinePropTextField.dart';
 import '../simpleProps/XmlPropEditorFactory.dart';
-import '../simpleProps/propEditorFactory.dart';
+import 'paramEditor.dart';
 import 'transformsEditor.dart';
 
 class EntityEditor extends ChangeNotifierWidget {
@@ -24,8 +23,6 @@ class _EntityEditorState extends ChangeNotifierState<EntityEditor> {
   @override
   Widget build(BuildContext context) {
     var paramProp = widget.prop.get("param");
-    var levelParams = paramProp?.where((prop) => prop.isNotEmpty && (prop[0].value as StringProp).value.contains("Lv"));
-    var nameTagParam = paramProp?.find((prop) => prop.isNotEmpty && (prop[0].value as StringProp).value == "NameTag");
     return Padding(
       padding: const EdgeInsets.all(4.0),
       child: Container(
@@ -35,23 +32,24 @@ class _EntityEditorState extends ChangeNotifierState<EntityEditor> {
         ),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (widget.showDetails)
-              makeXmlPropEditor(widget.prop.get("id")!, true),
-            makeXmlPropEditor(widget.prop.get("objId")!, widget.showDetails),
-            if (!widget.showDetails && levelParams != null && levelParams.isNotEmpty)
-              for (var levelParam in levelParams)
-                Row(
-                  children: levelParam.map((prop) => makePropEditor(prop.value)).toList(),
-                ),
-            if (!widget.showDetails && nameTagParam != null)
-              Row(
-                children: nameTagParam.map((prop) => makePropEditor(prop.value)).toList(),
+            if (widget.showDetails && widget.prop.get("id") != null)
+              makeXmlPropEditor<UnderlinePropTextField>(widget.prop.get("id")!, true),
+            makeXmlPropEditor<UnderlinePropTextField>(widget.prop.get("objId")!, widget.showDetails),
+            if (!widget.showDetails)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: paramProp
+                  ?.where((child) => child.tagName == "value" && child.length == 3)
+                  .map((child) => ParamsEditor(prop: child, showDetails: widget.showDetails),
+                  )
+                  .toList() ?? [],
               ),
             if (widget.showDetails)
-              TransformsEditor(parent: widget.prop),
+              TransformsEditor<UnderlinePropTextField>(parent: widget.prop),
             if (widget.showDetails)
-              ...makeXmlMultiPropEditor(widget.prop, true, (prop) => !_detailsIgnoreList.contains(prop.tagName)),
+              ...makeXmlMultiPropEditor<UnderlinePropTextField>(widget.prop, true, (prop) => !_detailsIgnoreList.contains(prop.tagName)),
           ],
         ),
       ),

@@ -2,7 +2,16 @@
 import 'package:flutter/material.dart';
 
 
-final windowTitle = ValueNotifier<String>("Nier Scripts Editor");
+const _windowTitleDefault = "Nier Scripts Editor";
+class _WindowTitleVN extends ValueNotifier<String> {
+  _WindowTitleVN() : super("");
+
+  @override
+  String get value => _windowTitleDefault + (super.value.isEmpty ? "" : "  |  ${super.value}");
+}
+
+final windowTitle = _WindowTitleVN();
+
 
 /// ugly fix
 bool disableFileChanges = false;

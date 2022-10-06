@@ -5,8 +5,9 @@ import 'package:flutter/material.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
 import '../../misc/smallButton.dart';
 import 'propEditorFactory.dart';
+import 'propTextField.dart';
 
-class OptionalPropEditor extends StatefulWidget {
+class OptionalPropEditor<T extends PropTextField> extends StatefulWidget {
   final XmlProp? prop;
   final XmlProp parent;
   final void Function() onAdd;
@@ -14,10 +15,10 @@ class OptionalPropEditor extends StatefulWidget {
   const OptionalPropEditor({super.key, this.prop, required this.parent, required this.onAdd});
 
   @override
-  State<OptionalPropEditor> createState() => _OptionalPropEditorState();
+  State<OptionalPropEditor> createState() => _OptionalPropEditorState<T>();
 }
 
-class _OptionalPropEditorState extends State<OptionalPropEditor> {
+class _OptionalPropEditorState<T extends PropTextField> extends State<OptionalPropEditor> {
   bool isHovered = false;
 
   @override
@@ -39,7 +40,7 @@ class _OptionalPropEditorState extends State<OptionalPropEditor> {
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          Flexible(child: makePropEditor(widget.prop!.value)),
+          Flexible(child: makePropEditor<T>(widget.prop!.value)),
           SizedBox(width: 5),
           AnimatedOpacity(
             duration: Duration(milliseconds: 100),

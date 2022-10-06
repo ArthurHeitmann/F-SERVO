@@ -72,7 +72,7 @@ class _DoubleClickablePropTextFieldState extends PropTextFieldState {
                   ),
                 )
                 : Padding(
-                  padding: const EdgeInsets.only(top: 4, bottom: 6),
+                  padding: const EdgeInsets.only(top: 4, bottom: 6, right: 2),
                   child: GestureDetector(
                     onDoubleTap: () {
                       setState(() => showInput = !showInput);

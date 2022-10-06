@@ -8,10 +8,12 @@ import '../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
 import '../../../utils.dart';
+import '../simpleProps/XmlPropEditorFactory.dart';
 import '../simpleProps/optionalPropEditor.dart';
 import '../simpleProps/propEditorFactory.dart';
+import '../simpleProps/propTextField.dart';
 
-class TransformsEditor extends ChangeNotifierWidget {
+class TransformsEditor<T extends PropTextField> extends ChangeNotifierWidget {
   final XmlProp parent;
   final bool canBeRotated;
   final bool canBeScaled;
@@ -25,14 +27,14 @@ class TransformsEditor extends ChangeNotifierWidget {
     ]);
 
   @override
-  State<TransformsEditor> createState() => _TransformsEditorState();
+  State<TransformsEditor> createState() => _TransformsEditorState<T>();
 }
 
 final _positionHash = crc32("position");
 final _rotationHash = crc32("rotation");
 final _scaleHash = crc32("scale");
 
-class _TransformsEditorState extends ChangeNotifierState<TransformsEditor> {
+class _TransformsEditorState<T extends PropTextField> extends ChangeNotifierState<TransformsEditor> {
   void addProp(int tagId, XmlProp parent, double initValue, int Function() getInsertPos) {
     parent.insert(
       getInsertPos(),
@@ -104,20 +106,22 @@ class _TransformsEditorState extends ChangeNotifierState<TransformsEditor> {
             parent: widget.parent,
             canBeRemoved: widget.itemsCanBeRemoved,
           ),
+        if (hasLocation)
+          ...makeXmlMultiPropEditor(location, true, (prop) => !_defaultLocationTagNames.contains(prop.tagName),)
       ],
     );
   }
 
   Widget makeIconRow({ required Widget icon, required void Function() onAdd, required XmlProp? prop, required XmlProp parent, required bool canBeRemoved }) {
     var editor = canBeRemoved
-      ? OptionalPropEditor(
+      ? OptionalPropEditor<T>(
         onAdd: onAdd,
         prop: prop,
         parent: parent,
       )
       : Row(
         children: [
-          Flexible(child: makePropEditor(prop!.value)),
+          Flexible(child: makePropEditor<T>(prop!.value)),
           if (widget.itemsCanBeRemoved)
             SizedBox(width: 30),
         ],
@@ -131,3 +135,5 @@ class _TransformsEditorState extends ChangeNotifierState<TransformsEditor> {
     );
   }
 }
+
+const _defaultLocationTagNames = ["position", "rotation"];

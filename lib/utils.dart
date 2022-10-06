@@ -6,12 +6,15 @@ import 'dart:math';
 import 'package:crclib/catalog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:uuid/uuid.dart';
 import 'package:path/path.dart' as path;
 
 import 'fileTypeUtils/utils/ByteDataWrapper.dart';
 import 'fileTypeUtils/yax/japToEng.dart';
+import 'main.dart';
 import 'stateManagement/miscValues.dart';
 
 final uuidGen = Uuid();
@@ -168,4 +171,31 @@ Future<List<String>> getDatFiles(String extractedDir) async {
     .where((file) => file is File && path.extension(file.path).length <= 3)
     .map((file) => file.path)
     .toList();
+}
+
+Future<void> waitForNextFrame() {
+  var completer = Completer<void>();
+  SchedulerBinding.instance.addPostFrameCallback((_) => completer.complete());
+  return completer.future;
+}
+
+void showToast(String msg) {
+  FToast toast = FToast();
+  toast.init(getGlobalContext());
+  toast.showToast(
+    child: Container(
+      decoration: BoxDecoration(
+        color: Colors.grey.shade700,
+        borderRadius: BorderRadius.all(Radius.circular(10))
+      ),
+      padding: const EdgeInsets.all(8),
+      child: Text(
+        msg,
+        style: TextStyle(
+          fontSize: 17,
+          color: Colors.white
+        ),
+      ),
+    )
+  );
 }

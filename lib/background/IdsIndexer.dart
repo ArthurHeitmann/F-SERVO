@@ -12,6 +12,7 @@ import '../../fileTypeUtils/utils/ByteDataWrapper.dart';
 import '../../fileTypeUtils/yax/yaxToXml.dart';
 import '../../utils.dart';
 import '../fileTypeUtils/pak/pakExtractor.dart';
+import '../fileTypeUtils/yax/hashToStringMap.dart';
 
 class IndexedIdData {
   final int id;
@@ -37,8 +38,8 @@ class IndexedIdData {
 class IndexedActionIdData extends IndexedIdData {
   final String actionName;
 
-  IndexedActionIdData(int id, String datPath, String pakPath, String xmlPath, this.actionName)
-    : super(id, "Action", datPath, pakPath, xmlPath);
+  IndexedActionIdData(int id, String datPath, String pakPath, String xmlPath, String actionType, this.actionName)
+    : super(id, "Action # $actionType", datPath, pakPath, xmlPath);
 
   @override
   String toString() {
@@ -87,7 +88,8 @@ enum InitStatus {
 class IdsIndexer {
   String? _path;
   bool _stop = false;
-  final Map<int, IndexedIdData> indexedIds = {};
+  final Map<int, List<IndexedIdData>> indexedIds = {};
+  void Function(bool)? onLoadingStateChange;
 
   InitStatus _initStatus = InitStatus.notInitialized;
   Completer<void> _awaitInitializedCompleter = Completer<void>();
@@ -95,15 +97,19 @@ class IdsIndexer {
   String? get path => _path;
 
   Future<void> indexPath(String path) async {
+    onLoadingStateChange?.call(true);
     _path = path;
     _initStatus = InitStatus.notInitialized;
     await _init(path);
+    onLoadingStateChange?.call(false);
   }
 
   void indexXml(XmlElement xml, String path) {
+    onLoadingStateChange?.call(true);
     _path = path;
     _initStatus = InitStatus.notInitialized;
     _initXml(xml, path);
+    onLoadingStateChange?.call(false);
   }
 
   void clear() {
@@ -303,11 +309,11 @@ class IdsIndexer {
     if (await File(xmlPath).exists()) {
       var xmlDoc = XmlDocument.parse(await File(xmlPath).readAsString());
       var xmlRoot = xmlDoc.rootElement;
-      _indexXmlContents(datPath, pakPath, yaxPath, xmlRoot);
+      _indexXmlContents(datPath, pakPath, xmlPath, xmlRoot);
     }
     else {
       var xmlRoot = yaxToXml(bytes, includeAnnotations: false);
-      _indexXmlContents(datPath, pakPath, yaxPath, xmlRoot);
+      _indexXmlContents(datPath, pakPath, xmlPath, xmlRoot);
     }
   }
 
@@ -319,14 +325,15 @@ class IdsIndexer {
     var hapIdL = root.findElements("id");
     if (hapIdL.isNotEmpty) {
       var hapId = int.parse(hapIdL.first.text);
-      indexedIds[hapId] = IndexedIdData(hapId, "HAP", datPath, pakPath, xmlPath);
+      _addIndexedData(hapId, IndexedIdData(hapId, "HAP", datPath, pakPath, xmlPath));
     }
 
     for (var action in root.findElements("action")) {
+      var actionCode = int.parse(action.findElements("code").first.text);
       var actionId = int.parse(action.findElements("id").first.text);
       var actionName = action.findElements("name").first.text;
       actionName = tryToTranslate(actionName);
-      indexedIds[actionId] = IndexedActionIdData(actionId, datPath, pakPath, xmlPath, actionName);
+      _addIndexedData(actionId, IndexedActionIdData(actionId, datPath, pakPath, xmlPath, hashToStringMap[actionCode] ?? actionCode.toString(), actionName));
 
       for (var normal in action.findAllElements("normal")) {  // entities
         var normalLayouts = normal.findElements("layouts").first;
@@ -350,9 +357,18 @@ class IdsIndexer {
             }
           }
 
-          indexedIds[entityId] = IndexedEntityIdData(entityId, datPath, pakPath, xmlPath, objId, actionId, name, level);
+          _addIndexedData(entityId, IndexedEntityIdData(entityId, datPath, pakPath, xmlPath, objId, actionId, name, level));
         }
       }
     }
+  }
+
+  void _addIndexedData(int id, IndexedIdData data) {
+    var idList = indexedIds[id];
+    if (idList == null) {
+      idList = [];
+      indexedIds[id] = idList;
+    }
+    idList.add(data);
   }
 }

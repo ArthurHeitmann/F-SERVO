@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import '../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../utils.dart';
+import 'DoubleClickablePropTextField.dart';
+import 'UnderlinePropTextField.dart';
+import 'primaryPropTextField.dart';
 
 abstract class PropTextField<P extends Prop> extends ChangeNotifierWidget {
   final P prop;
@@ -26,6 +29,53 @@ abstract class PropTextField<P extends Prop> extends ChangeNotifierWidget {
   })
     : constraints = constraints ?? BoxConstraints(minWidth: 50),
     super(notifier: prop);
+
+  static PropTextField make<T extends PropTextField>({
+    Key? key,
+    required Prop prop,
+    Widget? left,
+    BoxConstraints? constraints,
+    String? Function(String str)? validatorOnChange,
+    void Function(String)? onValid,
+    TextEditingController? controller,
+    String Function()? getDisplayText,
+  }) {
+    if (T == DoubleClickablePropTextField)
+      return DoubleClickablePropTextField(
+        key: key,
+        prop: prop,
+        left: left,
+        constraints: constraints,
+        validatorOnChange: validatorOnChange,
+        onValid: onValid,
+        controller: controller,
+        getDisplayText: getDisplayText,
+      );
+    if (T == UnderlinePropTextField)
+      return UnderlinePropTextField(
+        key: key,
+        prop: prop,
+        left: left,
+        constraints: constraints,
+        validatorOnChange: validatorOnChange,
+        onValid: onValid,
+        controller: controller,
+        getDisplayText: getDisplayText,
+      );
+    // else if (T == PrimaryPropTextField)
+    else {
+      return PrimaryPropTextField(
+        key: key,
+        prop: prop,
+        left: left,
+        constraints: constraints,
+        validatorOnChange: validatorOnChange,
+        onValid: onValid,
+        controller: controller,
+        getDisplayText: getDisplayText,
+      );
+    }
+  }
 }
 
 abstract class PropTextFieldState<P extends Prop> extends ChangeNotifierState<PropTextField<P>> {
