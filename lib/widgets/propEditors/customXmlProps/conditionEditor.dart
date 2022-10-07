@@ -34,7 +34,7 @@ class _ConditionEditorState extends ChangeNotifierState<ConditionEditor> {
             "?",
             style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
           ),
-          SizedBox(width: 12),
+          SizedBox(width: 10),
           Expanded(
             child: Container(
               decoration: BoxDecoration(
@@ -47,11 +47,9 @@ class _ConditionEditorState extends ChangeNotifierState<ConditionEditor> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   PuidReferenceEditor(prop: widget.prop.get("puid")!, showDetails: widget.showDetails),
-                  Divider(color: getTheme(context).textColor!.withOpacity(0.75), thickness: 2,),
+                  Divider(color: getTheme(context).textColor!.withOpacity(0.5), thickness: 2,),
                   if (label != null)
-                    makePropEditor(label)
-                  else
-                    Text("No label"),
+                    makePropEditor(label),
                   if (value != null)
                     Padding(
                       padding: const EdgeInsets.only(left: 8.0),

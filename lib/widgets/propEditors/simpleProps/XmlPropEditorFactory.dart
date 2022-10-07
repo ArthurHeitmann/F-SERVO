@@ -6,6 +6,7 @@ import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
 import '../../../utils.dart';
 import '../customXmlProps/areaEditor.dart';
+import '../customXmlProps/commandEditor.dart';
 import '../customXmlProps/conditionEditor.dart';
 import '../customXmlProps/entityEditor.dart';
 import '../customXmlProps/layoutsEditor.dart';
@@ -76,6 +77,15 @@ List<Widget> makeXmlMultiPropEditor<T extends PropTextField>(XmlProp parent, boo
     else if (child.tagName == "code" && _puidRefCodes.contains((child.value as HexProp).value)) {
       widgets.add(PuidReferenceEditor(prop: parent, showDetails: showDetails,));
       if (i + 1 < parent.length && _puidRefIdTags.contains(parent[i + 1].tagName))
+        i++;
+    }
+    // command
+    else if (child.tagName == "puid" && i + 1 < parent.length && (parent[i + 1].tagName == "command" || parent[i + 1].tagName == "hit")) {
+      widgets.add(CommandEditor(prop: parent, showDetails: showDetails));
+      i++;
+      if (i + 1 < parent.length && parent[i + 1].tagName == "hitout")
+        i++;
+      if (i + 1 < parent.length && parent[i + 1].tagName == "args")
         i++;
     }
     // fallback
