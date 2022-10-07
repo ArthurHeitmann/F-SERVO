@@ -6,6 +6,7 @@ import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
 import '../../../utils.dart';
 import '../customXmlProps/areaEditor.dart';
+import '../customXmlProps/conditionEditor.dart';
 import '../customXmlProps/entityEditor.dart';
 import '../customXmlProps/layoutsEditor.dart';
 import '../customXmlProps/paramEditor.dart';
@@ -30,6 +31,10 @@ Widget makeXmlPropEditor<T extends PropTextField>(XmlProp prop, bool showDetails
   // param
   if (prop.length == 3 && prop[0].tagName == "name" && prop[1].tagName == "code" && prop[2].tagName == "body") {
     return ParamsEditor(prop: prop, showDetails: showDetails);
+  }
+  // condition
+  if (prop.get("puid") != null && prop.get("condition") != null) {
+    return ConditionEditor(prop: prop, showDetails: showDetails);
   }
   // fallback
   return XmlPropEditor<T>(prop: prop, showDetails: showDetails,);
