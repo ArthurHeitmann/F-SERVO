@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../stateManagement/xmlProps/xmlProp.dart';
 import '../../stateManagement/xmlProps/xmlActionProp.dart';
 import '../misc/ColumnSeparated.dart';
+import '../propEditors/simpleProps/XmlPropEditorFactory.dart';
 import '../propEditors/xmlActions/XmlActionEditorFactory.dart';
 import '../propEditors/xmlActions/xmlArrayEditor.dart';
 
@@ -12,7 +13,7 @@ class XmlActionsEditor extends XmlArrayEditor {
   final XmlProp root;
 
   XmlActionsEditor({super.key, required this.root})
-    : super(root, root.where((element) => element.tagName == "size").first, "action", false);
+    : super(root, XmlPresets.action, root.where((element) => element.tagName == "size").first, "action", false);
 
   @override
   XmlArrayEditorState createState() => _XmlActionsEditorState();

@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import '../../../customTheme.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
 import '../simpleProps/XmlPropEditor.dart';
-import '../simpleProps/XmlPropEditorFactory.dart';
 import '../simpleProps/propEditorFactory.dart';
 
 class ParamsEditor extends StatelessWidget {

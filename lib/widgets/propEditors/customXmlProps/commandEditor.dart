@@ -1,13 +1,13 @@
 
 
 import 'package:flutter/material.dart';
-import 'package:nier_scripts_editor/widgets/propEditors/customXmlProps/puidReferenceEditor.dart';
 
 import '../../../customTheme.dart';
 import '../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
 import '../simpleProps/XmlPropEditorFactory.dart';
 import '../simpleProps/propEditorFactory.dart';
+import 'puidReferenceEditor.dart';
 
 class CommandEditor extends ChangeNotifierWidget {
   final XmlProp prop;
