@@ -11,6 +11,7 @@ import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/openFilesManager.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
 import '../../../utils.dart';
+import '../../misc/nestedContextMenu.dart';
 import '../simpleProps/UnderlinePropTextField.dart';
 import '../simpleProps/propEditorFactory.dart';
 import '../xmlActions/XmlActionEditor.dart';
@@ -103,13 +104,12 @@ class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor>
   }
 
   Widget interactionsWrapper(BuildContext context, { required Widget child }) {
-    return ContextMenuRegion(
-      contextMenu: GenericContextMenu(
-        buttonConfigs: [
-          ContextMenuButtonConfig("Go to Reference (ctrl + click)", onPressed: goToReference),
-          ContextMenuButtonConfig("Toggle Editing (double click)", onPressed: () => setState(() => showLookup = !showLookup)),
-        ],
-      ),
+    return NestedContextMenu(
+      buttons: [
+        ContextMenuButtonConfig("Paste PUID ref", icon: Icon(Icons.content_paste, size: 14), onPressed: pasteRef),
+        ContextMenuButtonConfig("Go to Reference", icon: Icon(Icons.east, size: 14), shortcutLabel: "(ctrl + click)", onPressed: goToReference),
+        ContextMenuButtonConfig("Toggle Editing", icon: Icon(Icons.edit, size: 14), shortcutLabel: "(double click)", onPressed: () => setState(() => showLookup = !showLookup)),
+      ],
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
         child: GestureDetector(
@@ -168,5 +168,13 @@ class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor>
 
       scrollIntoView(actionContext, duration: Duration(milliseconds: 400), viewOffset: 45);
     }
+  }
+
+  Future<void> pasteRef() async {
+    var puidRef = await getClipboardPuidRefData();
+    var code = widget.prop.get("code")!.value as HexProp;
+    var id = (widget.prop.get("id") ?? widget.prop.get("value")!).value as HexProp;
+    code.value = puidRef.codeHash;
+    id.value = puidRef.id;
   }
 }

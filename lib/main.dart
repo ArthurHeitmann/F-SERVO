@@ -81,7 +81,7 @@ class MyApp extends StatelessWidget {
                     if (config.shortcutLabel != null)
                       Text(
                         config.shortcutLabel!,
-                        style: const TextStyle(fontSize: 13, color: Colors.grey),
+                        style: const TextStyle(fontSize: 12, color: Colors.grey),
                       ),
                   ],
                 ),

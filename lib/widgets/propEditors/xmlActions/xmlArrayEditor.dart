@@ -53,8 +53,8 @@ class XmlArrayEditorState extends ChangeNotifierState<XmlArrayEditor> {
 
   Widget childWrapper({ required Widget child, required int index }) {
     return NestedContextMenu(
-      ignoreParent: true,
-      contextChildren: [
+      clearParent: true,
+      buttons: [
           ContextMenuButtonConfig(
             "Delete child",
             icon: Icon(Icons.delete, size: 14,),

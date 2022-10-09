@@ -30,7 +30,7 @@ class _EntityEditorState extends ChangeNotifierState<EntityEditor> {
     return Padding(
       padding: const EdgeInsets.all(4.0),
       child: NestedContextMenu(
-        contextChildren: [
+        buttons: [
           if (widget.prop.get("id") != null)
             ContextMenuButtonConfig(
               "Copy PUID ref",

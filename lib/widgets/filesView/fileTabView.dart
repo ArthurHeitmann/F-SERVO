@@ -94,7 +94,7 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
     }
     Widget newEntry = makeFileEditor(file);
     newEntry = Positioned.fill(
-      key: ValueKey(file),
+      key: PageStorageKey(file),
       child: SmoothSingleChildScrollView(
         controller: file.scrollController,
         child: Padding(

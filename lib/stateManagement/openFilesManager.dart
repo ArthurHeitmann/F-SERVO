@@ -24,6 +24,8 @@ class FilesAreaManager extends NestedNotifier<OpenFileData> implements Undoable 
     
     if (this == areasManager.activeArea)
       windowTitle.value = currentFile?.displayName ?? "";
+    
+    undoHistoryManager.onUndoableEvent();
   }
 
   void switchToClosestFile() {
@@ -226,6 +228,8 @@ class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
     notifyListeners();
 
     windowTitle.value = value?.currentFile?.displayName ?? "";
+    
+    undoHistoryManager.onUndoableEvent();
   }
 
   void ensureFileIsVisible(OpenFileData file) {

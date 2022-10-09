@@ -214,15 +214,15 @@ Future<void> copyPuidRef(String code, int id) {
 
 class PuidRefData {
   final String code;
-  final int hash;
+  final int codeHash;
   final int id;
  
-  const PuidRefData(this.code, this.hash, this.id);
+  const PuidRefData(this.code, this.codeHash, this.id);
 }
 
 const _fallbackPuidRefData = PuidRefData("", 0, 0);
 
-Future<PuidRefData> getPuidRefData() async {
+Future<PuidRefData> getClipboardPuidRefData() async {
   var text = (await Clipboard.getData(Clipboard.kTextPlain))?.text;
   if (text == null)
     return _fallbackPuidRefData;
@@ -230,7 +230,7 @@ Future<PuidRefData> getPuidRefData() async {
     var root = XmlDocument.parse(text).rootElement;
     if (root.name.local != "puid")
       return _fallbackPuidRefData;
-    var hash = int.parse(root.findElements("code").single.getAttribute("code")!);
+    var hash = int.parse(root.findElements("code").single.text);
     var code = root.getElement("code")?.getAttribute("str") ?? hashToStringMap[hash] ?? "";
     var id = int.parse(root.findElements("id").single.text);
     return PuidRefData(code, hash, id);
