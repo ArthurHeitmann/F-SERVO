@@ -65,7 +65,7 @@ class XmlActionEditorState extends ChangeNotifierState<XmlActionEditor> {
       child: NestedContextMenu(
         buttons: [
           ContextMenuButtonConfig(
-            "Copy PUID ref",
+            "Copy Action PUID ref",
             icon: Icon(Icons.content_copy, size: 14,),
             onPressed: () => copyPuidRef("hap::Action", widget.action.id.value)
           ),

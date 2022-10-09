@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../customTheme.dart';
+import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
 import '../simpleProps/XmlPropEditor.dart';
 import '../simpleProps/propEditorFactory.dart';
@@ -28,7 +29,7 @@ class ParamsEditor extends StatelessWidget {
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               makePropEditor(prop[0].value),
-              if (showDetails)
+              if (showDetails || (prop[1].value as HexProp).strVal == "type")
                 makePropEditor(prop[1].value),
               if (prop[2].isEmpty)
                 makePropEditor(prop[2].value)

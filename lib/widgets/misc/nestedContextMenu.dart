@@ -43,6 +43,7 @@ class NestedContextMenu extends StatelessWidget {
       child: Builder(
         builder: (context) {
           return ContextMenuRegion(
+            enableLongPress: false,
             contextMenu: GenericContextMenu(
               buttonConfigs: _NestedContextMenuIW.of(context)!.getAllWidgets(),
             ),

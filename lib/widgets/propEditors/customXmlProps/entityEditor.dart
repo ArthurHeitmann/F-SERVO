@@ -10,7 +10,7 @@ import '../../../utils.dart';
 import '../../misc/nestedContextMenu.dart';
 import '../simpleProps/UnderlinePropTextField.dart';
 import '../simpleProps/XmlPropEditorFactory.dart';
-import 'paramEditor.dart';
+import '../xmlActions/xmlArrayEditor.dart';
 import 'transformsEditor.dart';
 
 class EntityEditor extends ChangeNotifierWidget {
@@ -26,17 +26,87 @@ class EntityEditor extends ChangeNotifierWidget {
 class _EntityEditorState extends ChangeNotifierState<EntityEditor> {
   @override
   Widget build(BuildContext context) {
+    bool isLayoutEntity = widget.prop.get("id") != null;
     var paramProp = widget.prop.get("param");
     return Padding(
       padding: const EdgeInsets.all(4.0),
       child: NestedContextMenu(
         buttons: [
-          if (widget.prop.get("id") != null)
+          if (isLayoutEntity)
             ContextMenuButtonConfig(
-              "Copy PUID ref",
+              "Copy Entity PUID ref",
               icon: Icon(Icons.content_copy, size: 14,),
               onPressed: () => copyPuidRef("app::EntityLayout", (widget.prop.get("id")!.value as HexProp).value)
             ),
+          optionalPropButtonConfig(
+            widget.prop,
+            "param",
+            () => getNextInsertIndexBefore(widget.prop, ["delay"], widget.prop.length),
+            () {
+              var newProp = XmlPresets.params.prop(XmlPresetInit(file: widget.prop.file, parentPropName: widget.prop.tagName));
+              var countProp = XmlProp.fromXml(makeXmlElement(name: "count", text: "0x1"));
+              return [countProp, newProp! as XmlProp];
+            },
+          ),
+          if (widget.showDetails && isLayoutEntity) ...[
+            optionalValPropButtonConfig(
+              widget.prop, "flags", () => 1,
+              () => HexProp(0),
+            ),
+            optionalValPropButtonConfig(
+              widget.prop, "setFlag", () => widget.prop.indexOf(widget.prop.get("objId")!) + 1,
+              () => HexProp(0),
+            ),
+            optionalValPropButtonConfig(
+              widget.prop, "setType", () => getNextInsertIndexAfter(widget.prop, ["setFlag", "objId"]),
+              () => NumberProp(0, true)
+            ),
+            optionalValPropButtonConfig(
+              widget.prop, "setRtn", () => getNextInsertIndexAfter(widget.prop, ["setType", "setFlag", "objId"]),
+              () => NumberProp(0, true)
+            ),
+            optionalValPropButtonConfig(
+              widget.prop, "alias", () => getNextInsertIndexAfter(widget.prop, ["setRtn", "setType", "setFlag", "objId"]),
+              () => StringProp("aliasName")
+            ),
+            optionalValPropButtonConfig(
+              widget.prop, "delay", () => widget.prop.length,
+              () => NumberProp(0.0, false),
+            ),
+          ],
+          if (widget.showDetails && !isLayoutEntity) ...[
+            optionalPropButtonConfig(
+              widget.prop, "levelRange", () => 2,
+              () => [
+                XmlProp(file: widget.prop.file, tagId: crc32("min"), tagName: "min", value: NumberProp(1, true)),
+                XmlProp(file: widget.prop.file, tagId: crc32("max"), tagName: "max", value: NumberProp(1, true)),
+              ],
+            ),
+            optionalValPropButtonConfig(
+              widget.prop, "setType", () => getNextInsertIndexAfter(widget.prop, ["levelRange", "rate"]),
+              () => NumberProp(0, true)
+            ),
+            optionalValPropButtonConfig(
+              widget.prop, "setRtn", () => getNextInsertIndexAfter(widget.prop, ["setType", "levelRange", "rate"]),
+              () => NumberProp(0, true)
+            ),
+            optionalValPropButtonConfig(
+              widget.prop, "setFlag", () => getNextInsertIndexAfter(widget.prop, ["setRtn", "setType", "levelRange", "rate"]),
+              () => HexProp(0)
+            ),
+            optionalValPropButtonConfig(
+              widget.prop, "type2type", () => getNextInsertIndexAfter(widget.prop, ["setFlag", "setRtn", "setType", "levelRange", "rate"]),
+              () => NumberProp(1, true)
+            ),
+            optionalPropButtonConfig(
+              widget.prop, "type2", () => getNextInsertIndexAfter(widget.prop, ["type2type", "setFlag", "setRtn", "setType", "levelRange", "rate"]),
+              () => [
+                XmlProp(file: widget.prop.file, tagId: crc32("setRtn"), tagName: "setRtn", value: NumberProp(25, true)),
+                XmlProp(file: widget.prop.file, tagId: crc32("setType"), tagName: "setType", value: NumberProp(2, true)),
+                XmlProp(file: widget.prop.file, tagId: crc32("setFlag"), tagName: "setFlag", value: HexProp(0x10000000))
+              ],
+            ),
+          ],
         ],
         child: Container(
           decoration: BoxDecoration(
@@ -47,19 +117,12 @@ class _EntityEditorState extends ChangeNotifierState<EntityEditor> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (widget.showDetails && widget.prop.get("id") != null)
+              if (widget.showDetails && isLayoutEntity)
                 makeXmlPropEditor<UnderlinePropTextField>(widget.prop.get("id")!, true),
               makeXmlPropEditor<UnderlinePropTextField>(widget.prop.get("objId")!, widget.showDetails),
-              if (!widget.showDetails)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: paramProp
-                    ?.where((child) => child.tagName == "value" && child.length == 3)
-                    .map((child) => ParamsEditor(prop: child, showDetails: widget.showDetails),
-                    )
-                    .toList() ?? [],
-                ),
-              if (widget.showDetails)
+              if (paramProp != null && !widget.showDetails)
+                XmlArrayEditor(paramProp, XmlPresets.params, paramProp[0], "value", widget.showDetails),
+              if (widget.showDetails && widget.prop.get("location") != null)
                 TransformsEditor<UnderlinePropTextField>(parent: widget.prop),
               if (widget.showDetails)
                 ...makeXmlMultiPropEditor<UnderlinePropTextField>(widget.prop, true, (prop) => !_detailsIgnoreList.contains(prop.tagName)),

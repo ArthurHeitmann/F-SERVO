@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
+import '../../../utils.dart';
 import '../../misc/nestedContextMenu.dart';
 import '../../misc/smallButton.dart';
 import '../simpleProps/XmlPropEditorFactory.dart';
@@ -27,9 +28,15 @@ class XmlArrayEditorState extends ChangeNotifierState<XmlArrayEditor> {
     return widget.parent.where((child) => child.tagName == widget.itemsTagName);
   }
 
-  void addChild([int relIndex = -1]) {
+  void addChild([int relIndex = -1]) async {
     assert(widget.sizeIndicator.value is ValueProp);
     assert((widget.sizeIndicator.value as ValueProp).value is num);
+
+    var newProp = await widget.childrenPreset.prop(XmlPresetInit(file: widget.parent.file, parentPropName: widget.parent.tagName));
+    if (newProp == null) {
+      showToast("Couldn't create prop");
+      return;
+    }
 
     (widget.sizeIndicator.value as ValueProp).value += 1;
     
@@ -38,7 +45,7 @@ class XmlArrayEditorState extends ChangeNotifierState<XmlArrayEditor> {
       absIndex = widget.parent.length;
     else
       absIndex = widget.parent.length - getChildProps().length + relIndex;
-    // widget.parent.insert(absIndex, widget.childrenPreset.prop()); // TODO add back when fixed
+    widget.parent.insert(absIndex, newProp); // TODO add back when fixed
   }
 
   void deleteChild(int relIndex) {

@@ -106,6 +106,7 @@ class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor>
   Widget interactionsWrapper(BuildContext context, { required Widget child }) {
     return NestedContextMenu(
       buttons: [
+        ContextMenuButtonConfig("Copy PUID ref", icon: Icon(Icons.content_copy, size: 14), onPressed: copyRef),
         ContextMenuButtonConfig("Paste PUID ref", icon: Icon(Icons.content_paste, size: 14), onPressed: pasteRef),
         ContextMenuButtonConfig("Go to Reference", icon: Icon(Icons.east, size: 14), shortcutLabel: "(ctrl + click)", onPressed: goToReference),
         ContextMenuButtonConfig("Toggle Editing", icon: Icon(Icons.edit, size: 14), shortcutLabel: "(double click)", onPressed: () => setState(() => showLookup = !showLookup)),
@@ -170,8 +171,21 @@ class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor>
     }
   }
 
+  Future<void> copyRef() {
+    var code = widget.prop.get("code")!.value as HexProp;
+    var id = (widget.prop.get("id") ?? widget.prop.get("value")!).value as HexProp;
+    return copyPuidRef(
+      code.strVal!,
+      id.value
+    );
+  }
+
   Future<void> pasteRef() async {
     var puidRef = await getClipboardPuidRefData();
+    if (puidRef == null) {
+      showToast("No PUID ref in clipboard");
+      return;
+    }
     var code = widget.prop.get("code")!.value as HexProp;
     var id = (widget.prop.get("id") ?? widget.prop.get("value")!).value as HexProp;
     code.value = puidRef.codeHash;

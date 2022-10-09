@@ -6,7 +6,6 @@ import 'background/IdLookup.dart';
 import 'customTheme.dart';
 import 'keyboardEvents/globalShortcutsWrapper.dart';
 import 'widgets/EditorLayout.dart';
-import 'widgets/misc/debugContainer.dart';
 import 'widgets/statusbar/statusbar.dart';
 import 'widgets/titlebar/Titlebar.dart';
 

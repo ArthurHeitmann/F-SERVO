@@ -132,7 +132,7 @@ class XmlProp extends NestedNotifier<XmlProp> {
       tagId: tagId,
       tagName: tagName,
       value: value.takeSnapshot() as Prop,
-      file: null,
+      file: file,
       children: map((child) => child.takeSnapshot() as XmlProp).toList()
     );
   }

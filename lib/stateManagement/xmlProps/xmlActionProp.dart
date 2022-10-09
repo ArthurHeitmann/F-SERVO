@@ -14,13 +14,14 @@ class XmlActionProp extends XmlProp {
     id = this[2].value as HexProp;
     attribute = this[3].value as HexProp;
   }
+  
   @override
   Undoable takeSnapshot() {
     return XmlActionProp(XmlProp(
       tagId: tagId,
       tagName: tagName,
       value: value.takeSnapshot() as Prop,
-      file: null,
+      file: file,
       children: map((child) => child.takeSnapshot() as XmlProp).toList()
     ));
   }

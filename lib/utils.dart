@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:context_menus/context_menus.dart';
 import 'package:crclib/catalog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -17,7 +18,9 @@ import 'fileTypeUtils/utils/ByteDataWrapper.dart';
 import 'fileTypeUtils/yax/hashToStringMap.dart';
 import 'fileTypeUtils/yax/japToEng.dart';
 import 'main.dart';
+import 'stateManagement/Property.dart';
 import 'stateManagement/miscValues.dart';
+import 'stateManagement/xmlProps/xmlProp.dart';
 
 final uuidGen = Uuid();
 
@@ -220,21 +223,90 @@ class PuidRefData {
   const PuidRefData(this.code, this.codeHash, this.id);
 }
 
-const _fallbackPuidRefData = PuidRefData("", 0, 0);
-
-Future<PuidRefData> getClipboardPuidRefData() async {
+Future<PuidRefData?> getClipboardPuidRefData() async {
   var text = (await Clipboard.getData(Clipboard.kTextPlain))?.text;
   if (text == null)
-    return _fallbackPuidRefData;
+    return null;
   try {
     var root = XmlDocument.parse(text).rootElement;
     if (root.name.local != "puid")
-      return _fallbackPuidRefData;
+      return null;
     var hash = int.parse(root.findElements("code").single.text);
     var code = root.getElement("code")?.getAttribute("str") ?? hashToStringMap[hash] ?? "";
     var id = int.parse(root.findElements("id").single.text);
     return PuidRefData(code, hash, id);
   } catch (e) {
-    return _fallbackPuidRefData;
+    return null;
   }
+}
+
+XmlElement makeXmlElement({ required String name, String? text, Map<String, String> attributes = const {}, List<XmlElement> children = const [] }) {
+  return XmlElement(
+    XmlName(name),
+    attributes.entries.map((attr) => XmlAttribute(XmlName(attr.key), attr.value)).toList(),
+    <XmlNode>[
+      if (text != null)
+        XmlText(text),
+      ...children,
+    ],
+  );
+}
+
+final _randomGen = Random();
+int randomId() {
+  return _randomGen.nextInt(0xFFFFFFFF);
+}
+
+ContextMenuButtonConfig optionalValPropButtonConfig(XmlProp parent, String tagName, int Function() getInsertPos, Prop Function() makePropVal) {
+  if (parent.get(tagName) == null)
+    return ContextMenuButtonConfig(
+      "Add $tagName prop",
+      icon: Icon(Icons.add, size: 14,),
+      onPressed: () => parent.insert(
+        getInsertPos(),
+        XmlProp(file: parent.file, tagId: crc32(tagName), tagName: tagName, value: makePropVal()),
+      ),
+    );
+  else
+    return ContextMenuButtonConfig(
+      "Remove $tagName prop",
+      icon: Icon(Icons.remove, size: 14,),
+      onPressed: () => parent.remove(parent.get(tagName)!)
+    );
+}
+
+ContextMenuButtonConfig optionalPropButtonConfig(XmlProp parent, String tagName, int Function() getInsertPos, List<XmlProp> Function() makePropChildren) {
+  if (parent.get(tagName) == null)
+    return ContextMenuButtonConfig(
+      "Add $tagName prop",
+      icon: Icon(Icons.add, size: 14,),
+      onPressed: () => parent.insert(
+        getInsertPos(),
+        XmlProp(file: parent.file, tagId: crc32(tagName), tagName: tagName, children: makePropChildren()),
+      ),
+    );
+  else
+    return ContextMenuButtonConfig(
+      "Remove $tagName prop",
+      icon: Icon(Icons.remove, size: 14,),
+      onPressed: () => parent.remove(parent.get(tagName)!)
+    );
+}
+
+int getNextInsertIndexAfter(XmlProp parent, List<String> insertAfterPriorities, [int fallback = 0]) {
+  for (var prevTag in insertAfterPriorities) {
+    var prev = parent.get(prevTag);
+    if (prev != null)
+      return parent.indexOf(prev) + 1;
+  }
+  return fallback;
+}
+
+int getNextInsertIndexBefore(XmlProp parent, List<String> insertBeforeProp, [int fallback = 0]) {
+  for (var nextTag in insertBeforeProp) {
+    var next = parent.get(nextTag);
+    if (next != null)
+      return parent.indexOf(next);
+  }
+  return fallback;
 }

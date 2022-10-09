@@ -1,8 +1,11 @@
 
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../../stateManagement/Property.dart';
+import '../../../stateManagement/openFileTypes.dart';
 import '../../../stateManagement/xmlProps/xmlActionProp.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
 import '../../../utils.dart';
@@ -19,9 +22,16 @@ import '../xmlActions/xmlArrayEditor.dart';
 import 'XmlPropEditor.dart';
 import 'propTextField.dart';
 
+class XmlPresetInit {
+  OpenFileData? file;
+  String parentPropName;
+
+  XmlPresetInit({required this.file, required this.parentPropName});
+}
+
 class XmlPreset {
   final Widget Function<T extends PropTextField>(XmlProp prop, bool showDetails) editor;
-  final XmlProp? Function() prop;
+  final FutureOr<XmlProp?> Function(XmlPresetInit init) prop;
 
   XmlPreset(this.editor, this.prop);
 }
@@ -29,45 +39,102 @@ class XmlPreset {
 class XmlPresets {
   static XmlPreset action = XmlPreset(
     <T extends PropTextField>(prop, showDetails) => makeXmlActionEditor(action: prop as XmlActionProp, showDetails: showDetails),
-    () => null,
+    (init) => null,
   );
 
   static XmlPreset area = XmlPreset(
     <T extends PropTextField>(prop, showDetails) => AreaEditor(prop: prop, showDetails: showDetails),
-    () => null,
+    (init) => null,
   );
   static XmlPreset entity = XmlPreset(
     <T extends PropTextField>(prop, showDetails) => EntityEditor(prop: prop, showDetails: showDetails),
-    () => null,
+    (init) {
+      if (init.parentPropName == "layouts") {
+        return XmlProp.fromXml(makeXmlElement(
+          name: "value",
+          children: [
+            makeXmlElement(name: "id", text: "0x${randomId().toRadixString(16)}"),
+            makeXmlElement(name: "location", children: [
+              makeXmlElement(name: "position", text: "0 0 0"),
+              makeXmlElement(name: "rotation", text: "0 0 0"),
+            ]),
+            makeXmlElement(name: "objId", text: "em0000"),
+          ]
+        ));
+      }
+      if (init.parentPropName == "items") {
+        return XmlProp.fromXml(makeXmlElement(
+          name: "value",
+          children: [
+            makeXmlElement(name: "objId", text: "em0000"),
+            makeXmlElement(name: "rate", text: "0"),
+          ]
+        ));
+      }
+      throw Exception("Unsupported entity");
+    },
   );
   static XmlPreset layouts = XmlPreset(
     <T extends PropTextField>(prop, showDetails) => LayoutsEditor(prop: prop, showDetails: showDetails),
-    () => null,
+    (init) => null,
   );
   static XmlPreset params = XmlPreset(
     <T extends PropTextField>(prop, showDetails) => ParamsEditor(prop: prop, showDetails: showDetails),
-    () => null,
-  );
+    (init) => XmlProp.fromXml(makeXmlElement(
+      name: "value",
+      children: [
+        makeXmlElement(name: "name", text: "paramName"),
+        makeXmlElement(name: "code", text: "0x${crc32("type").toRadixString(16)}"),
+        makeXmlElement(name: "body", text: "0"),
+      ]
+    ),
+  ));
   static XmlPreset condition = XmlPreset(
     <T extends PropTextField>(prop, showDetails) => ConditionEditor(prop: prop, showDetails: showDetails),
-    () => null,
+    (init) => XmlProp.fromXml(makeXmlElement(
+      name: "value",
+      children: [
+        makeXmlElement(name: "puid",
+          children: [
+            makeXmlElement(name: "code", text: "0x0"),
+            makeXmlElement(name: "id", text: ""),
+          ],
+        ),
+        makeXmlElement(name: "condition",
+          children: [
+            makeXmlElement(name: "state", children: [
+              makeXmlElement(name: "label", text: "conditionLabel"),
+            ]),
+            makeXmlElement(name: "pred", text: "0"),
+          ],
+        ),
+      ]
+    )),
   );
   static XmlPreset transforms = XmlPreset(
     <T extends PropTextField>(prop, showDetails) => TransformsEditor(parent: prop),
-    () => null,
+    (init) => null,
   );
   static XmlPreset puidReference = XmlPreset(
     <T extends PropTextField>(prop, showDetails) => PuidReferenceEditor(prop: prop, showDetails: showDetails),
-    () => null,
+    (init) => XmlProp.fromXml(
+      makeXmlElement(name: "puid",
+        children: [
+          makeXmlElement(name: "code", text: "0x0"),
+          makeXmlElement(name: "id", text: ""),
+        ],
+      ),
+      file: init.file
+    ),
   );
   static XmlPreset command = XmlPreset(
     <T extends PropTextField>(prop, showDetails) => CommandEditor(prop: prop, showDetails: showDetails),
-    () => null,
+    (init) => null,
   );
 
   static XmlPreset fallback = XmlPreset(
     <T extends PropTextField>(prop, showDetails) => XmlPropEditor<T>(prop: prop, showDetails: showDetails),
-    () => null,
+    (init) => null,
   );
 }
 
@@ -97,7 +164,12 @@ XmlPreset getXmlPropPreset(XmlProp prop) {
   return XmlPresets.fallback;
 }
 
-List<Widget> makeXmlMultiPropEditor<T extends PropTextField>(XmlProp parent, bool showDetails, [bool Function(XmlProp)? filter]) {
+List<Widget> makeXmlMultiPropEditor<T extends PropTextField>(
+  XmlProp parent,
+  bool showDetails, [
+  bool Function(XmlProp)? filter,
+  List<String> parentTagNames = const [],
+]) {
   List<Widget> widgets = [];
 
   // <id><id> ... </id></id> shortcut
@@ -152,16 +224,21 @@ List<Widget> makeXmlMultiPropEditor<T extends PropTextField>(XmlProp parent, boo
     )) {
       var childProp = parent.where((child) => _arrayChildTags.contains(child.tagName));
       XmlPreset preset;
-      String childTagName;
+      String childTagName = _arrayChildTags.first;
       if (childProp.isNotEmpty) {
         var first = childProp.first;
         childTagName = first.tagName;
         preset = getXmlPropPreset(first);
       }
-      else {
+      else if (parent.tagName.toLowerCase().contains("area"))
+        preset = XmlPresets.area;
+      else if (parent.tagName == "layouts")
+        preset = XmlPresets.entity;
+      else if (parent.tagName == "param")
+        preset = XmlPresets.params;
+      // TODO more based on parentTagNames
+      else
         preset = XmlPresets.fallback;
-        childTagName = _arrayChildTags.first;
-      }
 
       var linkIndex = parent.indexWhere((child) => child.tagName == _arrayPostLengthSkipTag);
       if (linkIndex != -1) {
