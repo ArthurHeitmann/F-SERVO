@@ -6,6 +6,7 @@ import 'background/IdLookup.dart';
 import 'customTheme.dart';
 import 'keyboardEvents/globalShortcutsWrapper.dart';
 import 'widgets/EditorLayout.dart';
+import 'widgets/misc/debugContainer.dart';
 import 'widgets/statusbar/statusbar.dart';
 import 'widgets/titlebar/Titlebar.dart';
 
@@ -49,6 +50,43 @@ class MyApp extends StatelessWidget {
         home: Scaffold(
           key: _rootKey,
           body: ContextMenuOverlay(
+            cardBuilder: (context, children) => ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: 300, minWidth: 200),
+              child: Material(
+                color: getTheme(context).contextMenuBgColor,
+                borderRadius: const BorderRadius.all(Radius.circular(8)),
+                clipBehavior: Clip.antiAlias,
+                elevation: 5,
+                shadowColor: Colors.black,
+                child: Column(
+                  children: children,
+                ),
+              ),
+            ),
+            buttonBuilder: (context, config, [style]) => InkWell(
+              onTap: config.onPressed,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 5),
+                child: Row(
+                  children: [
+                    if (config.icon != null)
+                      config.icon!,
+                    if (config.icon != null)
+                      const SizedBox(width: 8),
+                    if (config.icon == null)
+                      const SizedBox(width: 16),
+                    Expanded(
+                      child: Text(config.label, overflow: TextOverflow.ellipsis,)
+                    ),
+                    if (config.shortcutLabel != null)
+                      Text(
+                        config.shortcutLabel!,
+                        style: const TextStyle(fontSize: 13, color: Colors.grey),
+                      ),
+                  ],
+                ),
+              ),
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [

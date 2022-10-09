@@ -1,9 +1,11 @@
 
+import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 
 import '../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
+import '../../misc/nestedContextMenu.dart';
 import '../../misc/smallButton.dart';
 import '../simpleProps/XmlPropEditorFactory.dart';
 
@@ -25,26 +27,60 @@ class XmlArrayEditorState extends ChangeNotifierState<XmlArrayEditor> {
     return widget.parent.where((child) => child.tagName == widget.itemsTagName);
   }
 
-  void addChild([int index = -1]) {
+  void addChild([int relIndex = -1]) {
     assert(widget.sizeIndicator.value is ValueProp);
     assert((widget.sizeIndicator.value as ValueProp).value is num);
 
     (widget.sizeIndicator.value as ValueProp).value += 1;
     
-    if (index == -1)
-      index = widget.parent.length - 1;
-    // widget.parent.insert(1, widget.childrenPreset.prop()); TODO add back when fixed
+    int absIndex;
+    if (relIndex == -1)
+      absIndex = widget.parent.length;
+    else
+      absIndex = widget.parent.length - getChildProps().length + relIndex;
+    // widget.parent.insert(absIndex, widget.childrenPreset.prop()); // TODO add back when fixed
+  }
+
+  void deleteChild(int relIndex) {
+    assert(widget.sizeIndicator.value is ValueProp);
+    assert((widget.sizeIndicator.value as ValueProp).value is num);
+
+    (widget.sizeIndicator.value as ValueProp).value -= 1;
+    
+    int absIndex = widget.parent.length - getChildProps().length + relIndex;
+    widget.parent.removeAt(absIndex);
+  }
+
+  Widget childWrapper({ required Widget child, required int index }) {
+    return NestedContextMenu(
+      ignoreParent: true,
+      contextChildren: [
+          ContextMenuButtonConfig(
+            "Delete child",
+            icon: Icon(Icons.delete, size: 14,),
+            onPressed: () => deleteChild(index),
+          ),
+      ],
+      child: child
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    List<XmlProp> childProps = getChildProps().toList(growable: false);
+    List<Widget> children = [];
+    for (int i = 0; i < getChildProps().length; i++) {
+      children.add(
+        childWrapper(
+          index: i,
+          child: widget.childrenPreset.editor(childProps[i], widget.showDetails),
+        )
+      );
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ...widget.parent
-          .where((child) => child.tagName == widget.itemsTagName)
-          .map((child) => widget.childrenPreset.editor(child, widget.showDetails))
-          .toList(),
+        ...children,
         SmallButton(
           onPressed: addChild,
           constraints: BoxConstraints.tight(const Size(30, 30)),

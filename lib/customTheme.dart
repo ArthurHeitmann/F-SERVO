@@ -29,7 +29,7 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
   final Color? selectedColor;
   final TextStyle? propInputTextStyle;
   final Color? propBorderColor;
-
+  final Color? contextMenuBgColor;
 
   NierThemeExtension({
     this.editorBackgroundColor,
@@ -57,6 +57,7 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
     this.selectedColor,
     this.propInputTextStyle,
     this.propBorderColor,
+    this.contextMenuBgColor,
   });
   
   @override
@@ -86,6 +87,7 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
     Color? selectedColor,
     TextStyle? propInputTextStyle,
     Color? propBorderColor,
+    Color? contextMenuBgColor,
   }) {
     return NierThemeExtension(
       editorBackgroundColor: editorBackgroundColor ?? this.editorBackgroundColor,
@@ -113,6 +115,7 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
       selectedColor: selectedColor ?? this.selectedColor,
       propInputTextStyle: propInputTextStyle ?? this.propInputTextStyle,
       propBorderColor: propBorderColor ?? this.propBorderColor,
+      contextMenuBgColor: contextMenuBgColor ?? this.contextMenuBgColor,
     );
   }
   
@@ -147,6 +150,7 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
       selectedColor: Color.lerp(selectedColor, other.selectedColor, t),
       propInputTextStyle: TextStyle.lerp(propInputTextStyle, other.propInputTextStyle, t),
       propBorderColor: Color.lerp(propBorderColor, other.propBorderColor, t),
+      contextMenuBgColor: Color.lerp(contextMenuBgColor, other.contextMenuBgColor, t),
     );
   }
 }
@@ -191,6 +195,7 @@ class NierDarkThemeExtension extends NierThemeExtension {
         overflow: TextOverflow.ellipsis,
       ),
       propBorderColor: Colors.grey.shade700,
+      contextMenuBgColor: Color.fromARGB(255, 65, 65, 65),
     );
 
   static ThemeData makeTheme() {

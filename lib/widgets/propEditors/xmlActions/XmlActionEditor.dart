@@ -1,5 +1,6 @@
 
 
+import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 
 import '../../../customTheme.dart';
@@ -8,6 +9,7 @@ import '../../../stateManagement/openFilesManager.dart';
 import '../../../stateManagement/xmlProps/xmlActionProp.dart';
 import '../../../utils.dart';
 import '../../misc/Selectable.dart';
+import '../../misc/nestedContextMenu.dart';
 import '../simpleProps/DoubleClickablePropTextField.dart';
 import '../simpleProps/XmlPropEditorFactory.dart';
 import '../simpleProps/propTextField.dart';
@@ -60,14 +62,23 @@ class XmlActionEditorState extends ChangeNotifierState<XmlActionEditor> {
       area: areasManager.getAreaOfFile(widget.action.file!),
       data: widget.action,
       color: getActionPrimaryColor().withOpacity(0.5),
-      child: SizedBox(
-        width: 450,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            makeActionHeader(),
-            makeActionBody(),
-          ],
+      child: NestedContextMenu(
+        contextChildren: [
+          ContextMenuButtonConfig(
+            "Copy PUID ref",
+            icon: Icon(Icons.content_copy, size: 14,),
+            onPressed: () => copyPuidRef("hap::Action", widget.action.id.value)
+          ),
+        ],
+        child: SizedBox(
+          width: 450,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              makeActionHeader(),
+              makeActionBody(),
+            ],
+          ),
         ),
       ),
     );

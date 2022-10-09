@@ -146,8 +146,9 @@ List<Widget> makeXmlMultiPropEditor<T extends PropTextField>(XmlProp parent, boo
     }
     // array
     else if (_arrayLengthTags.contains(child.tagName) && (
-      child.toList().sublist(i).every((child) => _arrayChildTags.contains(child.tagName)) ||
-      i + 1 < parent.length && parent[i + 1].tagName == _arrayPostLengthSkipTag && child.toList().sublist(i + 1).every((child) => _arrayChildTags.contains(child.tagName))
+      parent.toList().sublist(i + 1).every((child) => _arrayChildTags.contains(child.tagName)) ||
+      i + 1 < parent.length && parent[i + 1].tagName == _arrayPostLengthSkipTag
+        && parent.toList().sublist(i + 2).every((child) => _arrayChildTags.contains(child.tagName))
     )) {
       var childProp = parent.where((child) => _arrayChildTags.contains(child.tagName));
       XmlPreset preset;

@@ -11,8 +11,10 @@ import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:uuid/uuid.dart';
 import 'package:path/path.dart' as path;
+import 'package:xml/xml.dart';
 
 import 'fileTypeUtils/utils/ByteDataWrapper.dart';
+import 'fileTypeUtils/yax/hashToStringMap.dart';
 import 'fileTypeUtils/yax/japToEng.dart';
 import 'main.dart';
 import 'stateManagement/miscValues.dart';
@@ -198,4 +200,41 @@ void showToast(String msg) {
       ),
     )
   );
+}
+
+Future<void> copyPuidRef(String code, int id) {
+  var hash = crc32(code);
+  return Clipboard.setData(ClipboardData(text: 
+    "<puid>\n"
+      "<code str=\"$code\">0x${hash.toRadixString(16)}</code>\n"
+      "<id>0x${id.toRadixString(16)}</id>\n"
+    "</puid>"
+    ));
+}
+
+class PuidRefData {
+  final String code;
+  final int hash;
+  final int id;
+ 
+  const PuidRefData(this.code, this.hash, this.id);
+}
+
+const _fallbackPuidRefData = PuidRefData("", 0, 0);
+
+Future<PuidRefData> getPuidRefData() async {
+  var text = (await Clipboard.getData(Clipboard.kTextPlain))?.text;
+  if (text == null)
+    return _fallbackPuidRefData;
+  try {
+    var root = XmlDocument.parse(text).rootElement;
+    if (root.name.local != "puid")
+      return _fallbackPuidRefData;
+    var hash = int.parse(root.findElements("code").single.getAttribute("code")!);
+    var code = root.getElement("code")?.getAttribute("str") ?? hashToStringMap[hash] ?? "";
+    var id = int.parse(root.findElements("id").single.text);
+    return PuidRefData(code, hash, id);
+  } catch (e) {
+    return _fallbackPuidRefData;
+  }
 }
