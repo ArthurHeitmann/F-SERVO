@@ -7,6 +7,7 @@ import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
 import '../../../utils.dart';
 import '../../misc/CustomIcons.dart';
+import '../../misc/selectionPopup.dart';
 import '../simpleProps/XmlPropEditorFactory.dart';
 import '../simpleProps/propEditorFactory.dart';
 import 'transformsEditor.dart';
@@ -47,7 +48,19 @@ class _AreaEditorState extends ChangeNotifierState<AreaEditor> {
             width: 37,
             height: 37,
             child: OutlinedButton(
-              onPressed: () {},
+              onPressed: () async {
+                var selection = await showSelectionPopup<int>(context, [
+                  if (type != _typeBoxArea)
+                    SelectionPopupConfig(icon: CustomIcons.cube, name: "Box", getValue: () => _typeBoxArea),
+                  if (type != _typeCylinderArea)
+                    SelectionPopupConfig(icon: CustomIcons.cylinder, name: "Cylinder", getValue: () => _typeCylinderArea),
+                  if (type != _typeSphereArea)
+                    SelectionPopupConfig(icon: CustomIcons.sphere, name: "Sphere", getValue: () => _typeSphereArea),
+                ]);
+                if (selection == null)
+                  return;
+                convertTo(selection);
+              },
               style: OutlinedButton.styleFrom(
                 foregroundColor: getTheme(context).textColor,
                 padding: EdgeInsets.zero,
@@ -97,5 +110,47 @@ class _AreaEditorState extends ChangeNotifierState<AreaEditor> {
         ],
       ),
     );
+  }
+
+  void convertTo(int type) {
+    var prop = widget.prop;
+    var curType = prop[0].value as HexProp;
+    if (type == curType.value)
+      return;
+    
+    // add rotation, scale, height
+    if (type == _typeBoxArea || type == _typeCylinderArea) {
+      if (curType.value == _typeSphereArea) {
+        var posI = prop.indexWhere((e) => e.tagName == "position");
+        prop.insert(posI + 1, XmlProp(file: prop.file, tagId: crc32("rotation"), tagName: "rotation", value: VectorProp([0, 0, 0])));
+        prop.insert(posI + 1, XmlProp(file: prop.file, tagId: crc32("scale"), tagName: "scale", value: VectorProp([1, 1, 1])));
+        prop.add(XmlProp(file: prop.file, tagId: crc32("height"), tagName: "height", value: NumberProp(1, false)));
+      }
+    }
+    // remove rotation, scale, height
+    else {
+      prop.removeWhere((e) => e.tagName == "rotation" || e.tagName == "scale" || e.tagName == "height");
+    }
+    // add points
+    if (type == _typeBoxArea) {
+      prop.insert(prop.length - 1, XmlProp(file: prop.file, tagId: crc32("points"), tagName: "points", value: VectorProp([-1, -1, 1, -1, 1, 1, -1, 1])));
+    }
+    // remove points
+    else {
+      prop.removeWhere((e) => e.tagName == "points");
+    }
+    // add radius
+    if (type == _typeCylinderArea || type == _typeSphereArea) {
+      if (curType.value == _typeBoxArea) {
+        var insertI = getNextInsertIndexAfter(prop, ["scale", "rotation", "position"]);
+        prop.insert(insertI, XmlProp(file: prop.file, tagId: crc32("radius"), tagName: "radius", value: NumberProp(1, false)));
+      }
+    }
+    // remove radius
+    else {
+      prop.removeWhere((e) => e.tagName == "radius");
+    }
+
+    curType.value = type;
   }
 }

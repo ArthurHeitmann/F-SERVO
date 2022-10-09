@@ -4,11 +4,14 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../../main.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/openFileTypes.dart';
 import '../../../stateManagement/xmlProps/xmlActionProp.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
 import '../../../utils.dart';
+import '../../misc/CustomIcons.dart';
+import '../../misc/selectionPopup.dart';
 import '../customXmlProps/areaEditor.dart';
 import '../customXmlProps/commandEditor.dart';
 import '../customXmlProps/conditionEditor.dart';
@@ -44,7 +47,40 @@ class XmlPresets {
 
   static XmlPreset area = XmlPreset(
     <T extends PropTextField>(prop, showDetails) => AreaEditor(prop: prop, showDetails: showDetails),
-    (init) => null,
+    (init) {
+      return showSelectionPopup(getGlobalContext(), [
+        SelectionPopupConfig(icon: CustomIcons.cube, name: "Box", getValue: () => XmlProp.fromXml(makeXmlElement(
+          name: "value",
+          children: [
+            makeXmlElement(name: "code", text: "0x${crc32("app::area::BoxArea").toRadixString(16)}"),
+            makeXmlElement(name: "position", text: "0 0 0"),
+            makeXmlElement(name: "rotation", text: "0 0 0"),
+            makeXmlElement(name: "scale", text: "1 1 1"),
+            makeXmlElement(name: "points", text: "-1 -1 1 -1 1 1 -1 1"),
+            makeXmlElement(name: "height", text: "1"),
+          ]
+        ))),
+        SelectionPopupConfig(icon: CustomIcons.cylinder, name: "Cylinder", getValue: () => XmlProp.fromXml(makeXmlElement(
+          name: "value",
+          children: [
+            makeXmlElement(name: "code", text: "0x${crc32("app::area::CylinderArea").toRadixString(16)}"),
+            makeXmlElement(name: "position", text: "0 0 0"),
+            makeXmlElement(name: "rotation", text: "0 0 0"),
+            makeXmlElement(name: "scale", text: "1 1 1"),
+            makeXmlElement(name: "radius", text: "1"),
+            makeXmlElement(name: "height", text: "1"),
+          ]
+        ))),
+        SelectionPopupConfig(icon: CustomIcons.sphere, name: "Sphere", getValue: () => XmlProp.fromXml(makeXmlElement(
+          name: "value",
+          children: [
+            makeXmlElement(name: "code", text: "0x${crc32("app::area::SphereArea").toRadixString(16)}"),
+            makeXmlElement(name: "position", text: "0 0 0"),
+            makeXmlElement(name: "radius", text: "1"),
+          ]
+        ))),
+      ]);
+    },
   );
   static XmlPreset entity = XmlPreset(
     <T extends PropTextField>(prop, showDetails) => EntityEditor(prop: prop, showDetails: showDetails),

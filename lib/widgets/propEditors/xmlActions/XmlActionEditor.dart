@@ -23,7 +23,7 @@ GlobalKey<XmlActionEditorState> _getOrMakeKey(int id) {
   if (_actionKeys.containsKey(id))
     return _actionKeys[id]!;
   else {
-    var key = GlobalKey<XmlActionEditorState>();
+    var key = GlobalKey<XmlActionEditorState>(debugLabel: "0x${id.toRadixString(16)}");
     _actionKeys[id] = key;
     return key;
   }

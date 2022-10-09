@@ -195,7 +195,7 @@ class NierDarkThemeExtension extends NierThemeExtension {
         overflow: TextOverflow.ellipsis,
       ),
       propBorderColor: Colors.grey.shade700,
-      contextMenuBgColor: Color.fromARGB(255, 65, 65, 65),
+      contextMenuBgColor: Color.fromARGB(255, 25, 25, 25),
     );
 
   static ThemeData makeTheme() {
@@ -221,6 +221,9 @@ class NierDarkThemeExtension extends NierThemeExtension {
           color: Colors.white,
           fontSize: 12,
         ),
+      ),
+      popupMenuTheme: PopupMenuThemeData(
+        color: Color.fromARGB(255, 25, 25, 25),
       ),
     );
   } 

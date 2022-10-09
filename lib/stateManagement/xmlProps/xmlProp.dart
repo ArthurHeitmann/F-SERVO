@@ -88,6 +88,12 @@ class XmlProp extends NestedNotifier<XmlProp> {
   }
 
   @override
+  void move(int from, int to) {
+    super.move(from, to);
+    _onValueChange();
+  }
+
+  @override
   void clear() {
     super.clear();
     _onValueChange();

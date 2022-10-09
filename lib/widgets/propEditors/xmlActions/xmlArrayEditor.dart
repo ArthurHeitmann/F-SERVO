@@ -45,7 +45,7 @@ class XmlArrayEditorState extends ChangeNotifierState<XmlArrayEditor> {
       absIndex = widget.parent.length;
     else
       absIndex = widget.parent.length - getChildProps().length + relIndex;
-    widget.parent.insert(absIndex, newProp); // TODO add back when fixed
+    widget.parent.insert(absIndex, newProp);
   }
 
   void deleteChild(int relIndex) {
