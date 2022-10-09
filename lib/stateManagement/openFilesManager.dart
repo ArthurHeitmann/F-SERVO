@@ -54,6 +54,9 @@ class FilesAreaManager extends NestedNotifier<OpenFileData> implements Undoable 
       else if (answer == null)
         return;
     }
+    if (file.keepOpenAsHidden) {
+      areasManager.hiddenArea.add(file);
+    }
 
     if (currentFile == file)
       switchToClosestFile();
@@ -183,10 +186,13 @@ class FilesAreaManager extends NestedNotifier<OpenFileData> implements Undoable 
 
 class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
   FilesAreaManager? _activeArea;
+  final FilesAreaManager hiddenArea;
   final ChangeNotifier subEvents = ChangeNotifier();
   final ChangeNotifier onSaveAll = ChangeNotifier();
 
-  OpenFilesAreasManager() : super([]) {
+  OpenFilesAreasManager([FilesAreaManager? hiddenArea])
+    : hiddenArea = hiddenArea ?? FilesAreaManager(),
+    super([]) {
     addListener(subEvents.notifyListeners);
   }
 
@@ -197,6 +203,10 @@ class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
           return true;
       }
     }
+    for (var file in hiddenArea) {
+      if (file.path == path)
+        return true;
+    }
     return false;
   }
 
@@ -206,6 +216,10 @@ class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
         if (file.path == path)
           return file;
       }
+    }
+    for (var file in hiddenArea) {
+      if (file.path == path)
+        return file;
     }
     return null;
   }
@@ -239,20 +253,32 @@ class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
   }
 
   OpenFileData openFile(String filePath, { FilesAreaManager? toArea, bool focusIfOpen = true, String? secondaryName }) {
+    toArea ??= activeArea ?? this[0];
+
     if (isFileOpened(filePath)) {
       var openFile = getFile(filePath)!;
+      if (hiddenArea.contains(openFile)) {
+        hiddenArea.remove(openFile);
+        toArea.add(openFile);
+      }
       if (focusIfOpen)
         getAreaOfFile(openFile)!.currentFile = openFile;
       return openFile;
     }
 
-    toArea ??= activeArea ?? this[0];
     OpenFileData file = OpenFileData.from(path.basename(filePath), filePath, secondaryName: secondaryName);
     toArea.add(file);
     toArea.currentFile = file;
 
     undoHistoryManager.onUndoableEvent();
 
+    return file;
+  }
+
+  OpenFileData openFileAsHidden(String filePath, { String? secondaryName }) {
+    OpenFileData file = OpenFileData.from(path.basename(filePath), filePath, secondaryName: secondaryName);
+    file.keepOpenAsHidden = true;
+    hiddenArea.add(file);
     return file;
   }
 
@@ -305,13 +331,16 @@ class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
   }
   
   Future<void> saveAll() async {
-    await Future.wait(map((area) => area.saveAll()));
+    await Future.wait([
+      ...map((area) => area.saveAll()),
+      hiddenArea.saveAll()
+    ]);
     onSaveAll.notifyListeners();
   }
 
   @override
   Undoable takeSnapshot() {
-    var snapshot = OpenFilesAreasManager();
+    var snapshot = OpenFilesAreasManager(hiddenArea.takeSnapshot() as FilesAreaManager);
     snapshot.replaceWith(map((area) => area.takeSnapshot() as FilesAreaManager).toList());
     snapshot._activeArea = _activeArea != null ? _activeArea!.takeSnapshot() as FilesAreaManager : null;
     return snapshot;
@@ -321,6 +350,7 @@ class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
   void restoreWith(Undoable snapshot) {
     var entry = snapshot as OpenFilesAreasManager;
     updateOrReplaceWith(entry.toList(), (obj) => obj.takeSnapshot() as FilesAreaManager);
+    hiddenArea.restoreWith(entry.hiddenArea);
     if (entry._activeArea != null)
       activeArea = where((area) => area.uuid == entry._activeArea!.uuid).first;
     else

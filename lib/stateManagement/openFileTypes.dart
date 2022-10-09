@@ -18,6 +18,7 @@ class OpenFileData extends ChangeNotifier with Undoable, HasUuid {
   String _path;
   bool _unsavedChanges = false;
   bool _isLoaded = false;
+  bool keepOpenAsHidden = false;
   final ChangeNotifier contentNotifier = ChangeNotifier();
   final ScrollController scrollController = ScrollController();
 

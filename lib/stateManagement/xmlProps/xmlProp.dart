@@ -49,6 +49,9 @@ class XmlProp extends NestedNotifier<XmlProp> {
     return child.isEmpty ? null : child.first;
   }
 
+  List<XmlProp> getAll(String tag) =>
+    where((child) => child.tagName == tag).toList();
+
   @override
   void dispose() {
     value.removeListener(_onValueChange);

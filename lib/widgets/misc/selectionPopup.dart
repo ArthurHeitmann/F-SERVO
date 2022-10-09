@@ -45,7 +45,7 @@ class _SelectionContextMenu extends StatefulWidget {
   final List<SelectionPopupConfig> configs;
   final Completer completer;
 
-  const _SelectionContextMenu({super.key, required this.configs, required this.completer, required this.pos});
+  const _SelectionContextMenu({required this.configs, required this.completer, required this.pos});
 
   @override
   State<_SelectionContextMenu> createState() => _SelectionContextMenuState();

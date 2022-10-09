@@ -3,10 +3,13 @@ import 'package:flutter/material.dart';
 
 import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/FileHierarchy.dart';
-import '../../stateManagement/Property.dart';
+import '../../stateManagement/xmlProps/xmlProp.dart';
+import '../../utils.dart';
 import '../misc/SmoothSingleChildScrollView.dart';
 import '../misc/smallButton.dart';
+import '../propEditors/simpleProps/XmlPropEditorFactory.dart';
 import '../propEditors/simpleProps/propEditorFactory.dart';
+import '../propEditors/xmlActions/xmlArrayEditor.dart';
 
 class GroupEditor extends ChangeNotifierWidget {
   GroupEditor({super.key}) : super(notifier: openHierarchyManager);
@@ -67,8 +70,10 @@ class _GroupEditorState extends ChangeNotifierState<GroupEditor> {
 
   Widget makeGroupEditor(HapGroupHierarchyEntry groupEntry) {
     return ChangeNotifierBuilder(
-      notifier: groupEntry,
-      builder: (context) => Column(
+      notifier: groupEntry.prop,
+      builder: (context) {
+        var tokens = groupEntry.prop.get("tokens");
+        return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -81,29 +86,28 @@ class _GroupEditorState extends ChangeNotifierState<GroupEditor> {
           SizedBox(height: 5),
           Text("Tokens:"),
           SizedBox(height: 5),
-          for (var token in groupEntry.tokens)
-            Row(
-              children: [
-                Expanded(child: makePropEditor(token.code)),
-                SizedBox(width: 5),
-                Expanded(child: makePropEditor(token.id)),
-                SizedBox(width: 5),
-                SmallButton(
-                  onPressed: () => groupEntry.tokens.remove(token),
-                  constraints: BoxConstraints(maxWidth: 30),
-                  child: Icon(Icons.close, size: 15,),
-                )
-              ],
+          if (tokens != null)
+            XmlArrayEditor(tokens, XmlPresets.codeAndId, tokens[0], "value", true)
+          else
+            SmallButton(
+              onPressed: () {
+                groupEntry.prop.add(XmlProp.fromXml(makeXmlElement(
+                  name: "tokens",
+                  children: [
+                    makeXmlElement(name: "size", text: "1"),
+                    makeXmlElement(name: "value", children: [
+                      makeXmlElement(name: "code", text: "0x0"),
+                      makeXmlElement(name: "id", text: "0x0"),
+                    ])
+                  ]
+                )));
+              },
+              constraints: BoxConstraints(maxWidth: 60),
+              child: Icon(Icons.add, size: 20,),
             ),
-          SmallButton(
-            onPressed: () {
-              groupEntry.tokens.add(GroupToken(HexProp(0), HexProp(0)));
-            },
-            constraints: BoxConstraints(maxWidth: 60),
-            child: Icon(Icons.add, size: 20,),
-          )
         ]
-      ),
+      );
+      },
     );
   }
 

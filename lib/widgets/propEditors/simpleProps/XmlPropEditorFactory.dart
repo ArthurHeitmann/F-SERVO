@@ -167,6 +167,18 @@ class XmlPresets {
     <T extends PropTextField>(prop, showDetails) => CommandEditor(prop: prop, showDetails: showDetails),
     (init) => null,
   );
+  static XmlPreset codeAndId = XmlPreset(
+    <T extends PropTextField>(prop, showDetails) => XmlPropEditor<T>(prop: prop, showDetails: showDetails),
+    (init) => XmlProp.fromXml(
+      makeXmlElement(name: "value",
+        children: [
+          makeXmlElement(name: "code", text: "0x0"),
+          makeXmlElement(name: "id", text: "0x0"),
+        ],
+      ),
+      file: init.file
+    ),
+  );
 
   static XmlPreset fallback = XmlPreset(
     <T extends PropTextField>(prop, showDetails) => XmlPropEditor<T>(prop: prop, showDetails: showDetails),
