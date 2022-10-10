@@ -16,28 +16,31 @@ class XmlProp extends NestedNotifier<XmlProp> {
   final String tagName;
   final Prop value;
   final OpenFileData? file;
+  final List<String> parentTags;
 
-  XmlProp({ required this.file, required this.tagId, String? tagName, Prop? value, String? strValue, List<XmlProp>? children }) :
+  XmlProp({ required this.file, required this.tagId, String? tagName, Prop? value, String? strValue, List<XmlProp>? children, required this.parentTags }) :
     tagName = tagName ?? hashToStringMap[tagId] ?? "UNKNOWN",
-    value = value ?? Prop.fromString(strValue ?? ""),
+    value = value ?? Prop.fromString(strValue ?? "", tagName: tagName),
     super(children ?? [])
   {
     this.value.addListener(_onValueChange);
   }
 
-  XmlProp._fromXml(XmlElement root, { required this.file }) :
+  XmlProp._fromXml(XmlElement root, { required this.file, required this.parentTags }) :
     tagId = crc32(root.localName),
     tagName = root.localName,
     // TODO check if number is always int
-    value = Prop.fromString(root.childElements.isEmpty ? root.text : ""),
-    super(root.childElements.map((XmlElement child) => XmlProp.fromXml(child, file: file)).toList())
+    value = Prop.fromString(root.childElements.isEmpty ? root.text : "", tagName: root.localName),
+    super(root.childElements
+      .map((XmlElement child) => XmlProp.fromXml(child, file: file, parentTags: [...parentTags, root.localName]))
+      .toList())
   {
     value.addListener(_onValueChange);
   }
   
-  factory XmlProp.fromXml(XmlElement root, { OpenFileData? file })
+  factory XmlProp.fromXml(XmlElement root, { OpenFileData? file, required List<String> parentTags })
   {
-    var prop = XmlProp._fromXml(root, file: file);
+    var prop = XmlProp._fromXml(root, file: file, parentTags: parentTags);
     if (root.localName == "action")
       return XmlActionProp(prop);
     
@@ -51,6 +54,13 @@ class XmlProp extends NestedNotifier<XmlProp> {
 
   List<XmlProp> getAll(String tag) =>
     where((child) => child.tagName == tag).toList();
+
+  List<String> nextParents([String? next]) => [
+    ...parentTags,
+    tagName,
+    if (next != null)
+      next
+  ];
 
   @override
   void dispose() {
@@ -142,7 +152,8 @@ class XmlProp extends NestedNotifier<XmlProp> {
       tagName: tagName,
       value: value.takeSnapshot() as Prop,
       file: file,
-      children: map((child) => child.takeSnapshot() as XmlProp).toList()
+      children: map((child) => child.takeSnapshot() as XmlProp).toList(),
+      parentTags: parentTags,
     );
   }
   

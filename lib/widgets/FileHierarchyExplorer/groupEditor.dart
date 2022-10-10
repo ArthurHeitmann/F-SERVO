@@ -87,7 +87,11 @@ class _GroupEditorState extends ChangeNotifierState<GroupEditor> {
           Text("Tokens:"),
           SizedBox(height: 5),
           if (tokens != null)
-            XmlArrayEditor(tokens, XmlPresets.codeAndId, tokens[0], "value", true)
+            XmlArrayEditor(
+              tokens,
+              XmlPresets.codeAndId.withCxtV(groupEntry.prop),
+              tokens[0], "value", true
+            )
           else
             SmallButton(
               onPressed: () {
@@ -100,7 +104,7 @@ class _GroupEditorState extends ChangeNotifierState<GroupEditor> {
                       makeXmlElement(name: "id", text: "0x0"),
                     ])
                   ]
-                )));
+                ), parentTags: groupEntry.prop.nextParents()));
               },
               constraints: BoxConstraints(maxWidth: 60),
               child: Icon(Icons.add, size: 20,),

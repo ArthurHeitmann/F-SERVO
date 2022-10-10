@@ -8,7 +8,14 @@ class XmlActionProp extends XmlProp {
   late final HexProp id;
   late final HexProp attribute;
 
-  XmlActionProp(XmlProp prop) : super(tagId: prop.tagId, tagName: prop.tagName, value: prop.value, file: prop.file, children: prop.toList()) {
+  XmlActionProp(XmlProp prop) : super(
+    tagId: prop.tagId,
+    tagName: prop.tagName,
+    value: prop.value,
+    file: prop.file,
+    children: prop.toList(),
+    parentTags: prop.parentTags
+  ) {
     code = this[0].value as HexProp;
     name = this[1].value as StringProp;
     id = this[2].value as HexProp;
@@ -22,7 +29,8 @@ class XmlActionProp extends XmlProp {
       tagName: tagName,
       value: value.takeSnapshot() as Prop,
       file: file,
-      children: map((child) => child.takeSnapshot() as XmlProp).toList()
+      children: map((child) => child.takeSnapshot() as XmlProp).toList(),
+      parentTags: parentTags
     ));
   }
 }

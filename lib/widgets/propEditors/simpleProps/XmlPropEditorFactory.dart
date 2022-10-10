@@ -25,29 +25,47 @@ import '../xmlActions/xmlArrayEditor.dart';
 import 'XmlPropEditor.dart';
 import 'propTextField.dart';
 
-class XmlPresetInit {
-  OpenFileData? file;
-  String parentPropName;
+class XmlPresetContext {
+  XmlProp parent;
 
-  XmlPresetInit({required this.file, required this.parentPropName});
+  XmlPresetContext({required this.parent});
+
+  OpenFileData? get file => parent.file;
+  List<String> get parentTags => parent.nextParents();
+  String? get parentName => parent.tagName;
 }
 
-class XmlPreset {
+class XmlRawPreset {
   final Widget Function<T extends PropTextField>(XmlProp prop, bool showDetails) editor;
-  final FutureOr<XmlProp?> Function(XmlPresetInit init) prop;
+  final FutureOr<XmlProp?> Function(XmlPresetContext cxt) propFactory;
 
-  XmlPreset(this.editor, this.prop);
+  const XmlRawPreset(this.editor, this.propFactory);
+
+  XmlPreset withCxt(XmlPresetContext context) =>
+    XmlPreset(editor, propFactory, context);
+
+  XmlPreset withCxtV(XmlProp parent) =>
+    XmlPreset(editor, propFactory, XmlPresetContext(parent: parent));
+
+}
+
+class XmlPreset extends XmlRawPreset {
+  final XmlPresetContext? _context;
+
+  const XmlPreset(super.editor, super.propFactory, this._context);
+
+  FutureOr<XmlProp?> prop() => _context != null ? propFactory(_context!) : null;  
 }
 
 class XmlPresets {
-  static XmlPreset action = XmlPreset(
+  static XmlRawPreset action = XmlRawPreset(
     <T extends PropTextField>(prop, showDetails) => makeXmlActionEditor(action: prop as XmlActionProp, showDetails: showDetails),
-    (init) => null,
+    (cxt) => null,
   );
 
-  static XmlPreset area = XmlPreset(
+  static XmlRawPreset area = XmlRawPreset(
     <T extends PropTextField>(prop, showDetails) => AreaEditor(prop: prop, showDetails: showDetails),
-    (init) {
+    (cxt) {
       return showSelectionPopup(getGlobalContext(), [
         SelectionPopupConfig(icon: CustomIcons.cube, name: "Box", getValue: () => XmlProp.fromXml(makeXmlElement(
           name: "value",
@@ -59,7 +77,7 @@ class XmlPresets {
             makeXmlElement(name: "points", text: "-1 -1 1 -1 1 1 -1 1"),
             makeXmlElement(name: "height", text: "1"),
           ]
-        ))),
+        ), parentTags: cxt.parentTags)),
         SelectionPopupConfig(icon: CustomIcons.cylinder, name: "Cylinder", getValue: () => XmlProp.fromXml(makeXmlElement(
           name: "value",
           children: [
@@ -70,7 +88,7 @@ class XmlPresets {
             makeXmlElement(name: "radius", text: "1"),
             makeXmlElement(name: "height", text: "1"),
           ]
-        ))),
+        ), parentTags: cxt.parentTags)),
         SelectionPopupConfig(icon: CustomIcons.sphere, name: "Sphere", getValue: () => XmlProp.fromXml(makeXmlElement(
           name: "value",
           children: [
@@ -78,14 +96,14 @@ class XmlPresets {
             makeXmlElement(name: "position", text: "0 0 0"),
             makeXmlElement(name: "radius", text: "1"),
           ]
-        ))),
+        ), parentTags: cxt.parentTags)),
       ]);
     },
   );
-  static XmlPreset entity = XmlPreset(
+  static XmlRawPreset entity = XmlRawPreset(
     <T extends PropTextField>(prop, showDetails) => EntityEditor(prop: prop, showDetails: showDetails),
-    (init) {
-      if (init.parentPropName == "layouts") {
+    (cxt) {
+      if (cxt.parentName == "layouts") {
         return XmlProp.fromXml(makeXmlElement(
           name: "value",
           children: [
@@ -96,44 +114,44 @@ class XmlPresets {
             ]),
             makeXmlElement(name: "objId", text: "em0000"),
           ]
-        ));
+        ), parentTags: cxt.parentTags);
       }
-      if (init.parentPropName == "items") {
+      if (cxt.parentName == "items") {
         return XmlProp.fromXml(makeXmlElement(
           name: "value",
           children: [
             makeXmlElement(name: "objId", text: "em0000"),
             makeXmlElement(name: "rate", text: "0"),
           ]
-        ));
+        ), parentTags: cxt.parentTags);
       }
       throw Exception("Unsupported entity");
     },
   );
-  static XmlPreset layouts = XmlPreset(
+  static XmlRawPreset layouts = XmlRawPreset(
     <T extends PropTextField>(prop, showDetails) => LayoutsEditor(prop: prop, showDetails: showDetails),
-    (init) => null,
+    (cxt) => null,
   );
-  static XmlPreset params = XmlPreset(
+  static XmlRawPreset params = XmlRawPreset(
     <T extends PropTextField>(prop, showDetails) => ParamsEditor(prop: prop, showDetails: showDetails),
-    (init) => XmlProp.fromXml(makeXmlElement(
+    (cxt) => XmlProp.fromXml(makeXmlElement(
       name: "value",
       children: [
         makeXmlElement(name: "name", text: "paramName"),
         makeXmlElement(name: "code", text: "0x${crc32("type").toRadixString(16)}"),
         makeXmlElement(name: "body", text: "0"),
       ]
-    ),
+    ), parentTags: cxt.parentTags,
   ));
-  static XmlPreset condition = XmlPreset(
+  static XmlRawPreset condition = XmlRawPreset(
     <T extends PropTextField>(prop, showDetails) => ConditionEditor(prop: prop, showDetails: showDetails),
-    (init) => XmlProp.fromXml(makeXmlElement(
+    (cxt) => XmlProp.fromXml(makeXmlElement(
       name: "value",
       children: [
         makeXmlElement(name: "puid",
           children: [
             makeXmlElement(name: "code", text: "0x0"),
-            makeXmlElement(name: "id", text: ""),
+            makeXmlElement(name: "id", text: "0x0"),
           ],
         ),
         makeXmlElement(name: "condition",
@@ -145,78 +163,98 @@ class XmlPresets {
           ],
         ),
       ]
-    )),
+    ), parentTags: cxt.parentTags),
   );
-  static XmlPreset transforms = XmlPreset(
+  static XmlRawPreset transforms = XmlRawPreset(
     <T extends PropTextField>(prop, showDetails) => TransformsEditor(parent: prop),
-    (init) => null,
+    (cxt) => null,
   );
-  static XmlPreset puidReference = XmlPreset(
+  static XmlRawPreset puidReference = XmlRawPreset(
     <T extends PropTextField>(prop, showDetails) => PuidReferenceEditor(prop: prop, showDetails: showDetails),
-    (init) => XmlProp.fromXml(
+    (cxt) => XmlProp.fromXml(
       makeXmlElement(name: "puid",
         children: [
           makeXmlElement(name: "code", text: "0x0"),
-          makeXmlElement(name: "id", text: ""),
+          makeXmlElement(name: "id", text: "0x0"),
         ],
       ),
-      file: init.file
+      file: cxt.file,
+      parentTags: cxt.parentTags,
     ),
   );
-  static XmlPreset command = XmlPreset(
+  static XmlRawPreset command = XmlRawPreset(
     <T extends PropTextField>(prop, showDetails) => CommandEditor(prop: prop, showDetails: showDetails),
-    (init) => null,
+    (cxt) => XmlProp.fromXml(
+      makeXmlElement(name: "value",
+        children: [
+          makeXmlElement(name: "puid", children: [
+            makeXmlElement(name: "code", text: "0x0"),
+            makeXmlElement(name: "id", text: "0x0"),
+          ]),
+          makeXmlElement(name: "command", children: [
+            makeXmlElement(name: "label", text: "commandLabel"),
+          ]),
+        ]
+      ),
+      file: cxt.file,
+      parentTags: cxt.parentTags,
+    ),
   );
-  static XmlPreset codeAndId = XmlPreset(
+  static XmlRawPreset codeAndId = XmlRawPreset(
     <T extends PropTextField>(prop, showDetails) => XmlPropEditor<T>(prop: prop, showDetails: showDetails),
-    (init) => XmlProp.fromXml(
+    (cxt) => XmlProp.fromXml(
       makeXmlElement(name: "value",
         children: [
           makeXmlElement(name: "code", text: "0x0"),
           makeXmlElement(name: "id", text: "0x0"),
         ],
       ),
-      file: init.file
+      file: cxt.file,
+      parentTags: cxt.parentTags,
     ),
   );
 
-  static XmlPreset fallback = XmlPreset(
+  static XmlRawPreset fallback = XmlRawPreset(
     <T extends PropTextField>(prop, showDetails) => XmlPropEditor<T>(prop: prop, showDetails: showDetails),
-    (init) => null,
+    (cxt) => null,
   );
 }
 
 
-XmlPreset getXmlPropPreset(XmlProp prop) {
+XmlRawPreset getXmlPropPreset(XmlProp prop) {
+  var context = XmlPresetContext(parent: prop);
   // area editor
   if (prop.isNotEmpty && prop[0].tagName == "code" && prop[0].value is HexProp && _areaTypes.contains((prop[0].value as HexProp).value)) {
-    return XmlPresets.area;
+    return XmlPresets.area.withCxt(context);
   }
   // entity editor
   if (prop.isNotEmpty && prop.get("objId") != null) {
-    return XmlPresets.entity;
+    return XmlPresets.entity.withCxt(context);
   }
   // entity layouts
   if (prop.tagName == "layouts" && prop.get("normal")?.get("layouts") != null) {
-    return XmlPresets.layouts;
+    return XmlPresets.layouts.withCxt(context);
   }
   // param
   if (prop.length == 3 && prop[0].tagName == "name" && prop[1].tagName == "code" && prop[2].tagName == "body") {
-    return XmlPresets.params;
+    return XmlPresets.params.withCxt(context);
   }
   // condition
   if (prop.get("puid") != null && prop.get("condition") != null) {
-    return XmlPresets.condition;
+    return XmlPresets.condition.withCxt(context);
+  }
+  // command
+  if (prop.get("puid") != null && prop.get("command") != null) {
+    return XmlPresets.command.withCxt(context);
   }
   // fallback
-  return XmlPresets.fallback;
+  return XmlPresets.fallback.withCxt(context);
 }
 
 List<Widget> makeXmlMultiPropEditor<T extends PropTextField>(
   XmlProp parent,
   bool showDetails, [
   bool Function(XmlProp)? filter,
-  List<String> parentTagNames = const [],
 ]) {
   List<Widget> widgets = [];
 
@@ -227,6 +265,7 @@ List<Widget> makeXmlMultiPropEditor<T extends PropTextField>(
 
   for (var i = 0; i < parent.length; i++) {
     var child = parent[i];
+    var context = XmlPresetContext(parent: child);
     if (filter != null && !filter(child)) {
       continue;
     }
@@ -235,12 +274,12 @@ List<Widget> makeXmlMultiPropEditor<T extends PropTextField>(
     }
     // transformable with position, rotation (optional), scale (optional)
     if (child.tagName == "location") {
-      widgets.add(XmlPresets.transforms.editor<T>(parent, showDetails));
+      widgets.add(XmlPresets.transforms.withCxt(context).editor<T>(parent, showDetails));
       if (i + 1 < parent.length && parent[i + 1].tagName == "scale")
         i++;
     }
     else if (child.tagName == "position") {
-      widgets.add(XmlPresets.transforms.editor<T>(parent, showDetails));
+      widgets.add(XmlPresets.transforms.withCxt(context).editor<T>(parent, showDetails));
       if (i + 1 < parent.length && parent[i + 1].tagName == "rotation") {
         i++;
         if (i + 1 < parent.length && parent[i + 1].tagName == "scale")
@@ -251,13 +290,13 @@ List<Widget> makeXmlMultiPropEditor<T extends PropTextField>(
     }
     // puid references
     else if (child.tagName == "code" && _puidRefCodes.contains((child.value as HexProp).value)) {
-      widgets.add(XmlPresets.puidReference.editor<T>(parent, showDetails));
+      widgets.add(XmlPresets.puidReference.withCxt(context).editor<T>(parent, showDetails));
       if (i + 1 < parent.length && _puidRefIdTags.contains(parent[i + 1].tagName))
         i++;
     }
     // command
     else if (child.tagName == "puid" && i + 1 < parent.length && (parent[i + 1].tagName == "command" || parent[i + 1].tagName == "hit")) {
-      widgets.add(XmlPresets.command.editor<T>(parent, showDetails));
+      widgets.add(XmlPresets.command.withCxt(context).editor<T>(parent, showDetails));
       i++;
       if (i + 1 < parent.length && parent[i + 1].tagName == "hitout")
         i++;
@@ -270,20 +309,29 @@ List<Widget> makeXmlMultiPropEditor<T extends PropTextField>(
       i + 1 < parent.length && parent[i + 1].tagName == _arrayPostLengthSkipTag
         && parent.toList().sublist(i + 2).every((child) => _arrayChildTags.contains(child.tagName))
     )) {
+      context = XmlPresetContext(parent: parent);
       var childProp = parent.where((child) => _arrayChildTags.contains(child.tagName));
-      XmlPreset preset;
+      XmlRawPreset preset;
       String childTagName = _arrayChildTags.first;
+      // determine array type from first child
       if (childProp.isNotEmpty) {
         var first = childProp.first;
         childTagName = first.tagName;
         preset = getXmlPropPreset(first);
       }
+      // try to guess array type from parent tags
       else if (parent.tagName.toLowerCase().contains("area"))
         preset = XmlPresets.area;
       else if (parent.tagName == "layouts")
         preset = XmlPresets.entity;
       else if (parent.tagName == "param")
         preset = XmlPresets.params;
+      else if (parent.tagName == "items") {
+        if (parent.parentTags.last == "action") // works in 99.7% of cases (except with RandomCommandsArea :) )
+          preset = XmlPresets.entity;
+        else
+          preset = XmlPresets.command;
+      }
       // TODO more based on parentTagNames
       else
         preset = XmlPresets.fallback;
@@ -299,7 +347,7 @@ List<Widget> makeXmlMultiPropEditor<T extends PropTextField>(
     }
     // fallback
     else {
-      widgets.add(getXmlPropPreset(child).editor<T>(child, showDetails));
+      widgets.add(getXmlPropPreset(child).withCxt(context).editor<T>(child, showDetails));
     }
   }
 
@@ -307,7 +355,8 @@ List<Widget> makeXmlMultiPropEditor<T extends PropTextField>(
 }
 
 Widget makeXmlPropEditor<T extends PropTextField>(XmlProp prop, bool showDetails) {
-  return getXmlPropPreset(prop).editor<T>(prop, showDetails);
+  var context = XmlPresetContext(parent: prop);
+  return getXmlPropPreset(prop).withCxt(context).editor<T>(prop, showDetails);
 }
 
 // for skipping

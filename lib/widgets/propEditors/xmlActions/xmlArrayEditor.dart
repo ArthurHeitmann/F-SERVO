@@ -13,7 +13,7 @@ import '../simpleProps/XmlPropEditorFactory.dart';
 class XmlArrayEditor extends ChangeNotifierWidget {
   final bool showDetails;
   final XmlProp parent;
-  final XmlPreset childrenPreset;
+  final XmlRawPreset childrenPreset;
   final XmlProp sizeIndicator;
   final String itemsTagName;
 
@@ -32,7 +32,7 @@ class XmlArrayEditorState extends ChangeNotifierState<XmlArrayEditor> {
     assert(widget.sizeIndicator.value is ValueProp);
     assert((widget.sizeIndicator.value as ValueProp).value is num);
 
-    var newProp = await widget.childrenPreset.prop(XmlPresetInit(file: widget.parent.file, parentPropName: widget.parent.tagName));
+    var newProp = await widget.childrenPreset.withCxtV(widget.parent).prop();
     if (newProp == null) {
       showToast("Couldn't create prop");
       return;

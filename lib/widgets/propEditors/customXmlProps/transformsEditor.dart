@@ -42,6 +42,7 @@ class _TransformsEditorState<T extends PropTextField> extends ChangeNotifierStat
         file: widget.parent.file,
         tagId: tagId,
         value: VectorProp(List.filled(3, initValue)),
+        parentTags: parent.nextParents(),
       )
     );
   }

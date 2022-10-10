@@ -264,7 +264,7 @@ ContextMenuButtonConfig optionalValPropButtonConfig(XmlProp parent, String tagNa
       icon: Icon(Icons.add, size: 14,),
       onPressed: () => parent.insert(
         getInsertPos(),
-        XmlProp(file: parent.file, tagId: crc32(tagName), tagName: tagName, value: makePropVal()),
+        XmlProp(file: parent.file, tagId: crc32(tagName), tagName: tagName, value: makePropVal(), parentTags: parent.nextParents()),
       ),
     );
   else
@@ -282,7 +282,7 @@ ContextMenuButtonConfig optionalPropButtonConfig(XmlProp parent, String tagName,
       icon: Icon(Icons.add, size: 14,),
       onPressed: () => parent.insert(
         getInsertPos(),
-        XmlProp(file: parent.file, tagId: crc32(tagName), tagName: tagName, children: makePropChildren()),
+        XmlProp(file: parent.file, tagId: crc32(tagName), tagName: tagName, children: makePropChildren(), parentTags: parent.nextParents()),
       ),
     );
   else

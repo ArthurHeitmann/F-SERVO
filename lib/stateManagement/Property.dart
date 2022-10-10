@@ -17,8 +17,10 @@ mixin Prop<T> implements Listenable, Undoable {
 
   void updateWith(String str);
 
-  static Prop fromString(String str, { bool isInteger = false }) {
-    if (isHexInt(str))
+  static Prop fromString(String str, { bool isInteger = false, String? tagName }) {
+    if (tagName == "name")
+      return StringProp(str);
+    else if (isHexInt(str))
       return HexProp(int.parse(str));
     else if (isDouble(str))
       return NumberProp(double.parse(str), isInteger);
