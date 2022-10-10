@@ -15,7 +15,7 @@ class ConditionEditor extends ChangeNotifierWidget {
   final XmlProp prop;
   final bool showDetails;
 
-  ConditionEditor({super.key, required this.prop, required this.showDetails}) : super(notifier: prop);
+  ConditionEditor({super.key, required this.prop, required this.showDetails}) : super(notifiers: [prop, prop.get("condition")!.get("state")!]);
 
   @override
   State<ConditionEditor> createState() => _ConditionEditorState();
@@ -24,8 +24,9 @@ class ConditionEditor extends ChangeNotifierWidget {
 class _ConditionEditorState extends ChangeNotifierState<ConditionEditor> {
   @override
   Widget build(BuildContext context) {
-    var label = widget.prop.get("condition")?.get("state")?.get("label")?.value;
-    var value = widget.prop.get("condition")?.get("state")?.get("value");
+    var conditionState = widget.prop.get("condition")?.get("state");
+    var label = conditionState?.get("label")?.value;
+    var value = conditionState?.get("value");
     var args = widget.prop.get("args");
     var type = widget.prop.get("type");
 
@@ -46,9 +47,18 @@ class _ConditionEditorState extends ChangeNotifierState<ConditionEditor> {
                     widget.prop, "type", () => 0,
                     () => NumberProp(0, true)
                   ),
+                if (label == null)
+                  optionalValPropButtonConfig(
+                    conditionState!, "label", () => 0,
+                    () => StringProp("conditionLabel")
+                  ),
+                optionalValPropButtonConfig(
+                  conditionState!, "value", () => conditionState.length,
+                  () => NumberProp(1, true)
+                ),
                 optionalValPropButtonConfig(
                   widget.prop, "args", () => widget.prop.length,
-                  () => NumberProp(0, true)
+                  () => StringProp("arg")
                 ),
               ],
               child: Container(

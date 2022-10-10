@@ -295,7 +295,7 @@ List<Widget> makeXmlMultiPropEditor<T extends PropTextField>(
         i++;
     }
     // command
-    else if (child.tagName == "puid" && i + 1 < parent.length && (parent[i + 1].tagName == "command" || parent[i + 1].tagName == "hit")) {
+    else if (child.tagName == "puid" && i + 1 < parent.length && (parent[i + 1].tagName == "command" || parent[i + 1].tagName == "hit" || parent[i + 1].tagName == "hitout")) {
       widgets.add(XmlPresets.command.withCxt(context).editor<T>(parent, showDetails));
       i++;
       if (i + 1 < parent.length && parent[i + 1].tagName == "hitout")

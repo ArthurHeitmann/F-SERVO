@@ -115,6 +115,7 @@ class XmlProp extends NestedNotifier<XmlProp> {
   void _onValueChange() {
     file?.hasUnsavedChanges = true;
     file?.contentNotifier.notifyListeners();
+    undoHistoryManager.onUndoableEvent();
     notifyListeners();
   }
 
