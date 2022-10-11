@@ -121,6 +121,8 @@ class XmlProp extends NestedNotifier<XmlProp> {
 
   XmlElement toXml() {
     var element = XmlElement(XmlName(tagName));
+    if (tagName == "UNKNOWN")
+      element.attributes.add(XmlAttribute(XmlName("id"), "0x${tagId.toRadixString(16)}"));
     
     // special attributes
     if (value is StringProp && (value as StringProp).value.isNotEmpty) {

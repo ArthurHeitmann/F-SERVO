@@ -216,39 +216,45 @@ class XmlPresets {
 
   static XmlRawPreset fallback = XmlRawPreset(
     <T extends PropTextField>(prop, showDetails) => XmlPropEditor<T>(prop: prop, showDetails: showDetails),
-    (cxt) => null,
+    (cxt) {
+      if (cxt.parent.length < 2)
+        return null;
+      var example = cxt.parent[1];
+      var copy = XmlProp.fromXml(example.toXml(), parentTags: example.parentTags);
+      _resetProps(copy);
+      return copy;
+    },
   );
 }
 
 
 XmlRawPreset getXmlPropPreset(XmlProp prop) {
-  var context = XmlPresetContext(parent: prop);
   // area editor
   if (prop.isNotEmpty && prop[0].tagName == "code" && prop[0].value is HexProp && _areaTypes.contains((prop[0].value as HexProp).value)) {
-    return XmlPresets.area.withCxt(context);
+    return XmlPresets.area;
   }
   // entity editor
   if (prop.isNotEmpty && prop.get("objId") != null) {
-    return XmlPresets.entity.withCxt(context);
+    return XmlPresets.entity;
   }
   // entity layouts
   if (prop.tagName == "layouts" && prop.get("normal")?.get("layouts") != null) {
-    return XmlPresets.layouts.withCxt(context);
+    return XmlPresets.layouts;
   }
   // param
   if (prop.length == 3 && prop[0].tagName == "name" && prop[1].tagName == "code" && prop[2].tagName == "body") {
-    return XmlPresets.params.withCxt(context);
+    return XmlPresets.params;
   }
   // condition
   if (prop.get("puid") != null && prop.get("condition") != null) {
-    return XmlPresets.condition.withCxt(context);
+    return XmlPresets.condition;
   }
   // command
   if (prop.get("puid") != null && prop.get("command") != null) {
-    return XmlPresets.command.withCxt(context);
+    return XmlPresets.command;
   }
   // fallback
-  return XmlPresets.fallback.withCxt(context);
+  return XmlPresets.fallback;
 }
 
 List<Widget> makeXmlMultiPropEditor<T extends PropTextField>(
@@ -400,3 +406,22 @@ const _arrayChildTags = {
 };
 
 const _arrayPostLengthSkipTag = "link";
+
+void _resetProp(Prop prop) {
+  if (prop is HexProp)
+    prop.value = 0;
+  else if (prop is NumberProp)
+    prop.value = 0;
+  else if (prop is StringProp)
+    prop.value = "str";
+  else if (prop is VectorProp) {
+    for (var p in prop)
+      p.value = 0;
+  }
+}
+
+void _resetProps(XmlProp prop) {
+  _resetProp(prop.value);
+  for (var child in prop)
+    _resetProps(child);
+}

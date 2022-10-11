@@ -1,8 +1,10 @@
 
 import 'package:flutter/material.dart';
 
+import '../../../customTheme.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
 import '../simpleProps/XmlPropEditorFactory.dart';
+import 'puidReferenceEditor.dart';
 
 class LayoutsEditor extends StatelessWidget {
   final bool showDetails;
@@ -15,7 +17,15 @@ class LayoutsEditor extends StatelessWidget {
     return Column(
       children: [
         if (showDetails)
-          makeXmlPropEditor(prop.get("normal")!.get("parent")!, showDetails),
+          Row(
+            children: [
+              Text("parent", style: getTheme(context).propInputTextStyle,),
+              SizedBox(width: 10),
+              Flexible(
+                child: PuidReferenceEditor(prop: prop.get("normal")!.get("parent")!.get("id")!.get("id")!, showDetails: showDetails)
+              ),
+            ],
+          ),
         makeXmlPropEditor(prop.get("normal")!.get("layouts")!, showDetails),
       ],
     );
