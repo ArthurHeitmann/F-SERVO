@@ -19,6 +19,7 @@ dependencies:
   flutter:
     sdk: flutter
 
+  flutter_launcher_icons: ^0.10.0
   fluttertoast: ^8.0.9
   path: ^1.8.2
   shared_preferences: ^2.0.15
@@ -53,3 +54,14 @@ flutter:
     - family: CustomIconsFont
       fonts:
         - asset: assets/fonts/CustomIconsFont.ttf
+
+flutter_icons:
+  # to update icons run
+  # > flutter pub run flutter_launcher_icons:main
+  android: true
+  ios: true
+  image_path: "assets/logo/pod.png"
+  web:
+    generate: true
+  windows:
+    generate: true
