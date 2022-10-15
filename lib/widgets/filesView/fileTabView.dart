@@ -124,7 +124,17 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
             makeBackgroundClickArea(),
             widget.viewArea.currentFile != null
               ? getOrMakeFileEditor(widget.viewArea.currentFile!)
-              : Center(child: Text('No file open')),
+              : Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints.loose(Size(150, 150)),
+                  child: Opacity(
+                    opacity: 0.25,
+                    child: Image(
+                      image: AssetImage("assets/logo/pod.png"),
+                    ),
+                  )
+                ),
+              ),
             makeTabBar(),
             if (isDroppingFile)
               makeDropIndicator(),
