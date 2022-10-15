@@ -59,29 +59,26 @@ class XmlActionEditor extends ChangeNotifierWidget {
 class XmlActionEditorState extends ChangeNotifierState<XmlActionEditor> {
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: SelectableWidget<XmlActionProp>(
-        area: areasManager.getAreaOfFile(widget.action.file!),
-        data: widget.action,
-        color: getActionPrimaryColor().withOpacity(0.5),
-        child: NestedContextMenu(
-          buttons: [
-            ContextMenuButtonConfig(
-              "Copy Action PUID ref",
-              icon: Icon(Icons.content_copy, size: 14,),
-              onPressed: () => copyPuidRef("hap::Action", widget.action.id.value)
-            ),
-          ],
-          child: SizedBox(
-            width: 450,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                makeActionHeader(),
-                makeActionBody(),
-              ],
-            ),
+    return SelectableWidget<XmlActionProp>(
+      area: areasManager.getAreaOfFile(widget.action.file!),
+      data: widget.action,
+      color: getActionPrimaryColor().withOpacity(0.5),
+      child: NestedContextMenu(
+        buttons: [
+          ContextMenuButtonConfig(
+            "Copy Action PUID ref",
+            icon: Icon(Icons.content_copy, size: 14,),
+            onPressed: () => copyPuidRef("hap::Action", widget.action.id.value)
+          ),
+        ],
+        child: SizedBox(
+          width: 450,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              makeActionHeader(),
+              makeActionBody(),
+            ],
           ),
         ),
       ),

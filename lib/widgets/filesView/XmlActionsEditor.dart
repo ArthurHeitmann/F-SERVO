@@ -1,11 +1,16 @@
 
+import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 
+import '../../stateManagement/Property.dart';
 import '../../stateManagement/xmlProps/xmlProp.dart';
 import '../../stateManagement/xmlProps/xmlActionProp.dart';
+import '../../utils.dart';
 import '../misc/FlexReorderable.dart';
-import '../propEditors/simpleProps/XmlPropEditorFactory.dart';
+import '../misc/nestedContextMenu.dart';
 import '../propEditors/xmlActions/XmlActionEditorFactory.dart';
+import '../propEditors/xmlActions/XmlActionPresets.dart';
+import '../propEditors/xmlActions/actionAddButton.dart';
 import '../propEditors/xmlActions/xmlArrayEditor.dart';
 
 
@@ -13,7 +18,7 @@ class XmlActionsEditor extends XmlArrayEditor {
   final XmlProp root;
 
   XmlActionsEditor({super.key, required this.root})
-    : super(root, XmlPresets.action, root.where((element) => element.tagName == "size").first, "action", false);
+    : super(root, XmlActionPresets.action, root.where((element) => element.tagName == "size").first, "action", false);
 
   @override
   XmlArrayEditorState createState() => _XmlActionsEditorState();
@@ -30,10 +35,33 @@ class _XmlActionsEditorState extends XmlArrayEditorState<XmlActionsEditor> {
         onReorder: (int oldIndex, int newIndex) {
           widget.root.move(oldIndex + firstChildOffset, newIndex + firstChildOffset);
         },
-        children: actions.map((action) => makeXmlActionEditor(
-          action: action as XmlActionProp,
-          showDetails: false,
-        ))
+        header: ActionAddButton(parent: widget.root, index: 0),
+        children: actions.map((action) {
+          var actionEditor = makeXmlActionEditor(
+            action: action as XmlActionProp,
+            showDetails: false,
+          );
+          return Column(
+            key: makeReferenceKey(actionEditor.key!),
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              NestedContextMenu(
+                buttons: [
+                  ContextMenuButtonConfig(
+                    "Delete Action",
+                    icon: Icon(Icons.delete, size: 14),
+                    onPressed: () {
+                      (widget.root.get("size")!.value as NumberProp).value -= 1;
+                      widget.root.remove(action);
+                    }
+                  ),
+                ],
+                child: actionEditor
+              ),
+              ActionAddButton(parent: widget.root, index: actions.indexOf(action) + 1),
+            ],    
+          );
+        })
         .toList(),
       ),
     );

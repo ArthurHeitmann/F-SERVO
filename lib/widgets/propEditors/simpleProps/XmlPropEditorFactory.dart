@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import '../../../main.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/openFileTypes.dart';
-import '../../../stateManagement/xmlProps/xmlActionProp.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
 import '../../../utils.dart';
 import '../../misc/CustomIcons.dart';
@@ -20,7 +19,6 @@ import '../customXmlProps/layoutsEditor.dart';
 import '../customXmlProps/paramEditor.dart';
 import '../customXmlProps/puidReferenceEditor.dart';
 import '../customXmlProps/transformsEditor.dart';
-import '../xmlActions/XmlActionEditorFactory.dart';
 import '../xmlActions/xmlArrayEditor.dart';
 import 'XmlPropEditor.dart';
 import 'propTextField.dart';
@@ -57,48 +55,52 @@ class XmlPreset extends XmlRawPreset {
 }
 
 class XmlPresets {
-  static XmlRawPreset action = XmlRawPreset(
-    <T extends PropTextField>(prop, showDetails) => makeXmlActionEditor(
-      action: prop as XmlActionProp,
-      showDetails: showDetails,
-    ),
-    (cxt) => null,
-  );
-
   static XmlRawPreset area = XmlRawPreset(
     <T extends PropTextField>(prop, showDetails) => AreaEditor(prop: prop, showDetails: showDetails),
     (cxt) {
       return showSelectionPopup(getGlobalContext(), [
-        SelectionPopupConfig(icon: CustomIcons.cube, name: "Box", getValue: () => XmlProp.fromXml(makeXmlElement(
-          name: "value",
-          children: [
-            makeXmlElement(name: "code", text: "0x${crc32("app::area::BoxArea").toRadixString(16)}"),
-            makeXmlElement(name: "position", text: "0 0 0"),
-            makeXmlElement(name: "rotation", text: "0 0 0"),
-            makeXmlElement(name: "scale", text: "1 1 1"),
-            makeXmlElement(name: "points", text: "-1 -1 1 -1 1 1 -1 1"),
-            makeXmlElement(name: "height", text: "1"),
-          ]
-        ), parentTags: cxt.parentTags)),
-        SelectionPopupConfig(icon: CustomIcons.cylinder, name: "Cylinder", getValue: () => XmlProp.fromXml(makeXmlElement(
-          name: "value",
-          children: [
-            makeXmlElement(name: "code", text: "0x${crc32("app::area::CylinderArea").toRadixString(16)}"),
-            makeXmlElement(name: "position", text: "0 0 0"),
-            makeXmlElement(name: "rotation", text: "0 0 0"),
-            makeXmlElement(name: "scale", text: "1 1 1"),
-            makeXmlElement(name: "radius", text: "1"),
-            makeXmlElement(name: "height", text: "1"),
-          ]
-        ), parentTags: cxt.parentTags)),
-        SelectionPopupConfig(icon: CustomIcons.sphere, name: "Sphere", getValue: () => XmlProp.fromXml(makeXmlElement(
-          name: "value",
-          children: [
-            makeXmlElement(name: "code", text: "0x${crc32("app::area::SphereArea").toRadixString(16)}"),
-            makeXmlElement(name: "position", text: "0 0 0"),
-            makeXmlElement(name: "radius", text: "1"),
-          ]
-        ), parentTags: cxt.parentTags)),
+        SelectionPopupConfig(icon: CustomIcons.cube, name: "Box", getValue: () => XmlProp.fromXml(
+          makeXmlElement(
+            name: "value",
+            children: [
+              makeXmlElement(name: "code", text: "0x${crc32("app::area::BoxArea").toRadixString(16)}"),
+              makeXmlElement(name: "position", text: "0 0 0"),
+              makeXmlElement(name: "rotation", text: "0 0 0"),
+              makeXmlElement(name: "scale", text: "1 1 1"),
+              makeXmlElement(name: "points", text: "-1 -1 1 -1 1 1 -1 1"),
+              makeXmlElement(name: "height", text: "1"),
+            ]
+          ),
+          file: cxt.file,
+          parentTags: cxt.parentTags,
+        )),
+        SelectionPopupConfig(icon: CustomIcons.cylinder, name: "Cylinder", getValue: () => XmlProp.fromXml(
+          makeXmlElement(
+            name: "value",
+            children: [
+              makeXmlElement(name: "code", text: "0x${crc32("app::area::CylinderArea").toRadixString(16)}"),
+              makeXmlElement(name: "position", text: "0 0 0"),
+              makeXmlElement(name: "rotation", text: "0 0 0"),
+              makeXmlElement(name: "scale", text: "1 1 1"),
+              makeXmlElement(name: "radius", text: "1"),
+              makeXmlElement(name: "height", text: "1"),
+            ]
+          ),
+          file: cxt.file,
+          parentTags: cxt.parentTags,
+        )),
+        SelectionPopupConfig(icon: CustomIcons.sphere, name: "Sphere", getValue: () => XmlProp.fromXml(
+          makeXmlElement(
+            name: "value",
+            children: [
+              makeXmlElement(name: "code", text: "0x${crc32("app::area::SphereArea").toRadixString(16)}"),
+              makeXmlElement(name: "position", text: "0 0 0"),
+              makeXmlElement(name: "radius", text: "1"),
+            ]
+          ),
+          file: cxt.file,
+          parentTags: cxt.parentTags,
+        )),
       ]);
     },
   );
@@ -106,26 +108,34 @@ class XmlPresets {
     <T extends PropTextField>(prop, showDetails) => EntityEditor(prop: prop, showDetails: showDetails),
     (cxt) {
       if (cxt.parentName == "layouts") {
-        return XmlProp.fromXml(makeXmlElement(
-          name: "value",
-          children: [
-            makeXmlElement(name: "id", text: "0x${randomId().toRadixString(16)}"),
-            makeXmlElement(name: "location", children: [
-              makeXmlElement(name: "position", text: "0 0 0"),
-              makeXmlElement(name: "rotation", text: "0 0 0"),
-            ]),
-            makeXmlElement(name: "objId", text: "em0000"),
-          ]
-        ), parentTags: cxt.parentTags);
+        return XmlProp.fromXml(
+          makeXmlElement(
+            name: "value",
+            children: [
+              makeXmlElement(name: "id", text: "0x${randomId().toRadixString(16)}"),
+              makeXmlElement(name: "location", children: [
+                makeXmlElement(name: "position", text: "0 0 0"),
+                makeXmlElement(name: "rotation", text: "0 0 0"),
+              ]),
+              makeXmlElement(name: "objId", text: "em0000"),
+            ]
+          ),
+          file: cxt.file,
+          parentTags: cxt.parentTags,
+        );
       }
       if (cxt.parentName == "items") {
-        return XmlProp.fromXml(makeXmlElement(
-          name: "value",
-          children: [
-            makeXmlElement(name: "objId", text: "em0000"),
-            makeXmlElement(name: "rate", text: "0"),
-          ]
-        ), parentTags: cxt.parentTags);
+        return XmlProp.fromXml(
+          makeXmlElement(
+            name: "value",
+            children: [
+              makeXmlElement(name: "objId", text: "em0000"),
+              makeXmlElement(name: "rate", text: "0"),
+            ]
+          ),
+          file: cxt.file,
+          parentTags: cxt.parentTags,
+        );
       }
       throw Exception("Unsupported entity");
     },
@@ -136,36 +146,43 @@ class XmlPresets {
   );
   static XmlRawPreset params = XmlRawPreset(
     <T extends PropTextField>(prop, showDetails) => ParamsEditor(prop: prop, showDetails: showDetails),
-    (cxt) => XmlProp.fromXml(makeXmlElement(
-      name: "value",
-      children: [
-        makeXmlElement(name: "name", text: "paramName"),
-        makeXmlElement(name: "code", text: "0x${crc32("type").toRadixString(16)}"),
-        makeXmlElement(name: "body", text: "0"),
-      ]
-    ), parentTags: cxt.parentTags,
+    (cxt) => XmlProp.fromXml(
+      makeXmlElement(
+        name: "value",
+        children: [
+          makeXmlElement(name: "name", text: "paramName"),
+          makeXmlElement(name: "code", text: "0x${crc32("type").toRadixString(16)}"),
+          makeXmlElement(name: "body", text: "0"),
+        ]
+      ),
+      file: cxt.file,
+      parentTags: cxt.parentTags,
   ));
   static XmlRawPreset condition = XmlRawPreset(
     <T extends PropTextField>(prop, showDetails) => ConditionEditor(prop: prop, showDetails: showDetails),
-    (cxt) => XmlProp.fromXml(makeXmlElement(
-      name: "value",
-      children: [
-        makeXmlElement(name: "puid",
-          children: [
-            makeXmlElement(name: "code", text: "0x0"),
-            makeXmlElement(name: "id", text: "0x0"),
-          ],
-        ),
-        makeXmlElement(name: "condition",
-          children: [
-            makeXmlElement(name: "state", children: [
-              makeXmlElement(name: "label", text: "conditionLabel"),
-            ]),
-            makeXmlElement(name: "pred", text: "0"),
-          ],
-        ),
-      ]
-    ), parentTags: cxt.parentTags),
+    (cxt) => XmlProp.fromXml(
+      makeXmlElement(
+        name: "value",
+        children: [
+          makeXmlElement(name: "puid",
+            children: [
+              makeXmlElement(name: "code", text: "0x0"),
+              makeXmlElement(name: "id", text: "0x0"),
+            ],
+          ),
+          makeXmlElement(name: "condition",
+            children: [
+              makeXmlElement(name: "state", children: [
+                makeXmlElement(name: "label", text: "conditionLabel"),
+              ]),
+              makeXmlElement(name: "pred", text: "0"),
+            ],
+          ),
+        ]
+      ),
+      file: cxt.file,
+      parentTags: cxt.parentTags
+    ),
   );
   static XmlRawPreset transforms = XmlRawPreset(
     <T extends PropTextField>(prop, showDetails) => TransformsEditor(parent: prop),
@@ -222,7 +239,11 @@ class XmlPresets {
       if (cxt.parent.length < 2)
         return null;
       var example = cxt.parent[1];
-      var copy = XmlProp.fromXml(example.toXml(), parentTags: example.parentTags);
+      var copy = XmlProp.fromXml(
+        example.toXml(),
+        file: cxt.file,
+        parentTags: example.parentTags
+      );
       _resetProps(copy);
       return copy;
     },
