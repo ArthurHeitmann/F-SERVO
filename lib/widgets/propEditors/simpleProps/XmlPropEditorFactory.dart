@@ -46,7 +46,6 @@ class XmlRawPreset {
 
   XmlPreset withCxtV(XmlProp parent) =>
     XmlPreset(editor, propFactory, XmlPresetContext(parent: parent));
-
 }
 
 class XmlPreset extends XmlRawPreset {
@@ -59,7 +58,10 @@ class XmlPreset extends XmlRawPreset {
 
 class XmlPresets {
   static XmlRawPreset action = XmlRawPreset(
-    <T extends PropTextField>(prop, showDetails) => makeXmlActionEditor(action: prop as XmlActionProp, showDetails: showDetails),
+    <T extends PropTextField>(prop, showDetails) => makeXmlActionEditor(
+      action: prop as XmlActionProp,
+      showDetails: showDetails,
+    ),
     (cxt) => null,
   );
 

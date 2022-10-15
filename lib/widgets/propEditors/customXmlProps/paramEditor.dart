@@ -22,7 +22,7 @@ class ParamsEditor extends StatelessWidget {
           border: Border.all(color: getTheme(context).propBorderColor!, width: 0.5),
           borderRadius: BorderRadius.all(Radius.circular(10))
         ),
-        // padding: const EdgeInsets.all(2),
+        padding: const EdgeInsets.only(right: 15),
         child: IntrinsicWidth(
           child: Wrap(
             direction: Axis.horizontal,

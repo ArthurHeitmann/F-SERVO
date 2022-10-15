@@ -2,10 +2,12 @@
 import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 
+import '../../../customTheme.dart';
 import '../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
 import '../../../utils.dart';
+import '../../misc/FlexReorderable.dart';
 import '../../misc/nestedContextMenu.dart';
 import '../../misc/smallButton.dart';
 import '../simpleProps/XmlPropEditorFactory.dart';
@@ -23,9 +25,20 @@ class XmlArrayEditor extends ChangeNotifierWidget {
   State<XmlArrayEditor> createState() => XmlArrayEditorState();
 }
 
-class XmlArrayEditorState extends ChangeNotifierState<XmlArrayEditor> {
+class XmlArrayEditorState<T extends XmlArrayEditor> extends ChangeNotifierState<T> {
+  int get firstChildOffset {
+    for (int i = 0; i < widget.parent.length; i++) {
+      if (widget.parent[i].tagName == widget.itemsTagName)
+        return i;
+    }
+    return widget.parent.length;
+  }
+
   Iterable<XmlProp> getChildProps() {
-    return widget.parent.where((child) => child.tagName == widget.itemsTagName);
+    var firstOffset = firstChildOffset;
+    return firstOffset <= 0
+      ? widget.parent
+      : widget.parent.skip(firstOffset);
   }
 
   void addChild([int relIndex = -1]) async {
@@ -58,8 +71,9 @@ class XmlArrayEditorState extends ChangeNotifierState<XmlArrayEditor> {
     widget.parent.removeAt(absIndex);
   }
 
-  Widget childWrapper({ required Widget child, required int index }) {
+  Widget childWrapper({ required Key key, required Widget child, required int index }) {
     return NestedContextMenu(
+      key: key,
       clearParent: true,
       buttons: [
           ContextMenuButtonConfig(
@@ -68,7 +82,22 @@ class XmlArrayEditorState extends ChangeNotifierState<XmlArrayEditor> {
             onPressed: () => deleteChild(index),
           ),
       ],
-      child: child
+      child: Stack(
+        children: [
+          child,
+          Positioned(
+            top: 0,
+            bottom: 0,
+            right: 8,
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: FlexDraggableHandle(
+                child: Icon(Icons.drag_handle, color: getTheme(context).textColor!.withOpacity(0.5), size: 17,),
+              ),
+            ),
+          ),
+        ],
+      )
     );
   }
 
@@ -79,20 +108,22 @@ class XmlArrayEditorState extends ChangeNotifierState<XmlArrayEditor> {
     for (int i = 0; i < getChildProps().length; i++) {
       children.add(
         childWrapper(
+          key: Key(childProps[i].uuid),
           index: i,
           child: widget.childrenPreset.editor(childProps[i], widget.showDetails),
         )
       );
     }
-    return Column(
+    return ColumnReorderable(
       crossAxisAlignment: CrossAxisAlignment.start,
+      onReorder: (oldIndex, newIndex) => widget.parent.move(oldIndex + firstChildOffset, newIndex + firstChildOffset),
+      footer: SmallButton(
+        onPressed: addChild,
+        constraints: BoxConstraints.tight(const Size(30, 30)),
+        child: Icon(Icons.add)
+      ),
       children: [
         ...children,
-        SmallButton(
-          onPressed: addChild,
-          constraints: BoxConstraints.tight(const Size(30, 30)),
-          child: Icon(Icons.add)
-        )
       ],
     );
   }

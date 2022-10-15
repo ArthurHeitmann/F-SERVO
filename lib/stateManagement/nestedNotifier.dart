@@ -98,8 +98,6 @@ abstract class NestedNotifier<T> extends ChangeNotifier with IterableMixin<T>, U
 
   void move(int from, int to) {
     if (from == to) return;
-    if (to > from)
-      to--;
     var child = _children.removeAt(from);
     _children.insert(to, child);
     notifyListeners();

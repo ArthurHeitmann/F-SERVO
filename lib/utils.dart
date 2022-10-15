@@ -310,3 +310,9 @@ int getNextInsertIndexBefore(XmlProp parent, List<String> insertBeforeProp, [int
   }
   return fallback;
 }
+
+Key makeReferenceKey(Key key) {
+  if (key is GlobalKey || key is UniqueKey)
+    return ValueKey(key);
+  return key;
+}

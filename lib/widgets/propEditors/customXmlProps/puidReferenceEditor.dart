@@ -162,7 +162,7 @@ class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor>
       await waitForNextFrame();
 
       var actionContext = getActionKey(actionId)?.currentContext;
-      if (actionContext == null) {
+      if (actionContext == null || !mounted) {
         showToast("Couldn't find Action");
         return;
       }

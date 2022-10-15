@@ -8,6 +8,7 @@ import '../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../stateManagement/openFilesManager.dart';
 import '../../../stateManagement/xmlProps/xmlActionProp.dart';
 import '../../../utils.dart';
+import '../../misc/FlexReorderable.dart';
 import '../../misc/Selectable.dart';
 import '../../misc/nestedContextMenu.dart';
 import '../simpleProps/DoubleClickablePropTextField.dart';
@@ -48,7 +49,7 @@ class XmlActionEditor extends ChangeNotifierWidget {
   final bool showDetails;
   final XmlActionProp action;
 
-  XmlActionEditor({required this.action, required this.showDetails})
+  XmlActionEditor({ required this.action, required this.showDetails })
     : super(key: _getOrMakeKey(action.id.value), notifiers: [action, action.attribute]);
 
   @override
@@ -58,26 +59,29 @@ class XmlActionEditor extends ChangeNotifierWidget {
 class XmlActionEditorState extends ChangeNotifierState<XmlActionEditor> {
   @override
   Widget build(BuildContext context) {
-    return SelectableWidget<XmlActionProp>(
-      area: areasManager.getAreaOfFile(widget.action.file!),
-      data: widget.action,
-      color: getActionPrimaryColor().withOpacity(0.5),
-      child: NestedContextMenu(
-        buttons: [
-          ContextMenuButtonConfig(
-            "Copy Action PUID ref",
-            icon: Icon(Icons.content_copy, size: 14,),
-            onPressed: () => copyPuidRef("hap::Action", widget.action.id.value)
-          ),
-        ],
-        child: SizedBox(
-          width: 450,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              makeActionHeader(),
-              makeActionBody(),
-            ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: SelectableWidget<XmlActionProp>(
+        area: areasManager.getAreaOfFile(widget.action.file!),
+        data: widget.action,
+        color: getActionPrimaryColor().withOpacity(0.5),
+        child: NestedContextMenu(
+          buttons: [
+            ContextMenuButtonConfig(
+              "Copy Action PUID ref",
+              icon: Icon(Icons.content_copy, size: 14,),
+              onPressed: () => copyPuidRef("hap::Action", widget.action.id.value)
+            ),
+          ],
+          child: SizedBox(
+            width: 450,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                makeActionHeader(),
+                makeActionBody(),
+              ],
+            ),
           ),
         ),
       ),
@@ -123,19 +127,29 @@ class XmlActionEditorState extends ChangeNotifierState<XmlActionEditor> {
         ),
         child: Padding(
           padding: const EdgeInsets.all(4.0),
-          child: Column(
+          child: Row(
             children: [
-              RichText(
-                text: TextSpan(
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14
-                  ),
-                  text: widget.action.code.strVal ?? "UNKNOWN ${widget.action.code.value}"
-                )
+              SizedBox(width: 10, height: 10),  // placeholder for future icon or button
+              Expanded(
+                child: Column(
+                  children: [
+                    RichText(
+                      text: TextSpan(
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14
+                        ),
+                        text: widget.action.code.strVal ?? "UNKNOWN ${widget.action.code.value}"
+                      )
+                    ),
+                    SizedBox(height: 2),
+                    PropTextField.make<DoubleClickablePropTextField>(prop: widget.action.name),
+                  ],
+                ),
               ),
-              SizedBox(height: 2),
-              PropTextField.make<DoubleClickablePropTextField>(prop: widget.action.name),
+              FlexDraggableHandle(
+                child: Icon(Icons.drag_handle, color: getTheme(context).textColor!.withOpacity(0.5),),
+              )
             ],
           ),
         ),

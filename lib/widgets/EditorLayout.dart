@@ -13,43 +13,41 @@ class EditorLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(builder: (context, constraints) {
-      return ResizableWidget(
-        axis: Axis.horizontal,
-        percentages: [0.22, 0.53, 0.25],
-        draggableThickness: 4,
-        lineThickness: 4,
-        children: [
-          Container(
-            color: getTheme(context).sidebarBackgroundColor,
-            child: Material(
-              child: ResizableWidget(
-                axis: Axis.vertical,
-                percentages: [0.55, 0.45],
-                draggableThickness: 5,
-                children: [
-                  FileExplorer(),
-                  GroupEditor()
-                ],
-              ),
+    return ResizableWidget(
+      axis: Axis.horizontal,
+      percentages: [0.22, 0.53, 0.25],
+      draggableThickness: 4,
+      lineThickness: 4,
+      children: [
+        Container(
+          color: getTheme(context).sidebarBackgroundColor,
+          child: Material(
+            child: ResizableWidget(
+              axis: Axis.vertical,
+              percentages: [0.55, 0.45],
+              draggableThickness: 5,
+              children: [
+                FileExplorer(),
+                GroupEditor()
+              ],
             ),
           ),
-          OpenFilesAreas(),
-          Container(
-            color: getTheme(context).sidebarBackgroundColor,
-            child: Material(
-              child: ResizableWidget(
-                axis: Axis.vertical,
-                percentages: [0.4, 0.6],
-                children: [
-                  Outliner(),
-                  XmlActionDetailsEditor(),
-                ],
-              ),
+        ),
+        OpenFilesAreas(),
+        Container(
+          color: getTheme(context).sidebarBackgroundColor,
+          child: Material(
+            child: ResizableWidget(
+              axis: Axis.vertical,
+              percentages: [0.4, 0.6],
+              children: [
+                Outliner(),
+                XmlActionDetailsEditor(),
+              ],
             ),
           ),
-        ],
-      );
-    });
+        ),
+      ],
+    );
   }
 }
