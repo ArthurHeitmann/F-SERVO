@@ -361,29 +361,36 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
     return findRecWhere((e) => e.contains(entry)) ?? this;
   }
 
-  Future<void> openFile(String filePath, { HierarchyEntry? parent }) async {
+  Future<HierarchyEntry> openFile(String filePath, { HierarchyEntry? parent }) async {
     isLoadingStatus.pushIsLoading();
 
+    HierarchyEntry entry;
     try {
       if (filePath.endsWith(".dat")) {
         if (await File(filePath).exists())
-          await openDat(filePath, parent: parent);
+          entry = await openDat(filePath, parent: parent);
         else if (await Directory(filePath).exists())
-          await openExtractedDat(filePath, parent: parent);
+          entry = await openExtractedDat(filePath, parent: parent);
         else
           throw FileSystemException("File not found: $filePath");
       }
       else if (filePath.endsWith(".pak")) {
         if (await File(filePath).exists())
-          await openPak(filePath, parent: parent);
+          entry = await openPak(filePath, parent: parent);
         else if (await Directory(filePath).exists())
-          await openExtractedPak(filePath, parent: parent);
+          entry = await openExtractedPak(filePath, parent: parent);
         else
           throw FileSystemException("File not found: $filePath");
       }
       else if (filePath.endsWith(".xml")) {
         if (await File(filePath).exists())
-          openXmlScript(filePath, parent: parent);
+          entry = openXmlScript(filePath, parent: parent);
+        else
+          throw FileSystemException("File not found: $filePath");
+      }
+      else if (filePath.endsWith(".yax")) {
+        if (await File(filePath).exists())
+          entry = await openYaxXmlScript(filePath, parent: parent);
         else
           throw FileSystemException("File not found: $filePath");
       }
@@ -394,11 +401,14 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
     } finally {
       isLoadingStatus.popIsLoading();
     }
+
+    return entry;
   }
 
-  Future<void> openDat(String datPath, { HierarchyEntry? parent }) async {
-    if (findRecWhere((entry) => entry is DatHierarchyEntry && entry.path == datPath) != null)
-      return;
+  Future<HierarchyEntry> openDat(String datPath, { HierarchyEntry? parent }) async {
+    var existing = findRecWhere((entry) => entry is DatHierarchyEntry && entry.path == datPath);
+    if (existing != null)
+      return existing;
 
     var fileName = path.basename(datPath);
     var datFolder = path.dirname(datPath);
@@ -432,14 +442,15 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
     }
 
     await Future.wait(futures);
+
+    return datEntry;
   }
 
-  Future<void> openExtractedDat(String datDirPath, { HierarchyEntry? parent }) {
+  Future<HierarchyEntry> openExtractedDat(String datDirPath, { HierarchyEntry? parent }) {
     var srcDatDir = path.dirname(path.dirname(datDirPath));
     var srcDatPath = path.join(srcDatDir, path.basename(datDirPath));
     return openDat(srcDatPath, parent: parent);
   }
-
   
   HapGroupHierarchyEntry? findPakParentGroup(String fileName) {
     var match = _pakGroupIdMatcher.firstMatch(fileName);
@@ -450,9 +461,10 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
     return parentGroup;
   }
 
-  Future<void> openPak(String pakPath, { HierarchyEntry? parent }) async {
-    if (findRecWhere((entry) => entry is PakHierarchyEntry && entry.path == pakPath) != null)
-      return;
+  Future<HierarchyEntry> openPak(String pakPath, { HierarchyEntry? parent }) async {
+    var existing = findRecWhere((entry) => entry is PakHierarchyEntry && entry.path == pakPath);
+    if (existing != null)
+      return existing;
 
     var pakFolder = path.dirname(pakPath);
     var pakExtractDir = path.join(pakFolder, "pakExtracted", path.basename(pakPath));
@@ -497,22 +509,35 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
         throw FileSystemException("File not found: $xmlFilePath");
       pakEntry.add(xmlEntry);
     }
+
+    return pakEntry;
   }
 
-  Future<void> openExtractedPak(String pakDirPath, { HierarchyEntry? parent }) {
+  Future<HierarchyEntry> openExtractedPak(String pakDirPath, { HierarchyEntry? parent }) {
     var srcPakDir = path.dirname(path.dirname(pakDirPath));
     var srcPakPath = path.join(srcPakDir, path.basename(pakDirPath));
     return openPak(srcPakPath, parent: parent);
   }
 
-  void openXmlScript(String xmlFilePath, { HierarchyEntry? parent }) {
-    if (findRecWhere((entry) => entry is XmlScriptHierarchyEntry && entry.path == xmlFilePath) != null)
-      return;
+  Future<HierarchyEntry> openYaxXmlScript(String yaxFilePath, { HierarchyEntry? parent }) async {
+    var xmlFilePath = "${yaxFilePath.substring(0, yaxFilePath.length - 4)}.xml";
+    if (!await File(xmlFilePath).exists()) {
+      await yaxFileToXmlFile(yaxFilePath);
+    }
+    return openXmlScript(xmlFilePath, parent: parent);
+  }
+
+  HierarchyEntry openXmlScript(String xmlFilePath, { HierarchyEntry? parent }) {
+    var existing = findRecWhere((entry) => entry is XmlScriptHierarchyEntry && entry.path == xmlFilePath);
+    if (existing != null)
+      return existing;
     var entry = XmlScriptHierarchyEntry(StringProp(path.basename(xmlFilePath)), xmlFilePath);
     if (parent != null)
       parent.add(entry);
     else
       add(entry);
+    
+    return entry;
   }
 
   void expandAll() {

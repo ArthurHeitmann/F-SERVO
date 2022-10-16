@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math';
 
 import 'package:desktop_drop/desktop_drop.dart';
@@ -5,13 +6,15 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:cross_file/cross_file.dart';
+import 'package:path/path.dart' as path;
+import 'package:window_manager/window_manager.dart';
+
+import '../../stateManagement/FileHierarchy.dart';
 import '../../stateManagement/openFileTypes.dart';
 import '../misc/Selectable.dart';
 import '../misc/SmoothSingleChildScrollView.dart';
 import 'FileTabEntry.dart';
 import 'FileType.dart';
-import 'package:window_manager/window_manager.dart';
-
 import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/openFilesManager.dart';
 import '../../customTheme.dart';
@@ -65,7 +68,14 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
     if (files.isEmpty)
       return;
     OpenFileData? firstFile;
+    const fileExplorerExtensions = { ".pak", ".dat", ".yax" };
     for (var file in files) {
+      if (fileExplorerExtensions.contains(path.extension(file.name)) || await Directory(file.path).exists()) {
+        var entry = await openHierarchyManager.openFile(file.path);
+        if (entry is XmlScriptHierarchyEntry)
+          areasManager.openFile(entry.path);
+        continue;
+      }
       var newFileData = areasManager.openFile(file.path, toArea: widget.viewArea);
       firstFile ??= newFileData;
     }
@@ -129,15 +139,18 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
                   constraints: BoxConstraints.loose(Size(150, 150)),
                   child: Opacity(
                     opacity: 0.25,
-                    child: Image(
-                      image: AssetImage("assets/logo/pod.png"),
+                    child: AnimatedScale(
+                      scale: isDroppingFile ? 1.25 : 1.0 * (Random().nextInt(100) == 69 ? -1 : 1), // :)
+                      duration: const Duration(milliseconds: 250),
+                      curve: _BezierCurve(0, 1.5, 1.2, 1),
+                      child: Image(
+                        image: AssetImage("assets/logo/pod_alpha.png"),
+                      ),
                     ),
                   )
                 ),
               ),
             makeTabBar(),
-            if (isDroppingFile)
-              makeDropIndicator(),
           ],
         ),
       ),
@@ -232,5 +245,19 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
         ),
       ),
     );
+  }
+}
+
+class _BezierCurve extends Curve {
+  final double a;
+  final double b;
+  final double c;
+  final double d;
+
+  const _BezierCurve(this.a, this.b, this.c, this.d);
+
+  @override
+  double transformInternal(double x) {
+    return a*pow((1-x), 3) + 3*b*pow((1-x), 2)*x + 3*c*(1-x)*pow(x, 2) + d*pow(x, 3);
   }
 }
