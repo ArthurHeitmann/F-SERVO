@@ -262,6 +262,7 @@ class GroupToken with Undoable {
     id.restoreWith(entry.id);
   }
 }
+
 class HapGroupHierarchyEntry extends FileHierarchyEntry {
   final int id;
   final XmlProp prop;
@@ -269,6 +270,54 @@ class HapGroupHierarchyEntry extends FileHierarchyEntry {
   HapGroupHierarchyEntry(StringProp name, this.prop)
     : id = (prop.get("id")!.value as HexProp).value,
     super(name, "", 5, true, false);
+  
+  HapGroupHierarchyEntry addChild({ String name = "New Group" }) {
+    var newGroupProp = XmlProp.fromXml(
+      makeXmlElement(name: "group", children: [
+        makeXmlElement(name: "id", text: "0x${randomId().toRadixString(16)}"),
+        makeXmlElement(name: "name", text: name),
+        makeXmlElement(name: "parent", text: "0x${id.toRadixString(16)}"),
+      ]),
+      file: prop.file,
+      parentTags: prop.parentTags
+    );
+    var xmlRoot = (prop.file! as XmlFileData).root!;
+    var insertIndex = xmlRoot.length;
+    var childGroups = xmlRoot.where((group) => group.tagName == "group" && (group.get("parent")?.value as HexProp).value == id);
+    if (childGroups.isNotEmpty) {
+      var lastChild = childGroups.last;
+      var lastIndex = xmlRoot.indexOf(lastChild);
+      insertIndex = lastIndex + 1;
+    }
+    xmlRoot.insert(insertIndex, newGroupProp);
+
+    var ownInsertIndex = 0;
+    var ownChildGroups = whereType<HapGroupHierarchyEntry>();
+    if (ownChildGroups.isNotEmpty) {
+      var lastChild = ownChildGroups.last;
+      var lastIndex = indexOf(lastChild);
+      ownInsertIndex = lastIndex + 1;
+    }
+
+    var countProp = xmlRoot.get("count")!.value as NumberProp;
+    countProp.value += 1;
+
+    var newGroup = HapGroupHierarchyEntry(newGroupProp.get("name")!.value as StringProp, newGroupProp);
+    insert(ownInsertIndex, newGroup);
+
+    return newGroup;
+  }
+
+  void removeSelf() {
+    var xmlRoot = (prop.file! as XmlFileData).root!;
+    var index = xmlRoot.indexOf(prop);
+    xmlRoot.removeAt(index);
+
+    var countProp = xmlRoot.get("count")!.value as NumberProp;
+    countProp.value -= 1;
+
+    openHierarchyManager.removeAny(this);
+  }
 
   @override
   Undoable takeSnapshot() {
@@ -555,6 +604,16 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
     if (child.isNotEmpty)
       _removeRec(child);
     super.remove(child);
+  }
+
+  void removeAny(HierarchyEntry child) {
+    if (child is FileHierarchyEntry)
+      areasManager.releaseHiddenFile(child.path);
+    if (child == _selectedEntry)
+      selectedEntry = null;
+    if (child.isNotEmpty)
+      _removeRec(child);
+    parentOf(child).remove(child);
   }
 
   void _removeRec(HierarchyEntry entry) {

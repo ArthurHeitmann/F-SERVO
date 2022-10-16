@@ -87,6 +87,18 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
       enableLongPress: false,
       contextMenu: GenericContextMenu(
         buttonConfigs: [
+          if (widget.entry is HapGroupHierarchyEntry)
+            ContextMenuButtonConfig(
+              "New Group",
+              icon: Icon(Icons.add, size: 16,),
+              onPressed: () => (widget.entry as HapGroupHierarchyEntry).addChild(),
+            ),
+          if (widget.entry is HapGroupHierarchyEntry && widget.entry.isEmpty)
+            ContextMenuButtonConfig(
+              "Remove",
+              icon: Icon(Icons.remove, size: 16,),
+              onPressed: () => (widget.entry as HapGroupHierarchyEntry).removeSelf(),
+            ),
           if (openHierarchyManager.contains(widget.entry))
             ContextMenuButtonConfig(
               "Close",

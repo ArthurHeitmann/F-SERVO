@@ -21,7 +21,7 @@ enum _EditorType {
 }
 
 const _editorTypeNames = {
-  _EditorType.none: "",
+  _EditorType.none: "Properties",
   _EditorType.hapGroup: "Group Editor",
   _EditorType.xmlScript: "Script Properties",
 };
@@ -86,7 +86,7 @@ class _FileMetaEditorState extends ChangeNotifierState<FileMetaEditor> {
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
             child: Text(
-              _editorTypeNames[editorType]!,
+              _editorTypeNames[editorType]!.toUpperCase(),
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w300

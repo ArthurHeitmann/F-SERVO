@@ -139,12 +139,16 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
                   constraints: BoxConstraints.loose(Size(150, 150)),
                   child: Opacity(
                     opacity: 0.25,
-                    child: AnimatedScale(
-                      scale: isDroppingFile ? 1.25 : 1.0 * (Random().nextInt(100) == 69 ? -1 : 1), // :)
+                    child: AnimatedRotation(
                       duration: const Duration(milliseconds: 250),
-                      curve: _BezierCurve(0, 1.5, 1.2, 1),
-                      child: Image(
-                        image: AssetImage("assets/logo/pod_alpha.png"),
+                      turns: Random().nextInt(100) == 69 ? 1 : 0,
+                      child: AnimatedScale(
+                        scale: isDroppingFile ? 1.25 : 1.0,
+                        duration: const Duration(milliseconds: 250),
+                        curve: _BezierCurve(0, 1.5, 1.2, 1),
+                        child: Image(
+                          image: AssetImage("assets/logo/pod_alpha.png"),
+                        ),
                       ),
                     ),
                   )
