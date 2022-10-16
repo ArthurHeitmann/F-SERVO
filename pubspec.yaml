@@ -62,7 +62,7 @@ flutter_icons:
   # > flutter pub run flutter_launcher_icons:main
   android: true
   ios: true
-  image_path: "assets/logo/pod.png"
+  image_path: "assets/logo/pod_logo.png"
   web:
     generate: true
   windows:
