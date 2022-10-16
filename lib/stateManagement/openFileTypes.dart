@@ -134,6 +134,12 @@ class TextFileData extends OpenFileData {
   }
 
   @override
+  Future<void> save() async {
+    await File(path).writeAsString(_text);
+    hasUnsavedChanges = false;
+  }
+
+  @override
   Undoable takeSnapshot() {
     var snapshot = TextFileData(_name, _path);
     snapshot._unsavedChanges = _unsavedChanges;
