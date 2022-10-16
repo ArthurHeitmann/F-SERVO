@@ -89,8 +89,14 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
         buttonConfigs: [
           if (widget.entry is HapGroupHierarchyEntry)
             ContextMenuButtonConfig(
+              "New Script",
+              icon: Icon(Icons.description, size: 15,),
+              onPressed: () => openHierarchyManager.addScript(widget.entry, parentPath: (widget.entry as FileHierarchyEntry).path),
+            ),
+          if (widget.entry is HapGroupHierarchyEntry)
+            ContextMenuButtonConfig(
               "New Group",
-              icon: Icon(Icons.add, size: 16,),
+              icon: Icon(Icons.workspaces, size: 15,),
               onPressed: () => (widget.entry as HapGroupHierarchyEntry).addChild(),
             ),
           if (widget.entry is HapGroupHierarchyEntry && widget.entry.isEmpty)

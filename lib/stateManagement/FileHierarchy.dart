@@ -7,6 +7,7 @@ import 'package:xml/xml.dart';
 import '../fileTypeUtils/dat/datExtractor.dart';
 import '../fileTypeUtils/yax/yaxToXml.dart';
 import '../utils.dart';
+import '../widgets/propEditors/xmlActions/XmlActionPresets.dart';
 import 'Property.dart';
 import 'nestedNotifier.dart';
 import '../fileTypeUtils/pak/pakExtractor.dart';
@@ -269,7 +270,7 @@ class HapGroupHierarchyEntry extends FileHierarchyEntry {
   
   HapGroupHierarchyEntry(StringProp name, this.prop)
     : id = (prop.get("id")!.value as HexProp).value,
-    super(name, "", 5, true, false);
+    super(name, path.dirname(prop.file?.path ?? ""), 5, true, false);
   
   HapGroupHierarchyEntry addChild({ String name = "New Group" }) {
     var newGroupProp = XmlProp.fromXml(
@@ -625,6 +626,49 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
       if (child.isNotEmpty)
         _removeRec(child);
     }
+  }
+
+  Future<XmlScriptHierarchyEntry> addScript(HierarchyEntry parent, { String? filePath, String? parentPath }) async {
+    if (filePath == null) {
+      assert(parentPath != null);
+      var pakFiles = await getPakInfoData(parentPath!);
+      var newFileName = "${pakFiles.length}.xml";
+      filePath = path.join(parentPath, newFileName);
+    }
+
+    // create file
+    var dummyProp = XmlProp(file: null, tagId: 0, parentTags: []);
+    var content = XmlProp.fromXml(
+      makeXmlElement(name: "root", children: [
+        makeXmlElement(name: "name", text: "New Script"),
+        makeXmlElement(name: "id", text: "0x${randomId().toRadixString(16)}"),
+        if (parent is HapGroupHierarchyEntry)
+          makeXmlElement(name: "group", text: "0x${parent.id.toRadixString(16)}"),
+        makeXmlElement(name: "size", text: "1"),
+        (XmlActionPresets.sendCommand.withCxtV(dummyProp).prop() as XmlProp).toXml(),
+      ]),
+      parentTags: []
+    );
+    var file = File(filePath);
+    await file.create(recursive: true);
+    var doc = XmlDocument();
+    doc.children.add(XmlDeclaration([XmlAttribute(XmlName("version"), "1.0"), XmlAttribute(XmlName("encoding"), "utf-8")]));
+    doc.children.add(content.toXml());
+    var xmlStr = "${doc.toXmlString(pretty: true, indent: '\t')}\n";
+    await file.writeAsString(xmlStr);
+    // TODO xml to yax
+    
+    // add file to pakInfo.json
+    var yaxPath = "${filePath.substring(0, filePath.length - 4)}.yax";
+    await addPakInfoFileData(yaxPath, 3);
+
+    // add to hierarchy
+    var entry = XmlScriptHierarchyEntry(StringProp("New Script"), filePath);
+    parent.add(entry);
+
+    showToast("Remember to check the \"pak file type\"");
+
+    return entry;
   }
 
   void expandAll() {

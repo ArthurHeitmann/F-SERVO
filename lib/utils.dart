@@ -318,6 +318,14 @@ Key makeReferenceKey(Key key) {
   return key;
 }
 
+Future<List<dynamic>> getPakInfoData(String dir) async {
+  var pakInfoPath = join(dir, "pakInfo.json");
+  if (!await File(pakInfoPath).exists())
+    return [];
+  Map pakInfoJson = jsonDecode(await File(pakInfoPath).readAsString());
+  return pakInfoJson["files"];
+}
+
 Future<dynamic> getPakInfoFileData(String path) async {
   var pakInfoPath = join(dirname(path), "pakInfo.json");
   if (!await File(pakInfoPath).exists())
@@ -342,5 +350,32 @@ Future<void> updatePakInfoFileData(String path, void Function(dynamic data) upda
   if (fileInfoIndex == -1)
     return;
   updater(pakInfoJson["files"][fileInfoIndex]);
+  await File(pakInfoPath).writeAsString(JsonEncoder.withIndent("\t").convert(pakInfoJson));
+}
+
+Future<void> addPakInfoFileData(String path, int type) async {
+  var pakInfoPath = join(dirname(path), "pakInfo.json");
+  if (!await File(pakInfoPath).exists())
+    return;
+  Map pakInfoJson = jsonDecode(await File(pakInfoPath).readAsString());
+  var yaxName = "${basenameWithoutExtension(path)}.yax";
+  (pakInfoJson["files"] as List).add({
+    "name": yaxName,
+    "type": type,
+  });
+  await File(pakInfoPath).writeAsString(JsonEncoder.withIndent("\t").convert(pakInfoJson));
+}
+
+Future<void> removePakInfoFileData(String path) async {
+  var pakInfoPath = join(dirname(path), "pakInfo.json");
+  if (!await File(pakInfoPath).exists())
+    return;
+  Map pakInfoJson = jsonDecode(await File(pakInfoPath).readAsString());
+  var yaxName = "${basenameWithoutExtension(path)}.yax";
+  var fileInfoIndex = (pakInfoJson["files"] as List)
+    .indexWhere((file) => file["name"] == yaxName);
+  if (fileInfoIndex == -1)
+    return;
+  (pakInfoJson["files"] as List).removeAt(fileInfoIndex);
   await File(pakInfoPath).writeAsString(JsonEncoder.withIndent("\t").convert(pakInfoJson));
 }
