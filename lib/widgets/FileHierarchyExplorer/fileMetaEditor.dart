@@ -1,8 +1,11 @@
 
 import 'package:flutter/material.dart';
 
+import '../../customTheme.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/FileHierarchy.dart';
+import '../../stateManagement/openFileTypes.dart';
+import '../../stateManagement/openFilesManager.dart';
 import '../../stateManagement/xmlProps/xmlProp.dart';
 import '../../utils.dart';
 import '../misc/SmoothSingleChildScrollView.dart';
@@ -11,20 +14,51 @@ import '../propEditors/simpleProps/XmlPropEditorFactory.dart';
 import '../propEditors/simpleProps/propEditorFactory.dart';
 import '../propEditors/xmlActions/xmlArrayEditor.dart';
 
-class GroupEditor extends ChangeNotifierWidget {
-  GroupEditor({super.key}) : super(notifier: openHierarchyManager);
-
-  @override
-  State<GroupEditor> createState() => _GroupEditorState();
+enum _EditorType {
+  none,
+  hapGroup,
+  xmlScript,
 }
 
-class _GroupEditorState extends ChangeNotifierState<GroupEditor> {
+const _editorTypeNames = {
+  _EditorType.none: "",
+  _EditorType.hapGroup: "Group Editor",
+  _EditorType.xmlScript: "Script Properties",
+};
+
+class FileMetaEditor extends ChangeNotifierWidget {
+  FileMetaEditor({super.key}) : super(notifier: openHierarchyManager);
+
+  @override
+  State<FileMetaEditor> createState() => _FileMetaEditorState();
+}
+
+class _FileMetaEditorState extends ChangeNotifierState<FileMetaEditor> {
+  _EditorType get editorType {
+    var file = openHierarchyManager.selectedEntry;
+    if (file == null)
+      return _EditorType.none;
+    if (file is HapGroupHierarchyEntry)
+      return _EditorType.hapGroup;
+    if (file is XmlScriptHierarchyEntry)
+      return _EditorType.xmlScript;
+    return _EditorType.none;
+  }
+
+  Widget Function(HierarchyEntry) getEditor() {
+    switch (editorType) {
+      case _EditorType.hapGroup:
+        return makeGroupEditor;
+      case _EditorType.xmlScript:
+        return makeXmlScriptEditor;
+      default:
+        return makeFallback;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     var entry = openHierarchyManager.selectedEntry;
-    HapGroupHierarchyEntry? groupEntry;
-    if (entry is HapGroupHierarchyEntry)
-      groupEntry = entry;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -37,7 +71,7 @@ class _GroupEditorState extends ChangeNotifierState<GroupEditor> {
             controller: ScrollController(),
             child: Padding(
               padding: const EdgeInsets.all(8.0),
-              child: groupEntry != null ? makeGroupEditor(groupEntry) : makeFallback(),
+              child: entry != null ? getEditor()(entry) : makeFallback(null),
             ),
           ),
         ),
@@ -51,7 +85,8 @@ class _GroupEditorState extends ChangeNotifierState<GroupEditor> {
         Expanded(
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
-            child: Text("GROUP EDITOR", 
+            child: Text(
+              _editorTypeNames[editorType]!,
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w300
@@ -68,7 +103,9 @@ class _GroupEditorState extends ChangeNotifierState<GroupEditor> {
     );
   }
 
-  Widget makeGroupEditor(HapGroupHierarchyEntry groupEntry) {
+  Widget makeGroupEditor(HierarchyEntry groupEntry) {
+    if (groupEntry is! HapGroupHierarchyEntry)
+      throw Exception(":/");
     return ChangeNotifierBuilder(
       notifier: groupEntry.prop,
       builder: (context) {
@@ -115,10 +152,49 @@ class _GroupEditorState extends ChangeNotifierState<GroupEditor> {
     );
   }
 
-  Widget makeFallback() {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Text("No group selected"),
+  Widget makeXmlScriptEditor(HierarchyEntry scriptEntry) {
+    if (scriptEntry is! XmlScriptHierarchyEntry)
+      throw Exception(":/");
+    
+    var fileData = areasManager.openFileAsHidden(scriptEntry.path);
+
+    return ChangeNotifierBuilder(
+      notifier: fileData,
+      builder: (context) {
+        if (fileData.loadingState == LoadingState.notLoaded || fileData is! XmlFileData) {
+          fileData.load();
+          return Container();
+        }
+
+        var xml = fileData.root!;
+        var id = xml.get("id");
+        var name = xml.get("name");
+        var pakType = fileData.pakType;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (name != null)
+              makeXmlPropEditor(name, true),
+            if (id != null)
+              makeXmlPropEditor(id, true),
+            if (pakType != null)
+              Row(
+                children: [
+                  Text("pak file type", style: getTheme(context).propInputTextStyle,),
+                  SizedBox(width: 10),
+                  Flexible(
+                    child: makePropEditor(pakType),
+                  ),
+                ],
+              )
+          ],
+        );
+      },
     );
+  }
+
+  Widget makeFallback(_) {
+    return Container();
   }
 }

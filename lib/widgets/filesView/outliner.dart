@@ -9,7 +9,6 @@ import '../../stateManagement/xmlProps/xmlActionProp.dart';
 import '../../stateManagement/xmlProps/xmlProp.dart';
 import '../../utils.dart';
 import '../misc/SmoothSingleChildScrollView.dart';
-import '../propEditors/simpleProps/propEditorFactory.dart';
 import '../propEditors/xmlActions/XmlActionEditor.dart';
 import 'FileType.dart';
 
@@ -83,26 +82,12 @@ class _OutlinerState extends ChangeNotifierState<Outliner> {
 
   Widget makeOutliner() {
     var xmlProp = (areasManager.activeArea!.currentFile! as XmlFileData).root!;
-    var nameProp = xmlProp.get("name");
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (nameProp != null)
-          Container(
-            padding: const EdgeInsets.only(left: 6, right: 6, top: 3),
-            child: Row(
-              children: [
-                Text("Name:"),
-                SizedBox(width: 10,),
-                Expanded(child: makePropEditor(nameProp.value)),
-              ],
-            ),
-          ),
-        ...xmlProp
-          .whereType<XmlActionProp>()
-          .map((e) => _OutlinerEntry(action: e))
-          .toList()
-      ],
+      children: xmlProp
+        .whereType<XmlActionProp>()
+        .map((e) => _OutlinerEntry(action: e))
+        .toList(),
     );
   }
 }

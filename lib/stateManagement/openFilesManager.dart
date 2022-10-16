@@ -276,10 +276,20 @@ class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
   }
 
   OpenFileData openFileAsHidden(String filePath, { String? secondaryName }) {
+    if (isFileOpened(filePath)) {
+      return getFile(filePath)!;
+    }
     OpenFileData file = OpenFileData.from(path.basename(filePath), filePath, secondaryName: secondaryName);
     file.keepOpenAsHidden = true;
     hiddenArea.add(file);
     return file;
+  }
+
+  void releaseHiddenFile(String filePath) {
+    var file = hiddenArea.where((file) => file.path == filePath);
+    if (file.isNotEmpty) {
+      hiddenArea.remove(file.first);
+    }
   }
 
   Future<void> openPreferences() async {

@@ -22,6 +22,7 @@ class HierarchyEntry extends NestedNotifier<HierarchyEntry> with Undoable {
   StringProp name;
   final bool isSelectable;
   bool _isSelected = false;
+  bool get isSelected => _isSelected;
   final bool isCollapsible;
   bool _isCollapsed = false;
   final bool isOpenable;
@@ -30,7 +31,12 @@ class HierarchyEntry extends NestedNotifier<HierarchyEntry> with Undoable {
   HierarchyEntry(this.name, this.priority, this.isSelectable, this.isCollapsible, this.isOpenable)
     : super([]);
 
-  bool get isSelected => _isSelected;
+  @override
+  void dispose() {
+    name.dispose();
+    super.dispose();
+  }
+
 
   set isSelected(bool value) {
     if (value == _isSelected) return;
@@ -538,6 +544,28 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
       add(entry);
     
     return entry;
+  }
+
+  @override
+  void remove(HierarchyEntry child) {
+    if (child is FileHierarchyEntry)
+      areasManager.releaseHiddenFile(child.path);
+    if (child == _selectedEntry)
+      selectedEntry = null;
+    if (child.isNotEmpty)
+      _removeRec(child);
+    super.remove(child);
+  }
+
+  void _removeRec(HierarchyEntry entry) {
+    for (var child in entry) {
+      if (child is FileHierarchyEntry)
+        areasManager.releaseHiddenFile(child.path);
+      if (child == _selectedEntry)
+        selectedEntry = null;
+      if (child.isNotEmpty)
+        _removeRec(child);
+    }
   }
 
   void expandAll() {

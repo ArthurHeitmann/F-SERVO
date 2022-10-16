@@ -10,6 +10,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:path/path.dart';
 import 'package:uuid/uuid.dart';
 import 'package:path/path.dart' as path;
 import 'package:xml/xml.dart';
@@ -315,4 +316,31 @@ Key makeReferenceKey(Key key) {
   if (key is GlobalKey || key is UniqueKey)
     return ValueKey(key);
   return key;
+}
+
+Future<dynamic> getPakInfoFileData(String path) async {
+  var pakInfoPath = join(dirname(path), "pakInfo.json");
+  if (!await File(pakInfoPath).exists())
+    return null;
+  Map pakInfoJson = jsonDecode(await File(pakInfoPath).readAsString());
+  var yaxName = "${basenameWithoutExtension(path)}.yax";
+  var fileInfoIndex = (pakInfoJson["files"] as List)
+    .indexWhere((file) => file["name"] == yaxName);
+  if (fileInfoIndex == -1)
+    return null;
+  return pakInfoJson["files"][fileInfoIndex];
+}
+
+Future<void> updatePakInfoFileData(String path, void Function(dynamic data) updater) async {
+  var pakInfoPath = join(dirname(path), "pakInfo.json");
+  if (!await File(pakInfoPath).exists())
+    return;
+  Map pakInfoJson = jsonDecode(await File(pakInfoPath).readAsString());
+  var yaxName = "${basenameWithoutExtension(path)}.yax";
+  var fileInfoIndex = (pakInfoJson["files"] as List)
+    .indexWhere((file) => file["name"] == yaxName);
+  if (fileInfoIndex == -1)
+    return;
+  updater(pakInfoJson["files"][fileInfoIndex]);
+  await File(pakInfoPath).writeAsString(JsonEncoder.withIndent("\t").convert(pakInfoJson));
 }

@@ -4,12 +4,20 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:xml/xml.dart';
 
+import '../utils.dart';
 import '../widgets/filesView/FileType.dart';
 import 'FileHierarchy.dart';
+import 'Property.dart';
 import 'hasUuid.dart';
 import 'miscValues.dart';
 import 'undoable.dart';
 import 'xmlProps/xmlProp.dart';
+
+enum LoadingState {
+  notLoaded,
+  loading,
+  loaded,
+}
 
 class OpenFileData extends ChangeNotifier with Undoable, HasUuid {
   late final FileType type;
@@ -17,7 +25,8 @@ class OpenFileData extends ChangeNotifier with Undoable, HasUuid {
   String? _secondaryName;
   String _path;
   bool _unsavedChanges = false;
-  bool _isLoaded = false;
+  LoadingState _loadingState = LoadingState.notLoaded;
+  LoadingState get loadingState => _loadingState;
   bool keepOpenAsHidden = false;
   final ChangeNotifier contentNotifier = ChangeNotifier();
   final ScrollController scrollController = ScrollController();
@@ -70,7 +79,7 @@ class OpenFileData extends ChangeNotifier with Undoable, HasUuid {
   }
 
   Future<void> load() async {
-    _isLoaded = true;
+    _loadingState = LoadingState.loaded;
   }
 
   Future<void> save() async {
@@ -87,7 +96,7 @@ void dispose() {
   Undoable takeSnapshot() {
     var content = OpenFileData(_name, _path);
     content._unsavedChanges = _unsavedChanges;
-    content._isLoaded = _isLoaded;
+    content._loadingState = _loadingState;
     content.overrideUuidForUndoable(uuid);
     return content;
   }
@@ -116,9 +125,11 @@ class TextFileData extends OpenFileData {
 
   @override
   Future<void> load() async {
-    if (_isLoaded) return;
+    if (_loadingState != LoadingState.notLoaded)
+      return;
+    _loadingState = LoadingState.loading;
     _text = await File(path).readAsString();
-    _isLoaded = true;
+    _loadingState = LoadingState.loaded;
     notifyListeners();
   }
 
@@ -126,7 +137,7 @@ class TextFileData extends OpenFileData {
   Undoable takeSnapshot() {
     var snapshot = TextFileData(_name, _path);
     snapshot._unsavedChanges = _unsavedChanges;
-    snapshot._isLoaded = _isLoaded;
+    snapshot._loadingState = _loadingState;
     snapshot._text = _text;
     snapshot.overrideUuidForUndoable(uuid);
     return snapshot;
@@ -144,11 +155,11 @@ class TextFileData extends OpenFileData {
 
 class XmlFileData extends OpenFileData {
   XmlProp? _root;
+  XmlProp? get root => _root;
+  NumberProp? pakType;
 
   XmlFileData(super.name, super.path, { super.secondaryName });
 
-  XmlProp? get root => _root;
-  
   void _onNameChange() {
     var xmlName = _root!.get("name")!.value.toString();
 
@@ -162,7 +173,9 @@ class XmlFileData extends OpenFileData {
 
   @override
   Future<void> load() async {
-    if (_isLoaded) return;
+    if (_loadingState != LoadingState.notLoaded)
+      return;
+    _loadingState = LoadingState.loading;
     var text = await File(path).readAsString();
     var doc = XmlDocument.parse(text);
     _root = XmlProp.fromXml(doc.firstElementChild!, file: this, parentTags: []);
@@ -172,8 +185,19 @@ class XmlFileData extends OpenFileData {
       nameProp.value.addListener(_onNameChange);
       secondaryName = nameProp.value.toString();
     }
-    _isLoaded = true;
+    
+    var pakInfoFileData = await getPakInfoFileData(path);
+    if (pakInfoFileData != null) {
+      pakType = NumberProp(pakInfoFileData["type"], true);
+      pakType!.addListener(updatePakType);
+    }
+
+    _loadingState = LoadingState.loaded;
     notifyListeners();
+  }
+
+  Future<void> updatePakType() async {
+    await updatePakInfoFileData(path, (fileData) => fileData["type"] = pakType!.value.toInt());
   }
 
   @override
@@ -195,6 +219,8 @@ class XmlFileData extends OpenFileData {
     _root?.removeListener(notifyListeners);
     _root?.dispose();
     _root?.get("name")?.value.removeListener(_onNameChange);
+    pakType?.removeListener(updatePakType);
+    pakType?.dispose();
     super.dispose();
   }
 
@@ -202,7 +228,7 @@ class XmlFileData extends OpenFileData {
   Undoable takeSnapshot() {
     var snapshot = XmlFileData(_name, _path);
     snapshot._unsavedChanges = _unsavedChanges;
-    snapshot._isLoaded = _isLoaded;
+    snapshot._loadingState = _loadingState;
     snapshot._root = _root != null ? _root!.takeSnapshot() as XmlProp : null;
     snapshot.overrideUuidForUndoable(uuid);
     return snapshot;
