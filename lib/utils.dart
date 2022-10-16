@@ -379,3 +379,7 @@ Future<void> removePakInfoFileData(String path) async {
   (pakInfoJson["files"] as List).removeAt(fileInfoIndex);
   await File(pakInfoPath).writeAsString(JsonEncoder.withIndent("\t").convert(pakInfoJson));
 }
+
+bool isStringAscii(String s) {
+  return utf8.encode(s).every((byte) => byte < 128);
+}

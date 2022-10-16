@@ -1,16 +1,12 @@
 
-import 'dart:convert';
 import 'dart:io';
 import 'package:path/path.dart' as path;
 import 'package:xml/xml.dart';
 
+import '../../utils.dart';
 import 'hashToStringMap.dart';
 import 'japToEng.dart';
 import '../utils/ByteDataWrapper.dart';
-
-bool isStringAscii(String s) {
-  return utf8.encode(s).every((byte) => byte < 128);
-}
 
 /*
 struct XmlNode {
@@ -19,15 +15,15 @@ struct XmlNode {
 	uint32 stringOffset;
 };
 */
-class YaxNode {
+class _YaxNode {
   late int indentation;
   late int tagNameHash;
   late int stringOffset;
   late String tagName;
   String? text;
-  List<YaxNode> children = [];
+  List<_YaxNode> children = [];
 
-  YaxNode(ByteDataWrapper bytes) {
+  _YaxNode(ByteDataWrapper bytes) {
     indentation = bytes.readUint8();
     tagNameHash = bytes.readUint32();
     stringOffset = bytes.readUint32();
@@ -66,7 +62,7 @@ class YaxNode {
 
 XmlElement yaxToXml(ByteDataWrapper bytes, { includeAnnotations = true }) {
   int nodeCount = bytes.readUint32();
-  var nodes = List<YaxNode>.generate(nodeCount, (index) => YaxNode(bytes));
+  var nodes = List<_YaxNode>.generate(nodeCount, (index) => _YaxNode(bytes));
 
   Map<int, String> strings = {};
   while (bytes.position < bytes.length)
@@ -76,7 +72,7 @@ XmlElement yaxToXml(ByteDataWrapper bytes, { includeAnnotations = true }) {
     node.text = strings[node.stringOffset];
 
   // assemble tree from indents
-  List<YaxNode> root = [];
+  List<_YaxNode> root = [];
   for (var node in nodes) {
     if (node.indentation == 0) {
       root.add(node);

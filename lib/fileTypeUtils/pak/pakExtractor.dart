@@ -16,19 +16,19 @@ struct HeaderEntry
 	uint32 offset;
 };
  */
-class HeaderEntry {
+class _HeaderEntry {
   late int type;
   late int uncompressedSize;
   late int offset;
 
-  HeaderEntry(ByteDataWrapper bytes) {
+  _HeaderEntry(ByteDataWrapper bytes) {
     type = bytes.readUint32();
     uncompressedSize = bytes.readUint32();
     offset = bytes.readUint32();
   }
 }
 
-Future<void> _extractPakYax(HeaderEntry meta, int size, ByteDataWrapper bytes, String extractDir, int index) async {
+Future<void> _extractPakYax(_HeaderEntry meta, int size, ByteDataWrapper bytes, String extractDir, int index) async {
   bytes.position = meta.offset;
   bool isCompressed = meta.uncompressedSize > size;
   int readSize;
@@ -60,7 +60,7 @@ Future<List<String>> extractPakFiles(String pakPath, { bool yaxToXml = false }) 
   var fileCount = (firstOffset - 4) ~/ 12;
 
   bytes.position = 0;
-  var headerEntries = List<HeaderEntry>.generate(fileCount, (index) => HeaderEntry(bytes));
+  var headerEntries = List<_HeaderEntry>.generate(fileCount, (index) => _HeaderEntry(bytes));
 
   // calculate file sizes from offsets
   List<int> fileSizes = List<int>.generate(fileCount, (index) =>
@@ -110,7 +110,7 @@ Stream<ExtractedInnerFile> extractPakBytesAsStream(String pakPath, ByteDataWrapp
   var fileCount = (firstOffset - 4) ~/ 12;
 
   bytes.position = 0;
-  var headerEntries = List<HeaderEntry>.generate(fileCount, (index) => HeaderEntry(bytes));
+  var headerEntries = List<_HeaderEntry>.generate(fileCount, (index) => _HeaderEntry(bytes));
 
   // calculate file sizes from offsets
   List<int> fileSizes = List<int>.generate(fileCount, (index) =>

@@ -1,4 +1,5 @@
 
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:euc/jis.dart';
@@ -143,20 +144,9 @@ class ByteDataWrapper {
     return List<int>.generate(length, (_) => readUint64());
   }
 
-  String _decode(List<int> bytes, StringEncoding encoding) {
-    switch (encoding) {
-      case StringEncoding.utf8:
-        return String.fromCharCodes(bytes);
-      case StringEncoding.utf16:
-        return String.fromCharCodes(bytes); // TODO check if actually works
-      case StringEncoding.shiftJis:
-        return ShiftJIS().decode(bytes);
-    }
-  }
-
   String readString(int length, {StringEncoding encoding = StringEncoding.utf8}) {
     var bytes = readUint8List(length);
-    return _decode(bytes, encoding);
+    return decodeString(bytes, encoding);
   }
 
   String readStringZeroTerminated({StringEncoding encoding = StringEncoding.utf8}) {
@@ -167,7 +157,7 @@ class ByteDataWrapper {
       if (byte == 0) break;
       bytes.add(byte);
     }
-    return _decode(bytes, encoding);
+    return decodeString(bytes, encoding);
   }
 
   ByteDataWrapper makeSubView(int length) {
@@ -224,12 +214,18 @@ class ByteDataWrapper {
     _position += 8;
   }
 
-  void writeString(String value) {
-    var bytes = value.codeUnits;
+  void writeString(String value, [StringEncoding encoding = StringEncoding.utf8]) {
+    var bytes = encodeString(value, encoding);
     for (var byte in bytes) {
       _data.setUint8(_position, byte);
       _position += 1;
     }
+  }
+
+  void writeString0P(String value, [StringEncoding encoding = StringEncoding.utf8]) {
+    writeString(value, encoding);
+    _data.setUint8(_position, 0);
+    _position += 1;
   }
 
   void writeBytes(List<int> value) {
@@ -237,5 +233,27 @@ class ByteDataWrapper {
       _data.setUint8(_position, byte);
       _position += 1;
     }
+  }
+}
+
+String decodeString(List<int> bytes, StringEncoding encoding) {
+  switch (encoding) {
+    case StringEncoding.utf8:
+      return String.fromCharCodes(bytes);
+    case StringEncoding.utf16:
+      return String.fromCharCodes(bytes); // TODO check if actually works
+    case StringEncoding.shiftJis:
+      return ShiftJIS().decode(bytes);
+  }
+}
+
+List<int> encodeString(String value, StringEncoding encoding) {
+  switch (encoding) {
+    case StringEncoding.utf8:
+      return utf8.encode(value);
+    case StringEncoding.utf16:
+      return value.codeUnits; // TODO check if actually works
+    case StringEncoding.shiftJis:
+      return ShiftJIS().encode(value);
   }
 }
