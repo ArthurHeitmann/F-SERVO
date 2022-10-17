@@ -383,3 +383,38 @@ Future<void> removePakInfoFileData(String path) async {
 bool isStringAscii(String s) {
   return utf8.encode(s).every((byte) => byte < 128);
 }
+
+
+const _basicFolders = { "ba", "bg", "bh", "em", "et", "it", "pl", "ui", "um", "wp" };
+const Map<String, String> _nameStartToFolder = {
+  "q": "quest",
+  "core": "core",
+  "credit": "credit",
+  "Debug": "debug",
+  "font": "font",
+  "misctex": "misctex",
+  "subtitle": "subtitle",
+  "txt": "txtmess",
+};
+String getDatFolder(String datName) {
+  var c2 = datName.substring(0, 2);
+  if (_basicFolders.contains(c2))
+    return c2;
+  var c1 = datName[0];
+  if (c1 == "r")
+    return "st${datName[1]}";
+  if (c1 == "p")
+    return "ph${datName[1]}";
+  if (c1 == "g")
+    return "wd${datName[1]}";
+  
+  for (var start in _nameStartToFolder.keys) {
+    if (datName.startsWith(start))
+      return _nameStartToFolder[start]!;
+  }
+
+  if (isInt(c2))
+    return path.join("effect", "model");
+  
+  return path.withoutExtension(datName);
+}

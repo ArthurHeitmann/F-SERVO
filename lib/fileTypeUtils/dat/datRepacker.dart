@@ -47,6 +47,7 @@ Future<List<String>> _getDatFileListFromMetadata(String metadataPath) async {
 
 Future<void> repackDat(String datDir, String exportPath) async {
   var fileList = await getDatFileList(datDir);
+  fileList = fileList.map((fileName) => path.join(datDir, fileName)).toList();
   var fileNames = fileList.map((e) => path.basename(e)).toList();
   var fileSizes = (await Future.wait(fileList.map((e) => File(e).length()))).toList();
   var fileNumber = fileList.length;
@@ -90,6 +91,7 @@ Future<void> repackDat(String datDir, String exportPath) async {
   // WRITE
   // Header
   var datFile = File(exportPath);
+  await Directory(path.dirname(exportPath)).create(recursive: true);
   var datSize = fileOffsets.last + fileSizes.last + 1;
   var datBytes = ByteDataWrapper(ByteData(datSize).buffer);
   datBytes.writeString0P(fileID);

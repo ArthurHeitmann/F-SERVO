@@ -8,6 +8,7 @@ import '../utils.dart';
 import '../widgets/filesView/FileType.dart';
 import 'FileHierarchy.dart';
 import 'Property.dart';
+import 'changesExporter.dart';
 import 'hasUuid.dart';
 import 'miscValues.dart';
 import 'undoable.dart';
@@ -218,6 +219,7 @@ class XmlFileData extends OpenFileData {
     var xmlStr = "${doc.toXmlString(pretty: true, indent: '\t')}\n";
     await File(path).writeAsString(xmlStr);
     await super.save();
+    changedXmlFiles.add(this);
   }
 
   @override

@@ -102,8 +102,8 @@ class XmlActionPresets {
             makeXmlElement(name: "state", children: [
               makeXmlElement(name: "label", text: "conditionLabel"),
             ]),
+            makeXmlElement(name: "pred", text: "0"),
           ]),
-          makeXmlElement(name: "pred", text: "0"),
         ]),
         makeXmlElement(name: "delay", text: "0"),
         makeXmlElement(name: "bDisable", text: "0"),
@@ -116,7 +116,6 @@ class XmlActionPresets {
     XmlActionPresets.action.editor,
     (cxt) => XmlProp.fromXml(
       _makeAction("EntityLayoutAction", [
-        _makePuid(),
         makeXmlElement(name: "layouts", children: [
           _makeLayout("normal", flags: 0),
           _makeLayout("hard", flags: 1),
@@ -132,7 +131,6 @@ class XmlActionPresets {
     XmlActionPresets.action.editor,
     (cxt) => XmlProp.fromXml(
       _makeAction("EntityLayoutArea", [
-        _makePuid(),
         makeXmlElement(name: "layouts", children: [
           _makeLayout("normal", flags: 0),
           _makeLayout("hard", flags: 1),
@@ -156,7 +154,6 @@ class XmlActionPresets {
     XmlActionPresets.action.editor,
     (cxt) => XmlProp.fromXml(
       _makeAction("EnemySetAction", [
-        _makePuid(),
         makeXmlElement(name: "layouts", children: [
           _makeLayout("normal", flags: 0),
           _makeLayout("hard", flags: 1),
@@ -180,7 +177,6 @@ class XmlActionPresets {
     XmlActionPresets.action.editor,
     (cxt) => XmlProp.fromXml(
       _makeAction("EnemySetArea", [
-        _makePuid(),
         makeXmlElement(name: "layouts", children: [
           _makeLayout("normal", flags: 0),
           _makeLayout("hard", flags: 1),

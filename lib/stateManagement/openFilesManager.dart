@@ -3,10 +3,12 @@ import 'package:path/path.dart' as path;
 
 import '../main.dart';
 import '../widgets/misc/confirmCancelDialog.dart';
+import 'changesExporter.dart';
 import 'miscValues.dart';
 import 'nestedNotifier.dart';
 import 'openFileTypes.dart';
 import 'preferencesData.dart';
+import 'statusInfo.dart';
 import 'undoable.dart';
 
 class FilesAreaManager extends NestedNotifier<OpenFileData> implements Undoable {
@@ -341,11 +343,17 @@ class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
   }
   
   Future<void> saveAll() async {
-    await Future.wait([
-      ...map((area) => area.saveAll()),
-      hiddenArea.saveAll()
-    ]);
-    onSaveAll.notifyListeners();
+    isLoadingStatus.pushIsLoading();
+    try {
+      await Future.wait([
+        ...map((area) => area.saveAll()),
+        hiddenArea.saveAll()
+      ]);
+      onSaveAll.notifyListeners();
+      await processChangedXmlFiles();
+    } finally {
+      isLoadingStatus.popIsLoading();
+    }
   }
 
   @override

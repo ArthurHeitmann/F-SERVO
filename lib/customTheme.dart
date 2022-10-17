@@ -225,6 +225,7 @@ class NierDarkThemeExtension extends NierThemeExtension {
       popupMenuTheme: PopupMenuThemeData(
         color: Color.fromARGB(255, 25, 25, 25),
       ),
+      toggleableActiveColor: Color.fromARGB(255, 228, 162, 21),
     );
   } 
 }

@@ -7,12 +7,50 @@ import 'nestedNotifier.dart';
 import 'openFileTypes.dart';
 import 'undoable.dart';
 
+class SavableProp<T> extends ValueProp<T> {
+  final String key;
+
+  SavableProp(this.key, SharedPreferences prefs, T fallback)
+    : super(prefs.get(key) as T? ?? fallback) {
+    addListener(saveChanges);
+  }
+  
+  void saveChanges() {
+    var prefs = PreferencesData()._prefs!;
+    if (T == String)
+      prefs.setString(key, value as String);
+    else if (T == int)
+      prefs.setInt(key, value as int);
+    else if (T == double)
+      prefs.setDouble(key, value as double);
+    else if (T == bool)
+      prefs.setBool(key, value as bool);
+    else if (T == List<String>)
+      prefs.setStringList(key, value as List<String>);
+    else
+      throw Exception("Unsupported type: $T");
+  }
+  
+  @override
+  PropType get type => throw UnimplementedError();
+  @override
+  Undoable takeSnapshot() => this;
+  @override
+  void updateWith(String str) {
+  }
+
+}
+
 class PreferencesData extends OpenFileData {
   static PreferencesData? _instance;
   Future<SharedPreferences> prefsFuture;
   SharedPreferences? _prefs;
 
   IndexingPathsProp? indexingPaths;
+  SavableProp<String>? dataExportPath;
+  SavableProp<bool>? exportDats;
+  SavableProp<bool>? exportPaks;
+  SavableProp<bool>? convertXmls;
 
   PreferencesData._() 
     : prefsFuture = SharedPreferences.getInstance(),
@@ -41,6 +79,11 @@ class PreferencesData extends OpenFileData {
       await indexingPaths!.clearPaths();
       await indexingPaths!.addPaths(paths);
     }
+
+    dataExportPath = SavableProp<String>("dataExportPath", _prefs!, "");
+    exportDats = SavableProp<bool>("exportDat", _prefs!, true);
+    exportPaks = SavableProp<bool>("exportPak", _prefs!, true);
+    convertXmls = SavableProp<bool>("convertXml", _prefs!, true);
 
     await super.load();
   }

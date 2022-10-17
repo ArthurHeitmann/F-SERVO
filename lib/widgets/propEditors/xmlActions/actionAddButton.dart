@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
 import '../../misc/showOnHover.dart';
 import 'XmlActionPresets.dart';
@@ -46,6 +47,8 @@ class ActionAddButton extends StatelessWidget {
                           var sizeIndex = parent.indexWhere((ch) => ch.tagName == "size");
                           parent.insert(index + sizeIndex + 1, newProp);
                         }
+                        var sizeProp = parent.get("size")!.value as NumberProp;
+                        sizeProp.value += 1;
                       },
                       icon: Icon(Icons.add),
                     ),
