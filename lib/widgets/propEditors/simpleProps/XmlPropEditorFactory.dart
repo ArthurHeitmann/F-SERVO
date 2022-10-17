@@ -152,7 +152,7 @@ class XmlPresets {
         children: [
           makeXmlElement(name: "name", text: "paramName"),
           makeXmlElement(name: "code", text: "0x${crc32("type").toRadixString(16)}"),
-          makeXmlElement(name: "body", text: "0"),
+          makeXmlElement(name: "body", text: "value"),
         ]
       ),
       file: cxt.file,

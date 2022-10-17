@@ -2,6 +2,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:path/path.dart';
 import 'package:xml/xml.dart';
 
 import '../utils.dart';
@@ -205,6 +206,10 @@ class XmlFileData extends OpenFileData {
 
   Future<void> updatePakType() async {
     await updatePakInfoFileData(path, (fileData) => fileData["type"] = pakType!.value.toInt());
+    
+    var pakDir = dirname(path);
+    changedPakFiles.add(pakDir);
+    await processChangedFiles();
   }
 
   @override

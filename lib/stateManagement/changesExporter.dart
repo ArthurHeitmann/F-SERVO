@@ -1,6 +1,5 @@
 
 import 'dart:io';
-
 import 'package:path/path.dart';
 
 import '../fileTypeUtils/dat/datRepacker.dart';
@@ -11,13 +10,16 @@ import 'openFileTypes.dart';
 import 'preferencesData.dart';
 
 List<XmlFileData> changedXmlFiles = [];
+Set<String> changedPakFiles = {};
+Set<String> changedDatFiles = {};
 
 /// Convert changed files to YAX and repack PAK & DAT files
-Future<void> processChangedXmlFiles() async {
+Future<void> processChangedFiles() async {
   var changedFiles = changedXmlFiles;
   changedXmlFiles = [];
   
-  Set<String> paks = {};
+  Set<String> paks = changedPakFiles;
+  changedPakFiles = {};
   for (var file in changedFiles) {
     var dir = dirname(file.path);
     if (!dir.endsWith(".pak"))
@@ -25,7 +27,8 @@ Future<void> processChangedXmlFiles() async {
     paks.add(dir);
   }
 
-  Set<String> dats = {};
+  Set<String> dats = changedDatFiles;
+  changedPakFiles = {};
   for (var pakDir in paks) {
     var datDir = dirname(dirname(pakDir));
     if (!datDir.endsWith(".dat"))

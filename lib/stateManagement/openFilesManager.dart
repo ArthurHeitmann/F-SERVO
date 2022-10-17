@@ -350,7 +350,7 @@ class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
         hiddenArea.saveAll()
       ]);
       onSaveAll.notifyListeners();
-      await processChangedXmlFiles();
+      await processChangedFiles();
     } finally {
       isLoadingStatus.popIsLoading();
     }
