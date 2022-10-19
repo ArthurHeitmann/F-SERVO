@@ -87,6 +87,24 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
       enableLongPress: false,
       contextMenu: GenericContextMenu(
         buttonConfigs: [
+          if (widget.entry is XmlScriptHierarchyEntry)
+            ContextMenuButtonConfig(
+              "Open",
+              icon: Icon(Icons.open_in_new, size: 15,),
+              onPressed: onOpenFile,
+            ),
+          if (widget.entry is XmlScriptHierarchyEntry)
+            ContextMenuButtonConfig(
+              "Unlink",
+              icon: Icon(Icons.close, size: 15,),
+              onPressed: () => openHierarchyManager.unlinkScript(widget.entry as XmlScriptHierarchyEntry),
+            ),
+          if (widget.entry is XmlScriptHierarchyEntry)
+            ContextMenuButtonConfig(
+              "Delete",
+              icon: Icon(Icons.delete, size: 15,),
+              onPressed: () => openHierarchyManager.deleteScript(widget.entry as XmlScriptHierarchyEntry),
+            ),
           if (widget.entry is HapGroupHierarchyEntry)
             ContextMenuButtonConfig(
               "New Script",

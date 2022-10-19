@@ -29,6 +29,26 @@ class PuidReferenceEditor extends ChangeNotifierWidget {
 
 class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor> {
   bool showLookup = true;
+  Future<List<IndexedIdData>>? lookupFuture;
+
+  @override
+  void initState() {
+    var id = widget.prop.get("id") ?? widget.prop.get("value")!;
+    var idProp = id.value as HexProp;
+    idLookup.lookupId(idProp.value);
+    
+    idProp.addListener(updateLookup);
+
+    super.initState();
+  }
+
+  void updateLookup() async {
+    var id = widget.prop.get("id") ?? widget.prop.get("value")!;
+    var idProp = id.value as HexProp;
+    lookupFuture = idLookup.lookupId(idProp.value);
+    await lookupFuture;
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +71,7 @@ class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor>
               Icon(Icons.link, size: 25,),
               SizedBox(width: 4,),
               showLookup ? FutureBuilder(
-                future: idLookup.lookupId(idProp.value),
+                future: lookupFuture,
                 builder: (context, AsyncSnapshot<List<IndexedIdData>> snapshot) {
                   var lookup = snapshot.data;
                   if (lookup == null || lookup.isEmpty)

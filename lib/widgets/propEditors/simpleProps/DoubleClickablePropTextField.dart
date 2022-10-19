@@ -69,6 +69,7 @@ class _DoubleClickablePropTextFieldState extends PropTextFieldState {
                     onChanged: onTextChange,
                     style: getTheme(context).propInputTextStyle,
                     focusNode: focusNode,
+                    scrollController: ScrollController(keepScrollOffset: false),
                   ),
                 )
                 : Padding(

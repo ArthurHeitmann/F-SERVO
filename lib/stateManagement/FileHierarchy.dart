@@ -6,7 +6,9 @@ import 'package:xml/xml.dart';
 
 import '../fileTypeUtils/dat/datExtractor.dart';
 import '../fileTypeUtils/yax/yaxToXml.dart';
+import '../main.dart';
 import '../utils.dart';
+import '../widgets/misc/confirmDialog.dart';
 import '../widgets/propEditors/xmlActions/XmlActionPresets.dart';
 import 'Property.dart';
 import 'nestedNotifier.dart';
@@ -469,9 +471,20 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
     var fileName = path.basename(datPath);
     var datFolder = path.dirname(datPath);
     var datExtractDir = path.join(datFolder, "nier2blender_extracted", fileName);
-    if (!Directory(datExtractDir).existsSync()) {   // TODO: check if extracted folder actually contains all dat files
+    List<String>? datFilePaths;
+    if (!await Directory(datExtractDir).exists()) {
       await extractDatFiles(datPath, shouldExtractPakFiles: true);
     }
+    else {
+      datFilePaths = await getDatFileList(datExtractDir);
+      //check if extracted folder actually contains all dat files
+      if (await Future.any(
+        datFilePaths.map((name) async 
+          => !await File(name).exists()))) {
+        await extractDatFiles(datPath, shouldExtractPakFiles: true);
+      }
+    }
+
     var datEntry = DatHierarchyEntry(StringProp(fileName), datPath, datExtractDir);
     if (parent != null)
       parent.add(datEntry);
@@ -484,17 +497,16 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
       parentOf(entry).remove(entry);
 
     List<Future<void>> futures = [];
-    // TODO: search based on dat metadata
-    for (var file in Directory(datExtractDir).listSync()) {
-      if (file is! File || !file.path.endsWith(".pak"))
+    datFilePaths ??= await getDatFileList(datExtractDir);
+    for (var file in datFilePaths) {
+      if (!file.endsWith(".pak"))
         continue;
-      var pakPath = file.path;
-      int existingEntryI = existingEntries.indexWhere((entry) => (entry as FileHierarchyEntry).path == pakPath);
+      int existingEntryI = existingEntries.indexWhere((entry) => (entry as FileHierarchyEntry).path == file);
       if (existingEntryI != -1) {
         datEntry.add(existingEntries[existingEntryI]);
         continue;
       }
-      futures.add(openPak(pakPath, parent: datEntry));
+      futures.add(openPak(file, parent: datEntry));
     }
 
     await Future.wait(futures);
@@ -524,7 +536,7 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
 
     var pakFolder = path.dirname(pakPath);
     var pakExtractDir = path.join(pakFolder, "pakExtracted", path.basename(pakPath));
-    if (!Directory(pakExtractDir).existsSync()) {
+    if (!await Directory(pakExtractDir).exists()) {
       await extractPakFiles(pakPath, yaxToXml: true);
     }
     var pakEntry = PakHierarchyEntry(StringProp(pakPath.split(Platform.pathSeparator).last), pakPath, pakExtractDir);
@@ -540,9 +552,8 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
     for (var childXml in existingEntries)
       parentOf(childXml).remove(childXml);
 
-    var pakInfoJsonPath = path.join(pakExtractDir, "pakInfo.json");
-    var pakInfoJson = json.decode(File(pakInfoJsonPath).readAsStringSync());
-    for (var yaxFile in pakInfoJson["files"]) {
+    var pakInfoJson = await getPakInfoData(pakExtractDir);
+    for (var yaxFile in pakInfoJson) {
       var xmlFile = yaxFile["name"].replaceAll(".yax", ".xml");
       var xmlFilePath = path.join(pakExtractDir, xmlFile);
       int existingEntryI = existingEntries.indexWhere((entry) => (entry as FileHierarchyEntry).path == xmlFilePath);
@@ -550,7 +561,7 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
         pakEntry.add(existingEntries[existingEntryI]);
         continue;
       }
-      if (!File(xmlFilePath).existsSync()) {
+      if (!await File(xmlFilePath).exists()) {
         // TODO: display error message
       }
 
@@ -669,6 +680,23 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
     showToast("Remember to check the \"pak file type\"");
 
     return entry;
+  }
+
+  Future<void> unlinkScript(XmlScriptHierarchyEntry script, { bool requireConfirmation = true }) async {
+    if (requireConfirmation && await confirmDialog(getGlobalContext(), title: "Are you sure?") != true)
+      return;
+    await removePakInfoFileData(script.path);
+    removeAny(script);
+  }
+
+  Future<void> deleteScript(XmlScriptHierarchyEntry script) async {
+    if (await confirmDialog(getGlobalContext(), title: "Are you sure?") != true)
+      return;
+    await unlinkScript(script, requireConfirmation: false);
+    await File(script.path).delete();
+    var yaxPath = "${script.path.substring(0, script.path.length - 4)}.yax";
+    if (await File(yaxPath).exists())
+      await File(yaxPath).delete();
   }
 
   void expandAll() {

@@ -2,8 +2,10 @@
 import 'package:flutter/material.dart';
 
 import '../../stateManagement/ChangeNotifierWidget.dart';
+import '../../stateManagement/charNamesXmlWrapper.dart';
 import '../../stateManagement/openFileTypes.dart';
 import '../../stateManagement/xmlProps/xmlProp.dart';
+import '../propEditors/customXmlProps/tableEditor.dart';
 import '../propEditors/simpleProps/XmlPropEditor.dart';
 import 'XmlActionsEditor.dart';
 
@@ -32,13 +34,14 @@ class _XmlEditorState extends ChangeNotifierState<XmlFileEditor> {
 }
 
 Widget _makeXmlEditor(XmlProp root) {
-  if (isActionsXml(root))
+  if (_isActionsXml(root))
     return XmlActionsEditor(root: root);
-  else
-    return SingleChildScrollView(child: XmlPropEditor(prop: root, showDetails: true,));
+  if (root is CharNamesXmlProp)
+    return TableEditor(config: root);
+  return SingleChildScrollView(child: XmlPropEditor(prop: root, showDetails: true,));
 }
 
-bool isActionsXml(XmlProp root) {
+bool _isActionsXml(XmlProp root) {
   return
     root.any((element) => element.tagName == "name") &&
     root.any((element) => element.tagName == "id") &&

@@ -239,7 +239,7 @@ class ByteDataWrapper {
 String decodeString(List<int> bytes, StringEncoding encoding) {
   switch (encoding) {
     case StringEncoding.utf8:
-      return String.fromCharCodes(bytes);
+      return utf8.decode(bytes);
     case StringEncoding.utf16:
       return String.fromCharCodes(bytes); // TODO check if actually works
     case StringEncoding.shiftJis:

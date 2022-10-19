@@ -418,3 +418,42 @@ String getDatFolder(String datName) {
   
   return path.withoutExtension(datName);
 }
+
+Future<List<String>> getDatFileList(String datDir) async {
+  var datInfoPath = path.join(datDir, "dat_info.json");
+  if (await File(datInfoPath).exists())
+    return _getDatFileListFromJson(datInfoPath);
+  var metadataPath = path.join(datDir, "file_order.metadata");
+  if (await File(metadataPath).exists())
+    return _getDatFileListFromMetadata(metadataPath);
+  
+  throw Exception("No dat_info.json or file_order.metadata found in $datDir");
+}
+
+Future<List<String>> _getDatFileListFromJson(String datInfoPath) async {
+  var datInfoJson = jsonDecode(await File(datInfoPath).readAsString());
+  List<String> files = [];
+  var dir = path.dirname(datInfoPath);
+  for (var file in datInfoJson["files"]) {
+    files.add(path.join(dir, file));
+  }
+  files = files.toSet().toList();
+  files.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+
+  return files;
+}
+
+Future<List<String>> _getDatFileListFromMetadata(String metadataPath) async {
+  var metadataBytes = ByteDataWrapper((await File(metadataPath).readAsBytes()).buffer);
+  var numFiles = metadataBytes.readUint32();
+  var nameLength = metadataBytes.readUint32();
+  List<String> files = [];
+  for (var i = 0; i < numFiles; i++)
+    files.add(metadataBytes.readString(nameLength).replaceAll("\x00", ""));
+  files = files.toSet().toList();
+  files.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+  var dir = path.dirname(metadataPath);
+  files = files.map((file) => path.join(dir, file)).toList();
+
+  return files;
+}

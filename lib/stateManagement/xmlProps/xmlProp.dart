@@ -6,6 +6,7 @@ import '../../fileTypeUtils/yax/hashToStringMap.dart';
 import '../../fileTypeUtils/yax/japToEng.dart';
 import '../../utils.dart';
 import '../Property.dart';
+import '../charNamesXmlWrapper.dart';
 import '../nestedNotifier.dart';
 import '../openFileTypes.dart';
 import '../undoable.dart';
@@ -43,6 +44,8 @@ class XmlProp extends NestedNotifier<XmlProp> {
     var prop = XmlProp._fromXml(root, file: file, parentTags: parentTags);
     if (root.localName == "action")
       return XmlActionProp(prop);
+    if (prop.get("name")?.value.toString() == "CharName" && prop.get("text") != null)
+      return CharNamesXmlProp(file: file, children: prop.toList());
     
     return prop;
   }

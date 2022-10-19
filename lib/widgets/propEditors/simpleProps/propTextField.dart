@@ -7,6 +7,7 @@ import '../../../utils.dart';
 import 'DoubleClickablePropTextField.dart';
 import 'UnderlinePropTextField.dart';
 import 'primaryPropTextField.dart';
+import 'transparentPropTextField.dart';
 
 abstract class PropTextField<P extends Prop> extends ChangeNotifierWidget {
   final P prop;
@@ -53,6 +54,17 @@ abstract class PropTextField<P extends Prop> extends ChangeNotifierWidget {
       );
     if (T == UnderlinePropTextField)
       return UnderlinePropTextField(
+        key: key,
+        prop: prop,
+        left: left,
+        constraints: constraints,
+        validatorOnChange: validatorOnChange,
+        onValid: onValid,
+        controller: controller,
+        getDisplayText: getDisplayText,
+      );
+    if (T == TransparentPropTextField)
+      return TransparentPropTextField(
         key: key,
         prop: prop,
         left: left,

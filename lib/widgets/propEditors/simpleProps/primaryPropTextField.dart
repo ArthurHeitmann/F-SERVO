@@ -46,6 +46,7 @@ class _PrimaryPropTextFieldState extends PropTextFieldState {
                       controller: controller,
                       onChanged: onTextChange,
                       style: getTheme(context).propInputTextStyle,
+                      scrollController: ScrollController(keepScrollOffset: false),
                     ),
                   ),
                   if (errorMsg != null)
