@@ -1,5 +1,7 @@
 
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../customTheme.dart';
@@ -20,6 +22,15 @@ class Statusbar extends StatelessWidget {
         child: Row(
           children: [
             Expanded(child: Container(),),
+            ChangeNotifierBuilder(
+              notifier: messageLog,
+              builder: (context) => _FadeOut(
+                key: UniqueKey(),
+                showDuration: const Duration(seconds: 5),
+                fadeDuration: const Duration(milliseconds: 500),
+                child: messageLog.isEmpty ? Container() : Text(messageLog.last),
+              ),
+            ),
             Container(
               width: 25,
               height: 25,
@@ -37,6 +48,53 @@ class Statusbar extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _FadeOut extends StatefulWidget {
+  final Duration showDuration;
+  final Duration fadeDuration;
+  final Widget child;
+
+  const _FadeOut({ super.key, required this.showDuration, required this.fadeDuration, required this.child });
+
+  @override
+  State<_FadeOut> createState() => __FadeOutState();
+}
+
+class __FadeOutState extends State<_FadeOut> {
+  bool visible = true;
+  bool removed = false;
+  Timer? visibilityTimer;
+  Timer? removalTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    visibilityTimer = Timer(widget.showDuration, () {
+      setState(() => visible = false);
+    });
+    removalTimer = Timer(widget.showDuration + widget.fadeDuration, () {
+      setState(() => removed = true);
+    });
+  }
+
+  @override
+  void dispose() {
+    visibilityTimer?.cancel();
+    removalTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (removed)
+      return Container();
+    return AnimatedOpacity(
+      opacity: visible ? 1 : 0,
+      duration: widget.fadeDuration,
+      child: widget.child,
     );
   }
 }
