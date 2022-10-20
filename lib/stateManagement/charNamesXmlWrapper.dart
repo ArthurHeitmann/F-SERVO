@@ -50,8 +50,9 @@ const _nameKeys = [
 ];
 
 class CharNamesXmlProp extends XmlProp with XmlTableConfig {
-  static final textHash = crc32("text");
-  static final valueHash = crc32("value");
+  static final _textHash = crc32("text");
+  static final _valueHash = crc32("value");
+  static final _sizeHash = crc32("size");
 
   final List<CharNameTranslations> names = [];
   String _lastString = "";
@@ -59,7 +60,7 @@ class CharNamesXmlProp extends XmlProp with XmlTableConfig {
   bool ignoreUpdates = false;
 
   CharNamesXmlProp({ super.file, super.children })
-    : super(tagId: textHash, tagName: "text", value: StringProp(""), parentTags: []) {
+    : super(tagId: _textHash, tagName: "root", value: StringProp(""), parentTags: []) {
     
     name = "Character Names";
     columnNames = [
@@ -133,6 +134,13 @@ class CharNamesXmlProp extends XmlProp with XmlTableConfig {
         currentTranslations = [];
       }
     }
+    newNames.add(
+      CharNameTranslations(
+        StringProp(currentKey),
+        currentTranslations,
+        anyChangeNotifier
+      )
+    );
 
     // update
     for (int i = 0; i < min(names.length, newNames.length); i++) {
@@ -181,16 +189,14 @@ class CharNamesXmlProp extends XmlProp with XmlTableConfig {
         lines.add("  ${translation.key.value} ${translation.val.value}");
       }
     }
+    lines.add("");
 
     // convert lines to hex string
-    const firstLine = " �L�������O�e�[�u��";
-    const lastLine = "";
-    lines.insert(0, firstLine);
-    lines.add(lastLine);
     var text = lines.join("\n");
     _lastString = text;
     var bytes = encodeString(text, StringEncoding.utf8);
-    var hexStr = hex.encode(bytes);
+    const firstLine = "20efbfbd4cefbfbdefbfbdefbfbdefbfbdefbfbdefbfbdefbfbd4fefbfbd65efbfbd5befbfbd75efbfbdefbfbd0a";
+    var hexStr = firstLine + hex.encode(bytes);
 
     // convert hex string to prop rows
     var rows = <String>[];
@@ -199,20 +205,23 @@ class CharNamesXmlProp extends XmlProp with XmlTableConfig {
     }
 
     // update
+    var bytesLength = hexStr.length ~/ 2;
     var textProp = get("text")!;
     textProp.clear();
+    textProp.add(XmlProp(
+      file: file,
+      tagId: _sizeHash,
+      tagName: "size",
+      parentTags: parentTags,
+      value: HexProp(bytesLength),
+    ));
     textProp.addAll(rows.map((r) => XmlProp(
       file: file,
-      tagId: valueHash,
+      tagId: _valueHash,
       tagName: "value",
       parentTags: parentTags,
       value: StringProp(r),
     )));
-
-    // debug print XML
-    var doc = XmlDocument();
-    doc.children.add(toXml());
-    print(doc.toXmlString(pretty: true));
   }
 
   @override

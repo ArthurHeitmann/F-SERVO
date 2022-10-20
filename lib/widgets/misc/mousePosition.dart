@@ -32,6 +32,9 @@ class MousePosition extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Listener(
+      onPointerHover: (event) {
+        _mousePos = event.position;
+      },
       onPointerMove: (e) {
         _mousePos = e.position;
         for (var listener in _dragListeners.toList())

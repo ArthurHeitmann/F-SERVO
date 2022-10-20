@@ -608,33 +608,23 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
 
   @override
   void remove(HierarchyEntry child) {
-    if (child is FileHierarchyEntry)
-      areasManager.releaseHiddenFile(child.path);
-    if (child == _selectedEntry)
-      selectedEntry = null;
-    if (child.isNotEmpty)
-      _removeRec(child);
+    _removeRec(child);
     super.remove(child);
   }
 
   void removeAny(HierarchyEntry child) {
-    if (child is FileHierarchyEntry)
-      areasManager.releaseHiddenFile(child.path);
-    if (child == _selectedEntry)
-      selectedEntry = null;
-    if (child.isNotEmpty)
-      _removeRec(child);
+    _removeRec(child);
     parentOf(child).remove(child);
   }
 
   void _removeRec(HierarchyEntry entry) {
+    if (entry is FileHierarchyEntry)
+      areasManager.releaseFile(entry.path);
+    if (entry == _selectedEntry)
+      selectedEntry = null;
+      
     for (var child in entry) {
-      if (child is FileHierarchyEntry)
-        areasManager.releaseHiddenFile(child.path);
-      if (child == _selectedEntry)
-        selectedEntry = null;
-      if (child.isNotEmpty)
-        _removeRec(child);
+      _removeRec(child);
     }
   }
 

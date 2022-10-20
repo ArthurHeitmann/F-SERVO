@@ -238,6 +238,10 @@ class NierDarkThemeExtension extends NierThemeExtension {
         color: Color.fromARGB(255, 25, 25, 25),
       ),
       toggleableActiveColor: Color.fromARGB(255, 228, 162, 21),
+      colorScheme: ColorScheme.dark(
+        primary: Color.fromARGB(255, 228, 162, 21),
+        secondary: Color.fromARGB(255, 228, 162, 21),
+      ),
     );
   } 
 }

@@ -43,9 +43,12 @@ class _EntityEditorState extends ChangeNotifierState<EntityEditor> {
             "param",
             () => getNextInsertIndexBefore(widget.prop, ["delay"], widget.prop.length),
             () async {
-              var newProp = await XmlPresets.params.withCxtV(widget.prop).prop()! as XmlProp;
-              var countProp = XmlProp.fromXml(makeXmlElement(name: "count", text: "0x1"), parentTags: newProp.nextParents());
-              return [countProp, newProp];
+              var newProp = await XmlPresets.params.withCxtV(widget.prop).prop();
+              var countProp = XmlProp.fromXml(makeXmlElement(name: "count", text: newProp != null ? "0x1" : "0x0"), parentTags: newProp?.nextParents() ?? ["param"]);
+              return [
+                countProp,
+                if (newProp != null) newProp
+              ];
             },
           ),
           if (widget.showDetails && isLayoutEntity) ...[

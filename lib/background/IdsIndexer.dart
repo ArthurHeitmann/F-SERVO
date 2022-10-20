@@ -33,6 +33,20 @@ class IndexedIdData {
       "  xmlPath: $xmlPath,\n"
       ")";
   }
+
+  @override
+  bool operator==(Object o) {
+    if (o is! IndexedIdData)
+      return false;
+    return id == o.id &&
+      type == o.type &&
+      datPath == o.datPath &&
+      pakPath == o.pakPath &&
+      xmlPath == o.xmlPath;
+  }
+
+  @override
+  int get hashCode => Object.hash(id, type, datPath, pakPath, xmlPath);
 }
 
 class IndexedActionIdData extends IndexedIdData {
@@ -52,6 +66,17 @@ class IndexedActionIdData extends IndexedIdData {
       "  actionName: $actionName,\n"
       ")";
   }
+
+  @override
+  bool operator==(Object o) {
+    if (o is! IndexedActionIdData)
+      return false;
+    return super==(o) &&
+      actionName == o.actionName;
+  }
+
+  @override
+  int get hashCode => Object.hash(super.hashCode, actionName);
 }
 
 class IndexedEntityIdData extends IndexedIdData {
@@ -77,6 +102,20 @@ class IndexedEntityIdData extends IndexedIdData {
       "  level: $level,\n"
       ")";
   }
+
+  @override
+  bool operator==(Object o) {
+    if (o is! IndexedEntityIdData)
+      return false;
+    return super==(o) &&
+      objId == o.objId &&
+      actionId == o.actionId &&
+      name == o.name &&
+      level == o.level;
+  }
+
+  @override
+  int get hashCode => Object.hash(super.hashCode, objId, actionId, name, level);
 }
 
 enum InitStatus {

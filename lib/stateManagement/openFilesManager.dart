@@ -44,7 +44,7 @@ class FilesAreaManager extends NestedNotifier<OpenFileData> implements Undoable 
     currentFile = this[index];
   }
 
-  Future<void> closeFile(OpenFileData file) async {
+  Future<void> closeFile(OpenFileData file, { bool releaseHidden = false }) async {
     if (file.hasUnsavedChanges) {
       var answer = await confirmOrCancelDialog(
         getGlobalContext(),
@@ -56,9 +56,10 @@ class FilesAreaManager extends NestedNotifier<OpenFileData> implements Undoable 
       else if (answer == null)
         return;
     }
-    if (file.keepOpenAsHidden) {
+    if (file.keepOpenAsHidden && !releaseHidden)
       areasManager.hiddenArea.add(file);
-    }
+    else if (releaseHidden)
+      areasManager.hiddenArea.remove(file);
 
     if (currentFile == file)
       switchToClosestFile();
@@ -291,6 +292,16 @@ class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
     var file = hiddenArea.where((file) => file.path == filePath);
     if (file.isNotEmpty) {
       hiddenArea.remove(file.first);
+    }
+  }
+
+  void releaseFile(String filePath) {
+    for (var area in this) {
+      var file = area.where((file) => file.path == filePath);
+      if (file.isNotEmpty) {
+        area.closeFile(file.first, releaseHidden: true);
+        break;
+      }
     }
   }
 

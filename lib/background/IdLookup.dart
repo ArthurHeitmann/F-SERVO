@@ -49,10 +49,14 @@ class IdLookup with Initializable {
   Future<List<IndexedIdData>> lookupId(int id) async {
     await awaitInitialized();
     var result = await _lookupIdLevel1(id);
-    if (result.isNotEmpty) return result;
-    result = await _lookupIdLevel2(id);
-    if (result.isNotEmpty) return result;
-    return await _lookupIdLevel3(id);
+    if (result.isEmpty) {
+      result = await _lookupIdLevel2(id);
+      if (result.isEmpty)
+        result = await _lookupIdLevel3(id);
+    }
+    
+    // remove duplicates
+    return result.toSet().toList();
   }
 
   Future<List<IndexedIdData>> _lookupIdLevel3(int id) async {

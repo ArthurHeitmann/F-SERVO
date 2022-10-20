@@ -80,7 +80,7 @@ ByteDataWrapper xmlToYax(XmlElement root) {
 }
 
 Future<void> xmlFileToYaxFile(String xmlFilePath) async {
-  print("Converting $xmlFilePath to xml");
+  print("Converting $xmlFilePath to yax");
 
   var xmlFile = File(xmlFilePath);
   var xmlString = await xmlFile.readAsString();

@@ -1,12 +1,17 @@
 
 import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
+import 'package:path/path.dart';
 
 import '../../customTheme.dart';
+import '../../fileTypeUtils/dat/datRepacker.dart';
+import '../../fileTypeUtils/pak/pakRepacker.dart';
+import '../../fileTypeUtils/yax/xmlToYax.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/FileHierarchy.dart';
 import '../../stateManagement/miscValues.dart';
 import '../../stateManagement/openFilesManager.dart';
+import '../../stateManagement/preferencesData.dart';
 import '../../utils.dart';
 
 class HierarchyEntryWidget extends ChangeNotifierWidget {
@@ -37,7 +42,7 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
     return Column(
       children: [
         setupContextMenu(
-          child: optionallySetupSelectable(
+          child: optionallySetupSelectable(context,
             Container(
               padding: const EdgeInsets.symmetric(vertical: 3),
               height: 25,
@@ -83,46 +88,80 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
   }
 
   Widget setupContextMenu({ required Widget child }) {
+    var prefs = PreferencesData();
     return ContextMenuRegion(
       enableLongPress: false,
       contextMenu: GenericContextMenu(
         buttonConfigs: [
-          if (widget.entry is XmlScriptHierarchyEntry)
+          if (widget.entry is XmlScriptHierarchyEntry) ...[ 
             ContextMenuButtonConfig(
               "Open",
               icon: Icon(Icons.open_in_new, size: 15,),
               onPressed: onOpenFile,
             ),
-          if (widget.entry is XmlScriptHierarchyEntry)
+            ContextMenuButtonConfig(
+                "Export YAX",
+              icon: Icon(Icons.file_upload, size: 15,),
+              onPressed: () {
+                var xml = widget.entry as XmlScriptHierarchyEntry;
+                xmlFileToYaxFile(xml.path);
+              },
+            ),
             ContextMenuButtonConfig(
               "Unlink",
               icon: Icon(Icons.close, size: 15,),
               onPressed: () => openHierarchyManager.unlinkScript(widget.entry as XmlScriptHierarchyEntry),
             ),
-          if (widget.entry is XmlScriptHierarchyEntry)
             ContextMenuButtonConfig(
               "Delete",
               icon: Icon(Icons.delete, size: 15,),
               onPressed: () => openHierarchyManager.deleteScript(widget.entry as XmlScriptHierarchyEntry),
             ),
-          if (widget.entry is HapGroupHierarchyEntry)
+          ],
+          if (widget.entry is HapGroupHierarchyEntry) ...[
             ContextMenuButtonConfig(
               "New Script",
               icon: Icon(Icons.description, size: 15,),
               onPressed: () => openHierarchyManager.addScript(widget.entry, parentPath: (widget.entry as FileHierarchyEntry).path),
             ),
-          if (widget.entry is HapGroupHierarchyEntry)
             ContextMenuButtonConfig(
               "New Group",
               icon: Icon(Icons.workspaces, size: 15,),
               onPressed: () => (widget.entry as HapGroupHierarchyEntry).addChild(),
             ),
-          if (widget.entry is HapGroupHierarchyEntry && widget.entry.isEmpty)
+            if (widget.entry.isEmpty)
+              ContextMenuButtonConfig(
+                "Remove",
+                icon: Icon(Icons.remove, size: 16,),
+                onPressed: () => (widget.entry as HapGroupHierarchyEntry).removeSelf(),
+              ),
+          ],
+          if (widget.entry is PakHierarchyEntry) ...[
             ContextMenuButtonConfig(
-              "Remove",
-              icon: Icon(Icons.remove, size: 16,),
-              onPressed: () => (widget.entry as HapGroupHierarchyEntry).removeSelf(),
+              "Repack PAK",
+              icon: Icon(Icons.file_upload, size: 15,),
+              onPressed: () {
+                var pak = widget.entry as PakHierarchyEntry;
+                repackPak(pak.extractedPath);
+              },
             ),
+          ],
+          if (widget.entry is DatHierarchyEntry) ...[
+            ContextMenuButtonConfig(
+              "Repack DAT",
+              icon: Icon(Icons.file_upload, size: 15,),
+              onPressed: () {
+                if (prefs.dataExportPath?.value == null) {
+                  showToast("No export path set; go to Settings to set an export path");
+                  return;
+                }
+                var dat = widget.entry as DatHierarchyEntry;
+                var datBaseName = basename(dat.extractedPath);
+                var exportPath = join(prefs.dataExportPath!.value, getDatFolder(datBaseName), datBaseName);
+                repackDat(dat.extractedPath, exportPath);
+              },
+            ),
+          ],
           if (openHierarchyManager.contains(widget.entry))
             ContextMenuButtonConfig(
               "Close",
@@ -132,12 +171,13 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
           if (widget.entry.isNotEmpty)
             ContextMenuButtonConfig(
               "Collapse all",
-              icon: Icon(Icons.expand_less, size: 14,),
+              icon: Icon(Icons.unfold_less, size: 15,),
               onPressed: () => widget.entry.setCollapsedRecursive(true),
             ),
           if (widget.entry.isNotEmpty)
             ContextMenuButtonConfig(
               "Expand all",
+              icon: Icon(Icons.unfold_more, size: 15,),
               onPressed: () => widget.entry.setCollapsedRecursive(false, true),
             ),
         ],
@@ -146,7 +186,7 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
     );
   }
 
-  Widget optionallySetupSelectable(Widget child) {
+  Widget optionallySetupSelectable(BuildContext context, Widget child) {
     if (!widget.entry.isSelectable && !widget.entry.isCollapsible)
       return child;
     
