@@ -1,11 +1,15 @@
 
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:convert/convert.dart';
+import 'package:xml/xml.dart';
 
 import '../fileTypeUtils/utils/ByteDataWrapper.dart';
 import '../utils.dart';
 import '../widgets/propEditors/customXmlProps/tableEditor.dart';
 import 'Property.dart';
+import 'hasUuid.dart';
 import 'undoable.dart';
 import 'xmlProps/xmlProp.dart';
 
@@ -18,7 +22,7 @@ class KeyValProp extends ChangeNotifier {
   }
 }
 
-class CharNameTranslations {
+class CharNameTranslations with HasUuid {
   final ChangeNotifier anyChangeNotifier;
   StringProp key;
   List<KeyValProp> translations;
@@ -52,22 +56,36 @@ class CharNamesXmlProp extends XmlProp with XmlTableConfig {
   final List<CharNameTranslations> names = [];
   String _lastString = "";
   final ChangeNotifier anyChangeNotifier = ChangeNotifier();
+  bool ignoreUpdates = false;
 
   CharNamesXmlProp({ super.file, super.children })
     : super(tagId: textHash, tagName: "text", value: StringProp(""), parentTags: []) {
+    
+    name = "Character Names";
     columnNames = [
       "KEY",
       ..._nameKeys
     ];
+    rowCount = NumberProp(0, true);
+    rowCount.changesUndoable = false;
     
     deserialize();
-    addListener(serialize);
 
     anyChangeNotifier.addListener(() {
+      serialize();
       file?.hasUnsavedChanges = true;
       file?.contentNotifier.notifyListeners();
       undoHistoryManager.onUndoableEvent();
     });
+  }
+
+  @override
+  void notifyListeners() {
+    if (ignoreUpdates)
+      return;
+    ignoreUpdates = true;
+    super.notifyListeners();
+    ignoreUpdates = false;
   }
 
   String _getString() {
@@ -80,6 +98,7 @@ class CharNamesXmlProp extends XmlProp with XmlTableConfig {
   }
 
   void deserialize() {
+    print("deserialize");
     // convert prop rows of hex to single string
     var text = _getString();
     if (text == _lastString)
@@ -116,55 +135,96 @@ class CharNamesXmlProp extends XmlProp with XmlTableConfig {
     }
 
     // update
-    names.clear();
-    names.addAll(newNames);
+    for (int i = 0; i < min(names.length, newNames.length); i++) {
+      names[i].key.value = newNames[i].key.value;
+      // update translations
+      for (int j = 0; j < min(names[i].translations.length, newNames[i].translations.length); j++) {
+        names[i].translations[j].key.value = newNames[i].translations[j].key.value;
+        names[i].translations[j].val.value = newNames[i].translations[j].val.value;
+      }
+      // add new translations
+      if (names[i].translations.length < newNames[i].translations.length) {
+        for (int j = names[i].translations.length; j < newNames[i].translations.length; j++) {
+          names[i].translations.add(newNames[i].translations[j]);
+        }
+      }
+      // remove old translations
+      else if (names[i].translations.length > newNames[i].translations.length) {
+        for (int j = names[i].translations.length - 1; j >= newNames[i].translations.length; j--) {
+          names[i].translations.removeAt(j);
+        }
+      }
+    }
+    // add new names
+    if (names.length < newNames.length) {
+      for (int i = names.length; i < newNames.length; i++) {
+        names.add(newNames[i]);
+      }
+    }
+    // remove old names
+    else if (names.length > newNames.length) {
+      for (int i = names.length - 1; i >= newNames.length; i--) {
+        names.removeAt(i);
+      }
+    }
+    rowCount.value = names.length;
+    rowCount.notifyListeners();
   }
 
   void serialize() {
+    print("serialize");
     // convert translations to lines
     var lines = <String>[];
     for (var name in names) {
-      lines.add("  ${name.key.value}");
+      lines.add(" ${name.key.value}");
       for (var translation in name.translations) {
         lines.add("  ${translation.key.value} ${translation.val.value}");
       }
     }
 
     // convert lines to hex string
-    const firstLine = " �ｿｽL�ｿｽ�ｿｽ�ｿｽ�ｿｽ�ｿｽ�ｿｽ�ｿｽO�ｿｽe�ｿｽ[�ｿｽu�ｿｽ�ｿｽ";
+    const firstLine = " �L�������O�e�[�u��";
     const lastLine = "";
     lines.insert(0, firstLine);
     lines.add(lastLine);
     var text = lines.join("\n");
+    _lastString = text;
     var bytes = encodeString(text, StringEncoding.utf8);
     var hexStr = hex.encode(bytes);
 
     // convert hex string to prop rows
     var rows = <String>[];
     for (var i = 0; i < hexStr.length; i += 64) {
-      rows.add(hexStr.substring(i, i + 64));
+      rows.add(hexStr.substring(i, (min(i + 64, hexStr.length))));
     }
 
     // update
-    clear();
-    addAll(rows.map((r) => XmlProp(
+    var textProp = get("text")!;
+    textProp.clear();
+    textProp.addAll(rows.map((r) => XmlProp(
       file: file,
-      tagId: textHash,
-      tagName: "text",
+      tagId: valueHash,
+      tagName: "value",
       parentTags: parentTags,
       value: StringProp(r),
     )));
+
+    // debug print XML
+    var doc = XmlDocument();
+    doc.children.add(toXml());
+    print(doc.toXmlString(pretty: true));
   }
 
   @override
-  int get rowCount => names.length;
-
-  @override
-  List<CellConfig?> rowPropsGenerator(int index) {
+  RowConfig rowPropsGenerator(int index) {
     var name = names[index];
-    List<CellConfig?> cells = [CellConfig(prop: name.key)];
+    RowConfig row = RowConfig(
+      key: Key(name.uuid),
+      cells: [CellConfig(prop: name.key)]
+    );
+    var cells = row.cells;
     int ti = 0;
-    for (int i = 0; i < _nameKeys.length; i++) { // TODO reenable
+    for (int i = 0; i < _nameKeys.length; i++) {
       if (name.translations[ti].key.value == _nameKeys[i]) {
         cells.add(CellConfig(prop: name.translations[ti].val));
         ti++;
@@ -174,22 +234,42 @@ class CharNamesXmlProp extends XmlProp with XmlTableConfig {
       }
     }
     
-    return cells;
+    return row;
+  }
+
+  @override
+  void onRowAdd() {
+    names.add(CharNameTranslations(
+      StringProp(""),
+      _nameKeys.map((k) => KeyValProp(StringProp(k), StringProp(""))).toList(),
+      anyChangeNotifier
+    ));
+    rowCount.value++;
+    serialize();
+  }
+
+  @override
+  void onRowRemove(int index) {
+    names.removeAt(index);
+    rowCount.value--;
+    serialize();
   }
 
   @override
   Undoable takeSnapshot() {
-    return CharNamesXmlProp(
+    var snapshot = CharNamesXmlProp(
       file: file,
       children: map((p) => p.takeSnapshot() as XmlProp).toList(),
     );
+    return snapshot;
   }
 
   @override
   void restoreWith(Undoable snapshot) {
     var snapshotProp = snapshot as CharNamesXmlProp;
-    clear();
-    addAll(snapshotProp.map((p) => p.takeSnapshot() as XmlProp));
+    var textProp = get("text")!;
+    textProp.clear();
+    textProp.addAll(snapshotProp.get("text")!.map((p) => p.takeSnapshot() as XmlProp));
     deserialize();
   }
 }

@@ -19,6 +19,8 @@ class XmlFileEditor extends ChangeNotifierWidget {
 }
 
 class _XmlEditorState extends ChangeNotifierState<XmlFileEditor> {
+  final scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();

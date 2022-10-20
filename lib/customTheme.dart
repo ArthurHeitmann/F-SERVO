@@ -30,6 +30,8 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
   final TextStyle? propInputTextStyle;
   final Color? propBorderColor;
   final Color? contextMenuBgColor;
+  final Color? tableBgColor;
+  final Color? tableBgAltColor;
 
   NierThemeExtension({
     this.editorBackgroundColor,
@@ -58,6 +60,8 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
     this.propInputTextStyle,
     this.propBorderColor,
     this.contextMenuBgColor,
+    this.tableBgColor,
+    this.tableBgAltColor,
   });
   
   @override
@@ -88,6 +92,8 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
     TextStyle? propInputTextStyle,
     Color? propBorderColor,
     Color? contextMenuBgColor,
+    Color? tableBgColor,
+    Color? tableBgAltColor,
   }) {
     return NierThemeExtension(
       editorBackgroundColor: editorBackgroundColor ?? this.editorBackgroundColor,
@@ -116,6 +122,8 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
       propInputTextStyle: propInputTextStyle ?? this.propInputTextStyle,
       propBorderColor: propBorderColor ?? this.propBorderColor,
       contextMenuBgColor: contextMenuBgColor ?? this.contextMenuBgColor,
+      tableBgColor: tableBgColor ?? this.tableBgColor,
+      tableBgAltColor: tableBgAltColor ?? this.tableBgAltColor,
     );
   }
   
@@ -151,6 +159,8 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
       propInputTextStyle: TextStyle.lerp(propInputTextStyle, other.propInputTextStyle, t),
       propBorderColor: Color.lerp(propBorderColor, other.propBorderColor, t),
       contextMenuBgColor: Color.lerp(contextMenuBgColor, other.contextMenuBgColor, t),
+      tableBgColor: Color.lerp(tableBgColor, other.tableBgColor, t),
+      tableBgAltColor: Color.lerp(tableBgAltColor, other.tableBgAltColor, t),
     );
   }
 }
@@ -196,6 +206,8 @@ class NierDarkThemeExtension extends NierThemeExtension {
       ),
       propBorderColor: Colors.grey.shade700,
       contextMenuBgColor: Color.fromARGB(255, 25, 25, 25),
+      tableBgColor: Color.fromARGB(255, 33, 33, 33),
+      tableBgAltColor: Color.fromARGB(255, 54, 54, 54),
     );
 
   static ThemeData makeTheme() {

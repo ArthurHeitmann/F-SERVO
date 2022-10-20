@@ -32,6 +32,8 @@ mixin Prop<T> implements Listenable, Undoable {
 }
 
 abstract class ValueProp<T> extends ValueNotifier<T> with Prop<T> {
+  bool changesUndoable = true;
+
   ValueProp(super.value);
 
   @override
@@ -43,7 +45,8 @@ abstract class ValueProp<T> extends ValueNotifier<T> with Prop<T> {
   set value(T value) {
     if (value == this.value) return;
     super.value = value;
-    undoHistoryManager.onUndoableEvent();
+    if (changesUndoable)
+      undoHistoryManager.onUndoableEvent();
   }
 
   @override
