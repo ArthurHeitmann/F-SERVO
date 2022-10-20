@@ -99,7 +99,7 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
 
   Widget getOrMakeFileEditor(OpenFileData file) {
     if (!kDebugMode) {
-      if (cachedEditors.containsKey(file)) // TODO enable again
+      if (cachedEditors.containsKey(file))
         return cachedEditors[file]!;
     }
     Widget newEntry = makeFileEditor(file);

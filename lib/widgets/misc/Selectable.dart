@@ -56,7 +56,7 @@ class _Selectable extends ChangeNotifier {
   }
 }
 
-final _Selectable selectable = _Selectable();
+final  selectable = _Selectable();
 
 class SelectableWidget<T> extends StatefulWidget {
   final dynamic area;

@@ -258,15 +258,18 @@ int randomId() {
   return _randomGen.nextInt(0xFFFFFFFF);
 }
 
-ContextMenuButtonConfig optionalValPropButtonConfig(XmlProp parent, String tagName, int Function() getInsertPos, Prop Function() makePropVal) {
+ContextMenuButtonConfig optionalValPropButtonConfig(XmlProp parent, String tagName, int Function() getInsertPos, FutureOr<Prop> Function() makePropVal) {
   if (parent.get(tagName) == null)
     return ContextMenuButtonConfig(
       "Add $tagName prop",
       icon: Icon(Icons.add, size: 14,),
-      onPressed: () => parent.insert(
-        getInsertPos(),
-        XmlProp(file: parent.file, tagId: crc32(tagName), tagName: tagName, value: makePropVal(), parentTags: parent.nextParents()),
-      ),
+      onPressed: () async {
+        var prop = await makePropVal();
+        parent.insert(
+          getInsertPos(),
+          XmlProp(file: parent.file, tagId: crc32(tagName), tagName: tagName, value: prop, parentTags: parent.nextParents()),
+        );
+      },
     );
   else
     return ContextMenuButtonConfig(
@@ -276,15 +279,18 @@ ContextMenuButtonConfig optionalValPropButtonConfig(XmlProp parent, String tagNa
     );
 }
 
-ContextMenuButtonConfig optionalPropButtonConfig(XmlProp parent, String tagName, int Function() getInsertPos, List<XmlProp> Function() makePropChildren) {
+ContextMenuButtonConfig optionalPropButtonConfig(XmlProp parent, String tagName, int Function() getInsertPos, FutureOr<List<XmlProp>> Function() makePropChildren) {
   if (parent.get(tagName) == null)
     return ContextMenuButtonConfig(
       "Add $tagName prop",
       icon: Icon(Icons.add, size: 14,),
-      onPressed: () => parent.insert(
-        getInsertPos(),
-        XmlProp(file: parent.file, tagId: crc32(tagName), tagName: tagName, children: makePropChildren(), parentTags: parent.nextParents()),
-      ),
+      onPressed: () async {
+        var props = await makePropChildren();
+        parent.insert(
+          getInsertPos(),
+          XmlProp(file: parent.file, tagId: crc32(tagName), tagName: tagName, children: props, parentTags: parent.nextParents()),
+        );
+      },
     );
   else
     return ContextMenuButtonConfig(

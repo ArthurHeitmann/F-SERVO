@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:path/path.dart' as path;
@@ -562,7 +561,7 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
         continue;
       }
       if (!await File(xmlFilePath).exists()) {
-        // TODO: display error message
+        showToast("Failed to open $xmlFilePath");
       }
 
       var xmlEntry = XmlScriptHierarchyEntry(StringProp(xmlFile), xmlFilePath);
