@@ -6,6 +6,7 @@ import 'background/IdLookup.dart';
 import 'customTheme.dart';
 import 'keyboardEvents/globalShortcutsWrapper.dart';
 import 'stateManagement/preferencesData.dart';
+import 'stateManagement/sync/syncServer.dart';
 import 'widgets/EditorLayout.dart';
 import 'widgets/misc/mousePosition.dart';
 import 'widgets/statusbar/statusbar.dart';
@@ -28,6 +29,7 @@ void main() async {
     // await windowManager.focus();
   });
 
+  startSyncServer();
   idLookup.init();
   PreferencesData().load();
 

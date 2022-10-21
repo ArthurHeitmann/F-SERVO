@@ -35,7 +35,7 @@ class _XmlPropEditorState<T extends PropTextField> extends ChangeNotifierState<X
                   Text(widget.prop.tagName, style: getTheme(context).propInputTextStyle,),
                 if (widget.showTagName)
                   SizedBox(width: 10),
-                if (widget.prop.value.toString().isNotEmpty)
+                if (widget.prop.value.toString().isNotEmpty || widget.prop.isEmpty)
                   Flexible(
                     child: makePropEditor<T>(widget.prop.value),
                   ),
