@@ -18,6 +18,7 @@ import '../customXmlProps/entityEditor.dart';
 import '../customXmlProps/layoutsEditor.dart';
 import '../customXmlProps/paramEditor.dart';
 import '../customXmlProps/puidReferenceEditor.dart';
+import '../customXmlProps/scriptVariableEditor.dart';
 import '../customXmlProps/transformsEditor.dart';
 import '../xmlActions/xmlArrayEditor.dart';
 import 'XmlPropEditor.dart';
@@ -284,7 +285,7 @@ class XmlPresets {
             makeXmlElement(name: "code", text: "0x0"),
             makeXmlElement(name: "id", text: "0x0"),
           ]),
-          makeXmlElement(name: "command", children: [
+          makeXmlElement(name: "command", children: [ // TODO SendCommand vs SendCommands
             makeXmlElement(name: "label", text: "commandLabel"),
           ]),
         ]
@@ -300,6 +301,23 @@ class XmlPresets {
         children: [
           makeXmlElement(name: "code", text: "0x0"),
           makeXmlElement(name: "id", text: "0x0"),
+        ],
+      ),
+      file: cxt.file,
+      parentTags: cxt.parentTags,
+    ),
+  );
+  static XmlRawPreset variable = XmlRawPreset(
+    <T extends PropTextField>(prop, showDetails) => ScriptVariableEditor<T>(prop: prop, showDetails: showDetails),
+    (cxt) => XmlProp.fromXml(
+      makeXmlElement(name: "value",
+        children: [
+          makeXmlElement(name: "id", text: "0x${randomId().toRadixString(16)}"),
+          makeXmlElement(name: "name", text: "myVariable"),
+          makeXmlElement(name: "value", children: [
+            makeXmlElement(name: "code", text: "0x0"),
+            makeXmlElement(name: "value", text: "0x0"),
+          ]),
         ],
       ),
       file: cxt.file,
@@ -349,6 +367,10 @@ XmlRawPreset getXmlPropPreset(XmlProp prop) {
   // command
   if (prop.get("puid") != null && prop.get("command") != null) {
     return XmlPresets.command;
+  }
+  // variable
+  if (prop.length == 3 && prop[0].tagName == "id" && prop[1].tagName == "name" && prop[2].tagName == "value") {
+    return XmlPresets.variable;
   }
   // fallback
   return XmlPresets.fallback;
@@ -435,6 +457,8 @@ List<Widget> makeXmlMultiPropEditor<T extends PropTextField>(
         else
           preset = XmlPresets.command;
       }
+      else if (parent.tagName == "variables")
+        preset = XmlPresets.variable;
       else
         preset = XmlPresets.fallback;
 

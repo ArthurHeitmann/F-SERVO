@@ -92,6 +92,28 @@ class XmlActionPresets {
       parentTags: cxt.parentTags,
     ),
   );
+  static XmlRawPreset sendCommands = XmlRawPreset(
+    XmlActionPresets.action.editor,
+    (cxt) => XmlProp.fromXml(
+      _makeAction("SendCommands", [
+        makeXmlElement(name: "commands", children: [
+          makeXmlElement(name: "items", children: [
+            makeXmlElement(name: "size", text: "1"),
+            makeXmlElement(name: "value", children: [
+              _makePuid(),
+              makeXmlElement(name: "command", children: [
+                makeXmlElement(name: "command", children: [
+                  makeXmlElement(name: "label", text: "commandLabel"),
+                ]),
+              ]),
+            ]),
+          ]),
+        ]),
+      ]),
+      file: cxt.file,
+      parentTags: cxt.parentTags,
+    ),
+  );
   static XmlRawPreset conditionBlock = XmlRawPreset(
     XmlActionPresets.action.editor,
     (cxt) => XmlProp.fromXml(
@@ -299,6 +321,7 @@ class XmlActionPresets {
 
 final _actionPreset = {
   "SendCommand": XmlActionPresets.sendCommand,
+  "SendCommands": XmlActionPresets.sendCommands,
   "ConditionBlock": XmlActionPresets.conditionBlock,
   "ConditionCommands": XmlActionPresets.conditionCommands,
   "EntityLayoutAction": XmlActionPresets.entityLayout,
