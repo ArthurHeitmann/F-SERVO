@@ -3,7 +3,7 @@
 import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 
-import '../../../customTheme.dart';
+import '../../../widgets/theme/customTheme.dart';
 import '../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../stateManagement/openFilesManager.dart';
 import '../../../stateManagement/xmlProps/xmlActionProp.dart';
@@ -62,7 +62,7 @@ class XmlActionEditorState extends ChangeNotifierState<XmlActionEditor> {
     return SelectableWidget<XmlActionProp>(
       area: areasManager.getAreaOfFile(widget.action.file!),
       data: widget.action,
-      color: getActionPrimaryColor().withOpacity(0.5),
+      color: getActionPrimaryColor(context).withOpacity(0.5),
       child: NestedContextMenu(
         buttons: [
           ContextMenuButtonConfig(
@@ -76,7 +76,7 @@ class XmlActionEditorState extends ChangeNotifierState<XmlActionEditor> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              makeActionHeader(),
+              makeActionHeader(context),
               makeActionBody(),
             ],
           ),
@@ -85,14 +85,14 @@ class XmlActionEditorState extends ChangeNotifierState<XmlActionEditor> {
     );
   }
 
-  Color getActionPrimaryColor() {
+  Color getActionPrimaryColor(BuildContext context) {
     Color color;
     if (widget.action.attribute.value & 0x8 != 0)
-      color = Color.fromARGB(255, 223, 134, 0);
+      color = getTheme(context).actionTypeBlockingAccent!;
     else if (spawningActionCodes.contains(widget.action.code.value))
-      color = Color.fromARGB(255, 62, 145, 65);
+      color = getTheme(context).actionTypeEntityAccent!;
     else
-      color =Color.fromARGB(255, 30, 129, 209);
+      color = getTheme(context).actionTypeDefaultAccent!;
     
     if (widget.action.attribute.value & 0x2 != 0)
       color = Color.fromRGBO(color.red ~/ 2, color.green ~/ 2, color.blue ~/ 2, 1);
@@ -100,10 +100,10 @@ class XmlActionEditorState extends ChangeNotifierState<XmlActionEditor> {
     return color;
   }
 
-  Widget makeActionHeader() {
+  Widget makeActionHeader(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: getActionPrimaryColor(),
+        color: getActionPrimaryColor(context),
         borderRadius: BorderRadius.only(topLeft: Radius.circular(getTheme(context).actionBorderRadius!), topRight: Radius.circular(getTheme(context).actionBorderRadius!)),
       ),
       child: Theme(

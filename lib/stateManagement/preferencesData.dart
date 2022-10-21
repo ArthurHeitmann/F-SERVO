@@ -1,19 +1,36 @@
 
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../background/IdLookup.dart';
+import '../widgets/theme/darkTheme.dart';
+import '../widgets/theme/nierTheme.dart';
 import 'Property.dart';
 import 'nestedNotifier.dart';
 import 'openFileTypes.dart';
 import 'undoable.dart';
 
+enum ThemeType {
+  light,
+  dark,
+  nier,
+}
+
 class SavableProp<T> extends ValueProp<T> {
   final String key;
 
   SavableProp(this.key, SharedPreferences prefs, T fallback)
-    : super(prefs.get(key) as T? ?? fallback) {
+    : super(fallback) {
+    value = _getValue(prefs) ?? fallback;
     addListener(saveChanges);
   }
+
+  T? _getValue(SharedPreferences prefs) {
+    var val = prefs.get(key);
+    if (T == ThemeType)
+      return ThemeType.values[val as int] as T?;
+    return val as T?;
+  } 
   
   void saveChanges() {
     var prefs = PreferencesData()._prefs!;
@@ -27,6 +44,8 @@ class SavableProp<T> extends ValueProp<T> {
       prefs.setBool(key, value as bool);
     else if (T == List<String>)
       prefs.setStringList(key, value as List<String>);
+    else if (T == ThemeType)
+      prefs.setInt(key, ThemeType.values.indexOf(value as ThemeType));
     else
       throw Exception("Unsupported type: $T");
   }
@@ -44,6 +63,7 @@ class SavableProp<T> extends ValueProp<T> {
 class PreferencesData extends OpenFileData {
   static PreferencesData? _instance;
   Future<SharedPreferences> prefsFuture;
+  LoadingState _loadingState = LoadingState.notLoaded;
   SharedPreferences? _prefs;
 
   IndexingPathsProp? indexingPaths;
@@ -51,6 +71,7 @@ class PreferencesData extends OpenFileData {
   SavableProp<bool>? exportDats;
   SavableProp<bool>? exportPaks;
   SavableProp<bool>? convertXmls;
+  SavableProp<ThemeType>? themeType;
 
   PreferencesData._() 
     : prefsFuture = SharedPreferences.getInstance(),
@@ -62,6 +83,7 @@ class PreferencesData extends OpenFileData {
     });
   }
   
+  /// Singleton that manages preferences data.
   factory PreferencesData() {
     _instance ??= PreferencesData._();
     return _instance!;
@@ -70,6 +92,9 @@ class PreferencesData extends OpenFileData {
   @override
   Future<void> load() async {
     await prefsFuture;
+    if (_loadingState != LoadingState.notLoaded)
+      return;
+    _loadingState = LoadingState.loading;
 
     var paths = _prefs!.getStringList("indexingPaths") ?? [];
     if (indexingPaths == null) {
@@ -84,8 +109,21 @@ class PreferencesData extends OpenFileData {
     exportDats = SavableProp<bool>("exportDat", _prefs!, true);
     exportPaks = SavableProp<bool>("exportPak", _prefs!, true);
     convertXmls = SavableProp<bool>("convertXml", _prefs!, true);
+    themeType = SavableProp<ThemeType>("themeType", _prefs!, ThemeType.dark);
 
     await super.load();
+    _loadingState = LoadingState.loaded;
+  }
+
+  ThemeData makeTheme() {
+    switch (themeType!.value) {
+      case ThemeType.light:
+        throw UnimplementedError();
+      case ThemeType.dark:
+        return NierDarkThemeExtension.makeTheme();
+      case ThemeType.nier:
+        return NierNierThemeExtension.makeTheme();
+    }	
   }
 }
 

@@ -3,7 +3,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import '../../customTheme.dart';
+import '../../widgets/theme/customTheme.dart';
 import 'RowSeparated.dart';
 
 Future<bool?> confirmOrCancelDialog(BuildContext context, { required String title, String? body }) {

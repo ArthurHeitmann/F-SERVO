@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
 
-import '../../customTheme.dart';
+import '../../widgets/theme/customTheme.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/openFileTypes.dart';
 import '../../stateManagement/openFilesManager.dart';
@@ -130,9 +130,9 @@ class __OutlinerEntryState extends ChangeNotifierState<_OutlinerEntry> {
           isClicked = false;
         }),
         cursor: SystemMouseCursors.click,
-        child: AnimatedContainer(
+        child: Container(
           color: bgColor,
-          duration: Duration(milliseconds: 75),
+          // duration: Duration(milliseconds: 75),
           height: 25,
           padding: const EdgeInsets.symmetric(vertical: 3),
           child: Row(
@@ -147,7 +147,8 @@ class __OutlinerEntryState extends ChangeNotifierState<_OutlinerEntry> {
                     return Text(widget.action.name.toString(), 
                       style: TextStyle(
                         fontSize: 14,
-                        fontWeight: FontWeight.w300
+                        fontWeight: FontWeight.w300,
+                        color: isClicked ? getTheme(context).hierarchyEntrySelectedTextColor : null,
                       ),
                       overflow: TextOverflow.ellipsis,
                     );

@@ -3,7 +3,7 @@ import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 
-import '../../customTheme.dart';
+import '../../widgets/theme/customTheme.dart';
 import '../../fileTypeUtils/dat/datRepacker.dart';
 import '../../fileTypeUtils/pak/pakRepacker.dart';
 import '../../fileTypeUtils/yax/xmlToYax.dart';
@@ -25,20 +25,33 @@ class HierarchyEntryWidget extends ChangeNotifierWidget {
   State<HierarchyEntryWidget> createState() => _HierarchyEntryState();
 }
 
-const entryIcons = {
-  DatHierarchyEntry: Icon(Icons.folder, color: Color.fromRGBO(0xfd, 0xd8, 0x35, 1), size: 15),
-  PakHierarchyEntry: Icon(Icons.source, color: Color.fromRGBO(0xff, 0x98, 0x00, 1), size: 15),
-  HapGroupHierarchyEntry: Icon(Icons.workspaces, color: Color.fromRGBO(0x00, 0xbc, 0xd4, 1), size: 15),
-  XmlScriptHierarchyEntry: Icon(Icons.description, color: Color.fromRGBO(0xff, 0x70, 0x43, 1), size: 15),
-};
-
 class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
   bool isHovered = false;
   bool isClicked = false;
 
+  Icon? getEntryIcon(BuildContext context) {
+    var iconColor = getTheme(context).colorOfFiletype(widget.entry);
+    if (widget.entry is DatHierarchyEntry)
+      return Icon(Icons.folder, color: iconColor, size: 15);
+    else if (widget.entry is PakHierarchyEntry)
+      return Icon(Icons.source, color: iconColor, size: 15);
+    else if (widget.entry is HapGroupHierarchyEntry)
+      return Icon(Icons.workspaces, color: iconColor, size: 15);
+    else if (widget.entry is XmlScriptHierarchyEntry)
+      return Icon(Icons.description, color: iconColor, size: 15);
+    
+    return null;
+  }
+
+  Color getTextColor(BuildContext context) {
+    return isClicked || widget.entry.isSelected
+      ? getTheme(context).hierarchyEntrySelectedTextColor!
+      : getTheme(context).textColor!;
+  }
+
   @override
   Widget build(BuildContext context) {
-    Icon? icon = entryIcons[widget.entry.runtimeType];
+    Icon? icon = getEntryIcon(context);
     return Column(
       children: [
         setupContextMenu(
@@ -59,7 +72,11 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
                         ),
                         splashRadius: 14,
                         onPressed: toggleCollapsed,
-                        icon: Icon(widget.entry.isCollapsed ? Icons.chevron_right : Icons.expand_more, size: 17),
+                        icon: Icon(
+                          widget.entry.isCollapsed ? Icons.chevron_right : Icons.expand_more,
+                          size: 17,
+                          color: getTextColor(context)
+                        ),
                       ),
                     ),
                   if (icon != null)
@@ -72,6 +89,9 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
                         widget.entry.name.toString(),
                         overflow: TextOverflow.ellipsis,
                         textScaleFactor: 0.85,
+                        style: TextStyle(
+                          color: getTextColor(context)
+                        ),
                       ),
                     )
                   )
@@ -199,7 +219,7 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
       bgColor = getTheme(context).hierarchyEntryHovered!;
     else
       bgColor = Colors.transparent;
-
+    
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => isHovered = true),
@@ -212,9 +232,9 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
         onTap: onClick,
         onTapDown: (_) => setState(() => isClicked = true),
         onTapUp: (_) => setState(() => isClicked = false),
-        child: AnimatedContainer(
+        child: Container(
           color: bgColor,
-          duration: Duration(milliseconds: 75),
+          // duration: Duration(milliseconds: 75),
           child: child
         ),
       ),

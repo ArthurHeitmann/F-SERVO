@@ -35,14 +35,14 @@ class IndexedIdData {
   }
 
   @override
-  bool operator==(Object o) {
-    if (o is! IndexedIdData)
+  bool operator==(Object other) {
+    if (other is! IndexedIdData)
       return false;
-    return id == o.id &&
-      type == o.type &&
-      datPath == o.datPath &&
-      pakPath == o.pakPath &&
-      xmlPath == o.xmlPath;
+    return id == other.id &&
+      type == other.type &&
+      datPath == other.datPath &&
+      pakPath == other.pakPath &&
+      xmlPath == other.xmlPath;
   }
 
   @override
@@ -68,11 +68,11 @@ class IndexedActionIdData extends IndexedIdData {
   }
 
   @override
-  bool operator==(Object o) {
-    if (o is! IndexedActionIdData)
+  bool operator==(Object other) {
+    if (other is! IndexedActionIdData)
       return false;
-    return super==(o) &&
-      actionName == o.actionName;
+    return super==(other) &&
+      actionName == other.actionName;
   }
 
   @override
@@ -104,14 +104,14 @@ class IndexedEntityIdData extends IndexedIdData {
   }
 
   @override
-  bool operator==(Object o) {
-    if (o is! IndexedEntityIdData)
+  bool operator==(Object other) {
+    if (other is! IndexedEntityIdData)
       return false;
-    return super==(o) &&
-      objId == o.objId &&
-      actionId == o.actionId &&
-      name == o.name &&
-      level == o.level;
+    return super==(other) &&
+      objId == other.objId &&
+      actionId == other.actionId &&
+      name == other.name &&
+      level == other.level;
   }
 
   @override

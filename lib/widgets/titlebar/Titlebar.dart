@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
-import '../../customTheme.dart';
+import '../../widgets/theme/customTheme.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/miscValues.dart';
 import '../../stateManagement/openFilesManager.dart';

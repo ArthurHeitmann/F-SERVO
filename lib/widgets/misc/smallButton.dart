@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
 
-import '../../customTheme.dart';
+import '../../widgets/theme/customTheme.dart';
 
 class SmallButton extends StatelessWidget {
   final Widget child;

@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../../../background/IdLookup.dart';
 import '../../../background/IdsIndexer.dart';
-import '../../../customTheme.dart';
+import '../../../widgets/theme/customTheme.dart';
 import '../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/openFilesManager.dart';

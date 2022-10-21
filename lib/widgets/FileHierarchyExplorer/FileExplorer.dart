@@ -2,7 +2,7 @@
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
 
-import '../../customTheme.dart';
+import '../../widgets/theme/customTheme.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/FileHierarchy.dart';
 import '../../stateManagement/miscValues.dart';
@@ -84,7 +84,7 @@ class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
         Row(
           children: [
             Tooltip(
-              message: "Auo translate Jap to Eng",
+              message: "Auto translate Jap to Eng",
               waitDuration: Duration(milliseconds: 500),
               child: ValueListenableBuilder(
                 valueListenable: shouldAutoTranslate,

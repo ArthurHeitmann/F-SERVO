@@ -1,0 +1,6 @@
+[submodule "lib/fileTypeUtils/MrubyDecompiler"]
+	path = lib/fileTypeUtils/MrubyDecompiler
+	url = https://github.com/ArthurHeitmann/MrubyDecompiler.git
+[submodule "lib/fileTypeUtils/ruby/MrubyDecompiler"]
+	path = lib/fileTypeUtils/ruby/MrubyDecompiler
+	url = https://github.com/ArthurHeitmann/MrubyDecompiler.git

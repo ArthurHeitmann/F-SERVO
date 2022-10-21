@@ -3,8 +3,11 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
+import '../../stateManagement/FileHierarchy.dart';
+
 class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
   final Color? editorBackgroundColor;
+  final String? editorIconPath;
   final Color? sidebarBackgroundColor;
   final Color? dividerColor;
   final Color? tabColor;
@@ -20,9 +23,17 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
   final Color? titleBarButtonCloseColor;
   final Color? hierarchyEntryHovered;
   final Color? hierarchyEntrySelected;
+  final Color? hierarchyEntrySelectedTextColor;
   final Color? hierarchyEntryClicked;
+  final Color? filetypeDatColor;
+  final Color? filetypePakColor;
+  final Color? filetypeGroupColor;
+  final Color? filetypeXmlColor;
   final Color? formElementBgColor;
   final Color? actionBgColor;
+  final Color? actionTypeDefaultAccent;
+  final Color? actionTypeEntityAccent;
+  final Color? actionTypeBlockingAccent;
   final double? actionBorderRadius;
   final ButtonStyle? dialogPrimaryButtonStyle;
   final ButtonStyle? dialogSecondaryButtonStyle;
@@ -35,6 +46,7 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
 
   NierThemeExtension({
     this.editorBackgroundColor,
+    this.editorIconPath,
     this.sidebarBackgroundColor,
     this.dividerColor,
     this.tabColor,
@@ -50,9 +62,17 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
     this.titleBarButtonCloseColor,
     this.hierarchyEntryHovered,
     this.hierarchyEntrySelected,
+    this.hierarchyEntrySelectedTextColor,
     this.hierarchyEntryClicked,
+    this.filetypeDatColor,
+    this.filetypePakColor,
+    this.filetypeGroupColor,
+    this.filetypeXmlColor,
     this.formElementBgColor,
     this.actionBgColor,
+    this.actionTypeDefaultAccent,
+    this.actionTypeEntityAccent,
+    this.actionTypeBlockingAccent,
     this.actionBorderRadius,
     this.dialogPrimaryButtonStyle,
     this.dialogSecondaryButtonStyle,
@@ -67,6 +87,7 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
   @override
   ThemeExtension<NierThemeExtension> copyWith({
     Color? editorBackgroundColor,
+    String? editorIconPath,
     Color? sidebarBackgroundColor,
     Color? dividerColor,
     Color? tabColor,
@@ -82,9 +103,17 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
     Color? titleBarButtonCloseColor,
     Color? hierarchyEntryHovered,
     Color? hierarchyEntrySelected,
+    Color? hierarchyEntrySelectedTextColor,
     Color? hierarchyEntryClicked,
+    Color? filetypeDatColor,
+    Color? filetypePakColor,
+    Color? filetypeGroupColor,
+    Color? filetypeXmlColor,
     Color? formElementBgColor,
     Color? actionBgColor,
+    Color? actionTypeDefaultAccent,
+    Color? actionTypeEntityAccent,
+    Color? actionTypeBlockingAccent,
     double? actionBorderRadius,
     ButtonStyle? dialogPrimaryButtonStyle,
     ButtonStyle? dialogSecondaryButtonStyle,
@@ -97,6 +126,7 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
   }) {
     return NierThemeExtension(
       editorBackgroundColor: editorBackgroundColor ?? this.editorBackgroundColor,
+      editorIconPath: editorIconPath ?? this.editorIconPath,
       sidebarBackgroundColor: sidebarBackgroundColor ?? this.sidebarBackgroundColor,
       dividerColor: dividerColor ?? this.dividerColor,
       tabColor: tabColor ?? this.tabColor,
@@ -112,9 +142,17 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
       titleBarButtonCloseColor: titleBarButtonCloseColor ?? this.titleBarButtonCloseColor,
       hierarchyEntryHovered: hierarchyEntryHovered ?? this.hierarchyEntryHovered,
       hierarchyEntrySelected: hierarchyEntrySelected ?? this.hierarchyEntrySelected,
+      hierarchyEntrySelectedTextColor: hierarchyEntrySelectedTextColor ?? this.hierarchyEntrySelectedTextColor,
       hierarchyEntryClicked: hierarchyEntryClicked ?? this.hierarchyEntryClicked,
+      filetypeDatColor: filetypeDatColor ?? this.filetypeDatColor,
+      filetypePakColor: filetypePakColor ?? this.filetypePakColor,
+      filetypeGroupColor: filetypeGroupColor ?? this.filetypeGroupColor,
+      filetypeXmlColor: filetypeXmlColor ?? this.filetypeXmlColor,
       formElementBgColor: formElementBgColor ?? this.formElementBgColor,
       actionBgColor: actionBgColor ?? this.actionBgColor,
+      actionTypeDefaultAccent: actionTypeDefaultAccent ?? this.actionTypeDefaultAccent,
+      actionTypeEntityAccent: actionTypeEntityAccent ?? this.actionTypeEntityAccent,
+      actionTypeBlockingAccent: actionTypeBlockingAccent ?? this.actionTypeBlockingAccent,
       actionBorderRadius: actionBorderRadius ?? this.actionBorderRadius,
       dialogPrimaryButtonStyle: dialogPrimaryButtonStyle ?? this.dialogPrimaryButtonStyle,
       dialogSecondaryButtonStyle: dialogSecondaryButtonStyle ?? this.dialogSecondaryButtonStyle,
@@ -134,6 +172,7 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
     }
     return NierThemeExtension(
       editorBackgroundColor: Color.lerp(editorBackgroundColor, other.editorBackgroundColor, t),
+      editorIconPath: t < 0.5 ? editorIconPath : other.editorIconPath,
       sidebarBackgroundColor: Color.lerp(sidebarBackgroundColor, other.sidebarBackgroundColor, t),
       dividerColor: Color.lerp(dividerColor, other.dividerColor, t),
       tabColor: Color.lerp(tabColor, other.tabColor, t),
@@ -149,9 +188,17 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
       titleBarButtonCloseColor: Color.lerp(titleBarButtonCloseColor, other.titleBarButtonCloseColor, t),
       hierarchyEntryHovered: Color.lerp(hierarchyEntryHovered, other.hierarchyEntryHovered, t),
       hierarchyEntrySelected: Color.lerp(hierarchyEntrySelected, other.hierarchyEntrySelected, t),
+      hierarchyEntrySelectedTextColor: Color.lerp(hierarchyEntrySelectedTextColor, other.hierarchyEntrySelectedTextColor, t),
       hierarchyEntryClicked: Color.lerp(hierarchyEntryClicked, other.hierarchyEntryClicked, t),
+      filetypeDatColor: Color.lerp(filetypeDatColor, other.filetypeDatColor, t),
+      filetypePakColor: Color.lerp(filetypePakColor, other.filetypePakColor, t),
+      filetypeGroupColor: Color.lerp(filetypeGroupColor, other.filetypeGroupColor, t),
+      filetypeXmlColor: Color.lerp(filetypeXmlColor, other.filetypeXmlColor, t),
       formElementBgColor: Color.lerp(formElementBgColor, other.formElementBgColor, t),
       actionBgColor: Color.lerp(actionBgColor, other.actionBgColor, t),
+      actionTypeDefaultAccent: Color.lerp(actionTypeDefaultAccent, other.actionTypeDefaultAccent, t),
+      actionTypeEntityAccent: Color.lerp(actionTypeEntityAccent, other.actionTypeEntityAccent, t),
+      actionTypeBlockingAccent: Color.lerp(actionTypeBlockingAccent, other.actionTypeBlockingAccent, t),
       actionBorderRadius: lerpDouble(actionBorderRadius, other.actionBorderRadius, t),
       dialogPrimaryButtonStyle: ButtonStyle.lerp(dialogPrimaryButtonStyle, other.dialogPrimaryButtonStyle, t),
       dialogSecondaryButtonStyle: ButtonStyle.lerp(dialogSecondaryButtonStyle, other.dialogSecondaryButtonStyle, t),
@@ -163,87 +210,19 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
       tableBgAltColor: Color.lerp(tableBgAltColor, other.tableBgAltColor, t),
     );
   }
-}
 
-class NierDarkThemeExtension extends NierThemeExtension {
-  NierDarkThemeExtension()
-    : super(
-      editorBackgroundColor: const Color.fromRGBO(18, 18, 18, 1),
-      sidebarBackgroundColor: Color.fromARGB(255, 50, 50, 50),
-      dividerColor: Color.fromRGBO(255, 255, 255, 0.1),
-      tabColor: Color.fromARGB(255, 59, 59, 59),
-      tabSelectedColor: Color.fromARGB(255, 36, 36, 36),
-      tabIconColor: Color.fromARGB(255, 255, 255, 255),
-      dropTargetColor: Colors.black.withOpacity(0.5),
-      textColor: Colors.white,
-      titleBarColor: Color.fromARGB(255, 49, 49, 49),
-      titleBarTextColor: Color.fromRGBO(200, 200, 200, 1),
-      titleBarButtonDefaultColor: Color.fromRGBO(239, 239, 239, 1),
-      titleBarButtonPrimaryColor: Colors.blue,
-      titleBarButtonCloseColor: Colors.redAccent,
-      hierarchyEntryHovered: Color.fromRGBO(255, 255, 255, 0.075),
-      hierarchyEntrySelected: Color.fromRGBO(255, 255, 255, 0.175),
-      hierarchyEntryClicked: Color.fromRGBO(255, 255, 255, 0.2),
-      formElementBgColor: Color.fromRGBO(37, 37, 37, 1),
-      actionBgColor: Color.fromARGB(255, 53, 53, 53),
-      actionBorderRadius: 10,
-      dialogPrimaryButtonStyle: ButtonStyle(
-        backgroundColor: MaterialStateProperty.all(Colors.blue),
-        foregroundColor: MaterialStateProperty.all(Colors.white),
-      ),
-      dialogSecondaryButtonStyle: ButtonStyle(
-        backgroundColor: MaterialStateProperty.all(Colors.transparent),
-        foregroundColor: MaterialStateProperty.all(Colors.white),
-        side: MaterialStateProperty.all(BorderSide(color: Colors.grey)),
-        shadowColor: MaterialStateProperty.all(Colors.transparent),
-      ),
-      selectedColor: Colors.blue.shade500.withOpacity(0.5),
-      propInputTextStyle: TextStyle(
-        color: Colors.white,
-        fontSize: 12,
-        fontFamily: "FiraCode",
-        overflow: TextOverflow.ellipsis,
-      ),
-      propBorderColor: Colors.grey.shade700,
-      contextMenuBgColor: Color.fromARGB(255, 25, 25, 25),
-      tableBgColor: Color.fromARGB(255, 33, 33, 33),
-      tableBgAltColor: Color.fromARGB(255, 54, 54, 54),
-    );
-
-  static ThemeData makeTheme() {
-    return ThemeData(
-      brightness: Brightness.dark,
-      extensions: [NierDarkThemeExtension()],
-      scrollbarTheme: ScrollbarThemeData(
-        radius: Radius.zero,
-        crossAxisMargin: 0,
-        thickness: MaterialStateProperty.all(12),
-      ),
-      inputDecorationTheme: InputDecorationTheme(
-        border: InputBorder.none,
-        contentPadding: EdgeInsets.symmetric(vertical: 8),
-        isDense: true,
-      ),
-      tooltipTheme: TooltipThemeData(
-        decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.75),
-          borderRadius: BorderRadius.circular(4),
-        ),
-        textStyle: TextStyle(
-          color: Colors.white,
-          fontSize: 12,
-        ),
-      ),
-      popupMenuTheme: PopupMenuThemeData(
-        color: Color.fromARGB(255, 25, 25, 25),
-      ),
-      toggleableActiveColor: Color.fromARGB(255, 228, 162, 21),
-      colorScheme: ColorScheme.dark(
-        primary: Color.fromARGB(255, 228, 162, 21),
-        secondary: Color.fromARGB(255, 228, 162, 21),
-      ),
-    );
-  } 
+  Color colorOfFiletype(HierarchyEntry entry) {
+    if (entry is XmlScriptHierarchyEntry)
+      return filetypeXmlColor!;
+    if (entry is PakHierarchyEntry)
+      return filetypePakColor!;
+    if (entry is DatHierarchyEntry)
+      return filetypeDatColor!;
+    if (entry is HapGroupHierarchyEntry)
+      return filetypeGroupColor!;
+    
+    return Colors.white;
+  }
 }
 
 NierThemeExtension getTheme(context) {

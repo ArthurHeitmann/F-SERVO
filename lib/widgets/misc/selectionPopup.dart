@@ -5,7 +5,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../customTheme.dart';
+import '../../widgets/theme/customTheme.dart';
 import 'mousePosition.dart';
 
 class SelectionPopupConfig<T> {

@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
 
-import '../../../customTheme.dart';
+import '../../../widgets/theme/customTheme.dart';
 import '../../../stateManagement/ChangeNotifierWidget.dart';
 import 'propTextField.dart';
 

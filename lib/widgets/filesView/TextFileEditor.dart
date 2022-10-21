@@ -12,7 +12,7 @@ import 'package:highlight/languages/bash.dart';
 import 'package:highlight/languages/xml.dart';
 import 'package:path/path.dart';
 
-import '../../customTheme.dart';
+import '../../widgets/theme/customTheme.dart';
 import '../../main.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/openFileTypes.dart';

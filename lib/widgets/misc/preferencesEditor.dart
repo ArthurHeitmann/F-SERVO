@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
-import '../../customTheme.dart';
+import '../../widgets/theme/customTheme.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/preferencesData.dart';
 import '../propEditors/simpleProps/boolPropSwitch.dart';
@@ -36,6 +36,7 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
           SizedBox(height: 20,),
           ...makeDataExportEditor(),
           ...makeIndexingEditor(),
+          ...makeThemeEditor(),
         ],
       ),
     );
@@ -167,6 +168,61 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
         },
         child: Icon(Icons.add, size: 17,),
       )
+    ];
+  }
+
+  Widget makeThemeSelectable(BuildContext context, ThemeType type, Color primary, Color secondary) {
+    return Container(
+      width: 100,
+      height: 100,
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: secondary.withOpacity(widget.prefs.themeType!.value == type ? 0.5 : 0),
+          width: 2,
+        ),
+        borderRadius: BorderRadius.circular(17),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Material(
+        color: primary,
+        borderRadius: BorderRadius.circular(15),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => widget.prefs.themeType!.value = type,
+          splashColor: secondary.withOpacity(0.5),
+          child: Align(
+            alignment: Alignment.bottomRight,
+            child: Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: secondary,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(15),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<Widget> makeThemeEditor() {
+    return [
+      Text("Theme:", style: sectionHeaderStyle,),
+      SizedBox(height: 10,),
+      ChangeNotifierBuilder(
+        notifier: widget.prefs.themeType!,
+        builder: (context) => Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            makeThemeSelectable(context, ThemeType.dark, Color.fromARGB(255, 50, 50, 50), Colors.white),
+            makeThemeSelectable(context, ThemeType.nier, Color.fromARGB(255, 218, 212, 187), Color.fromARGB(255, 78, 75, 61)),
+          ],
+        ),
+      ),
     ];
   }
 }

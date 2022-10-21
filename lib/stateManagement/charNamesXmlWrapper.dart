@@ -3,7 +3,6 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:convert/convert.dart';
-import 'package:xml/xml.dart';
 
 import '../fileTypeUtils/utils/ByteDataWrapper.dart';
 import '../utils.dart';

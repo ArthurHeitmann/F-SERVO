@@ -12,12 +12,11 @@ import 'package:window_manager/window_manager.dart';
 import '../../stateManagement/FileHierarchy.dart';
 import '../../stateManagement/openFileTypes.dart';
 import '../misc/Selectable.dart';
-import '../misc/SmoothSingleChildScrollView.dart';
 import 'FileTabEntry.dart';
 import 'FileType.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/openFilesManager.dart';
-import '../../customTheme.dart';
+import '../../widgets/theme/customTheme.dart';
 import '../../utils.dart';
 
 
@@ -105,13 +104,10 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
     Widget newEntry = makeFileEditor(file);
     newEntry = Positioned.fill(
       key: PageStorageKey(file),
-      // child: SmoothSingleChildScrollView(
-      //   controller: file.scrollController,
         child: Padding(
           padding: const EdgeInsets.only(top: 30),
           child: newEntry,
         ),
-      // ),
     );
     cachedEditors[file] = newEntry;
     return newEntry;
@@ -147,7 +143,7 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
                         duration: const Duration(milliseconds: 250),
                         curve: _BezierCurve(0, 1.5, 1.2, 1),
                         child: Image(
-                          image: AssetImage("assets/logo/pod_alpha.png"),
+                          image: AssetImage(getTheme(context).editorIconPath!),
                         ),
                       ),
                     ),

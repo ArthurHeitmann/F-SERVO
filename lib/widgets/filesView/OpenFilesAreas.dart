@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'fileTabView.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/openFilesManager.dart';
-import '../../customTheme.dart';
+import '../../widgets/theme/customTheme.dart';
 import '../../widgets/ResizableWidget.dart';
 
 
