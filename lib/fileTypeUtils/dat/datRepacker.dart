@@ -4,11 +4,14 @@ import 'dart:typed_data';
 
 import 'package:path/path.dart' as path;
 
+import '../../stateManagement/statusInfo.dart';
 import '../../utils.dart';
 import '../utils/ByteDataWrapper.dart';
 import 'datHashGenerator.dart';
 
 Future<void> repackDat(String datDir, String exportPath) async {
+  messageLog.add("Repacking ${path.basename(exportPath)}");
+  
   var fileList = await getDatFileList(datDir);
   var fileNames = fileList.map((e) => path.basename(e)).toList();
   var fileSizes = (await Future.wait(fileList.map((e) => File(e).length()))).toList();
@@ -101,6 +104,4 @@ Future<void> repackDat(String datDir, String exportPath) async {
   }
 
   await datFile.writeAsBytes(datBytes.buffer.asUint8List());
-
-  print('DAT/DTT Export Complete. :>');
 }

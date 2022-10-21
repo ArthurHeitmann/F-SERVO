@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:path/path.dart' as path;
 
+import '../../stateManagement/statusInfo.dart';
 import '../pak/pakExtractor.dart';
 import '../utils/ByteDataWrapper.dart';
 
@@ -39,6 +40,7 @@ class _DatHeader {
 
 Future<List<String>> extractDatFiles(String datPath, { bool shouldExtractPakFiles = false }) async {
   print("Extracting dat files from $datPath");
+  messageLog.add("Extracting ${path.basename(datPath)}");
 
   var datFile = File(datPath);
   var rawBytes = await datFile.readAsBytes();

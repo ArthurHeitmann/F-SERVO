@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:path/path.dart' as path;
 
+import '../../stateManagement/statusInfo.dart';
 import '../dat/datExtractor.dart';
 import '../yax/yaxToXml.dart';
 import '../utils/ByteDataWrapper.dart';
@@ -50,6 +51,7 @@ Future<void> _extractPakYax(_HeaderEntry meta, int size, ByteDataWrapper bytes, 
 
 Future<List<String>> extractPakFiles(String pakPath, { bool yaxToXml = false }) async {
   print("Extracting pak files from $pakPath");
+  messageLog.add("Extracting ${path.basename(pakPath)}");
 
   var pakFile = File(pakPath);
   var rawBytes = await pakFile.readAsBytes();

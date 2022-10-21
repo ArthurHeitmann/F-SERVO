@@ -11,8 +11,6 @@ import 'stateManagement/sync/syncServer.dart';
 import 'widgets/EditorLayout.dart';
 import 'widgets/misc/mousePosition.dart';
 import 'widgets/statusbar/statusbar.dart';
-import 'widgets/theme/darkTheme.dart';
-import 'widgets/theme/nierTheme.dart';
 import 'widgets/titlebar/Titlebar.dart';
 
 void main() async {

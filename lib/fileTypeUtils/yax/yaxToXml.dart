@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:path/path.dart' as path;
 import 'package:xml/xml.dart';
 
+import '../../stateManagement/statusInfo.dart';
 import '../../utils.dart';
 import 'hashToStringMap.dart';
 import 'japToEng.dart';
@@ -90,6 +91,7 @@ XmlElement yaxToXml(ByteDataWrapper bytes, { includeAnnotations = true }) {
 
 Future<void> yaxFileToXmlFile(String yaxFilePath) async {
   print("Converting $yaxFilePath to xml");
+  messageLog.add("Converting ${path.basename(yaxFilePath)}");
 
   var rawBytes = await File(yaxFilePath).readAsBytes();
   var bytes = ByteDataWrapper(rawBytes.buffer);

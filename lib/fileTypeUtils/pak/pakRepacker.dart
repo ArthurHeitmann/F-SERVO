@@ -5,6 +5,7 @@ import 'package:path/path.dart' as path;
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 
+import '../../stateManagement/statusInfo.dart';
 import '../utils/ByteDataWrapper.dart';
 
 final ZLibEncoder _zLibEncoder = ZLibEncoder();
@@ -72,6 +73,8 @@ class _FileEntry {
 }
 
 Future<void> repackPak(String pakDir) async {
+  messageLog.add("Repacking ${path.basename(pakDir)}");
+  
   var infoJsonFile = File(path.join(pakDir, "pakInfo.json"));
   var pakInfo = jsonDecode(await infoJsonFile.readAsString());
 

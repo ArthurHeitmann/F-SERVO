@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:path/path.dart' as path;
 import 'package:xml/xml.dart';
 
+import '../../stateManagement/statusInfo.dart';
 import '../../utils.dart';
 import '../utils/ByteDataWrapper.dart';
 
@@ -81,6 +82,7 @@ ByteDataWrapper xmlToYax(XmlElement root) {
 
 Future<void> xmlFileToYaxFile(String xmlFilePath) async {
   print("Converting $xmlFilePath to yax");
+  messageLog.add("Converting ${path.basename(xmlFilePath)}");
 
   var xmlFile = File(xmlFilePath);
   var xmlString = await xmlFile.readAsString();
