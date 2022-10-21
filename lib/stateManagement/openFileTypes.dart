@@ -40,6 +40,8 @@ class OpenFileData extends ChangeNotifier with Undoable, HasUuid {
   factory OpenFileData.from(String name, String path, { String? secondaryName }) {
     if (path.endsWith(".xml"))
       return XmlFileData(name, path, secondaryName: secondaryName);
+    else if (path.endsWith(".rb"))
+      return RubyFileData(name, path, secondaryName: secondaryName);
     else
       return TextFileData(name, path, secondaryName: secondaryName);
   }
@@ -257,5 +259,15 @@ class XmlFileData extends OpenFileData {
       _root?.restoreWith(content._root as Undoable);
     else
       _root = null;
+  }
+}
+
+class RubyFileData extends TextFileData {
+  RubyFileData(super.name, super.path, { super.secondaryName });
+
+  @override
+  Future<void> save() async {
+    await super.save();
+    changedRbFiles.add(path);
   }
 }

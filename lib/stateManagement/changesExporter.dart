@@ -1,9 +1,11 @@
 
 import 'dart:io';
+import 'package:nier_scripts_editor/stateManagement/statusInfo.dart';
 import 'package:path/path.dart';
 
 import '../fileTypeUtils/dat/datRepacker.dart';
 import '../fileTypeUtils/pak/pakRepacker.dart';
+import '../fileTypeUtils/ruby/pythonRuby.dart';
 import '../fileTypeUtils/yax/xmlToYax.dart';
 import '../utils.dart';
 import 'openFileTypes.dart';
@@ -12,6 +14,7 @@ import 'preferencesData.dart';
 List<XmlFileData> changedXmlFiles = [];
 Set<String> changedPakFiles = {};
 Set<String> changedDatFiles = {};
+Set<String> changedRbFiles = {};
 
 /// Convert changed files to YAX and repack PAK & DAT files
 Future<void> processChangedFiles() async {
@@ -31,6 +34,12 @@ Future<void> processChangedFiles() async {
   changedPakFiles = {};
   for (var pakDir in paks) {
     var datDir = dirname(dirname(pakDir));
+    if (!datDir.endsWith(".dat"))
+      continue;
+    dats.add(datDir);
+  }
+  for (var rbFile in changedRbFiles) {
+    var datDir = dirname(rbFile);
     if (!datDir.endsWith(".dat"))
       continue;
     dats.add(datDir);
@@ -62,6 +71,14 @@ Future<void> processChangedFiles() async {
     }));
   }
 
+  // compile changed RB files
+  // if (prefs.compileRbs?.value == true) {
+    await Future.wait(changedRbFiles.map((rbPath) async {
+      await rubyFileToBin(rbPath);
+    }));
+    changedRbFiles = {};
+  // }
+
   // repack DAT
   if (prefs.exportDats?.value == true && prefs.dataExportPath?.value != "") {
     await Future.wait(dats.map((datDir) {
@@ -70,4 +87,6 @@ Future<void> processChangedFiles() async {
       return repackDat(datDir, exportPath);
     }));
   }
+
+  messageLog.add("Done :)");
 }

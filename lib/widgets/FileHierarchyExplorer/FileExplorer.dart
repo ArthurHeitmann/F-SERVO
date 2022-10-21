@@ -2,6 +2,7 @@
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
 
+import '../../stateManagement/statusInfo.dart';
 import '../../widgets/theme/customTheme.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/FileHierarchy.dart';
@@ -19,10 +20,16 @@ class FileExplorer extends ChangeNotifierWidget {
 class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
   bool isDroppingFile = false;
 
-  void openFile(DropDoneDetails details) {
+  void openFile(DropDoneDetails details) async {
+    List<Future> futures = [];
+
     for (var file in details.files) {
-      openHierarchyManager.openFile(file.path);
+      futures.add(openHierarchyManager.openFile(file.path));
     }
+
+    await Future.wait(futures);
+
+    messageLog.add("Opened ${details.files.length} file${details.files.length == 1 ? "" : "s"}");
   }
 
   @override

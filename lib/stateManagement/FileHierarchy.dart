@@ -4,6 +4,7 @@ import 'package:path/path.dart' as path;
 import 'package:xml/xml.dart';
 
 import '../fileTypeUtils/dat/datExtractor.dart';
+import '../fileTypeUtils/ruby/pythonRuby.dart';
 import '../fileTypeUtils/yax/yaxToXml.dart';
 import '../main.dart';
 import '../utils.dart';
@@ -28,9 +29,8 @@ class HierarchyEntry extends NestedNotifier<HierarchyEntry> with Undoable {
   final bool isCollapsible;
   bool _isCollapsed = false;
   final bool isOpenable;
-  final int priority;
 
-  HierarchyEntry(this.name, this.priority, this.isSelectable, this.isCollapsible, this.isOpenable)
+  HierarchyEntry(this.name, this.isSelectable, this.isCollapsible, this.isOpenable)
     : super([]);
 
   @override
@@ -68,7 +68,7 @@ class HierarchyEntry extends NestedNotifier<HierarchyEntry> with Undoable {
 
   @override
   Undoable takeSnapshot() {
-    var snapshot = HierarchyEntry(name.takeSnapshot() as StringProp, priority, isSelectable, isCollapsible, isOpenable);
+    var snapshot = HierarchyEntry(name.takeSnapshot() as StringProp, isSelectable, isCollapsible, isOpenable);
     snapshot.overrideUuidForUndoable(uuid);
     snapshot._isSelected = _isSelected;
     snapshot._isCollapsed = _isCollapsed;
@@ -91,12 +91,12 @@ class HierarchyEntry extends NestedNotifier<HierarchyEntry> with Undoable {
 class FileHierarchyEntry extends HierarchyEntry {
   final String path;
 
-  FileHierarchyEntry(StringProp name, this.path, int priority, bool isCollapsible, bool isOpenable)
-    : super(name, priority, true, isCollapsible, isOpenable);
+  FileHierarchyEntry(StringProp name, this.path, bool isCollapsible, bool isOpenable)
+    : super(name, true, isCollapsible, isOpenable);
   
   @override
   Undoable takeSnapshot() {
-    var snapshot = FileHierarchyEntry(name.takeSnapshot() as StringProp, path, priority, isCollapsible, isOpenable);
+    var snapshot = FileHierarchyEntry(name.takeSnapshot() as StringProp, path, isCollapsible, isOpenable);
     snapshot.overrideUuidForUndoable(uuid);
     snapshot._isSelected = _isSelected;
     snapshot._isCollapsed = _isCollapsed;
@@ -117,12 +117,12 @@ class FileHierarchyEntry extends HierarchyEntry {
 class ExtractableHierarchyEntry extends FileHierarchyEntry {
   final String extractedPath;
 
-  ExtractableHierarchyEntry(StringProp name, String filePath, this.extractedPath, int priority, bool isCollapsible, bool isOpenable)
-    : super(name, filePath, priority, isCollapsible, isOpenable);
+  ExtractableHierarchyEntry(StringProp name, String filePath, this.extractedPath, bool isCollapsible, bool isOpenable)
+    : super(name, filePath, isCollapsible, isOpenable);
   
   @override
   Undoable takeSnapshot() {
-    var snapshot = ExtractableHierarchyEntry(name.takeSnapshot() as StringProp, this.path, extractedPath, priority, isCollapsible, isOpenable);
+    var snapshot = ExtractableHierarchyEntry(name.takeSnapshot() as StringProp, this.path, extractedPath, isCollapsible, isOpenable);
     snapshot.overrideUuidForUndoable(uuid);
     snapshot._isSelected = _isSelected;
     snapshot._isCollapsed = _isCollapsed;
@@ -142,7 +142,7 @@ class ExtractableHierarchyEntry extends FileHierarchyEntry {
 
 class DatHierarchyEntry extends ExtractableHierarchyEntry {
   DatHierarchyEntry(StringProp name, String path, String extractedPath)
-    : super(name, path, extractedPath, 10, true, false);
+    : super(name, path, extractedPath, true, false);
 
   @override
   HierarchyEntry clone() {
@@ -158,7 +158,7 @@ class PakHierarchyEntry extends ExtractableHierarchyEntry {
   final Map<int, HapGroupHierarchyEntry> _flatGroups = {};
 
   PakHierarchyEntry(StringProp name, String path, String extractedPath)
-    : super(name, path, extractedPath, 7, true, false);
+    : super(name, path, extractedPath, true, false);
 
   Future<void> readGroups(String groupsXmlPath, HierarchyEntry? parent) async {
     var groupsFile = File(groupsXmlPath);
@@ -271,7 +271,7 @@ class HapGroupHierarchyEntry extends FileHierarchyEntry {
   
   HapGroupHierarchyEntry(StringProp name, this.prop)
     : id = (prop.get("id")!.value as HexProp).value,
-    super(name, path.dirname(prop.file?.path ?? ""), 5, true, false);
+    super(name, path.dirname(prop.file?.path ?? ""), true, false);
   
   HapGroupHierarchyEntry addChild({ String name = "New Group" }) {
     var newGroupProp = XmlProp.fromXml(
@@ -348,7 +348,7 @@ class XmlScriptHierarchyEntry extends FileHierarchyEntry {
   String _hapName = "";
 
   XmlScriptHierarchyEntry(StringProp name, String path)
-    : super(name, path, 2, false, true)
+    : super(name, path, false, true)
   {
     this.name.transform = (str) {
       if (_hapName.isNotEmpty)
@@ -409,6 +409,11 @@ class XmlScriptHierarchyEntry extends FileHierarchyEntry {
   }
 }
 
+class RubyScriptHierarchyEntry extends FileHierarchyEntry {
+  RubyScriptHierarchyEntry(StringProp name, String path)
+    : super(name, path, false, true);
+}
+
 class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable {
   HierarchyEntry? _selectedEntry;
 
@@ -451,6 +456,12 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
         else
           throw FileSystemException("File not found: $filePath");
       }
+      else if (filePath.endsWith(".bin")) {
+        if (await File(filePath).exists())
+          entry = await openBinMrbScript(filePath, parent: parent);
+        else
+          throw FileSystemException("File not found: $filePath");
+      }
       else
         throw FileSystemException("Unsupported file type: $filePath");
       
@@ -467,6 +478,7 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
     if (existing != null)
       return existing;
 
+    // get DAT infos
     var fileName = path.basename(datPath);
     var datFolder = path.dirname(datPath);
     var datExtractDir = path.join(datFolder, "nier2blender_extracted", fileName);
@@ -495,17 +507,23 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
     for (var entry in existingEntries)
       parentOf(entry).remove(entry);
 
+    // process DAT files
     List<Future<void>> futures = [];
     datFilePaths ??= await getDatFileList(datExtractDir);
     for (var file in datFilePaths) {
-      if (!file.endsWith(".pak"))
+      if (!file.endsWith(".pak") && !file.endsWith("_scp.bin"))
         continue;
       int existingEntryI = existingEntries.indexWhere((entry) => (entry as FileHierarchyEntry).path == file);
       if (existingEntryI != -1) {
         datEntry.add(existingEntries[existingEntryI]);
         continue;
       }
-      futures.add(openPak(file, parent: datEntry));
+      if (file.endsWith(".pak"))
+        futures.add(openPak(file, parent: datEntry));
+      else if (file.endsWith("_scp.bin"))
+        futures.add(openBinMrbScript(file, parent: datEntry));
+      else
+        throw FileSystemException("Unsupported file type: $file");
     }
 
     await Future.wait(futures);
@@ -598,6 +616,26 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
     if (existing != null)
       return existing;
     var entry = XmlScriptHierarchyEntry(StringProp(path.basename(xmlFilePath)), xmlFilePath);
+    if (parent != null)
+      parent.add(entry);
+    else
+      add(entry);
+    
+    return entry;
+  }
+
+  Future<HierarchyEntry> openBinMrbScript(String binFilePath, { HierarchyEntry? parent }) async {
+    var rbPath = "$binFilePath.rb";
+
+    var existing = findRecWhere((entry) => entry is RubyScriptHierarchyEntry && entry.path == rbPath);
+    if (existing != null)
+      return existing;
+
+    if (!await File(rbPath).exists()) {
+      await binFileToRuby(binFilePath);
+    }
+
+    var entry = RubyScriptHierarchyEntry(StringProp(path.basename(rbPath)), rbPath);
     if (parent != null)
       parent.add(entry);
     else

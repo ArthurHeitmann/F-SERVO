@@ -3,6 +3,7 @@ import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 
+import '../../fileTypeUtils/ruby/pythonRuby.dart';
 import '../../widgets/theme/customTheme.dart';
 import '../../fileTypeUtils/dat/datRepacker.dart';
 import '../../fileTypeUtils/pak/pakRepacker.dart';
@@ -37,7 +38,7 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
       return Icon(Icons.source, color: iconColor, size: 15);
     else if (widget.entry is HapGroupHierarchyEntry)
       return Icon(Icons.workspaces, color: iconColor, size: 15);
-    else if (widget.entry is XmlScriptHierarchyEntry)
+    else if (widget.entry is XmlScriptHierarchyEntry || widget.entry is RubyScriptHierarchyEntry)
       return Icon(Icons.description, color: iconColor, size: 15);
     
     return null;
@@ -179,6 +180,16 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
                 var datBaseName = basename(dat.extractedPath);
                 var exportPath = join(prefs.dataExportPath!.value, getDatFolder(datBaseName), datBaseName);
                 repackDat(dat.extractedPath, exportPath);
+              },
+            ),
+          ],
+          if (widget.entry is RubyScriptHierarchyEntry) ...[
+            ContextMenuButtonConfig(
+              "Compile to .bin",
+              icon: Icon(Icons.file_upload, size: 15,),
+              onPressed: () {
+                var rbPath = (widget.entry as RubyScriptHierarchyEntry).path;
+                rubyFileToBin(rbPath);
               },
             ),
           ],

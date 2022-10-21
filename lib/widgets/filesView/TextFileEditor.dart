@@ -9,6 +9,7 @@ import 'package:highlight/languages/json.dart';
 import 'package:highlight/languages/markdown.dart';
 import 'package:highlight/languages/python.dart';
 import 'package:highlight/languages/bash.dart';
+import 'package:highlight/languages/ruby.dart';
 import 'package:highlight/languages/xml.dart';
 import 'package:path/path.dart';
 
@@ -16,6 +17,7 @@ import '../../widgets/theme/customTheme.dart';
 import '../../main.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/openFileTypes.dart';
+import '../misc/SmoothSingleChildScrollView.dart';
 
 class TextFileEditor extends ChangeNotifierWidget {
   late final TextFileData fileContent;
@@ -35,6 +37,7 @@ final _highlightLanguages = {
   ".py": python,
   ".sh": bash,
   ".xml": xml,
+  ".rb": ruby,
 };
 
 Map<String, TextStyle> get _customTheme => {
@@ -44,6 +47,7 @@ Map<String, TextStyle> get _customTheme => {
 
 class _TextFileEditorState extends ChangeNotifierState<TextFileEditor> {
   CodeController? controller;
+  final scrollController = ScrollController();
 
   @override
   void initState() {
@@ -51,7 +55,8 @@ class _TextFileEditorState extends ChangeNotifierState<TextFileEditor> {
     widget.fileContent.load()
       .then((_) {
         controller = CodeController(
-          theme: _customTheme,
+          // theme: _customTheme,
+          theme: atomOneDarkTheme,
           language: _highlightLanguages[extension(widget.fileContent.path)],
           text: widget.fileContent.text,
           onChange: (text) {
@@ -68,8 +73,11 @@ class _TextFileEditorState extends ChangeNotifierState<TextFileEditor> {
   @override
   Widget build(BuildContext context) {
     return controller != null
-      ? CodeField(
-        controller: controller!,
+      ? SmoothSingleChildScrollView(
+        controller: scrollController,
+        child: CodeField(
+          controller: controller!,
+        ),
       )
       : Center(
         child: ConstrainedBox(

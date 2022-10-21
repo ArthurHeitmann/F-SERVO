@@ -11,6 +11,7 @@ import 'package:window_manager/window_manager.dart';
 
 import '../../stateManagement/FileHierarchy.dart';
 import '../../stateManagement/openFileTypes.dart';
+import '../../stateManagement/statusInfo.dart';
 import '../misc/Selectable.dart';
 import 'FileTabEntry.dart';
 import 'FileType.dart';
@@ -67,7 +68,7 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
     if (files.isEmpty)
       return;
     OpenFileData? firstFile;
-    const fileExplorerExtensions = { ".pak", ".dat", ".yax" };
+    const fileExplorerExtensions = { ".pak", ".dat", ".yax", ".bin" };
     for (var file in files) {
       if (fileExplorerExtensions.contains(path.extension(file.name)) || await Directory(file.path).exists()) {
         var entry = await openHierarchyManager.openFile(file.path);
@@ -82,6 +83,8 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
       widget.viewArea.currentFile = firstFile;
     windowManager.focus();
     setState(() {});
+
+    messageLog.add("Opened ${files.length} file${files.length == 1 ? "" : "s"}");
   }
 
   void pruneCachedWidgets() {

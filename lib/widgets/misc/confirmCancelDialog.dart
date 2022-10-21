@@ -17,6 +17,7 @@ Future<bool?> confirmOrCancelDialog(BuildContext context, { required String titl
         return true;
       },
       child: Dialog(
+        backgroundColor: getTheme(context).editorBackgroundColor,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Padding(
           padding: const EdgeInsets.all(12.0),
