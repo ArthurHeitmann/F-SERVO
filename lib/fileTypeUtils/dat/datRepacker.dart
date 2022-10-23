@@ -16,7 +16,7 @@ Future<void> repackDat(String datDir, String exportPath) async {
   var fileNames = fileList.map((e) => path.basename(e)).toList();
   var fileSizes = (await Future.wait(fileList.map((e) => File(e).length()))).toList();
   var fileNumber = fileList.length;
-  var hashData = generateHashData(fileNames);
+  var hashData = HashInfo(fileNames);
 
   var fileExtensionsSize = 0;
   List<String> fileExtensions = [];
@@ -33,15 +33,16 @@ Future<void> repackDat(String datDir, String exportPath) async {
     if (fileName.length + 1 > nameLength)
       nameLength = fileName.length + 1;
   }
+  var namesPadding = 4 - (nameLength % 4);
 
-  var hashMapSize = hashData.getStructSize();
+  var hashMapSize = hashData.getTableSize();
 
   // Header
   var fileID = "DAT";
   var fileOffsetsOffset = 32;
   var fileExtensionsOffset = fileOffsetsOffset + (fileNumber * 4);
   var fileNamesOffset = fileExtensionsOffset + fileExtensionsSize;
-  var fileSizesOffset = fileNamesOffset + (fileNumber * nameLength) + 4;
+  var fileSizesOffset = fileNamesOffset + 4 + (fileNumber * nameLength) + namesPadding;
   var hashMapOffset = fileSizesOffset + (fileNumber * 4);
 
   // fileOffsets
@@ -58,6 +59,8 @@ Future<void> repackDat(String datDir, String exportPath) async {
   var datFile = File(exportPath);
   await Directory(path.dirname(exportPath)).create(recursive: true);
   var datSize = fileOffsets.last + fileSizes.last + 1;
+  if (datSize % 16 != 0)
+    datSize = (datSize / 16).ceil() * 16;
   var datBytes = ByteDataWrapper(ByteData(datSize).buffer);
   datBytes.writeString0P(fileID);
   datBytes.writeUint32(fileNumber);
@@ -69,19 +72,23 @@ Future<void> repackDat(String datDir, String exportPath) async {
   datBytes.writeBytes(Uint8List(4));
 
   // fileOffsets
+  datBytes.position = fileOffsetsOffset;
   for (var value in fileOffsets) {
     datBytes.writeUint32(value);
   }
 
   // fileExtensions
+  datBytes.position = fileExtensionsOffset;
   for (var value in fileExtensions) {
     datBytes.writeString0P(value);
   }
 
   // nameLength
+  datBytes.position = fileNamesOffset;
   datBytes.writeUint32(nameLength);
 
   // fileNames
+  datBytes.position = fileNamesOffset + 4;
   for (var value in fileNames) {
     datBytes.writeString0P(value);
     if (value.length < nameLength)
@@ -89,12 +96,24 @@ Future<void> repackDat(String datDir, String exportPath) async {
   }
 
   // fileSizes
+  datBytes.position = fileSizesOffset;
   for (var value in fileSizes) {
     datBytes.writeUint32(value);
   }
 
   // hashMap
-  hashData.write(datBytes);
+  datBytes.position = hashMapOffset;
+  datBytes.writeUint32(hashData.preHashShift);
+  datBytes.writeUint32(16);
+  datBytes.writeUint32(16 + hashData.bucketsSize);
+  datBytes.writeUint32(16 + hashData.bucketsSize + hashData.hashesSize);
+  for (var value in hashData.bucketOffsets)
+    datBytes.writeUint16(value);
+  for (var value in hashData.hashes)
+    datBytes.writeUint32(value);
+  for (var value in hashData.indices)
+    datBytes.writeUint16(value);
+
 
   // Files
   for (var i = 0; i < fileList.length; i++) {

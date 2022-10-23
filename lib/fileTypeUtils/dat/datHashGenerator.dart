@@ -1,94 +1,68 @@
 
-import 'dart:math';
-
 import '../../utils.dart';
 import '../utils/ByteDataWrapper.dart';
 
-int _significantBitsInInt(int i) {
-  int bits = 0;
-  while (i != 0) {
-    i >>= 1;
-    bits++;
-  }
-  return bits;
-}
+// From https://github.com/xxk-i/DATrepacker
+class HashInfo {
+  List<String> inFiles;
+  List<String> filenames = [];
+  List<int> hashes = [];
+  List<int> indices = [];
+  List<int> bucketOffsets = [];
+  int preHashShift = 0;
+  int bucketsSize = 0;
+  int hashesSize = 0;
+  int indicesSize = 0;
 
-int _nextPowerOf2Bits(int x) {
-  return x == 0 ? 1 : _significantBitsInInt(x - 1);
-}
-
-class HashData {
-  int preHashShift;
-  List<int> bucketOffsets;
-  List<int> hashes;
-  List<int> fileIndices;
-
-  HashData(this.preHashShift) : bucketOffsets = [], hashes = [], fileIndices = [];
-
-  int getStructSize() {
-    return 4 + 2 * bucketOffsets.length + 4 * hashes.length + 4 * fileIndices.length;
+  HashInfo(this.inFiles) {
+    _generateInfo();
   }
 
-  void write(ByteDataWrapper bytes) {
-    var bucketsOffset = 4 * 4;
-    var hashesOffset = bucketsOffset + bucketOffsets.length * 2;
-    var fileIndicesOffset = hashesOffset + hashes.length * 4;
+  int _calculateShift() {
+    for (int i = 0; i < 31; i++) {
+      if (1 << i >= inFiles.length)
+        return 31 - i;
+    }
 
-    bytes.writeUint32(preHashShift);
-    bytes.writeUint32(bucketsOffset);
-    bytes.writeUint32(hashesOffset);
-    bytes.writeUint32(fileIndicesOffset);
-
-    for (var bucketOffset in bucketOffsets)
-      bytes.writeInt16(bucketOffset);
-    for (var hash in hashes)
-      bytes.writeUint32(hash);
-    for (var fileIndex in fileIndices)
-      bytes.writeInt16(fileIndex);
+    return 0;
   }
-}
 
-class _TripleList {
-  final int hash;
-  final int fileIndex;
-  final String fileName;
+  void _generateInfo() {
+    preHashShift = _calculateShift();
 
-  const _TripleList(this.hash, this.fileIndex, this.fileName);
-}
+    filenames = inFiles;
 
-HashData generateHashData(List<String> fileNames) {
-  var preHashShift = _nextPowerOf2Bits(fileNames.length);
-  preHashShift = min(31, 32 - preHashShift);
-  var bucketOffsetsSize = 1 << (31 - preHashShift);
-  var bucketOffsets = List<int>.filled(bucketOffsetsSize, -1);
-  var hashes = List<int>.filled(fileNames.length, 0);
-  var fileIndices = List<int>.generate(fileNames.length, (i) => i);
+    bucketOffsets = List<int>.filled(1 << 31 - preHashShift, -1);
 
-  // generate hashes
-  for (var i = 0; i < fileNames.length; i++) {
-    var fileName = fileNames[i];
-    var hash = crc32(fileName.toLowerCase());
-    var otherHash = hash & 0x7FFFFFFF;
-    hashes[i] = otherHash;
-  }
-  // sort by first half byte (x & 0x70000000)
-  // sort indices & hashes at the same time
-  var hashesFileIndicesFileNames = List.generate(fileNames.length, (i) => _TripleList(hashes[i], fileIndices[i], fileNames[i]));
-  hashesFileIndicesFileNames.sort((a, b) => (a.hash & 0x70000000).compareTo(b.hash & 0x70000000));
-  hashes = hashesFileIndicesFileNames.map((e) => e.hash).toList();
-  fileIndices = hashesFileIndicesFileNames.map((e) => e.fileIndex).toList();
-  fileNames = hashesFileIndicesFileNames.map((e) => e.fileName).toList();
-  // generate bucket list
-  for (var i = 0; i < fileNames.length; i++) {
-    var bucketOffsetsIndex = hashes[i] >> preHashShift;
-    if (bucketOffsets[bucketOffsetsIndex] == -1) {
-      bucketOffsets[bucketOffsetsIndex] = i;
+    if (preHashShift == 0)
+      print("Hash shift is 0; does directory have more than 1 << 31 files?");
+
+    List<List<dynamic>> namesIndicesHashes = [];
+    for (int i = 0; i < filenames.length; i++)
+      namesIndicesHashes.add([filenames[i], i, (crc32(filenames[i].toLowerCase()) & 0x7fffffff)]);
+
+    namesIndicesHashes.sort((a, b) => a[2] >> preHashShift);
+
+    hashes = namesIndicesHashes
+      .map((e) => e[2] as int)
+      .toList();
+
+    hashes.sort((a, b) => a >> preHashShift);
+
+    for (int i = 0; i < namesIndicesHashes.length; i++) {
+      if (bucketOffsets[namesIndicesHashes[i][2] >> preHashShift] == -1)
+        bucketOffsets[namesIndicesHashes[i][2] >> preHashShift] = i;
+      indices.add(namesIndicesHashes[i][1]);
     }
   }
 
-  var hashData = HashData(preHashShift);
-  hashData.bucketOffsets = bucketOffsets;
-  hashData.hashes = hashes;
-  hashData.fileIndices = fileIndices;
-  return hashData;
+  int getTableSize() {
+    bucketsSize = bucketOffsets.length * 2; // these are only shorts (uint16)
+    hashesSize = hashes.length * 4; // uint32
+    indicesSize = indices.length * 2; // shorts again (uint16)
+
+    int size = 16 + bucketsSize + hashesSize + indicesSize; // 16 for pre_hash_shift and 3 table offsets (all uint32)
+
+    return size;
+  }
 }
