@@ -18,12 +18,12 @@ Set<String> changedRbFiles = {};
 
 /// Convert changed files to YAX and repack PAK & DAT files
 Future<void> processChangedFiles() async {
-  var changedFiles = changedXmlFiles;
+  var xmls = changedXmlFiles;
   changedXmlFiles = [];
   
   Set<String> paks = changedPakFiles;
   changedPakFiles = {};
-  for (var file in changedFiles) {
+  for (var file in xmls) {
     var dir = dirname(file.path);
     if (!dir.endsWith(".pak"))
       continue;
@@ -49,7 +49,7 @@ Future<void> processChangedFiles() async {
 
   // convert all changed XMLs to YAX
   if (prefs.convertXmls?.value == true)
-    await Future.wait(changedFiles.map((f) => xmlFileToYaxFile(f.path)));
+    await Future.wait(xmls.map((f) => xmlFileToYaxFile(f.path)));
 
   // convert potentially missing YAX files based on pak info
   // repack PAK

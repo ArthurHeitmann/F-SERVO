@@ -125,6 +125,12 @@ class PreferencesData extends OpenFileData {
         return NierNierThemeExtension.makeTheme();
     }	
   }
+
+  @override
+  // ignore: must_call_super
+  void dispose() {
+    // never dispose, because singleton
+  }
 }
 
 class IndexingPathsProp extends NestedNotifier<StringProp> {

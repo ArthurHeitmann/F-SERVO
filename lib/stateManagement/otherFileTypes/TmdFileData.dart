@@ -56,12 +56,14 @@ class TmdData extends NestedNotifier<TmdEntryData> with CustomTableConfig, Undoa
       anyChangeNotifier: fileChangeNotifier,
     ));
     rowCount.value++;
+    fileChangeNotifier.notifyListeners();
   }
 
   @override
   void onRowRemove(int index) {
     removeAt(index);
     rowCount.value--;
+    fileChangeNotifier.notifyListeners();
   }
 
   @override

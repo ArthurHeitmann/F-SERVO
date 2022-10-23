@@ -527,8 +527,9 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
     // process DAT files
     List<Future<void>> futures = [];
     datFilePaths ??= await getDatFileList(datExtractDir);
+    const supportedFileEndings = { ".pak", "_scp.bin", ".tmd" };
     for (var file in datFilePaths) {
-      if (!file.endsWith(".pak") && !file.endsWith("_scp.bin"))
+      if (supportedFileEndings.every((ending) => !file.endsWith(ending)))
         continue;
       int existingEntryI = existingEntries.indexWhere((entry) => (entry as FileHierarchyEntry).path == file);
       if (existingEntryI != -1) {
