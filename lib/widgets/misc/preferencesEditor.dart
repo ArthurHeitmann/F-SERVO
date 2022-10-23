@@ -9,6 +9,7 @@ import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/preferencesData.dart';
 import '../propEditors/simpleProps/boolPropSwitch.dart';
 import '../propEditors/simpleProps/primaryPropTextField.dart';
+import '../propEditors/simpleProps/propTextField.dart';
 import 'RowSeparated.dart';
 import 'smallButton.dart';
 
@@ -68,7 +69,7 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
               prop: exportPathProp,
               onValid: (value) => exportPathProp.value = value,
               validatorOnChange: (value) => value.isEmpty || Directory(value).existsSync() ? null : "Directory does not exist",
-              constraints: BoxConstraints(minHeight: 30),
+              options: PropTFOptions(constraints: BoxConstraints(minHeight: 30)),
             ),
           ),
           SmallButton(
@@ -132,7 +133,7 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
                 prop: path,
                 onValid: (value) => widget.prefs.indexingPaths!.setPath(path, value),
                 validatorOnChange: (value) => Directory(value).existsSync() ? null : "Directory does not exist",
-                constraints: BoxConstraints(minHeight: 30),
+                options: PropTFOptions(constraints: BoxConstraints(minHeight: 30)),
               ),
             ),
             SmallButton(

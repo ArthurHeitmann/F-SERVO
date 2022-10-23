@@ -71,7 +71,7 @@ class TmdData extends NestedNotifier<TmdEntryData> with CustomTableConfig, Undoa
       key: Key(entry.uuid),
       cells: [
         CellConfig(prop: entry.id),
-        CellConfig(prop: entry.text),
+        CellConfig(prop: entry.text, allowMultiline: true),
       ],
     );
   }

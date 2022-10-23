@@ -10,12 +10,12 @@ class TransparentPropTextField extends PropTextField {
     super.key,
     required super.prop,
     super.left,
-    BoxConstraints? constraints,
+    super.options,
     super.validatorOnChange,
     super.onValid,
     super.controller,
     super.getDisplayText,
-  }) : super(constraints: constraints);
+  }) : super();
 
 
   @override
@@ -29,9 +29,9 @@ class _TransparentPropTextFieldState extends PropTextFieldState {
       notifier: widget.prop,
       builder: (context) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 3),
-        child: IntrinsicWidth(
+        child: intrinsicWidthWrapper(
           child: ConstrainedBox(
-            constraints: widget.constraints,
+            constraints: widget.options.constraints,
             child: Row(
               children: [
                 if (widget.left != null)
@@ -44,6 +44,8 @@ class _TransparentPropTextFieldState extends PropTextFieldState {
                     onChanged: onTextChange,
                     style: getTheme(context).propInputTextStyle,
                     scrollController: ScrollController(keepScrollOffset: false),
+                      maxLines: widget.options.isMultiline ? null : 1,
+                      keyboardType: widget.options.isMultiline ? TextInputType.multiline : null,
                   ),
                 ),
                 if (errorMsg != null)

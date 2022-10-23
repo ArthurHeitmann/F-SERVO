@@ -10,12 +10,12 @@ class PrimaryPropTextField extends PropTextField {
     super.key,
     required super.prop,
     super.left,
-    BoxConstraints? constraints,
+    super.options,
     super.validatorOnChange,
     super.onValid,
     super.controller,
     super.getDisplayText,
-  }) : super(constraints: constraints);
+  }) : super();
 
 
   @override
@@ -32,9 +32,9 @@ class _PrimaryPropTextFieldState extends PropTextFieldState {
         child: Material(
           color: getTheme(context).formElementBgColor,
           borderRadius: BorderRadius.circular(8.0),
-          child: IntrinsicWidth(
+          child: intrinsicWidthWrapper(
             child: ConstrainedBox(
-              constraints: widget.constraints,
+              constraints: widget.options.constraints,
               child: Row(
                 children: [
                   if (widget.left != null)
@@ -47,6 +47,8 @@ class _PrimaryPropTextFieldState extends PropTextFieldState {
                       onChanged: onTextChange,
                       style: getTheme(context).propInputTextStyle,
                       scrollController: ScrollController(keepScrollOffset: false),
+                      maxLines: widget.options.isMultiline ? null : 1,
+                      keyboardType: widget.options.isMultiline ? TextInputType.multiline : null,
                     ),
                   ),
                   if (errorMsg != null)

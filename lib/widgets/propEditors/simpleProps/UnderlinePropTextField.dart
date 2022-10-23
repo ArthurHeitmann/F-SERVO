@@ -10,12 +10,12 @@ class UnderlinePropTextField extends PropTextField {
     super.key,
     required super.prop,
     super.left,
-    BoxConstraints? constraints,
+    super.options,
     super.validatorOnChange,
     super.onValid,
     super.controller,
     super.getDisplayText,
-  }) : super(constraints: constraints);
+  }) : super();
 
   @override
   State createState() => _UnderlinePropTextFieldState();
@@ -32,9 +32,9 @@ class _UnderlinePropTextFieldState extends PropTextFieldState {
           decoration: BoxDecoration(
             border: Border(bottom: BorderSide(color: getTheme(context).propBorderColor!, width: 2)),
           ),
-          child: IntrinsicWidth(
+          child: intrinsicWidthWrapper(
             child: ConstrainedBox(
-              constraints: widget.constraints,
+              constraints: widget.options.constraints,
               child: Row(
                 children: [
                   if (widget.left != null)
@@ -47,6 +47,8 @@ class _UnderlinePropTextFieldState extends PropTextFieldState {
                       onChanged: onTextChange,
                       style: getTheme(context).propInputTextStyle,
                       scrollController: ScrollController(keepScrollOffset: false),
+                      maxLines: widget.options.isMultiline ? null : 1,
+                      keyboardType: widget.options.isMultiline ? TextInputType.multiline : null,
                     ),
                   ),
                   if (errorMsg != null)

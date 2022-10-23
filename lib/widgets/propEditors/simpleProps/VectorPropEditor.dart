@@ -43,7 +43,7 @@ class VectorPropEditor<T extends PropTextField> extends StatelessWidget {
                     Flexible(
                       child: NumberPropTextField<T>(
                         prop: prop[i],
-                        constraints: constraintsFromCount(prop.length, compact),
+                        options: PropTFOptions(constraints: constraintsFromCount(prop.length, compact)),
                         left: prop.length == 3 && !compact
                           ? Padding(
                             padding: const EdgeInsets.only(right: 4, left: 6),

@@ -7,12 +7,14 @@ import '../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
 import '../../misc/nestedContextMenu.dart';
 import '../simpleProps/propEditorFactory.dart';
+import '../simpleProps/propTextField.dart';
 import '../simpleProps/transparentPropTextField.dart';
 
 class CellConfig {
   final Prop prop;
+  final bool allowMultiline;
 
-  CellConfig({ required this.prop });
+  CellConfig({ required this.prop, this.allowMultiline = false });
 }
 
 class RowConfig {
@@ -231,7 +233,11 @@ class _TableRowState extends State<_TableRow> {
           ),
           child: cell != null ? makePropEditor<TransparentPropTextField>(
             cell.prop,
-            BoxConstraints(minWidth: double.infinity, minHeight: 30),
+            PropTFOptions(
+              constraints: BoxConstraints(minWidth: double.infinity, minHeight: 30),
+              isMultiline: cell.allowMultiline,
+              useIntrinsicWidth: false,
+            ),
           ) : null,
         ),
       ),

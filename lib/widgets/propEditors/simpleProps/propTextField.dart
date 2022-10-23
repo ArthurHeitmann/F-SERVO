@@ -9,10 +9,22 @@ import 'UnderlinePropTextField.dart';
 import 'primaryPropTextField.dart';
 import 'transparentPropTextField.dart';
 
+class PropTFOptions {
+  final BoxConstraints constraints;
+  final bool isMultiline;
+  final bool useIntrinsicWidth;
+
+  const PropTFOptions({
+    this.constraints = const BoxConstraints(minWidth: 50),
+    this.isMultiline = false,
+    this.useIntrinsicWidth = true
+  });
+}
+
 abstract class PropTextField<P extends Prop> extends ChangeNotifierWidget {
   final P prop;
   final Widget? left;
-  final BoxConstraints constraints;
+  final PropTFOptions options;
   final String? Function(String str)? validatorOnChange;
   final void Function(String)? onValid;
   final TextEditingController? controller;
@@ -22,20 +34,19 @@ abstract class PropTextField<P extends Prop> extends ChangeNotifierWidget {
     super.key,
     required this.prop,
     this.left,
-    BoxConstraints? constraints,
+    this.options = const PropTFOptions(),
     this.validatorOnChange,
     this.onValid,
     this.controller,
     this.getDisplayText,
   })
-    : constraints = constraints ?? BoxConstraints(minWidth: 50),
-    super(notifier: prop);
+    : super(notifier: prop);
 
   static PropTextField make<T extends PropTextField>({
     Key? key,
     required Prop prop,
     Widget? left,
-    BoxConstraints? constraints,
+    PropTFOptions options = const PropTFOptions(),
     String? Function(String str)? validatorOnChange,
     void Function(String)? onValid,
     TextEditingController? controller,
@@ -46,7 +57,7 @@ abstract class PropTextField<P extends Prop> extends ChangeNotifierWidget {
         key: key,
         prop: prop,
         left: left,
-        constraints: constraints,
+        options: options,
         validatorOnChange: validatorOnChange,
         onValid: onValid,
         controller: controller,
@@ -57,7 +68,7 @@ abstract class PropTextField<P extends Prop> extends ChangeNotifierWidget {
         key: key,
         prop: prop,
         left: left,
-        constraints: constraints,
+        options: options,
         validatorOnChange: validatorOnChange,
         onValid: onValid,
         controller: controller,
@@ -68,7 +79,7 @@ abstract class PropTextField<P extends Prop> extends ChangeNotifierWidget {
         key: key,
         prop: prop,
         left: left,
-        constraints: constraints,
+        options: options,
         validatorOnChange: validatorOnChange,
         onValid: onValid,
         controller: controller,
@@ -80,7 +91,7 @@ abstract class PropTextField<P extends Prop> extends ChangeNotifierWidget {
         key: key,
         prop: prop,
         left: left,
-        constraints: constraints,
+        options: options,
         validatorOnChange: validatorOnChange,
         onValid: onValid,
         controller: controller,
@@ -137,4 +148,8 @@ abstract class PropTextFieldState<P extends Prop> extends ChangeNotifierState<Pr
       return;
     onValid(text);
   }
+
+  Widget intrinsicWidthWrapper({ required Widget child }) => widget.options.useIntrinsicWidth
+    ? IntrinsicWidth(child: child)
+    : child;
 }

@@ -9,13 +9,13 @@ import 'propTextField.dart';
 class NumberPropTextField<T extends PropTextField> extends StatelessWidget {
   final NumberProp prop;
   final bool isInteger;
-  final BoxConstraints? constraints;
+  final PropTFOptions options;
   final Widget? left;
 
   NumberPropTextField({
     super.key,
     required this.prop,
-    this.constraints,
+    this.options = const PropTFOptions(),
     this.left,
   }) : isInteger = prop.isInteger;
 
@@ -35,7 +35,7 @@ class NumberPropTextField<T extends PropTextField> extends StatelessWidget {
     return PropTextField.make<T>(
       prop: prop,
       left: left,
-      constraints: constraints,
+      options: options,
       validatorOnChange: textValidator,
       onValid: onValidUpdateProp,
     );

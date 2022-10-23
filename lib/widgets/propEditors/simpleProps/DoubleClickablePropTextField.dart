@@ -10,12 +10,12 @@ class DoubleClickablePropTextField extends PropTextField {
     super.key,
     required super.prop,
     super.left,
-    BoxConstraints? constraints,
+    super.options,
     super.validatorOnChange,
     super.onValid,
     super.controller,
     super.getDisplayText,
-  }) : super(constraints: constraints);
+  }) : super();
 
   @override
   createState() => _DoubleClickablePropTextFieldState();
@@ -50,9 +50,9 @@ class _DoubleClickablePropTextFieldState extends PropTextFieldState {
   Widget build(BuildContext context) {
     return ChangeNotifierBuilder(
       notifier: widget.prop,
-      builder: (context) => IntrinsicWidth(
+      builder: (context) => intrinsicWidthWrapper(
         child: ConstrainedBox(
-          constraints: widget.constraints,
+          constraints: widget.options.constraints,
           child: Row(
             children: [
               if (widget.left != null)
@@ -70,6 +70,8 @@ class _DoubleClickablePropTextFieldState extends PropTextFieldState {
                     style: getTheme(context).propInputTextStyle,
                     focusNode: focusNode,
                     scrollController: ScrollController(keepScrollOffset: false),
+                    maxLines: widget.options.isMultiline ? null : 1,
+                    keyboardType: widget.options.isMultiline ? TextInputType.multiline : null,
                   ),
                 )
                 : Padding(
