@@ -117,7 +117,10 @@ class CharNamesXmlProp extends XmlProp with CustomTableConfig {
         var spaceIndex = line.indexOf(" ");
         var key = line.substring(0, spaceIndex);
         var val = line.substring(spaceIndex + 1);
-        currentTranslations.add(KeyValProp(StringProp(key), StringProp(val)));
+        var keyProp = StringProp(key);
+        var valProp = StringProp(val);
+        valProp.transform = (str) => str;
+        currentTranslations.add(KeyValProp(keyProp, valProp));
       }
       else {
         if (currentKey != "") {

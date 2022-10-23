@@ -212,7 +212,7 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
   }
 
   Color colorOfFiletype(HierarchyEntry entry) {
-    if (entry is XmlScriptHierarchyEntry || entry is RubyScriptHierarchyEntry)
+    if (entry is XmlScriptHierarchyEntry || entry is RubyScriptHierarchyEntry || entry is TmdHierarchyEntry)
       return filetypeXmlColor!;
     if (entry is PakHierarchyEntry)
       return filetypePakColor!;

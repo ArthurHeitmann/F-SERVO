@@ -6,6 +6,7 @@ import '../../../widgets/theme/customTheme.dart';
 import '../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
 import '../../misc/nestedContextMenu.dart';
+import '../simpleProps/UnderlinePropTextField.dart';
 import '../simpleProps/propEditorFactory.dart';
 import '../simpleProps/propTextField.dart';
 import '../simpleProps/transparentPropTextField.dart';
@@ -23,6 +24,12 @@ class RowConfig {
 
   RowConfig({ required this.key, required this.cells });
 }
+class _RowConfigIndexed {
+  final int index;
+  final RowConfig rowConfig;
+
+  const _RowConfigIndexed(this.index, this.rowConfig);
+}
 
 mixin CustomTableConfig {
   late final String name;
@@ -32,6 +39,13 @@ mixin CustomTableConfig {
   RowConfig rowPropsGenerator(int index);
   void onRowAdd();
   void onRowRemove(int index);
+}
+
+class _ColumnSort {
+  int index;
+  bool ascending;
+
+  _ColumnSort(this.index, this.ascending);
 }
 
 class TableEditor extends ChangeNotifierWidget {
@@ -45,9 +59,78 @@ class TableEditor extends ChangeNotifierWidget {
 
 class _TableEditorState extends ChangeNotifierState<TableEditor> {
   final scrollController = ScrollController();
+  List<_RowConfigIndexed> rows = [];
+  _ColumnSort? columnSort;
+  late final List<StringProp> columnSearch;
+
+  @override
+  void initState() {
+    columnSearch = List.generate(widget.config.columnNames.length, (index) {
+      var prop = StringProp("");
+      prop.addListener(() => setState(() {}));
+      return prop;
+    });
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    for (var prop in columnSearch)
+      prop.dispose();
+    super.dispose();
+  }
+
+  void updateRows() {
+    // generate all rows
+    rows = List.generate(
+      widget.config.rowCount.value as int,
+      (index) => _RowConfigIndexed(index, widget.config.rowPropsGenerator(index))
+    );
+    // filter rows
+    if (columnSearch.any((prop) => prop.value.isNotEmpty)) {
+      rows = rows.where((row) {
+        for (var i = 0; i < columnSearch.length; i++) {
+          if (columnSearch[i].value.isEmpty)
+            continue;
+          var cell = row.rowConfig.cells[i];
+          if (cell == null) {
+            if (columnSearch[i].value.isNotEmpty)
+              return false;
+            continue;
+          }
+          var searchStr = columnSearch[i].value.toLowerCase();
+          var cellValue = cell.prop.toString().toLowerCase();
+          if (!cellValue.contains(searchStr))
+            return false;
+        }
+        return true;
+      }).toList();
+    }
+    // sort rows
+    if (columnSort != null) {
+      rows.sort((a, b) {
+        final aCell = a.rowConfig.cells[columnSort!.index];
+        final bCell = b.rowConfig.cells[columnSort!.index];
+        if (aCell == null && bCell == null)
+          return 0;
+        if (aCell == null)
+          return columnSort!.ascending ? -1 : 1;
+        if (bCell == null)
+          return columnSort!.ascending ? 1 : -1;
+        final aProp = aCell.prop;
+        final bProp = bCell.prop;
+        if (aProp is NumberProp && bProp is NumberProp) {
+          return aProp.value.compareTo(bProp.value) * (columnSort!.ascending ? 1 : -1);
+        } else {
+          return aProp.toString().compareTo(bProp.toString()) * (columnSort!.ascending ? 1 : -1);
+        }
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    updateRows();
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
@@ -86,7 +169,6 @@ class _TableEditorState extends ChangeNotifierState<TableEditor> {
           for (int i = 0; i < widget.config.columnNames.length; i++)
             Expanded(
               child: Container(
-                height: 60,
                 decoration: BoxDecoration(
                   color: getTheme(context).tableBgColor,
                   border: Border(
@@ -96,19 +178,56 @@ class _TableEditorState extends ChangeNotifierState<TableEditor> {
                     ),
                   ),
                 ),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                    child: Text(
-                      widget.config.columnNames[i],
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                padding: const EdgeInsets.only(left: 8, right: 2, top: 4, bottom: 4),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          if (columnSort != null && columnSort!.index == i) {
+                            if (columnSort!.ascending)
+                              columnSort!.ascending = false;
+                            else
+                              columnSort = null;
+                          } else {
+                            columnSort = _ColumnSort(i, true);
+                          }
+                        });
+                      },
+                      child: Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              widget.config.columnNames[i],
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          SizedBox(width: 6),
+                          columnSort == null || columnSort!.index != i
+                            ? Icon(Icons.swap_vert, size: 17, color: Theme.of(context).colorScheme.primary.withOpacity(0.5))
+                            : columnSort!.ascending
+                              ? Icon(Icons.arrow_drop_up, size: 20)
+                              : Icon(Icons.arrow_drop_down, size: 20),
+                        ],
                       ),
-                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 4, right: 6),
+                      child: makePropEditor<UnderlinePropTextField>(
+                        columnSearch[i],
+                        PropTFOptions(
+                          constraints: BoxConstraints(maxWidth: 200),
+                          useIntrinsicWidth: false,
+                          hintText: "Search...",
+                        )
+                      ),
+                    ),
+                  ],
                 ),
               )
             ),
@@ -132,8 +251,8 @@ class _TableEditorState extends ChangeNotifierState<TableEditor> {
           children: [
             ListView.builder(
               controller: scrollController,
-              itemCount: widget.config.rowCount.value as int,
-              itemBuilder: (context, i) => _TableRow(index: i, config: widget.config),
+              itemCount: rows.length,
+              itemBuilder: (context, i) => _TableRow(i % 2 == 1, rows[i].index, rows[i].rowConfig, widget.config),
             ),
             _makeAddRowButton()
           ],
@@ -157,6 +276,8 @@ class _TableEditorState extends ChangeNotifierState<TableEditor> {
             onPressed: () {
               widget.config.onRowAdd();
               setState(() {});
+              if (columnSort != null)
+                return;
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 scrollController.animateTo(
                   scrollController.position.maxScrollExtent,
@@ -174,10 +295,13 @@ class _TableEditorState extends ChangeNotifierState<TableEditor> {
 }
 
 class _TableRow extends StatefulWidget {
+  final bool alt;
   final int index;
+  final RowConfig row;
   final CustomTableConfig config;
 
-  const _TableRow({ required this.index, required this.config });
+  _TableRow(this.alt, this.index, this.row, this.config)
+    : super(key: row.key);
 
   @override
   State<_TableRow> createState() => _TableRowState();
@@ -188,12 +312,11 @@ class _TableRowState extends State<_TableRow> {
 
   @override
   Widget build(BuildContext context) {
-    var rowColor = widget.index % 2 == 1 ? Colors.transparent : getTheme(context).tableBgAltColor;
+    var rowColor = widget.alt ? Colors.transparent : getTheme(context).tableBgAltColor;
     if (isHovered) 
       rowColor = getTheme(context).textColor!.withOpacity(0.2);
     
     return NestedContextMenu(
-      key: widget.config.rowPropsGenerator(widget.index).key,
       clearParent: true,
       buttons: [
         ContextMenuButtonConfig(
@@ -210,7 +333,7 @@ class _TableRowState extends State<_TableRow> {
           child: Row(
             children: [
               for (int j = 0; j < widget.config.columnNames.length; j++)
-                makeCell(cell: widget.config.rowPropsGenerator(widget.index).cells[j], drawBorder: j != widget.config.columnNames.length - 1),
+                makeCell(cell: widget.row.cells[j], drawBorder: j != widget.config.columnNames.length - 1),
             ],
           ),
         ),

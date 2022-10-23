@@ -13,11 +13,13 @@ class PropTFOptions {
   final BoxConstraints constraints;
   final bool isMultiline;
   final bool useIntrinsicWidth;
+  final String? hintText;
 
   const PropTFOptions({
     this.constraints = const BoxConstraints(minWidth: 50),
     this.isMultiline = false,
-    this.useIntrinsicWidth = true
+    this.useIntrinsicWidth = true,
+    this.hintText,
   });
 }
 

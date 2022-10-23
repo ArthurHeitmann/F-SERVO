@@ -72,6 +72,9 @@ class _DoubleClickablePropTextFieldState extends PropTextFieldState {
                     scrollController: ScrollController(keepScrollOffset: false),
                     maxLines: widget.options.isMultiline ? null : 1,
                     keyboardType: widget.options.isMultiline ? TextInputType.multiline : null,
+                    decoration: InputDecoration(
+                      hintText: widget.options.hintText,
+                    ),
                   ),
                 )
                 : Padding(

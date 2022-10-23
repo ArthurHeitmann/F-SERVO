@@ -34,11 +34,16 @@ class TmdData extends NestedNotifier<TmdEntryData> with CustomTableConfig, Undoa
   TmdData.from(List<TmdEntry> rawEntries, String fileName)
     : fileChangeNotifier = ChangeNotifier(),
     super([]) {
-    addAll(rawEntries.map((e) => TmdEntryData(
-      id: StringProp(e.id),
-      text: StringProp(e.text),
-      anyChangeNotifier: fileChangeNotifier,
-    )));
+    addAll(rawEntries.map((e) {
+      var idProp = StringProp(e.id);
+      var textProp = StringProp(e.text);
+      textProp.transform = (str) => str;
+      return TmdEntryData(
+        id: idProp,
+        text: textProp,
+        anyChangeNotifier: fileChangeNotifier,
+      );
+    }));
     name = fileName;
     columnNames = ["ID", "Text"];
     rowCount = NumberProp(rawEntries.length, true);
@@ -50,9 +55,12 @@ class TmdData extends NestedNotifier<TmdEntryData> with CustomTableConfig, Undoa
 
   @override
   void onRowAdd() {
+    var idProp = StringProp("ID");
+    var textProp = StringProp("Text");
+    textProp.transform = (str) => str;
     add(TmdEntryData(
-      id: StringProp("TMD ID"),
-      text: StringProp("Text"),
+      id: idProp,
+      text: textProp,
       anyChangeNotifier: fileChangeNotifier,
     ));
     rowCount.value++;

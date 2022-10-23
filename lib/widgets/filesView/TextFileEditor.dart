@@ -58,6 +58,7 @@ class _TextFileEditorState extends ChangeNotifierState<TextFileEditor> {
           // theme: _customTheme,
           theme: atomOneDarkTheme,
           language: _highlightLanguages[extension(widget.fileContent.path)],
+          params: EditorParams(tabSpaces: 4),
           text: widget.fileContent.text,
           onChange: (text) {
             if (text == widget.fileContent.text)

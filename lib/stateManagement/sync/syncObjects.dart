@@ -35,7 +35,7 @@ void startSyncingObject(SyncedObject obj) {
     obj.startSync();
   }
   else {
-    showToast("Can't sync! Probably no connection to Blender");
+    showToast("Can't sync! Connect from Blender first");
   }
 
 }

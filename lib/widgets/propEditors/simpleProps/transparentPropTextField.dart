@@ -44,8 +44,11 @@ class _TransparentPropTextFieldState extends PropTextFieldState {
                     onChanged: onTextChange,
                     style: getTheme(context).propInputTextStyle,
                     scrollController: ScrollController(keepScrollOffset: false),
-                      maxLines: widget.options.isMultiline ? null : 1,
-                      keyboardType: widget.options.isMultiline ? TextInputType.multiline : null,
+                    maxLines: widget.options.isMultiline ? null : 1,
+                    keyboardType: widget.options.isMultiline ? TextInputType.multiline : null,
+                    decoration: InputDecoration(
+                      hintText: widget.options.hintText,
+                    ),
                   ),
                 ),
                 if (errorMsg != null)

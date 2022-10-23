@@ -40,6 +40,8 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
       return Icon(Icons.workspaces, color: iconColor, size: 15);
     else if (widget.entry is XmlScriptHierarchyEntry || widget.entry is RubyScriptHierarchyEntry)
       return Icon(Icons.description, color: iconColor, size: 15);
+    else if (widget.entry is TmdHierarchyEntry)
+      return Icon(Icons.subtitles, color: iconColor, size: 15);
     
     return null;
   }
