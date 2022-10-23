@@ -47,6 +47,11 @@ flutter:
     - assets/
     - assets/logo/
     - assets/svgs/
+    - assets/MrubyDecompiler/
+    - assets/MrubyDecompiler/bins/
+    - assets/MrubyDecompiler/bins/linux/
+    - assets/MrubyDecompiler/bins/windows/
+    - assets/MrubyDecompiler/mrbToRb/
 
   fonts:
     - family: FiraCode

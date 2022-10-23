@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'background/IdLookup.dart';
+import 'fileTypeUtils/ruby/pythonRuby.dart';
 import 'stateManagement/ChangeNotifierWidget.dart';
 import 'widgets/theme/customTheme.dart';
 import 'keyboardEvents/globalShortcutsWrapper.dart';
@@ -31,6 +32,7 @@ void main() async {
   });
 
   startSyncServer();
+  findAssetsDir();
   idLookup.init();
   await PreferencesData().load();
 
