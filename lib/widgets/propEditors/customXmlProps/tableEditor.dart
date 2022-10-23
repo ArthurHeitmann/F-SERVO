@@ -22,7 +22,7 @@ class RowConfig {
   RowConfig({ required this.key, required this.cells });
 }
 
-mixin XmlTableConfig {
+mixin CustomTableConfig {
   late final String name;
   late final List<String> columnNames;
   late final NumberProp rowCount;
@@ -33,7 +33,7 @@ mixin XmlTableConfig {
 }
 
 class TableEditor extends ChangeNotifierWidget {
-  final XmlTableConfig config;
+  final CustomTableConfig config;
 
   TableEditor({ super.key, required this.config }) : super(notifier: config.rowCount);
 
@@ -131,7 +131,6 @@ class _TableEditorState extends ChangeNotifierState<TableEditor> {
             ListView.builder(
               controller: scrollController,
               itemCount: widget.config.rowCount.value as int,
-              itemExtent: 40,
               itemBuilder: (context, i) => _TableRow(index: i, config: widget.config),
             ),
             _makeAddRowButton()
@@ -174,7 +173,7 @@ class _TableEditorState extends ChangeNotifierState<TableEditor> {
 
 class _TableRow extends StatefulWidget {
   final int index;
-  final XmlTableConfig config;
+  final CustomTableConfig config;
 
   const _TableRow({ required this.index, required this.config });
 
@@ -219,20 +218,22 @@ class _TableRowState extends State<_TableRow> {
 
   Widget makeCell({ required CellConfig? cell, required bool drawBorder }) {
     return Expanded(
-      child: Container(
-        height: 40,
-        decoration: BoxDecoration(
-          border: Border(
-            right: BorderSide(
-              color: Theme.of(context).dividerColor,
-              width: drawBorder ? 1 : 0,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(minHeight: 40),
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border(
+              right: BorderSide(
+                color: Theme.of(context).dividerColor,
+                width: drawBorder ? 1 : 0,
+              ),
             ),
           ),
+          child: cell != null ? makePropEditor<TransparentPropTextField>(
+            cell.prop,
+            BoxConstraints(minWidth: double.infinity, minHeight: 30),
+          ) : null,
         ),
-        child: cell != null ? makePropEditor<TransparentPropTextField>(
-          cell.prop,
-          BoxConstraints(minWidth: double.infinity, minHeight: 30),
-        ) : null,
       ),
     );
   }

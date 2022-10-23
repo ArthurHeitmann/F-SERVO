@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 import 'package:xml/xml.dart';
 
+import '../fileTypeUtils/tmd/tmdReader.dart';
+import '../fileTypeUtils/tmd/tmdWriter.dart';
 import '../utils.dart';
 import '../widgets/filesView/FileType.dart';
 import 'FileHierarchy.dart';
@@ -12,6 +14,7 @@ import 'Property.dart';
 import 'changesExporter.dart';
 import 'hasUuid.dart';
 import 'miscValues.dart';
+import 'otherFileTypes/TmdFileData.dart';
 import 'undoable.dart';
 import 'xmlProps/xmlProp.dart';
 
@@ -42,6 +45,8 @@ class OpenFileData extends ChangeNotifier with Undoable, HasUuid {
       return XmlFileData(name, path, secondaryName: secondaryName);
     else if (path.endsWith(".rb"))
       return RubyFileData(name, path, secondaryName: secondaryName);
+    else if (path.endsWith(".tmd"))
+      return TmdFileData(name, path, secondaryName: secondaryName);
     else
       return TextFileData(name, path, secondaryName: secondaryName);
   }
@@ -51,6 +56,8 @@ class OpenFileData extends ChangeNotifier with Undoable, HasUuid {
       return FileType.xml;
     else if (path == "preferences")
       return FileType.preferences;
+    else if (path.endsWith(".tmd"))
+      return FileType.tmd;
     else
       return FileType.text;
   }
@@ -84,6 +91,8 @@ class OpenFileData extends ChangeNotifier with Undoable, HasUuid {
 
   Future<void> load() async {
     _loadingState = LoadingState.loaded;
+    undoHistoryManager.onUndoableEvent();
+    notifyListeners();
   }
 
   Future<void> save() async {
@@ -133,8 +142,7 @@ class TextFileData extends OpenFileData {
       return;
     _loadingState = LoadingState.loading;
     _text = await File(path).readAsString();
-    _loadingState = LoadingState.loaded;
-    notifyListeners();
+    await super.load();
   }
 
   @override
@@ -202,8 +210,7 @@ class XmlFileData extends OpenFileData {
       pakType!.addListener(updatePakType);
     }
 
-    _loadingState = LoadingState.loaded;
-    notifyListeners();
+    await super.load();
   }
 
   Future<void> updatePakType() async {
@@ -269,5 +276,42 @@ class RubyFileData extends TextFileData {
   Future<void> save() async {
     await super.save();
     changedRbFiles.add(path);
+  }
+}
+
+class TmdFileData extends OpenFileData {
+  TmdData? tmdData;
+
+  TmdFileData(super.name, super.path, { super.secondaryName });
+
+  @override
+  Future<void> load() async {
+    if (_loadingState != LoadingState.notLoaded)
+      return;
+    _loadingState = LoadingState.loading;
+
+    var tmdEntries = await readTmdFile(path);
+    tmdData = TmdData.from(tmdEntries, basenameWithoutExtension(path));
+    tmdData!.fileChangeNotifier.addListener(() {
+      hasUnsavedChanges = true;
+    });
+
+    await super.load();
+  }
+
+  @override
+  Future<void> save() async {
+    await saveTmd(tmdData!.toEntries(), path);
+
+    var datDir = dirname(path);
+    changedDatFiles.add(datDir);
+
+    await super.save();
+  }
+
+  @override
+  void dispose() {
+    tmdData?.dispose();
+    super.dispose();
   }
 }

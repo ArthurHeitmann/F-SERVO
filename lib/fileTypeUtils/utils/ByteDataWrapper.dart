@@ -145,11 +145,28 @@ class ByteDataWrapper {
   }
 
   String readString(int length, {StringEncoding encoding = StringEncoding.utf8}) {
-    var bytes = readUint8List(length);
+    List<int> bytes;
+    if (encoding != StringEncoding.utf16)
+      bytes = readUint8List(length);
+    else
+      bytes = readUint16List(length ~/ 2);
     return decodeString(bytes, encoding);
   }
 
+  String _readStringZeroTerminatedUtf16() {
+    var bytes = <int>[];
+    while (true) {
+      var byte = _data.getUint16(_position, endian);
+      _position += 2;
+      if (byte == 0) break;
+      bytes.add(byte);
+    }
+    return decodeString(bytes, StringEncoding.utf16);
+  }
+
   String readStringZeroTerminated({StringEncoding encoding = StringEncoding.utf8}) {
+    if (encoding == StringEncoding.utf16)
+      return _readStringZeroTerminatedUtf16();
     var bytes = <int>[];
     while (true) {
       var byte = _data.getUint8(_position);
@@ -215,17 +232,23 @@ class ByteDataWrapper {
   }
 
   void writeString(String value, [StringEncoding encoding = StringEncoding.utf8]) {
-    var bytes = encodeString(value, encoding);
-    for (var byte in bytes) {
-      _data.setUint8(_position, byte);
-      _position += 1;
+    var codes = encodeString(value, encoding);
+    if (encoding == StringEncoding.utf16) {
+      for (var code in codes) {
+        _data.setUint16(_position, code, endian);
+        _position += 2;
+      }
+    } else {
+      for (var code in codes) {
+        _data.setUint8(_position, code);
+        _position += 1;
+      }
     }
   }
 
+  static const _zeroStr = "\x00";
   void writeString0P(String value, [StringEncoding encoding = StringEncoding.utf8]) {
-    writeString(value, encoding);
-    _data.setUint8(_position, 0);
-    _position += 1;
+    writeString(value + _zeroStr, encoding);
   }
 
   void writeBytes(List<int> value) {
@@ -236,24 +259,24 @@ class ByteDataWrapper {
   }
 }
 
-String decodeString(List<int> bytes, StringEncoding encoding) {
+String decodeString(List<int> codes, StringEncoding encoding) {
   switch (encoding) {
     case StringEncoding.utf8:
-      return utf8.decode(bytes);
+      return utf8.decode(codes);
     case StringEncoding.utf16:
-      return String.fromCharCodes(bytes); // TODO check if actually works
+      return String.fromCharCodes(codes); // TODO check if actually works
     case StringEncoding.shiftJis:
-      return ShiftJIS().decode(bytes);
+      return ShiftJIS().decode(codes);
   }
 }
 
-List<int> encodeString(String value, StringEncoding encoding) {
+List<int> encodeString(String str, StringEncoding encoding) {
   switch (encoding) {
     case StringEncoding.utf8:
-      return utf8.encode(value);
+      return utf8.encode(str);
     case StringEncoding.utf16:
-      return value.codeUnits; // TODO check if actually works
+      return str.codeUnits; // TODO check if actually works
     case StringEncoding.shiftJis:
-      return ShiftJIS().encode(value);
+      return ShiftJIS().encode(str);
   }
 }

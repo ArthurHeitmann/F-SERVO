@@ -48,7 +48,7 @@ const _nameKeys = [
   "KOR",
 ];
 
-class CharNamesXmlProp extends XmlProp with XmlTableConfig {
+class CharNamesXmlProp extends XmlProp with CustomTableConfig {
   static final _textHash = crc32("text");
   static final _valueHash = crc32("value");
   static final _sizeHash = crc32("size");

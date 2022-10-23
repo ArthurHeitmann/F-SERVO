@@ -414,6 +414,11 @@ class RubyScriptHierarchyEntry extends FileHierarchyEntry {
     : super(name, path, false, true);
 }
 
+class TmdHierarchyEntry extends FileHierarchyEntry {
+  TmdHierarchyEntry(StringProp name, String path)
+    : super(name, path, false, true);
+}
+
 class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable {
   HierarchyEntry? _selectedEntry;
 
@@ -456,9 +461,21 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
         else
           throw FileSystemException("File not found: $filePath");
       }
-      else if (filePath.endsWith(".bin")) {
+      else if (filePath.endsWith(".rb")) {
+        if (await File(filePath).exists())
+          entry = openRbScript(filePath, parent: parent);
+        else
+          throw FileSystemException("File not found: $filePath");
+      }
+      else if (filePath.endsWith(".bin") || filePath.endsWith(".mrb")) {
         if (await File(filePath).exists())
           entry = await openBinMrbScript(filePath, parent: parent);
+        else
+          throw FileSystemException("File not found: $filePath");
+      }
+      else if (filePath.endsWith(".tmd")) {
+        if (await File(filePath).exists())
+          entry = openTmdFile(filePath, parent: parent);
         else
           throw FileSystemException("File not found: $filePath");
       }
@@ -522,6 +539,8 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
         futures.add(openPak(file, parent: datEntry));
       else if (file.endsWith("_scp.bin"))
         futures.add(openBinMrbScript(file, parent: datEntry));
+      else if (file.endsWith(".tmd"))
+        openTmdFile(file, parent: datEntry);
       else
         throw FileSystemException("Unsupported file type: $file");
     }
@@ -624,6 +643,20 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
     return entry;
   }
 
+  HierarchyEntry openRbScript(String rbFilePath, { HierarchyEntry? parent }) {
+    var existing = findRecWhere((entry) => entry is RubyScriptHierarchyEntry && entry.path == rbFilePath);
+    if (existing != null)
+      return existing;
+
+    var entry = RubyScriptHierarchyEntry(StringProp(path.basename(rbFilePath)), rbFilePath);
+    if (parent != null)
+      parent.add(entry);
+    else
+      add(entry);
+    
+    return entry;
+  }
+
   Future<HierarchyEntry> openBinMrbScript(String binFilePath, { HierarchyEntry? parent }) async {
     var rbPath = "$binFilePath.rb";
 
@@ -635,7 +668,15 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
       await binFileToRuby(binFilePath);
     }
 
-    var entry = RubyScriptHierarchyEntry(StringProp(path.basename(rbPath)), rbPath);
+    return openRbScript(rbPath, parent: parent);
+  }
+
+  HierarchyEntry openTmdFile(String tmdFilePath, { HierarchyEntry? parent }) {
+    var existing = findRecWhere((entry) => entry is TmdHierarchyEntry && entry.path == tmdFilePath);
+    if (existing != null)
+      return existing;
+
+    var entry = TmdHierarchyEntry(StringProp(path.basename(tmdFilePath)), tmdFilePath);
     if (parent != null)
       parent.add(entry);
     else
