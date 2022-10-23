@@ -68,7 +68,8 @@ class XmlArrayEditorState<T extends XmlArrayEditor> extends ChangeNotifierState<
     (widget.sizeIndicator.value as ValueProp).value -= 1;
     
     int absIndex = widget.parent.length - getChildProps().length + relIndex;
-    widget.parent.removeAt(absIndex);
+    var removed = widget.parent.removeAt(absIndex);
+    removed.dispose();
   }
 
   Widget childWrapper({ required Key key, required Widget child, required int index }) {

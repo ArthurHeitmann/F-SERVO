@@ -38,6 +38,7 @@ class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor>
     idLookup.lookupId(idProp.value);
     
     idProp.addListener(updateLookup);
+    updateLookup();
 
     super.initState();
   }

@@ -2,6 +2,7 @@
 import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 
+import '../../../stateManagement/sync/syncObjects.dart';
 import '../../../widgets/theme/customTheme.dart';
 import '../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
@@ -38,6 +39,11 @@ class _EntityEditorState extends ChangeNotifierState<EntityEditor> {
               icon: Icon(Icons.content_copy, size: 14,),
               onPressed: () => copyPuidRef("app::EntityLayout", (widget.prop.get("id")!.value as HexProp).value)
             ),
+          ContextMenuButtonConfig(
+            "Sync to Blender",
+            icon: Icon(Icons.sync, size: 14,),
+            onPressed: () => startSyncingObject(EntitySyncedObject(widget.prop))
+          ),
           optionalPropButtonConfig(
             widget.prop,
             "param",

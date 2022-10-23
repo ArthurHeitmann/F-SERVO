@@ -1,6 +1,6 @@
 
 import 'dart:io';
-import 'package:nier_scripts_editor/stateManagement/statusInfo.dart';
+import 'statusInfo.dart';
 import 'package:path/path.dart';
 
 import '../fileTypeUtils/dat/datRepacker.dart';

@@ -1,12 +1,15 @@
 
+import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 
+import '../../../stateManagement/sync/syncObjects.dart';
 import '../../../widgets/theme/customTheme.dart';
 import '../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
 import '../../../utils.dart';
 import '../../misc/CustomIcons.dart';
+import '../../misc/nestedContextMenu.dart';
 import '../../misc/selectionPopup.dart';
 import '../simpleProps/XmlPropEditorFactory.dart';
 import '../simpleProps/propEditorFactory.dart';
@@ -40,74 +43,86 @@ class _AreaEditorState extends ChangeNotifierState<AreaEditor> {
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3.0),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 37,
-            height: 37,
-            child: OutlinedButton(
-              onPressed: () async {
-                var selection = await showSelectionPopup<int>(context, [
-                  if (type != _typeBoxArea)
-                    SelectionPopupConfig(icon: CustomIcons.cube, name: "Box", getValue: () => _typeBoxArea),
-                  if (type != _typeCylinderArea)
-                    SelectionPopupConfig(icon: CustomIcons.cylinder, name: "Cylinder", getValue: () => _typeCylinderArea),
-                  if (type != _typeSphereArea)
-                    SelectionPopupConfig(icon: CustomIcons.sphere, name: "Sphere", getValue: () => _typeSphereArea),
-                ]);
-                if (selection == null)
-                  return;
-                convertTo(selection);
-              },
-              style: OutlinedButton.styleFrom(
-                foregroundColor: getTheme(context).textColor,
-                padding: EdgeInsets.zero,
-                side: BorderSide(
-                  color: getTheme(context).textColor!.withOpacity(0.5),
-                  width: 0.5,
-                ),
-              ),
-              child: Icon(_areaIcons[type]!, size: 35),
-            ),
-          ),
-          SizedBox(width: 5),
-          Container(width: 4, color: getTheme(context).editorBackgroundColor,),
-          Flexible(
-            child: Container(
-              decoration: BoxDecoration(
-                border: Border(left: BorderSide(
-                  color: getTheme(context).formElementBgColor!,
-                  width: 3,
-                )),
-              ),
-              padding: EdgeInsets.only(left: 10),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (parent != null)
-                    makeXmlPropEditor(parent, widget.showDetails),
-                  TransformsEditor(
-                    parent: widget.prop,
-                    canBeRotated: type != _typeSphereArea,
-                    canBeScaled: type != _typeSphereArea,
-                    itemsCanBeRemoved: false,
-                  ),
-                  if (radius != null)
-                    Row(
-                      children: [
-                        Icon(CustomIcons.radius, size: 18),
-                        SizedBox(width: 10),
-                        makePropEditor(radius.value),
-                      ],
-                    ),
-                ],
-              ),
-            ),
+      child: NestedContextMenu(
+        buttons: [
+          ContextMenuButtonConfig(
+            "Sync to Blender",
+            icon: Icon(Icons.sync, size: 14,),
+            onPressed: () => startSyncingObject(AreaSyncedObject(widget.prop))
           ),
         ],
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 37,
+              height: 37,
+              child: OutlinedButton(
+                onPressed: () async {
+                  var selection = await showSelectionPopup<int>(context, [
+                    if (type != _typeBoxArea)
+                      SelectionPopupConfig(icon: CustomIcons.cube, name: "Box", getValue: () => _typeBoxArea),
+                    if (type != _typeCylinderArea)
+                      SelectionPopupConfig(icon: CustomIcons.cylinder, name: "Cylinder", getValue: () => _typeCylinderArea),
+                    if (type != _typeSphereArea)
+                      SelectionPopupConfig(icon: CustomIcons.sphere, name: "Sphere", getValue: () => _typeSphereArea),
+                  ]);
+                  if (selection == null)
+                    return;
+                  convertTo(selection);
+                },
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: getTheme(context).textColor,
+                  padding: EdgeInsets.zero,
+                  side: BorderSide(
+                    color: getTheme(context).textColor!.withOpacity(0.5),
+                    width: 0.5,
+                  ),
+                ),
+                child: Icon(_areaIcons[type]!, size: 35),
+              ),
+            ),
+            SizedBox(width: 5),
+            Container(width: 4, color: getTheme(context).editorBackgroundColor,),
+            Flexible(
+              child: Container(
+                decoration: BoxDecoration(
+                  border: Border(left: BorderSide(
+                    color: getTheme(context).formElementBgColor!,
+                    width: 3,
+                  )),
+                ),
+                padding: EdgeInsets.only(left: 10),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (parent != null)
+                      makeXmlPropEditor(parent, widget.showDetails),
+                    TransformsEditor(
+                      parent: widget.prop,
+                      canBeRotated: type != _typeSphereArea,
+                      canBeScaled: type != _typeSphereArea,
+                      itemsCanBeRemoved: false,
+                    ),
+                    if (radius != null)
+                      Row(
+                        children: [
+                          Icon(CustomIcons.radius, size: 18),
+                          SizedBox(width: 10),
+                          makePropEditor(radius.value),
+                        ],
+                      ),
+                    if (widget.showDetails)
+                      ...makeXmlMultiPropEditor(widget.prop, widget.showDetails, 
+                        (prop) => !{ "position", "rotation", "scale", "parent", "radius" }.contains(prop.tagName))
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

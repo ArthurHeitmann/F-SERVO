@@ -98,9 +98,10 @@ class XmlProp extends NestedNotifier<XmlProp> {
   }
 
   @override
-  void removeAt(int index) {
-    super.removeAt(index);
+  XmlProp removeAt(int index) {
+    var ret = super.removeAt(index);
     _onValueChange();
+    return ret;
   }
 
   @override

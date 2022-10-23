@@ -58,6 +58,7 @@ class _XmlActionsEditorState extends XmlArrayEditorState<XmlActionsEditor> {
                       onPressed: () {
                         (widget.root.get("size")!.value as NumberProp).value -= 1;
                         widget.root.remove(action);
+                        action.dispose();
                       }
                     ),
                   ],

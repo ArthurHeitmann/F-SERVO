@@ -1,7 +1,7 @@
 
 import '../utils.dart';
 
-class HasUuid {
+mixin HasUuid {
   String _uuid = uuidGen.v1();
 
   String get uuid => _uuid;

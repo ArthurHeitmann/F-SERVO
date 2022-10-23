@@ -28,7 +28,7 @@ class SavableProp<T> extends ValueProp<T> {
   T? _getValue(SharedPreferences prefs) {
     var val = prefs.get(key);
     if (T == ThemeType)
-      return ThemeType.values[val as int] as T?;
+      return val != null ? ThemeType.values[val as int] as T : null;
     return val as T?;
   } 
   

@@ -111,8 +111,8 @@ class FilesAreaManager extends NestedNotifier<OpenFileData> implements Undoable 
     else {
       rightArea = areasManager[areaIndex + 1];
     }
-    remove(file);
     rightArea.add(file);
+    remove(file);
     rightArea.currentFile = file;
     
     if (length == 0) {
@@ -136,8 +136,8 @@ class FilesAreaManager extends NestedNotifier<OpenFileData> implements Undoable 
     else {
       leftArea = areasManager[leftAreaIndex];
     }
-    remove(file);
     leftArea.add(file);
+    remove(file);
     leftArea.currentFile = file;
     
     if (length == 0) {
@@ -165,6 +165,20 @@ class FilesAreaManager extends NestedNotifier<OpenFileData> implements Undoable 
     await Future.wait(
       where((file) => file.hasUnsavedChanges)
       .map((file) => file.save()));
+  }
+
+  @override
+  void remove(OpenFileData child) {
+    super.remove(child);
+    if (areasManager.getAreaOfFile(child, true) == null)
+      child.dispose();
+  }
+
+  @override
+  void dispose() {
+    for (var file in toList())
+      remove(file);
+    super.dispose();
   }
 
   @override
@@ -227,11 +241,13 @@ class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
     return null;
   }
 
-  FilesAreaManager? getAreaOfFile(OpenFileData searchFile) {
+  FilesAreaManager? getAreaOfFile(OpenFileData searchFile, [bool includeHidden = true]) {
     for (var area in this) {
       if (area.contains(searchFile))
         return area;
     }
+    if (includeHidden && hiddenArea.contains(searchFile))
+      return hiddenArea;
     return null;
   }
 
@@ -261,8 +277,8 @@ class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
     if (isFileOpened(filePath)) {
       var openFile = getFile(filePath)!;
       if (hiddenArea.contains(openFile)) {
-        hiddenArea.remove(openFile);
         toArea.add(openFile);
+        hiddenArea.remove(openFile);
       }
       if (focusIfOpen)
         getAreaOfFile(openFile)!.currentFile = openFile;
@@ -296,7 +312,7 @@ class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
   }
 
   void releaseFile(String filePath) {
-    for (var area in this) {
+    for (var area in [...this, hiddenArea]) {
       var file = area.where((file) => file.path == filePath);
       if (file.isNotEmpty) {
         area.closeFile(file.first, releaseHidden: true);
@@ -336,15 +352,16 @@ class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
     if (child == _activeArea)
       _activeArea = this[0];
     child.removeListener(subEvents.notifyListeners);
+    child.dispose();
     super.remove(child);
   }
 
   @override
-  void removeAt(int index) {
+  FilesAreaManager removeAt(int index) {
     if (this[index] == _activeArea)
       _activeArea = this[0];
     this[index].removeListener(subEvents.notifyListeners);
-    super.removeAt(index);
+    return super.removeAt(index);
   }
 
   @override
