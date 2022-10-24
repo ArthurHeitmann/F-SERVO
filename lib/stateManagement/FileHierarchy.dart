@@ -419,6 +419,11 @@ class TmdHierarchyEntry extends FileHierarchyEntry {
     : super(name, path, false, true);
 }
 
+class SmdHierarchyEntry extends FileHierarchyEntry {
+  SmdHierarchyEntry(StringProp name, String path)
+    : super(name, path, false, true);
+}
+
 class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable {
   HierarchyEntry? _selectedEntry;
 
@@ -451,7 +456,7 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
       }
       else if (filePath.endsWith(".xml")) {
         if (await File(filePath).exists())
-          entry = openXmlScript(filePath, parent: parent);
+          entry = openGenericFile<XmlScriptHierarchyEntry>(filePath, parent, (n, p) => XmlScriptHierarchyEntry(n, p));
         else
           throw FileSystemException("File not found: $filePath");
       }
@@ -463,7 +468,7 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
       }
       else if (filePath.endsWith(".rb")) {
         if (await File(filePath).exists())
-          entry = openRbScript(filePath, parent: parent);
+          entry = openGenericFile<RubyScriptHierarchyEntry>(filePath, parent, ((n, p) => RubyScriptHierarchyEntry(n, p)));
         else
           throw FileSystemException("File not found: $filePath");
       }
@@ -475,7 +480,13 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
       }
       else if (filePath.endsWith(".tmd")) {
         if (await File(filePath).exists())
-          entry = openTmdFile(filePath, parent: parent);
+          entry = openGenericFile<TmdHierarchyEntry>(filePath, parent, (n, p) => TmdHierarchyEntry(n, p),);
+        else
+          throw FileSystemException("File not found: $filePath");
+      }
+      else if (filePath.endsWith(".smd")) {
+        if (await File(filePath).exists())
+          entry = openGenericFile<SmdHierarchyEntry>(filePath, parent, (n ,p) => SmdHierarchyEntry(n, p));
         else
           throw FileSystemException("File not found: $filePath");
       }
@@ -527,7 +538,7 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
     // process DAT files
     List<Future<void>> futures = [];
     datFilePaths ??= await getDatFileList(datExtractDir);
-    const supportedFileEndings = { ".pak", "_scp.bin", ".tmd" };
+    const supportedFileEndings = { ".pak", "_scp.bin", ".tmd", ".smd" };
     for (var file in datFilePaths) {
       if (supportedFileEndings.every((ending) => !file.endsWith(ending)))
         continue;
@@ -541,7 +552,9 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
       else if (file.endsWith("_scp.bin"))
         futures.add(openBinMrbScript(file, parent: datEntry));
       else if (file.endsWith(".tmd"))
-        openTmdFile(file, parent: datEntry);
+        openGenericFile<TmdHierarchyEntry>(file, parent, (n, p) => TmdHierarchyEntry(n, p));
+      else if (file.endsWith(".smd"))
+        openGenericFile<SmdHierarchyEntry>(file, parent, (n ,p) => SmdHierarchyEntry(n, p));
       else
         throw FileSystemException("Unsupported file type: $file");
     }
@@ -628,28 +641,14 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
     if (!await File(xmlFilePath).exists()) {
       await yaxFileToXmlFile(yaxFilePath);
     }
-    return openXmlScript(xmlFilePath, parent: parent);
+    return openGenericFile<XmlScriptHierarchyEntry>(xmlFilePath,parent, (n, p) => XmlScriptHierarchyEntry(n, p));
   }
 
-  HierarchyEntry openXmlScript(String xmlFilePath, { HierarchyEntry? parent }) {
-    var existing = findRecWhere((entry) => entry is XmlScriptHierarchyEntry && entry.path == xmlFilePath);
+  HierarchyEntry openGenericFile<T extends FileHierarchyEntry>(String filePath, HierarchyEntry? parent, HierarchyEntry Function(StringProp n, String p) make) {
+    var existing = findRecWhere((entry) => entry is T && entry.path == filePath);
     if (existing != null)
       return existing;
-    var entry = XmlScriptHierarchyEntry(StringProp(path.basename(xmlFilePath)), xmlFilePath);
-    if (parent != null)
-      parent.add(entry);
-    else
-      add(entry);
-    
-    return entry;
-  }
-
-  HierarchyEntry openRbScript(String rbFilePath, { HierarchyEntry? parent }) {
-    var existing = findRecWhere((entry) => entry is RubyScriptHierarchyEntry && entry.path == rbFilePath);
-    if (existing != null)
-      return existing;
-
-    var entry = RubyScriptHierarchyEntry(StringProp(path.basename(rbFilePath)), rbFilePath);
+    var entry = make(StringProp(path.basename(filePath)), filePath);
     if (parent != null)
       parent.add(entry);
     else
@@ -669,21 +668,7 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
       await binFileToRuby(binFilePath);
     }
 
-    return openRbScript(rbPath, parent: parent);
-  }
-
-  HierarchyEntry openTmdFile(String tmdFilePath, { HierarchyEntry? parent }) {
-    var existing = findRecWhere((entry) => entry is TmdHierarchyEntry && entry.path == tmdFilePath);
-    if (existing != null)
-      return existing;
-
-    var entry = TmdHierarchyEntry(StringProp(path.basename(tmdFilePath)), tmdFilePath);
-    if (parent != null)
-      parent.add(entry);
-    else
-      add(entry);
-    
-    return entry;
+    return openGenericFile<RubyScriptHierarchyEntry>(rbPath, parent, (n, p) => RubyScriptHierarchyEntry(n, p));
   }
 
   @override

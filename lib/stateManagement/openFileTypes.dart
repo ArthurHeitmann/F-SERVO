@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 import 'package:xml/xml.dart';
 
+import '../fileTypeUtils/smd/smdReader.dart';
+import '../fileTypeUtils/smd/smdWriter.dart';
 import '../fileTypeUtils/tmd/tmdReader.dart';
 import '../fileTypeUtils/tmd/tmdWriter.dart';
 import '../utils.dart';
@@ -14,6 +16,7 @@ import 'Property.dart';
 import 'changesExporter.dart';
 import 'hasUuid.dart';
 import 'miscValues.dart';
+import 'otherFileTypes/SmdFileData.dart';
 import 'otherFileTypes/TmdFileData.dart';
 import 'undoable.dart';
 import 'xmlProps/xmlProp.dart';
@@ -47,6 +50,8 @@ class OpenFileData extends ChangeNotifier with Undoable, HasUuid {
       return RubyFileData(name, path, secondaryName: secondaryName);
     else if (path.endsWith(".tmd"))
       return TmdFileData(name, path, secondaryName: secondaryName);
+    else if (path.endsWith(".smd"))
+      return SmdFileData(name, path, secondaryName: secondaryName);
     else
       return TextFileData(name, path, secondaryName: secondaryName);
   }
@@ -58,6 +63,8 @@ class OpenFileData extends ChangeNotifier with Undoable, HasUuid {
       return FileType.preferences;
     else if (path.endsWith(".tmd"))
       return FileType.tmd;
+    else if (path.endsWith(".smd"))
+      return FileType.smd;
     else
       return FileType.text;
   }
@@ -312,6 +319,43 @@ class TmdFileData extends OpenFileData {
   @override
   void dispose() {
     tmdData?.dispose();
+    super.dispose();
+  }
+}
+
+class SmdFileData extends OpenFileData {
+  SmdData? smdData;
+
+  SmdFileData(super.name, super.path, { super.secondaryName });
+
+  @override
+  Future<void> load() async {
+    if (_loadingState != LoadingState.notLoaded)
+      return;
+    _loadingState = LoadingState.loading;
+
+    var smdEntries = await readSmdFile(path);
+    smdData = SmdData.from(smdEntries, basenameWithoutExtension(path));
+    smdData!.fileChangeNotifier.addListener(() {
+      hasUnsavedChanges = true;
+    });
+
+    await super.load();
+  }
+
+  @override
+  Future<void> save() async {
+    await saveSmd(smdData!.toEntries(), path);
+
+    var datDir = dirname(path);
+    changedDatFiles.add(datDir);
+
+    await super.save();
+  }
+
+  @override
+  void dispose() {
+    smdData?.dispose();
     super.dispose();
   }
 }

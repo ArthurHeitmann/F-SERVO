@@ -12,6 +12,7 @@ enum FileType {
   xml,
   preferences,
   tmd,
+  smd,
 }
 
 Widget makeFileEditor(OpenFileData content) {
@@ -22,6 +23,8 @@ Widget makeFileEditor(OpenFileData content) {
       return PreferencesEditor(prefs: content as PreferencesData);
     case FileType.tmd:
       return TableFileEditor(file: content, getTableConfig: () => (content as TmdFileData).tmdData!);
+    case FileType.smd:
+      return TableFileEditor(file: content, getTableConfig: () => (content as SmdFileData).smdData!);
     default:
       return TextFileEditor(fileContent: content as TextFileData);
   }
