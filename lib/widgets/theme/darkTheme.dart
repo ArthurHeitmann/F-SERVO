@@ -9,7 +9,7 @@ class NierDarkThemeExtension extends NierThemeExtension {
       editorBackgroundColor: const Color.fromRGBO(18, 18, 18, 1),
       editorIconPath: "assets/logo/pod_alpha.png",
       sidebarBackgroundColor: Color.fromARGB(255, 50, 50, 50),
-      dividerColor: Color.fromRGBO(255, 255, 255, 0.1),
+      dividerColor: Color.fromRGBO(75, 75, 75, 1),
       tabColor: Color.fromARGB(255, 59, 59, 59),
       tabSelectedColor: Color.fromARGB(255, 36, 36, 36),
       tabIconColor: Color.fromARGB(255, 255, 255, 255),

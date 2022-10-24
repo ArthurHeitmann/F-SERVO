@@ -113,6 +113,7 @@ class MyAppBody extends StatelessWidget {
             children: [
               TitleBar(),
               Expanded(child: EditorLayout()),
+              Divider(height: 1, color: getTheme(context).dividerColor),
               Statusbar(),
             ],
           ),

@@ -28,7 +28,7 @@ class _UnderlinePropTextFieldState extends PropTextFieldState {
       notifier: widget.prop,
       builder: (context) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 3),
-        child: Container(
+        child: DecoratedBox(
           decoration: BoxDecoration(
             border: Border(bottom: BorderSide(color: getTheme(context).propBorderColor!, width: 2)),
           ),

@@ -1,6 +1,5 @@
 
 import '../../utils.dart';
-import '../utils/ByteDataWrapper.dart';
 
 // From https://github.com/xxk-i/DATrepacker
 class HashInfo {

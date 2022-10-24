@@ -119,7 +119,10 @@ Stream<ExtractedInnerFile> extractDatFilesAsStream(String datPath) async* {
 
     for (int i = 0; i < header.fileNumber; i++) {
       bytes.position = fileOffsets[i];
-      yield ExtractedInnerFile(fileNames[i], bytes.makeSubView(fileSizes[i]));
+      yield ExtractedInnerFile(
+        path.join(datPath, fileNames[i]),
+        bytes.makeSubView(fileSizes[i])
+      );
     }
   } catch (e) {
     print("Error while extracting dat files from $datPath");

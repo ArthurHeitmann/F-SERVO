@@ -33,7 +33,8 @@ Future<void> repackDat(String datDir, String exportPath) async {
     if (fileName.length + 1 > nameLength)
       nameLength = fileName.length + 1;
   }
-  var namesPadding = 4 - (nameLength % 4);
+  var namesSize = nameLength * fileNumber;
+  var namesPadding = 4 - (namesSize % 4);
 
   var hashMapSize = hashData.getTableSize();
 

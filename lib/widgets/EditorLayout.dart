@@ -7,6 +7,8 @@ import 'FileHierarchyExplorer/FileExplorer.dart';
 import 'ResizableWidget.dart';
 import 'filesView/XmlActionDetailsEditor.dart';
 import 'filesView/outliner.dart';
+import 'filesView/searchPanel.dart';
+import 'filesView/sidebar.dart';
 
 class EditorLayout extends StatelessWidget {
   const EditorLayout({Key? key}) : super(key: key);
@@ -21,13 +23,26 @@ class EditorLayout extends StatelessWidget {
       children: [
         Material(
           color: getTheme(context).sidebarBackgroundColor,
-          child: ResizableWidget(
-            axis: Axis.vertical,
-            percentages: [0.55, 0.45],
-            draggableThickness: 5,
-            children: [
-              FileExplorer(),
-              FileMetaEditor()
+          child: Sidebar(
+            entries: [
+              SidebarEntryConfig(
+                name: "Files",
+                icon: Icons.folder,
+                child: ResizableWidget(
+                  axis: Axis.vertical,
+                  percentages: [0.55, 0.45],
+                  draggableThickness: 5,
+                  children: [
+                    FileExplorer(),
+                    FileMetaEditor()
+                  ],
+                ),
+              ),
+              SidebarEntryConfig(
+                name: "Search",
+                icon: Icons.search,
+                child: SearchPanel(),
+              )
             ],
           ),
         ),
