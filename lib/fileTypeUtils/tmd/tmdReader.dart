@@ -18,6 +18,11 @@ class TmdEntry {
   int sizeInBytes() {
     return 4 + idSize*2+2 + 4 + textSize*2+2;
   }
+
+  @override
+  String toString() {
+    return "TmdEntry{\n\tID: $id\n\tText: $text\n}";
+  }
 }
 
 Future<List<TmdEntry>> readTmdFile(String path) async {

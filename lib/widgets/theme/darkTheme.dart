@@ -27,7 +27,7 @@ class NierDarkThemeExtension extends NierThemeExtension {
       filetypeDatColor: Color.fromRGBO(0xfd, 0xd8, 0x35, 1),
       filetypePakColor: Color.fromRGBO(0xff, 0x98, 0x00, 1),
       filetypeGroupColor: Color.fromRGBO(0x00, 0xbc, 0xd4, 1),
-      filetypeXmlColor: Color.fromRGBO(0xff, 0x70, 0x43, 1),
+      filetypeDocColor: Color.fromRGBO(0xff, 0x70, 0x43, 1),
       formElementBgColor: Color.fromRGBO(37, 37, 37, 1),
       actionBgColor: Color.fromARGB(255, 53, 53, 53),
       actionTypeDefaultAccent: Color.fromARGB(255, 30, 129, 209),

@@ -9,6 +9,11 @@ class SmdEntry {
   final String text;
 
   const SmdEntry(this.id, this.indexX10, this.text);
+
+  @override
+  String toString() {
+    return "SmdEntry{\n\tID: $id\n\tText: $text\n}";
+  }
 }
 
 Future<List<SmdEntry>> readSmdFile(String path) async {

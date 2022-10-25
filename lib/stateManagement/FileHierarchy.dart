@@ -438,7 +438,7 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
 
     HierarchyEntry entry;
     try {
-      if (filePath.endsWith(".dat")) {
+      if (strEndsWithDat(filePath)) {
         if (await File(filePath).exists())
           entry = await openDat(filePath, parent: parent);
         else if (await Directory(filePath).exists())

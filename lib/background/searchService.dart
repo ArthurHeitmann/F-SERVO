@@ -6,6 +6,7 @@ import 'dart:isolate';
 import 'package:path/path.dart' as path;
 import 'package:xml/xml.dart';
 
+import '../fileTypeUtils/tmd/tmdReader.dart';
 import '../fileTypeUtils/yax/hashToStringMap.dart';
 import '../stateManagement/Property.dart';
 import '../utils.dart';
@@ -20,8 +21,9 @@ class SearchResult {
 
 class SearchResultText extends SearchResult {
   final String line;
+  final int lineNum;
 
-  SearchResultText(super.filePath, this.line);
+  SearchResultText(super.filePath, this.line, this.lineNum);
 }
 
 class SearchResultId extends SearchResult {
@@ -42,8 +44,9 @@ class SearchOptionsText extends SearchOptions {
   final String query;
   final bool isRegex;
   final bool isCaseSensitive;
+  final bool isMultiline;
 
-  SearchOptionsText(super.searchPath, super.fileExtensions, this.query, this.isRegex, this.isCaseSensitive);
+  SearchOptionsText(super.searchPath, super.fileExtensions, this.query, this.isRegex, this.isCaseSensitive, this.isMultiline);
 }
 
 class SearchOptionsId extends SearchOptions {
@@ -65,7 +68,6 @@ class SearchService {
   SearchService({ required this.isSearching });
 
   Stream<SearchResult> search(SearchOptions options) {
-    print("Starting search");
     isSearching.value = true;
     if (options is SearchOptionsId && options.useIndexedData) {
       _searchId(options);
@@ -133,6 +135,8 @@ class _SearchServiceWorker {
     var t1 = DateTime.now();
 
     try {
+      if (!await Directory(options.searchPath).exists() && !await File(options.searchPath).exists())
+        return;
       if (options is SearchOptionsText)
         await _searchTextRec(options.searchPath, options);
       else if (options is SearchOptionsId)
@@ -148,9 +152,15 @@ class _SearchServiceWorker {
   void _onMessage(dynamic message) {
     if (message is String && message == "cancel") {
       _isCanceled = true;
-      print("Search canceled");
     } else
       print("Unhandled message: $message");
+  }
+
+  void _sendResult(SearchResult result, SendPort sendPort) {
+    sendPort.send(result);
+    _resultsCount++;
+    if (_resultsCount >= _maxResults)
+      _isCanceled = true;
   }
 
   Future<void> _searchTextRec(String filePath, SearchOptionsText options, [bool Function(String)? test]) async {
@@ -162,19 +172,53 @@ class _SearchServiceWorker {
       if (options.fileExtensions.isNotEmpty && !options.fileExtensions.contains(path.extension(filePath)))
         return;
       List<String> lines;
-      try {
-        lines = await file.readAsLines();
-      } catch (e) {
-        return;
+      if (!options.isMultiline) {
+        lines = await _getFileLines(file, options);
+        for (int i = 0; i < lines.length; i++) {
+          var line = lines[i];
+          if (!test(line))
+            continue;
+          _sendResult(SearchResultText(filePath, line, i + 1), options.sendPort!);
+        }
       }
-      for (var line in lines) {
-        if (!test(line))
-          continue;
-        options.sendPort!.send(SearchResultText(filePath, line));
-        _resultsCount++;
-        if (_resultsCount >= _maxResults) {
-          _isCanceled = true;
+      else {
+        String content = await _getFileContent(file, options);
+        if (!test(content))
           return;
+        var matchPattern = RegExp(
+          options.isRegex ? options.query : RegExp.escape(options.query),
+          caseSensitive: options.isCaseSensitive
+        );
+        // convert matches to full lines
+        var matches = matchPattern.allMatches(content);
+        for (var match in matches) {
+          var lineEndI = content.indexOf("\n");
+          var line = content.substring(0, lineEndI);
+          int lineNum = 1;
+          int lineStart = 0;
+          int lineEnd = lineStart + line.length;
+          while (!between(match.start, lineStart, lineStart + line.length) && lineEndI != -1) {
+            lineStart += line.length + 1;
+            lineEndI = content.indexOf("\n", lineStart);
+            if (lineEndI == -1)
+              line = content.substring(lineStart);
+            else
+              line = content.substring(lineStart, lineEndI);
+            lineEnd = lineStart + line.length;
+            lineNum++;
+          }
+          String matchStr = line;
+          while (match.end > lineEnd) {
+            lineStart += line.length + 1;
+            lineEndI = content.indexOf("\n", lineStart);
+            if (lineEndI == -1)
+              line = content.substring(lineStart);
+            else
+              line = content.substring(lineStart, lineEndI);
+            lineEnd = lineStart + line.length;
+            matchStr += "\n$line";
+          }
+          _sendResult(SearchResultText(filePath, matchStr, lineNum), options.sendPort!);
         }
       }
     }
@@ -207,6 +251,46 @@ class _SearchServiceWorker {
     }
   }
   
+  Future<String> _getFileContent(File file, SearchOptionsText options) async {
+    if (file.path.endsWith(".tmd")) {
+      var entries = await readTmdFile(file.path);
+      return entries.map((e) => e.toString()).join("\n");
+    }
+    else if (file.path.endsWith(".tmd")) {
+      var entries = await readTmdFile(file.path);
+      return entries.map((e) => e.toString()).join("\n");
+    }
+    try {
+      return await file.readAsString();
+    }
+    catch (e) {
+      return "";
+    }
+  }
+
+  Future<List<String>> _getFileLines(File file, SearchOptionsText options) async {
+    if (file.path.endsWith(".tmd")) {
+      var entries = await readTmdFile(file.path);
+      return entries
+        .map((e) => e.toString().split("\n"))
+        .expand((e) => e)
+        .toList();
+    }
+    else if (file.path.endsWith(".tmd")) {
+      var entries = await readTmdFile(file.path);
+      return entries
+        .map((e) => e.toString().split("\n"))
+        .expand((e) => e)
+        .toList();
+    }
+    try {
+      return await file.readAsLines();
+    }
+    catch (e) {
+      return [];
+    }
+  }
+
   Future<void> _searchIdRec(String filePath, SearchOptionsId options) async {
     if (_isCanceled)
       return;
@@ -246,10 +330,7 @@ class _SearchServiceWorker {
   void _optionallySendIdData(IndexedIdData idData, SearchOptionsId options) {
     if (idData.id != options.id)
       return;
-    options.sendPort!.send(SearchResultId(idData.xmlPath, idData));
-    _resultsCount++;
-    if (_resultsCount >= _maxResults)
-      _isCanceled = true;
+    _sendResult(SearchResultId(idData.xmlPath, idData), options.sendPort!);
   }
 
   void _searchIdInXml(String filePath, XmlElement root, SearchOptionsId options) {

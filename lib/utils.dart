@@ -469,3 +469,34 @@ String pluralStr(int number, String label, [String numberSuffix = ""]) {
     return "$number$numberSuffix $label";
   return "$number$numberSuffix ${label}s";
 }
+
+/// https://stackoverflow.com/a/60717480/9819447
+extension Iterables<E> on Iterable<E> {
+  Map<K, List<E>> groupBy<K>(K Function(E) keyFunction) => fold(
+      <K, List<E>>{},
+      (Map<K, List<E>> map, E element) =>
+          map..putIfAbsent(keyFunction(element), () => <E>[]).add(element));
+}
+
+bool between(num val, num min, num max) => val >= min && val <= max;
+
+void revealFileInExplorer(String path) {
+  if (Platform.isWindows) {
+    Process.run("explorer.exe", ["/select,", path]);
+  } else if (Platform.isMacOS) {
+    Process.run("open", ["-R", path]);
+  } else if (Platform.isLinux) {
+    Process.run("xdg-open", [path]);
+  }
+}
+
+const datExtensions = { ".dat", ".dtt", ".evn", ".eff" };
+
+bool strEndsWithDat(String str) {
+  for (var ext in datExtensions) {
+    if (str.endsWith(ext))
+      return true;
+  }
+  return false;
+}
+

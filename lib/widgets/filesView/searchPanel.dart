@@ -1,21 +1,35 @@
 
+import 'dart:math';
+
+import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 import 'package:mutex/mutex.dart';
+import 'package:path/path.dart';
 
 import '../../background/IdsIndexer.dart';
 import '../../background/searchService.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';
+import '../../stateManagement/FileHierarchy.dart';
 import '../../stateManagement/Property.dart';
 import '../../stateManagement/nestedNotifier.dart';
 import '../../stateManagement/openFilesManager.dart';
 import '../../utils.dart';
 import '../misc/RowSeparated.dart';
+import '../misc/SmoothSingleChildScrollView.dart';
+import '../misc/nestedContextMenu.dart';
 import '../propEditors/simpleProps/boolPropIcon.dart';
 import '../propEditors/simpleProps/propEditorFactory.dart';
 import '../propEditors/simpleProps/propTextField.dart';
 import '../theme/customTheme.dart';
 
 enum _SearchType { text, id }
+
+class _SearchResultsFileGroup {
+  final String filePath;
+  final List<SearchResult> results;
+
+  _SearchResultsFileGroup(this.filePath, this.results);
+}
 
 class SearchPanel extends StatefulWidget {
   const SearchPanel({super.key});
@@ -28,24 +42,26 @@ class _SearchPanelState extends State<SearchPanel> {
   _SearchType searchType = _SearchType.text;
   SearchService? searchService;
   Stream<SearchResult>? searchStream;
-  ValueNestedNotifier<SearchResult> searchResults = ValueNestedNotifier([]);
-  BoolProp isSearching = BoolProp(false);
-  Mutex cancelMutex = Mutex();
+  final ValueNestedNotifier<SearchResult> searchResults = ValueNestedNotifier([]);
+  final BoolProp isSearching = BoolProp(false);
+  final Mutex cancelMutex = Mutex();
+  final scrollController = ScrollController();
   late final void Function() updateSearchStream;
   // common options
-  StringProp extensions = StringProp("");
-  StringProp path = StringProp("");
+  final StringProp extensions = StringProp("");
+  final StringProp path = StringProp("");
   // text search options
-  StringProp query = StringProp("");
-  BoolProp isRegex = BoolProp(false);
-  BoolProp isCaseSensitive = BoolProp(false);
+  final StringProp query = StringProp("");
+  final BoolProp isRegex = BoolProp(false);
+  final BoolProp isCaseSensitive = BoolProp(false);
   // id search options
-  HexProp id = HexProp(0);
-  BoolProp useIndexedData = BoolProp(true);
+  final HexProp id = HexProp(0);
+  final BoolProp useIndexedData = BoolProp(true);
+  
 
   @override
   void initState() {
-    updateSearchStream = throttle(_updateSearchStream, 200);
+    updateSearchStream = debounce(_updateSearchStream, 250);
 
     extensions.addListener(updateSearchStream);
     path.addListener(updateSearchStream);
@@ -54,6 +70,13 @@ class _SearchPanelState extends State<SearchPanel> {
     isCaseSensitive.addListener(updateSearchStream);
     id.addListener(updateSearchStream);
     useIndexedData.addListener(updateSearchStream);
+    extensions.changesUndoable = false;
+    path.changesUndoable = false;
+    query.changesUndoable = false;
+    isRegex.changesUndoable = false;
+    isCaseSensitive.changesUndoable = false;
+    id.changesUndoable = false;
+    useIndexedData.changesUndoable = false;
     super.initState();
   }
 
@@ -74,7 +97,7 @@ class _SearchPanelState extends State<SearchPanel> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _makeSearchTypeRow(),
+        _makeSearchTypeRow(context),
         _makeIsSearchingIndicator(),
         SizedBox(height: 4),
         if (searchType == _SearchType.text)
@@ -113,6 +136,14 @@ class _SearchPanelState extends State<SearchPanel> {
 
     if (!areAllFieldsFilled())
       return;
+    if (searchType == _SearchType.text && isRegex.value) {
+      try {
+        RegExp(query.value);
+      } catch (e) {
+        showToast("Invalid regex");
+        return;
+      }
+    }
 
     SearchOptions options;
     List<String> fileExtensions;
@@ -131,6 +162,7 @@ class _SearchPanelState extends State<SearchPanel> {
         query.value,
         isRegex.value,
         isCaseSensitive.value,
+        query.value.contains("\n"),
       );
     } else if (searchType == _SearchType.id) {
       options = SearchOptionsId(
@@ -165,20 +197,20 @@ class _SearchPanelState extends State<SearchPanel> {
     );
   }
 
-  Widget _makeSearchTypeRow() {
+  Widget _makeSearchTypeRow(BuildContext context) {
     return SizedBox(
       height: 40,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _makeSearchTypeButton(_SearchType.text, "Text Search"),
-          _makeSearchTypeButton(_SearchType.id, "ID Lookup"),
+          _makeSearchTypeButton(context, _SearchType.text, "Text Search"),
+          _makeSearchTypeButton(context, _SearchType.id, "ID Lookup"),
         ],
       ),
     );
   }
 
-  Widget _makeSearchTypeButton(_SearchType type, String text) {
+  Widget _makeSearchTypeButton(BuildContext context, _SearchType type, String text) {
     return Expanded(
       child: TextButton(
         onPressed: () {
@@ -271,7 +303,7 @@ class _SearchPanelState extends State<SearchPanel> {
   Widget _makeSearchResults() {
     return Expanded(
       child: ChangeNotifierBuilder(
-        notifier: searchResults,
+        notifiers: [searchResults, isSearching],
         builder: (context) {
           String? errorText;
           String? infoText;
@@ -296,6 +328,12 @@ class _SearchPanelState extends State<SearchPanel> {
             color: getTheme(context).textColor!.withOpacity(0.5),
             fontSize: 12,
           );
+          var fileGroups = results
+            .groupBy((e) => e.filePath)
+            .entries
+            .map((kv) => _SearchResultsFileGroup(kv.key, kv.value,))
+            .toList();
+
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -315,9 +353,20 @@ class _SearchPanelState extends State<SearchPanel> {
               Divider(height: 1,),
               if (errorText == null)
                 Expanded(
-                  child: ListView.builder(
-                    itemCount: results.length,
-                    itemBuilder: (context, index) => _makeSearchResult(results[index]),
+                  child: SmoothSingleChildScrollView(
+                    controller: scrollController,
+                    duration: const Duration(milliseconds: 100),
+                    stepSize: 40,
+                    child: Column(
+                      children: fileGroups.map((fg) => 
+                        _SearchGroupResult(
+                          fg,
+                          isRegex.value,
+                          isCaseSensitive.value,
+                          query.value,
+                        ),
+                      ).toList(),
+                    ),
                   ),
                 ),
             ],
@@ -326,42 +375,134 @@ class _SearchPanelState extends State<SearchPanel> {
       ),
     );
   }
+}
 
-  Widget _makeSearchResult(SearchResult result) {
-    Widget resultWidget;
-    if (result is SearchResultText)
-      resultWidget = _makeSearchResultText(result);
-    else if (result is SearchResultId)
-      resultWidget = _makeSearchResultId(result);
-    else
-      throw "Unknown search result type";
-    return InkWell(
-      onTap: () => areasManager.openFile(result.filePath),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-        child: resultWidget,
+class _SearchGroupResult extends StatefulWidget {
+  final _SearchResultsFileGroup group;
+  final bool isRegex;
+  final bool isCaseSensitive;
+  final String query;
+
+ _SearchGroupResult(this.group, this.isRegex, this.isCaseSensitive, this.query)
+    : super(key: Key(group.filePath));
+
+  @override
+  State<_SearchGroupResult> createState() => _SearchGroupResultState();
+}
+
+class _SearchGroupResultState extends State<_SearchGroupResult> {
+  bool isExpanded = true;
+
+  @override
+  Widget build(BuildContext context) {
+    return NestedContextMenu(
+      buttons: [
+        ContextMenuButtonConfig(
+          "Open in File Explorer",
+          icon: Icon(Icons.drive_file_move, size: 15,),
+          onPressed: () => openHierarchyManager.openFile(widget.group.filePath),
+        ),
+        ContextMenuButtonConfig(
+          "Reveal in Windows Explorer",
+          icon: Icon(Icons.folder_open, size: 15,),
+          onPressed: () => revealFileInExplorer(widget.group.filePath),
+        ),
+      ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            height: 25,
+            child: InkWell(
+              onTap: () => setState(() => isExpanded = !isExpanded),
+              child: Row(
+                children: [
+                  SizedBox(width: 4),
+                  Transform.rotate(
+                    angle: isExpanded ? 0 : -pi / 2,
+                    child: Icon(Icons.expand_more, size: 18)
+                  ),
+                  SizedBox(width: 4),
+                  Icon(Icons.description, color: getTheme(context).filetypeDocColor, size: 18,),
+                  SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      widget.group.filePath.length > 40
+                        ? ".../${basename(dirname(widget.group.filePath))}/${basename(widget.group.filePath)}"
+                        : widget.group.filePath,
+                      style: TextStyle(
+                        fontSize: 13,
+                      ),
+                      maxLines: 1,
+                    ),
+                  ),
+                  Text(
+                    widget.group.results.length.toString(),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: getTheme(context).textColor!.withOpacity(0.5),
+                    ),
+                  ),
+                  SizedBox(width: 8),
+                ],
+              ),
+            ),
+          ),
+          if (isExpanded)
+            ...widget.group.results
+              .map((result) => _makeSearchResult(context, result))
+        ],
       ),
     );
   }
 
-  Widget _makeSearchResultText(SearchResultText result) {
-    String text = result.line.replaceAll("\t", "  ");
+  Widget _makeSearchResult(BuildContext context, SearchResult result) {
+    Widget resultWidget;
+    if (result is SearchResultText)
+      resultWidget = _makeSearchResultText(context, result);
+    else if (result is SearchResultId)
+      resultWidget = _makeSearchResultId(context, result);
+    else
+      throw "Unknown search result type";
+    return ConstrainedBox(
+      constraints: BoxConstraints(minHeight: 25),
+      child: InkWell(
+        onTap: () => areasManager.openFile(result.filePath),
+        child: Padding(
+          padding: const EdgeInsets.only(left: 40.0),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: resultWidget
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _makeSearchResultText(BuildContext context, SearchResultText result) {
+    String text = result.line;
     List<TextSpan> textSpans;
     List<String> fillStrings;
     RegExp regex;
-    if (isRegex.value) {
-      regex = RegExp(query.value, caseSensitive: isCaseSensitive.value);
+    if (widget.isRegex) {
+      regex = RegExp(widget.query, caseSensitive: widget.isCaseSensitive);
       textSpans = text.split(regex)
-        .map((e) => TextSpan(text: e))
+        .map((e) => TextSpan(
+          text: e.replaceAll("\t", "  "),
+          style: TextStyle(
+            fontSize: 13,
+          ),
+        ))
         .toList();
     }
     else {
-      regex = RegExp(RegExp.escape(query.value), caseSensitive: isCaseSensitive.value);
+      regex = RegExp(RegExp.escape(widget.query), caseSensitive: widget.isCaseSensitive);
       textSpans = text.split(regex)
         .map((e) => TextSpan(
-          text: e,
+          text: e.replaceAll("\t", "  "),
           style: TextStyle(
             color: getTheme(context).textColor,
+            fontSize: 13,
           ),
         ))
         .toList();
@@ -372,44 +513,35 @@ class _SearchPanelState extends State<SearchPanel> {
     // insert colored spans of query between all text spans
     for (int i = 1; i < textSpans.length; i += 2) {
       textSpans.insert(i, TextSpan(
-        text: fillStrings[(i - 1) ~/ 2],
+        text: fillStrings[(i - 1) ~/ 2].replaceAll("\t", "  "),
         style: TextStyle(
           color: getTheme(context).textColor,
           backgroundColor: Theme.of(context).colorScheme.secondary.withOpacity(0.35),
-          overflow: TextOverflow.ellipsis,
         ),
       ));
     }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
       children: [
-        RichText(
-          text: TextSpan(
-            children: textSpans,
-            style: TextStyle(
-              overflow: TextOverflow.ellipsis,
-            ),
+        Text(
+          result.lineNum.toString(),
+          style: TextStyle(
+            fontSize: 11,
+            color: getTheme(context).textColor!.withOpacity(0.5),
           ),
-          overflow: TextOverflow.ellipsis,
-          maxLines: 1,
         ),
-        Tooltip(
-          message: result.filePath,
-          waitDuration: const Duration(milliseconds: 750),
-          child: Text(
-            result.filePath,
-            style: TextStyle(
-              fontSize: 12,
-              color: getTheme(context).textColor!.withOpacity(0.5),
+        Expanded(
+          child: RichText(
+            text: TextSpan(
+              children: textSpans,
             ),
-            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
       ],
     );
   }
 
-  Widget _makeSearchResultId(SearchResultId result) {
+  Widget _makeSearchResultId(BuildContext context, SearchResultId result) {
     var idData = result.idData;
     String title = idData.type;
     if (idData is IndexedActionIdData)
@@ -422,31 +554,13 @@ class _SearchPanelState extends State<SearchPanel> {
         title += " [lvl ${idData.level}]";
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 14,
-          ),
-          maxLines: 1,
-        ),
-        Tooltip(
-          message: result.filePath,
-          waitDuration: const Duration(milliseconds: 750),
-          child: Text(
-            result.filePath,
-            style: TextStyle(
-              fontSize: 12,
-              color: getTheme(context).textColor!.withOpacity(0.5),
-            ),
-            maxLines: 1,
-          ),
-        ),
-      ],
+    return Text(
+      title,
+      style: TextStyle(
+        fontSize: 14,
+      ),
+      maxLines: 1,
     );
   }
   
-  bool get wantKeepAlive => true;
 }

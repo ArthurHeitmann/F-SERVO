@@ -43,7 +43,7 @@ class NierNierThemeExtension extends NierThemeExtension {
       filetypeDatColor: _ncBrownDark,
       filetypePakColor: _ncBrownDark,
       filetypeGroupColor: _ncCyan,
-      filetypeXmlColor: _ncOrange,
+      filetypeDocColor: _ncOrange,
       formElementBgColor: _ncLight3,
       actionBgColor: _ncLight,
       actionTypeDefaultAccent: _ncBrownDark,

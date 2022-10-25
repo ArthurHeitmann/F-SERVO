@@ -96,8 +96,6 @@ class RowReorderable extends FlexReorderable {
   }) : super(direction: Axis.horizontal);
 }
 
-bool _between(num val, num min, num max) => val >= min && val <= max;
-
 class _FlexReorderableState extends State<FlexReorderable> {
   static const int animDuration = 250;
   final List<Size> _childrenSizes = [];
@@ -196,7 +194,7 @@ class _FlexReorderableState extends State<FlexReorderable> {
     for (var i = 0; i < widget.children.length; i++) {
       double childMin = curOffset;
       double childMax = curOffset + getSizeExtent(childSizes[i]);
-      if (_between(draggedOffset, childMin, childMax))
+      if (between(draggedOffset, childMin, childMax))
         return i;
       curOffset += getSizeExtent(childSizes[i]);
     }
@@ -298,9 +296,9 @@ class _FlexReorderableState extends State<FlexReorderable> {
       return 0;
     if (draggedIndex == i)
       return draggedOffset;
-    if (_between(i, newDraggedIndex, draggedIndex))
+    if (between(i, newDraggedIndex, draggedIndex))
       return draggedExtent;
-    if (_between(i, draggedIndex, newDraggedIndex))
+    if (between(i, draggedIndex, newDraggedIndex))
       return -draggedExtent;
     return 0;
   }

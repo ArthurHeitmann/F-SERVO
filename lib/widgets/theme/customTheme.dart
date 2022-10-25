@@ -28,7 +28,7 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
   final Color? filetypeDatColor;
   final Color? filetypePakColor;
   final Color? filetypeGroupColor;
-  final Color? filetypeXmlColor;
+  final Color? filetypeDocColor;
   final Color? formElementBgColor;
   final Color? actionBgColor;
   final Color? actionTypeDefaultAccent;
@@ -67,7 +67,7 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
     this.filetypeDatColor,
     this.filetypePakColor,
     this.filetypeGroupColor,
-    this.filetypeXmlColor,
+    this.filetypeDocColor,
     this.formElementBgColor,
     this.actionBgColor,
     this.actionTypeDefaultAccent,
@@ -108,7 +108,7 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
     Color? filetypeDatColor,
     Color? filetypePakColor,
     Color? filetypeGroupColor,
-    Color? filetypeXmlColor,
+    Color? filetypeDocColor,
     Color? formElementBgColor,
     Color? actionBgColor,
     Color? actionTypeDefaultAccent,
@@ -147,7 +147,7 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
       filetypeDatColor: filetypeDatColor ?? this.filetypeDatColor,
       filetypePakColor: filetypePakColor ?? this.filetypePakColor,
       filetypeGroupColor: filetypeGroupColor ?? this.filetypeGroupColor,
-      filetypeXmlColor: filetypeXmlColor ?? this.filetypeXmlColor,
+      filetypeDocColor: filetypeDocColor ?? this.filetypeDocColor,
       formElementBgColor: formElementBgColor ?? this.formElementBgColor,
       actionBgColor: actionBgColor ?? this.actionBgColor,
       actionTypeDefaultAccent: actionTypeDefaultAccent ?? this.actionTypeDefaultAccent,
@@ -193,7 +193,7 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
       filetypeDatColor: Color.lerp(filetypeDatColor, other.filetypeDatColor, t),
       filetypePakColor: Color.lerp(filetypePakColor, other.filetypePakColor, t),
       filetypeGroupColor: Color.lerp(filetypeGroupColor, other.filetypeGroupColor, t),
-      filetypeXmlColor: Color.lerp(filetypeXmlColor, other.filetypeXmlColor, t),
+      filetypeDocColor: Color.lerp(filetypeDocColor, other.filetypeDocColor, t),
       formElementBgColor: Color.lerp(formElementBgColor, other.formElementBgColor, t),
       actionBgColor: Color.lerp(actionBgColor, other.actionBgColor, t),
       actionTypeDefaultAccent: Color.lerp(actionTypeDefaultAccent, other.actionTypeDefaultAccent, t),
@@ -213,7 +213,7 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
 
   Color colorOfFiletype(HierarchyEntry entry) {
     if (entry is XmlScriptHierarchyEntry || entry is RubyScriptHierarchyEntry || entry is TmdHierarchyEntry || entry is TmdHierarchyEntry)
-      return filetypeXmlColor!;
+      return filetypeDocColor!;
     if (entry is PakHierarchyEntry)
       return filetypePakColor!;
     if (entry is DatHierarchyEntry)
