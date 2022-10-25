@@ -4,6 +4,7 @@ import '../../stateManagement/openFileTypes.dart';
 import '../../stateManagement/preferencesData.dart';
 import '../misc/preferencesEditor.dart';
 import '../propEditors/otherFileTypes/genericTable/TableFileEditor.dart';
+import '../propEditors/otherFileTypes/mcdEditor.dart';
 import 'TextFileEditor.dart';
 import 'XmlFileEditor.dart';
 
@@ -13,6 +14,7 @@ enum FileType {
   preferences,
   tmd,
   smd,
+  mcd,
 }
 
 Widget makeFileEditor(OpenFileData content) {
@@ -25,6 +27,8 @@ Widget makeFileEditor(OpenFileData content) {
       return TableFileEditor(file: content, getTableConfig: () => (content as TmdFileData).tmdData!);
     case FileType.smd:
       return TableFileEditor(file: content, getTableConfig: () => (content as SmdFileData).smdData!);
+    case FileType.mcd:
+      return McdEditor(file: content as McdFileData);
     default:
       return TextFileEditor(fileContent: content as TextFileData);
   }

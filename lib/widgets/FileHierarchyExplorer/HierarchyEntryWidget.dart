@@ -38,12 +38,10 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
       return Icon(Icons.source, color: iconColor, size: 15);
     else if (widget.entry is HapGroupHierarchyEntry)
       return Icon(Icons.workspaces, color: iconColor, size: 15);
-    else if (widget.entry is XmlScriptHierarchyEntry || widget.entry is RubyScriptHierarchyEntry)
-      return Icon(Icons.description, color: iconColor, size: 15);
-    else if (widget.entry is TmdHierarchyEntry || widget.entry is SmdHierarchyEntry)
+    else if (widget.entry is TmdHierarchyEntry || widget.entry is SmdHierarchyEntry || widget.entry is McdHierarchyEntry)
       return Icon(Icons.subtitles, color: iconColor, size: 15);
-    
-    return null;
+    else
+      return Icon(Icons.description, color: iconColor, size: 15);
   }
 
   Color getTextColor(BuildContext context) {

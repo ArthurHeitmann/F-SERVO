@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 import 'package:xml/xml.dart';
 
+import '../fileTypeUtils/mcd/mcdReader.dart';
 import '../fileTypeUtils/smd/smdReader.dart';
 import '../fileTypeUtils/smd/smdWriter.dart';
 import '../fileTypeUtils/tmd/tmdReader.dart';
@@ -52,6 +53,8 @@ class OpenFileData extends ChangeNotifier with Undoable, HasUuid {
       return TmdFileData(name, path, secondaryName: secondaryName);
     else if (path.endsWith(".smd"))
       return SmdFileData(name, path, secondaryName: secondaryName);
+    else if (path.endsWith(".mcd"))
+      return McdFileData(name, path, secondaryName: secondaryName);
     else
       return TextFileData(name, path, secondaryName: secondaryName);
   }
@@ -65,6 +68,8 @@ class OpenFileData extends ChangeNotifier with Undoable, HasUuid {
       return FileType.tmd;
     else if (path.endsWith(".smd"))
       return FileType.smd;
+    else if (path.endsWith(".mcd"))
+      return FileType.mcd;
     else
       return FileType.text;
   }
@@ -358,4 +363,31 @@ class SmdFileData extends OpenFileData {
     smdData?.dispose();
     super.dispose();
   }
+}
+
+class McdFileData extends OpenFileData {
+  McdFile? mcdData;
+
+  McdFileData(super.name, super.path, { super.secondaryName });
+
+  @override
+  Future<void> load() async {
+    if (_loadingState != LoadingState.notLoaded)
+      return;
+    _loadingState = LoadingState.loading;
+
+    mcdData = await McdFile.fromFile(path);
+
+    await super.load();
+  }
+
+  // @override
+  // Future<void> save() async {
+  //   await super.save();
+  // }
+
+  // @override
+  // void dispose() {
+  //   super.dispose();
+  // }
 }
