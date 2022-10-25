@@ -265,6 +265,48 @@ class CharNamesXmlProp extends XmlProp with CustomTableConfig {
     rowCount.value--;
     serialize();
   }
+  
+  @override
+  void updateRowWith(int index, List<String?> values) {
+    if (index > names.length) {
+      assert(index == names.length);
+      names.add(CharNameTranslations(
+        StringProp(values[0]!),
+        List.generate(_nameKeys.length, (i) {
+          if (values[i] == null)
+            return null;
+          return KeyValProp(
+            StringProp(_nameKeys[i]),
+            StringProp(values[i]!),
+          );
+        })
+        .whereType<KeyValProp>()
+        .toList(),
+        anyChangeNotifier
+      ));
+      rowCount.value++;
+      serialize();
+      return;
+    }
+    var name = names[index];
+    name.key.value = values[0]!;
+    for (int i = 0; i < _nameKeys.length; i++) {
+      if (values[i] == null) {
+        name.translations.removeWhere((t) => t.key.value == _nameKeys[i]);
+      }
+      else if (!name.translations.any((t) => t.key.value == _nameKeys[i])) {
+        name.translations.add(
+          KeyValProp(StringProp(_nameKeys[i]), StringProp(values[i]!))
+        );
+      }
+      else {
+        name.translations
+          .firstWhere((t) => t.key.value == _nameKeys[i])
+          .val.value = values[i]!;
+      }
+    }
+    serialize();
+  }
 
   @override
   Undoable takeSnapshot() {

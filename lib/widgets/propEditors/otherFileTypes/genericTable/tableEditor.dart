@@ -10,6 +10,7 @@ import '../../simpleProps/UnderlinePropTextField.dart';
 import '../../simpleProps/propEditorFactory.dart';
 import '../../simpleProps/propTextField.dart';
 import '../../simpleProps/transparentPropTextField.dart';
+import 'tableExporter.dart';
 
 class CellConfig {
   final Prop prop;
@@ -39,6 +40,7 @@ mixin CustomTableConfig {
   RowConfig rowPropsGenerator(int index);
   void onRowAdd();
   void onRowRemove(int index);
+  void updateRowWith(int index, List<String?> values);
 }
 
 class _ColumnSort {
@@ -136,21 +138,73 @@ class _TableEditorState extends ChangeNotifierState<TableEditor> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
-                widget.config.name,
-                style: Theme.of(context).textTheme.headline6,
+          Row(
+            children: [
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    widget.config.name,
+                    style: Theme.of(context).textTheme.headline6,
+                  ),
+                ),
               ),
-            ),
+              _makeExportDropdown(),
+            ],
           ),
           const SizedBox(height: 20),
           _makeHeader(),
           _makeTableBody(),
         ],
       ),
+    );
+  }
+
+  Widget _makeExportDropdown() {
+    return PopupMenuButton<String>(
+      icon: const Icon(Icons.more_vert),
+      onSelected: (String? newValue) {
+        if (newValue == "E JSON")
+          saveTableAsJson(widget.config);
+        else if (newValue == "E CSV")
+          saveTableAsCsv(widget.config);
+        else if (newValue == "I JSON")
+          loadTableFromJson(widget.config);
+        else if (newValue == "I CSV")
+          loadTableFromCsv(widget.config);
+        else
+          throw Exception("Unknown export type: $newValue");
+      },
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          value: "E JSON",
+          child: ListTile(
+            leading: const Icon(Icons.data_object),
+            title: const Text("Export as JSON"),
+          ),
+        ),
+        PopupMenuItem(
+          value: "E CSV",
+          child: ListTile(
+            leading: const Icon(Icons.table_chart_outlined),
+            title: const Text("Export as CSV"),
+          ),
+        ),
+        PopupMenuItem(
+          value: "I JSON",
+          child: ListTile(
+            leading: const Icon(Icons.data_object),
+            title: const Text("Import from JSON"),
+          ),
+        ),
+        PopupMenuItem(
+          value: "I CSV",
+          child: ListTile(
+            leading: const Icon(Icons.table_chart_outlined),
+            title: const Text("Import from CSV"),
+          ),
+        ),
+      ],
     );
   }
 

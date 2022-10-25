@@ -87,6 +87,26 @@ class TmdData extends NestedNotifier<TmdEntryData> with CustomTableConfig, Undoa
   }
   
   @override
+  void updateRowWith(int index, List<String?> values) {
+    if (index > length) {
+      assert(index == length);
+      var idProp = StringProp(values[0]!);
+      var textProp = StringProp(values[1]!);
+      textProp.transform = (str) => str;
+      add(TmdEntryData(
+        id: idProp,
+        text: textProp,
+        anyChangeNotifier: fileChangeNotifier,
+      ));
+      rowCount.value++;
+      return;
+    }
+    var entry = this[index];
+    entry.id.value = values[0] ?? "";
+    entry.text.value = values[1] ?? "";
+  }  
+  
+  @override
   void restoreWith(Undoable snapshot) {
     // TODO: implement restoreWith
   }
