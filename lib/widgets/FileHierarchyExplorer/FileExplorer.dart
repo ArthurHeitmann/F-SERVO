@@ -3,6 +3,7 @@ import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
 
 import '../../stateManagement/statusInfo.dart';
+import '../../utils.dart';
 import '../../widgets/theme/customTheme.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/FileHierarchy.dart';
@@ -29,7 +30,7 @@ class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
 
     await Future.wait(futures);
 
-    messageLog.add("Opened ${details.files.length} file${details.files.length == 1 ? "" : "s"}");
+    messageLog.add("Opened ${pluralStr(details.files.length, "file")}");
   }
 
   @override

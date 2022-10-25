@@ -84,7 +84,7 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
     windowManager.focus();
     setState(() {});
 
-    messageLog.add("Opened ${files.length} file${files.length == 1 ? "" : "s"}");
+    messageLog.add("Opened ${pluralStr(files.length, "file")}");
   }
 
   void pruneCachedWidgets() {

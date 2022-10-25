@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:mutex/mutex.dart';
 
 import '../../background/IdsIndexer.dart';
 import '../../background/searchService.dart';
@@ -7,6 +8,7 @@ import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/Property.dart';
 import '../../stateManagement/nestedNotifier.dart';
 import '../../stateManagement/openFilesManager.dart';
+import '../../utils.dart';
 import '../misc/RowSeparated.dart';
 import '../propEditors/simpleProps/boolPropIcon.dart';
 import '../propEditors/simpleProps/propEditorFactory.dart';
@@ -28,6 +30,8 @@ class _SearchPanelState extends State<SearchPanel> {
   Stream<SearchResult>? searchStream;
   ValueNestedNotifier<SearchResult> searchResults = ValueNestedNotifier([]);
   BoolProp isSearching = BoolProp(false);
+  Mutex cancelMutex = Mutex();
+  late final void Function() updateSearchStream;
   // common options
   StringProp extensions = StringProp("");
   StringProp path = StringProp("");
@@ -41,6 +45,8 @@ class _SearchPanelState extends State<SearchPanel> {
 
   @override
   void initState() {
+    updateSearchStream = throttle(_updateSearchStream, 200);
+
     extensions.addListener(updateSearchStream);
     path.addListener(updateSearchStream);
     query.addListener(updateSearchStream);
@@ -80,12 +86,13 @@ class _SearchPanelState extends State<SearchPanel> {
     );
   }
 
-  void resetSearch() {
-    searchService?.cancel();
+  Future<void> resetSearch() async {
+    if (searchService == null)
+      return;
+    await searchService?.cancel();
     searchService = null;
     searchStream = null;
     searchResults.clear();
-    print("#########");
   }
 
   bool areAllFieldsFilled() {
@@ -101,8 +108,9 @@ class _SearchPanelState extends State<SearchPanel> {
     return true;
   }
 
-  void updateSearchStream() {
-    resetSearch();
+  void _updateSearchStream() async {
+    await cancelMutex.protect<void>(() => resetSearch());
+
     if (!areAllFieldsFilled())
       return;
 
@@ -265,20 +273,57 @@ class _SearchPanelState extends State<SearchPanel> {
       child: ChangeNotifierBuilder(
         notifier: searchResults,
         builder: (context) {
+          String? errorText;
+          String? infoText;
           if (!areAllFieldsFilled())
-            return Center(child: Text("Fill all fields to start search"));
+            errorText = "Fill all fields to start search";
           if (searchResults.isEmpty) {
             if (isSearching.value)
-              return Center(child: Text("Searching..."));
+              errorText = "Searching...";
             else
-              return Center(child: Text("No results"));
+              errorText = "No results";
           }
-          return ListView.builder(
-          itemCount: searchResults.length,
-          itemBuilder: (context, index) => _makeSearchResult(searchResults[index]),
-        );
+          var results = searchResults.toList();
+          var optP = "";
+          if (searchResults.length >= 1000) {
+            results = results.sublist(0, 1000);
+            infoText = "Stopped at 1000 results";
+            optP = "+";
+          }
+
+          var resultsFilesCount = searchResults.map((e) => e.filePath).toSet().length;
+          var infoStyle = TextStyle(
+            color: getTheme(context).textColor!.withOpacity(0.5),
+            fontSize: 12,
+          );
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
+                child: Text(
+                  errorText ?? "Found ${pluralStr(searchResults.length, "result", optP)} in ${pluralStr(resultsFilesCount, "file", optP)}",
+                  style: infoStyle,
+                ),
+              ),
+              if (infoText != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
+                  child: Text(infoText, style: infoStyle),
+                ),
+              SizedBox(height: 5),
+              Divider(height: 1,),
+              if (errorText == null)
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: results.length,
+                    itemBuilder: (context, index) => _makeSearchResult(results[index]),
+                  ),
+                ),
+            ],
+          );
         },
-      )
+      ),
     );
   }
 
@@ -300,14 +345,52 @@ class _SearchPanelState extends State<SearchPanel> {
   }
 
   Widget _makeSearchResultText(SearchResultText result) {
+    String text = result.line.replaceAll("\t", "  ");
+    List<TextSpan> textSpans;
+    List<String> fillStrings;
+    RegExp regex;
+    if (isRegex.value) {
+      regex = RegExp(query.value, caseSensitive: isCaseSensitive.value);
+      textSpans = text.split(regex)
+        .map((e) => TextSpan(text: e))
+        .toList();
+    }
+    else {
+      regex = RegExp(RegExp.escape(query.value), caseSensitive: isCaseSensitive.value);
+      textSpans = text.split(regex)
+        .map((e) => TextSpan(
+          text: e,
+          style: TextStyle(
+            color: getTheme(context).textColor,
+          ),
+        ))
+        .toList();
+    }
+    fillStrings = regex.allMatches(text)
+      .map((e) => e.group(0)!)
+      .toList();
+    // insert colored spans of query between all text spans
+    for (int i = 1; i < textSpans.length; i += 2) {
+      textSpans.insert(i, TextSpan(
+        text: fillStrings[(i - 1) ~/ 2],
+        style: TextStyle(
+          color: getTheme(context).textColor,
+          backgroundColor: Theme.of(context).colorScheme.secondary.withOpacity(0.35),
+          overflow: TextOverflow.ellipsis,
+        ),
+      ));
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          result.line,
-          style: TextStyle(
-            fontSize: 14,
+        RichText(
+          text: TextSpan(
+            children: textSpans,
+            style: TextStyle(
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
+          overflow: TextOverflow.ellipsis,
           maxLines: 1,
         ),
         Tooltip(

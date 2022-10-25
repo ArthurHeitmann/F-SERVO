@@ -59,6 +59,7 @@ class SearchService {
   final StreamController<SearchResult> controller = StreamController<SearchResult>();
   Isolate? _isolate;
   SendPort? _sendPort;
+  final _isDoneCompleter = Completer<void>();
   final BoolProp isSearching;
 
   SearchService({ required this.isSearching });
@@ -96,30 +97,40 @@ class SearchService {
     else if (message is SearchResult)
       controller.add(message);
     else if (message is String && message == "done") {
+      if (!_isDoneCompleter.isCompleted) {
+        isSearching.value = false;
+        _isDoneCompleter.complete();
+      }
       if (controller.isClosed)
         return;
       controller.close();
       _isolate?.kill(priority: Isolate.beforeNextEvent);
-      isSearching.value = false;
     } else
       print("Unhandled message: $message");
   }
 
-  void cancel() async {
+  Future<void> cancel() {
     _sendPort?.send("cancel");
-    await Future.delayed(Duration(milliseconds: 500));
-    _isolate?.kill(priority: Isolate.immediate);
+    Future.delayed(Duration(milliseconds: 500)).then((_) {
+      _isolate?.kill(priority: Isolate.immediate);
+      if (!_isDoneCompleter.isCompleted)
+        _isDoneCompleter.complete();
+    });
+    return _isDoneCompleter.future;
   }
 }
 
 /// In new isolate search recursively for files with given extensions in given path
 class _SearchServiceWorker {
   bool _isCanceled = false;
+  int _resultsCount = 0;
+  static const int _maxResults = 1000;
 
   void search(SearchOptions options) async {
     var receivePort = ReceivePort();
     receivePort.listen(_onMessage);
     options.sendPort!.send(receivePort.sendPort);
+    var t1 = DateTime.now();
 
     try {
       if (options is SearchOptionsText)
@@ -129,7 +140,8 @@ class _SearchServiceWorker {
     }
     finally {
       options.sendPort!.send("done");
-      print("Search done");
+      var t2 = DateTime.now();
+      print("Search done in ${t2.difference(t1).inSeconds} s");
     }
   }
 
@@ -159,6 +171,11 @@ class _SearchServiceWorker {
         if (!test(line))
           continue;
         options.sendPort!.send(SearchResultText(filePath, line));
+        _resultsCount++;
+        if (_resultsCount >= _maxResults) {
+          _isCanceled = true;
+          return;
+        }
       }
     }
     else {
@@ -230,6 +247,9 @@ class _SearchServiceWorker {
     if (idData.id != options.id)
       return;
     options.sendPort!.send(SearchResultId(idData.xmlPath, idData));
+    _resultsCount++;
+    if (_resultsCount >= _maxResults)
+      _isCanceled = true;
   }
 
   void _searchIdInXml(String filePath, XmlElement root, SearchOptionsId options) {

@@ -463,3 +463,9 @@ Future<List<String>> _getDatFileListFromMetadata(String metadataPath) async {
 
   return files;
 }
+
+String pluralStr(int number, String label, [String numberSuffix = ""]) {
+  if (number == 1)
+    return "$number$numberSuffix $label";
+  return "$number$numberSuffix ${label}s";
+}

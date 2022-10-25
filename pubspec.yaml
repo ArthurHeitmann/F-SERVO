@@ -26,6 +26,7 @@ dependencies:
   flutter_launcher_icons: ^0.10.0
   fluttertoast: ^8.0.9
   highlight: ^0.7.0
+  mutex: ^3.0.0
   path: ^1.8.2
   shared_preferences: ^2.0.15
   tuple: ^2.0.0
