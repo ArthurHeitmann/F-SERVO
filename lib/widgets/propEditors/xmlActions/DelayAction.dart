@@ -20,8 +20,8 @@ class _DelayActionEditorState extends XmlActionEditorState {
       padding: const EdgeInsets.all(8.0),
       child: Row(
         children: [
-        Text("Delay"),
-          SizedBox(width: 10),
+        const Text("Delay"),
+          const SizedBox(width: 10),
           SizedBox(
             width: 50,
             child: makePropEditor(widget.action[4].value)

@@ -68,7 +68,7 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
                       padding: const EdgeInsets.only(right: 4, left: 2),
                       child: IconButton(
                         padding: EdgeInsets.zero,
-                        constraints: BoxConstraints(
+                        constraints: const BoxConstraints(
                           maxWidth: 14
                         ),
                         splashRadius: 14,
@@ -82,7 +82,7 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
                     ),
                   if (icon != null)
                     icon,
-                  SizedBox(width: 5),
+                  const SizedBox(width: 5),
                   Expanded(
                     child: ValueListenableBuilder(
                       valueListenable: widget.entry.name,
@@ -117,12 +117,12 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
           if (widget.entry is XmlScriptHierarchyEntry) ...[ 
             ContextMenuButtonConfig(
               "Open",
-              icon: Icon(Icons.open_in_new, size: 15,),
+              icon: const Icon(Icons.open_in_new, size: 15,),
               onPressed: onOpenFile,
             ),
             ContextMenuButtonConfig(
                 "Export YAX",
-              icon: Icon(Icons.file_upload, size: 15,),
+              icon: const Icon(Icons.file_upload, size: 15,),
               onPressed: () {
                 var xml = widget.entry as XmlScriptHierarchyEntry;
                 xmlFileToYaxFile(xml.path);
@@ -130,37 +130,37 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
             ),
             ContextMenuButtonConfig(
               "Unlink",
-              icon: Icon(Icons.close, size: 15,),
+              icon: const Icon(Icons.close, size: 15,),
               onPressed: () => openHierarchyManager.unlinkScript(widget.entry as XmlScriptHierarchyEntry),
             ),
             ContextMenuButtonConfig(
               "Delete",
-              icon: Icon(Icons.delete, size: 15,),
+              icon: const Icon(Icons.delete, size: 15,),
               onPressed: () => openHierarchyManager.deleteScript(widget.entry as XmlScriptHierarchyEntry),
             ),
           ],
           if (widget.entry is HapGroupHierarchyEntry) ...[
             ContextMenuButtonConfig(
               "New Script",
-              icon: Icon(Icons.description, size: 15,),
+              icon: const Icon(Icons.description, size: 15,),
               onPressed: () => openHierarchyManager.addScript(widget.entry, parentPath: (widget.entry as FileHierarchyEntry).path),
             ),
             ContextMenuButtonConfig(
               "New Group",
-              icon: Icon(Icons.workspaces, size: 15,),
+              icon: const Icon(Icons.workspaces, size: 15,),
               onPressed: () => (widget.entry as HapGroupHierarchyEntry).addChild(),
             ),
             if (widget.entry.isEmpty)
               ContextMenuButtonConfig(
                 "Remove",
-                icon: Icon(Icons.remove, size: 16,),
+                icon: const Icon(Icons.remove, size: 16,),
                 onPressed: () => (widget.entry as HapGroupHierarchyEntry).removeSelf(),
               ),
           ],
           if (widget.entry is PakHierarchyEntry) ...[
             ContextMenuButtonConfig(
               "Repack PAK",
-              icon: Icon(Icons.file_upload, size: 15,),
+              icon: const Icon(Icons.file_upload, size: 15,),
               onPressed: () {
                 var pak = widget.entry as PakHierarchyEntry;
                 repackPak(pak.extractedPath);
@@ -170,7 +170,7 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
           if (widget.entry is DatHierarchyEntry) ...[
             ContextMenuButtonConfig(
               "Repack DAT",
-              icon: Icon(Icons.file_upload, size: 15,),
+              icon: const Icon(Icons.file_upload, size: 15,),
               onPressed: () {
                 if (prefs.dataExportPath?.value == null) {
                   showToast("No export path set; go to Settings to set an export path");
@@ -186,7 +186,7 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
           if (widget.entry is RubyScriptHierarchyEntry) ...[
             ContextMenuButtonConfig(
               "Compile to .bin",
-              icon: Icon(Icons.file_upload, size: 15,),
+              icon: const Icon(Icons.file_upload, size: 15,),
               onPressed: () {
                 var rbPath = (widget.entry as RubyScriptHierarchyEntry).path;
                 rubyFileToBin(rbPath);
@@ -196,19 +196,19 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
           if (openHierarchyManager.contains(widget.entry))
             ContextMenuButtonConfig(
               "Close",
-              icon: Icon(Icons.close, size: 14,),
+              icon: const Icon(Icons.close, size: 14,),
               onPressed: () => openHierarchyManager.remove(widget.entry),
             ),
           if (widget.entry.isNotEmpty)
             ContextMenuButtonConfig(
               "Collapse all",
-              icon: Icon(Icons.unfold_less, size: 15,),
+              icon: const Icon(Icons.unfold_less, size: 15,),
               onPressed: () => widget.entry.setCollapsedRecursive(true),
             ),
           if (widget.entry.isNotEmpty)
             ContextMenuButtonConfig(
               "Expand all",
-              icon: Icon(Icons.unfold_more, size: 15,),
+              icon: const Icon(Icons.unfold_more, size: 15,),
               onPressed: () => widget.entry.setCollapsedRecursive(false, true),
             ),
         ],
@@ -245,7 +245,7 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
         onTapUp: (_) => setState(() => isClicked = false),
         child: Container(
           color: bgColor,
-          // duration: Duration(milliseconds: 75),
+          // duration: const Duration(milliseconds: 75),
           child: child
         ),
       ),

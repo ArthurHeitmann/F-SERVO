@@ -23,7 +23,7 @@ import 'stateManagement/Property.dart';
 import 'stateManagement/miscValues.dart';
 import 'stateManagement/xmlProps/xmlProp.dart';
 
-final uuidGen = Uuid();
+const uuidGen = Uuid();
 
 enum HorizontalDirection { left, right }
 
@@ -192,12 +192,12 @@ void showToast(String msg) {
     child: Container(
       decoration: BoxDecoration(
         color: Colors.grey.shade700,
-        borderRadius: BorderRadius.all(Radius.circular(10))
+        borderRadius: const BorderRadius.all(Radius.circular(10))
       ),
       padding: const EdgeInsets.all(8),
       child: Text(
         msg,
-        style: TextStyle(
+        style: const TextStyle(
           fontSize: 17,
           color: Colors.white
         ),
@@ -262,7 +262,7 @@ ContextMenuButtonConfig optionalValPropButtonConfig(XmlProp parent, String tagNa
   if (parent.get(tagName) == null)
     return ContextMenuButtonConfig(
       "Add $tagName prop",
-      icon: Icon(Icons.add, size: 14,),
+      icon: const Icon(Icons.add, size: 14,),
       onPressed: () async {
         var prop = await makePropVal();
         parent.insert(
@@ -274,7 +274,7 @@ ContextMenuButtonConfig optionalValPropButtonConfig(XmlProp parent, String tagNa
   else
     return ContextMenuButtonConfig(
       "Remove $tagName prop",
-      icon: Icon(Icons.remove, size: 14,),
+      icon: const Icon(Icons.remove, size: 14,),
       onPressed: () => parent.remove(parent.get(tagName)!)
     );
 }
@@ -283,7 +283,7 @@ ContextMenuButtonConfig optionalPropButtonConfig(XmlProp parent, String tagName,
   if (parent.get(tagName) == null)
     return ContextMenuButtonConfig(
       "Add $tagName prop",
-      icon: Icon(Icons.add, size: 14,),
+      icon: const Icon(Icons.add, size: 14,),
       onPressed: () async {
         var props = await makePropChildren();
         parent.insert(
@@ -295,7 +295,7 @@ ContextMenuButtonConfig optionalPropButtonConfig(XmlProp parent, String tagName,
   else
     return ContextMenuButtonConfig(
       "Remove $tagName prop",
-      icon: Icon(Icons.remove, size: 14,),
+      icon: const Icon(Icons.remove, size: 14,),
       onPressed: () => parent.remove(parent.get(tagName)!)
     );
 }
@@ -356,7 +356,7 @@ Future<void> updatePakInfoFileData(String path, void Function(dynamic data) upda
   if (fileInfoIndex == -1)
     return;
   updater(pakInfoJson["files"][fileInfoIndex]);
-  await File(pakInfoPath).writeAsString(JsonEncoder.withIndent("\t").convert(pakInfoJson));
+  await File(pakInfoPath).writeAsString(const JsonEncoder.withIndent("\t").convert(pakInfoJson));
 }
 
 Future<void> addPakInfoFileData(String path, int type) async {
@@ -369,7 +369,7 @@ Future<void> addPakInfoFileData(String path, int type) async {
     "name": yaxName,
     "type": type,
   });
-  await File(pakInfoPath).writeAsString(JsonEncoder.withIndent("\t").convert(pakInfoJson));
+  await File(pakInfoPath).writeAsString(const JsonEncoder.withIndent("\t").convert(pakInfoJson));
 }
 
 Future<void> removePakInfoFileData(String path) async {
@@ -383,7 +383,7 @@ Future<void> removePakInfoFileData(String path) async {
   if (fileInfoIndex == -1)
     return;
   (pakInfoJson["files"] as List).removeAt(fileInfoIndex);
-  await File(pakInfoPath).writeAsString(JsonEncoder.withIndent("\t").convert(pakInfoJson));
+  await File(pakInfoPath).writeAsString(const JsonEncoder.withIndent("\t").convert(pakInfoJson));
 }
 
 bool isStringAscii(String s) {

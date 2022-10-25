@@ -94,7 +94,7 @@ class _SelectionContextMenuState extends State<_SelectionContextMenu> {
     return prepareLayout(context,
       child: setupShortcuts(
         child: ConstrainedBox(
-          constraints: BoxConstraints.tightFor(width: popupWidth),
+          constraints: const BoxConstraints.tightFor(width: popupWidth),
           child: Column(
             children: [
               makeSearchBar(),
@@ -139,7 +139,7 @@ class _SelectionContextMenuState extends State<_SelectionContextMenu> {
             search = value;
           });
         },
-        decoration: InputDecoration(
+        decoration: const InputDecoration(
           prefixIcon: Icon(Icons.search),
           hintText: "Search...",
           border: InputBorder.none,

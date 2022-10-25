@@ -86,7 +86,7 @@ Future<List<String>> extractPakFiles(String pakPath, { bool yaxToXml = false }) 
     })
   };
   var pakInfoPath = path.join(extractDir, "pakInfo.json");
-  await File(pakInfoPath).writeAsString(JsonEncoder.withIndent("\t").convert(meta));
+  await File(pakInfoPath).writeAsString(const JsonEncoder.withIndent("\t").convert(meta));
 
   if (yaxToXml) {
     await Future.wait(Iterable<int>.generate(fileCount).map<Future<void>>((i) async {

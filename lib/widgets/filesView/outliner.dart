@@ -30,9 +30,9 @@ class _OutlinerState extends ChangeNotifierState<Outliner> {
         builder: (context) => Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Divider(height: 1),
+            const Divider(height: 1),
             makeTopRow(),
-            Divider(height: 1),
+            const Divider(height: 1),
             Expanded(
               child: areasManager.activeArea?.currentFile?.type == FileType.xml
                 ? ChangeNotifierBuilder(
@@ -59,10 +59,10 @@ class _OutlinerState extends ChangeNotifierState<Outliner> {
   
   Widget makeTopRow() {
     return Row(
-      children: [
+      children: const [
         Expanded(
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+            padding: EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
             child: Text("OUTLINER", 
               style: TextStyle(
                 fontSize: 14,
@@ -71,10 +71,6 @@ class _OutlinerState extends ChangeNotifierState<Outliner> {
               overflow: TextOverflow.ellipsis,
             ),
           ),
-        ),
-        Row(
-          children: [
-          ],
         ),
       ],
     );
@@ -121,7 +117,7 @@ class __OutlinerEntryState extends ChangeNotifierState<_OutlinerEntry> {
       onTap: () {
         var actionContext = getActionKey(widget.action.id.value)?.currentContext;
         if (actionContext != null)
-          scrollIntoView(actionContext, duration: Duration(milliseconds: 400), viewOffset: 45);
+          scrollIntoView(actionContext, duration: const Duration(milliseconds: 400), viewOffset: 45);
       },
       child: MouseRegion(
         onEnter: (event) => setState(() => isHovering = true),
@@ -132,14 +128,14 @@ class __OutlinerEntryState extends ChangeNotifierState<_OutlinerEntry> {
         cursor: SystemMouseCursors.click,
         child: Container(
           color: bgColor,
-          // duration: Duration(milliseconds: 75),
+          // duration: const Duration(milliseconds: 75),
           height: 25,
           padding: const EdgeInsets.symmetric(vertical: 3),
           child: Row(
             children: [
-              SizedBox(width: 3),
-              Icon(Icons.chevron_right, size: 19,),
-              SizedBox(width: 3),
+              const SizedBox(width: 3),
+              const Icon(Icons.chevron_right, size: 19,),
+              const SizedBox(width: 3),
               Expanded(
                 child: ChangeNotifierBuilder(
                   notifier: widget.action.name,

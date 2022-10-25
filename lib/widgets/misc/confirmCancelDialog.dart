@@ -27,12 +27,12 @@ Future<bool?> confirmOrCancelDialog(BuildContext context, { required String titl
             children: [
               Text(title, style: Theme.of(context).textTheme.headline6),
               if (body != null) ...[
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
                 Text(body, style: Theme.of(context).textTheme.bodyText2),
               ],
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: 300),
+                constraints: const BoxConstraints(maxWidth: 300),
                 child: RowSeparated(
                   separatorWidth: 5,
                   mainAxisAlignment: MainAxisAlignment.end,
@@ -43,7 +43,7 @@ Future<bool?> confirmOrCancelDialog(BuildContext context, { required String titl
                         Navigator.of(context).pop();
                       },
                       style: getTheme(context).dialogPrimaryButtonStyle,
-                      child: Text("Save"),
+                      child: const Text("Save"),
                     ),
                     ElevatedButton(
                       onPressed: () {
@@ -51,7 +51,7 @@ Future<bool?> confirmOrCancelDialog(BuildContext context, { required String titl
                         Navigator.of(context).pop();
                       },
                       style: getTheme(context).dialogSecondaryButtonStyle,
-                      child: Text("Don't save"),
+                      child: const Text("Don't save"),
                     ),
                     ElevatedButton(
                       onPressed: () {
@@ -59,7 +59,7 @@ Future<bool?> confirmOrCancelDialog(BuildContext context, { required String titl
                         Navigator.of(context).pop();
                       },
                       style: getTheme(context).dialogSecondaryButtonStyle,
-                      child: Text("Cancel"),
+                      child: const Text("Cancel"),
                     ),
                   ],
                 ),

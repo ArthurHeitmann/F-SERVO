@@ -162,7 +162,7 @@ abstract class SyncedObject {
     _isUpdating = true;
     updateInternal(message);
     // prevent received changes to self to be synced back to client
-    await Future.delayed(Duration(milliseconds: 10));
+    await Future.delayed(const Duration(milliseconds: 10));
     _isUpdating = false;
   }
 
@@ -182,8 +182,6 @@ abstract class SyncedObject {
       root.add(newProp);
     }
   }
-
-  // TODO handle prop updates
 }
 
 class AreaSyncedObject extends SyncedObject {

@@ -57,11 +57,11 @@ class CommandEditorState extends ChangeNotifierState<CommandEditor> {
       padding: const EdgeInsets.all(4.0),
       child: Row(
         children: [
-          Text(
+          const Text(
             "!",
             style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
           ),
-          SizedBox(width: 10),
+          const SizedBox(width: 10),
           Expanded(
             child: NestedContextMenu(
               buttons: [
@@ -86,7 +86,7 @@ class CommandEditorState extends ChangeNotifierState<CommandEditor> {
                     if (command != null)
                       makeCommandEditor(command, isAreaCommand ? "hit" : null)
                     else if (!isAreaCommand)
-                      Text("No command"),
+                      const Text("No command"),
                     if (hitoutCommand != null)
                       makeCommandEditor(hitoutCommand, "hitout"),
                     if (args != null)
@@ -137,7 +137,7 @@ class CommandEditorState extends ChangeNotifierState<CommandEditor> {
             Divider(color: getTheme(context).textColor!.withOpacity(0.5), thickness: 2,),
             if (commLabel != null)
               Center(
-                child: Text(commLabel, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),)
+                child: Text(commLabel, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),)
               ),
             if (label != null)
               makePropEditor(label),

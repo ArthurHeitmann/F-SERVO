@@ -42,7 +42,7 @@ final _highlightLanguages = {
 
 Map<String, TextStyle> get _customTheme => {
   ...atomOneDarkTheme,
-  "root": TextStyle(color: Color(0xffabb2bf), backgroundColor: getTheme(getGlobalContext()).editorBackgroundColor),
+  "root": TextStyle(color: const Color(0xffabb2bf), backgroundColor: getTheme(getGlobalContext()).editorBackgroundColor),
 };
 
 class _TextFileEditorState extends ChangeNotifierState<TextFileEditor> {
@@ -58,7 +58,7 @@ class _TextFileEditorState extends ChangeNotifierState<TextFileEditor> {
           // theme: _customTheme,
           theme: atomOneDarkTheme,
           language: _highlightLanguages[extension(widget.fileContent.path)],
-          params: EditorParams(tabSpaces: 4),
+          params: const EditorParams(tabSpaces: 4),
           text: widget.fileContent.text,
           onChange: (text) {
             if (text == widget.fileContent.text)
@@ -82,8 +82,8 @@ class _TextFileEditorState extends ChangeNotifierState<TextFileEditor> {
       )
       : Center(
         child: ConstrainedBox(
-          constraints: BoxConstraints.loose(Size(150, 150)),
-          child: Opacity(
+          constraints: BoxConstraints.loose(const Size(150, 150)),
+          child: const Opacity(
             opacity: 0.25,
             child: Image(
               image: AssetImage("assets/logo/pod_alpha.png"),

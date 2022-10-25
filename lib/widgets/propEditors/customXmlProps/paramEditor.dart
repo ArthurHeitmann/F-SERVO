@@ -20,7 +20,7 @@ class ParamsEditor extends StatelessWidget {
         decoration: BoxDecoration(
           color: getTheme(context).formElementBgColor,
           border: Border.all(color: getTheme(context).propBorderColor!, width: 0.5),
-          borderRadius: BorderRadius.all(Radius.circular(10))
+          borderRadius: const BorderRadius.all(Radius.circular(10))
         ),
         padding: const EdgeInsets.only(right: 15),
         child: IntrinsicWidth(

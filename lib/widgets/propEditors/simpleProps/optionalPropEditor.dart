@@ -28,8 +28,8 @@ class _OptionalPropEditorState<T extends PropTextField> extends State<OptionalPr
         padding: const EdgeInsets.all(2.5),
         child: SmallButton(
           onPressed: widget.onAdd,
-          constraints: BoxConstraints.tight(Size(25, 24)),
-          child: Icon(Icons.add, size: 17,),
+          constraints: BoxConstraints.tight(const Size(25, 24)),
+          child: const Icon(Icons.add, size: 17,),
         ),
       );
     }
@@ -41,14 +41,14 @@ class _OptionalPropEditorState<T extends PropTextField> extends State<OptionalPr
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
           Flexible(child: makePropEditor<T>(widget.prop!.value)),
-          SizedBox(width: 5),
+          const SizedBox(width: 5),
           AnimatedOpacity(
-            duration: Duration(milliseconds: 100),
+            duration: const Duration(milliseconds: 100),
             opacity: isHovered ? 1 : 0,
             child: SmallButton(
               onPressed: () => widget.parent.remove(widget.prop!),
-              constraints: BoxConstraints.tight(Size(25, 25)),
-              child: Icon(Icons.remove, size: 17,),
+              constraints: BoxConstraints.tight(const Size(25, 25)),
+              child: const Icon(Icons.remove, size: 17,),
             ),
           ),
         ],

@@ -81,7 +81,7 @@ Future<List<String>> extractDatFiles(String datPath, { bool shouldExtractPakFile
     "ext": path.basename(datPath).split(".")[1],
   };
   await File(path.join(extractDir, "dat_info.json"))
-    .writeAsString(JsonEncoder.withIndent("\t").convert(jsonMetadata));
+    .writeAsString(const JsonEncoder.withIndent("\t").convert(jsonMetadata));
 
   if (shouldExtractPakFiles) {
     var pakFiles = fileNames.where((file) => file.endsWith(".pak"));

@@ -20,7 +20,7 @@ class LayoutsEditor extends StatelessWidget {
           Row(
             children: [
               Text("parent", style: getTheme(context).propInputTextStyle,),
-              SizedBox(width: 10),
+              const SizedBox(width: 10),
               Flexible(
                 child: PuidReferenceEditor(prop: prop.get("normal")!.get("parent")!.get("id")!.get("id")!, showDetails: showDetails)
               ),

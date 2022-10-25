@@ -10,17 +10,17 @@ Widget globalShortcutsWrapper(BuildContext context, { required Widget child }) {
   return Shortcuts(
     shortcuts: {
       LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.tab):
-        TabChangeIntent(HorizontalDirection.right),
+        const TabChangeIntent(HorizontalDirection.right),
       LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.shift, LogicalKeyboardKey.tab):
-        TabChangeIntent(HorizontalDirection.left),
+        const TabChangeIntent(HorizontalDirection.left),
       LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyW):
-        CloseTabIntent(),
+        const CloseTabIntent(),
       LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyS):
-        SaveTabIntent(),
+        const SaveTabIntent(),
       LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyZ):
-        UndoIntent(),
+        const UndoIntent(),
       LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyY):
-        RedoIntent(),
+        const RedoIntent(),
     },
     child: Actions(
       actions: {

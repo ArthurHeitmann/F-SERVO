@@ -57,11 +57,11 @@ class NierNierThemeExtension extends NierThemeExtension {
       dialogSecondaryButtonStyle: ButtonStyle(
         backgroundColor: MaterialStateProperty.all(_ncLight),
         foregroundColor: MaterialStateProperty.all(_ncDark),
-        side: MaterialStateProperty.all(BorderSide(color: _ncDark)),
+        side: MaterialStateProperty.all(const BorderSide(color: _ncDark)),
         shadowColor: MaterialStateProperty.all(Colors.transparent),
       ),
       selectedColor: _ncBrownDark,
-      propInputTextStyle: TextStyle(
+      propInputTextStyle: const TextStyle(
         color: _ncDark,
         fontSize: 12,
         fontFamily: "FiraCode",
@@ -76,7 +76,7 @@ class NierNierThemeExtension extends NierThemeExtension {
   static ThemeData makeTheme() {
     return ThemeData(
       extensions: [NierNierThemeExtension()],
-      textTheme: TextTheme(
+      textTheme: const TextTheme(
         bodyText1: TextStyle(),
         bodyText2: TextStyle(),
       ).apply(
@@ -88,7 +88,7 @@ class NierNierThemeExtension extends NierThemeExtension {
         crossAxisMargin: 0,
         thickness: MaterialStateProperty.all(12),
       ),
-      inputDecorationTheme: InputDecorationTheme(
+      inputDecorationTheme: const InputDecorationTheme(
         border: InputBorder.none,
         contentPadding: EdgeInsets.symmetric(vertical: 8),
         isDense: true,
@@ -98,23 +98,23 @@ class NierNierThemeExtension extends NierThemeExtension {
           color: _ncLight3,
           borderRadius: BorderRadius.circular(4),
         ),
-        textStyle: TextStyle(
+        textStyle: const TextStyle(
           color: _ncDark,
           fontSize: 12,
         ),
       ),
-      popupMenuTheme: PopupMenuThemeData(
+      popupMenuTheme: const PopupMenuThemeData(
         color: _ncLight2,
       ),
       toggleableActiveColor: _ncCyan,
-      colorScheme: ColorScheme.light(
+      colorScheme: const ColorScheme.light(
         primary: _ncCyan,
         secondary: _ncCyan,
       ),
-      iconTheme: IconThemeData(
+      iconTheme: const IconThemeData(
         color: _ncDark,
       ),
-      textSelectionTheme: TextSelectionThemeData(
+      textSelectionTheme: const TextSelectionThemeData(
         cursorColor: _ncDark,
         selectionColor: _ncBrownDark,
         selectionHandleColor: _ncBrownDark,

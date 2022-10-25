@@ -67,7 +67,7 @@ class XmlActionEditorState extends ChangeNotifierState<XmlActionEditor> {
         buttons: [
           ContextMenuButtonConfig(
             "Copy Action PUID ref",
-            icon: Icon(Icons.content_copy, size: 14,),
+            icon: const Icon(Icons.content_copy, size: 14,),
             onPressed: () => copyPuidRef("hap::Action", widget.action.id.value)
           ),
         ],
@@ -114,7 +114,7 @@ class XmlActionEditorState extends ChangeNotifierState<XmlActionEditor> {
             selectionHandleColor: Colors.white,
           ),
           extensions: [getTheme(context).copyWith(
-            propInputTextStyle: TextStyle(
+            propInputTextStyle: const TextStyle(
             color: Colors.white,
             fontSize: 14,
             fontFamily: "FiraCode",
@@ -126,20 +126,20 @@ class XmlActionEditorState extends ChangeNotifierState<XmlActionEditor> {
           padding: const EdgeInsets.all(4.0),
           child: Row(
             children: [
-              SizedBox(width: 10, height: 10),  // placeholder for future icon or button
+              const SizedBox(width: 10, height: 10),  // placeholder for future icon or button
               Expanded(
                 child: Column(
                   children: [
                     RichText(
                       text: TextSpan(
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 14
                         ),
                         text: widget.action.code.strVal ?? "UNKNOWN ${widget.action.code.value}"
                       )
                     ),
-                    SizedBox(height: 2),
+                    const SizedBox(height: 2),
                     PropTextField.make<DoubleClickablePropTextField>(prop: widget.action.name),
                   ],
                 ),

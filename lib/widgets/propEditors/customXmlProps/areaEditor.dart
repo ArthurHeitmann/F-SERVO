@@ -47,7 +47,7 @@ class _AreaEditorState extends ChangeNotifierState<AreaEditor> {
         buttons: [
           ContextMenuButtonConfig(
             "Sync to Blender",
-            icon: Icon(Icons.sync, size: 14,),
+            icon: const Icon(Icons.sync, size: 14,),
             onPressed: () => startSyncingObject(AreaSyncedObject(widget.prop))
           ),
         ],
@@ -83,7 +83,7 @@ class _AreaEditorState extends ChangeNotifierState<AreaEditor> {
                 child: Icon(_areaIcons[type]!, size: 35),
               ),
             ),
-            SizedBox(width: 5),
+            const SizedBox(width: 5),
             Container(width: 4, color: getTheme(context).editorBackgroundColor,),
             Flexible(
               child: Container(
@@ -93,7 +93,7 @@ class _AreaEditorState extends ChangeNotifierState<AreaEditor> {
                     width: 3,
                   )),
                 ),
-                padding: EdgeInsets.only(left: 10),
+                padding: const EdgeInsets.only(left: 10),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -109,8 +109,8 @@ class _AreaEditorState extends ChangeNotifierState<AreaEditor> {
                     if (radius != null)
                       Row(
                         children: [
-                          Icon(CustomIcons.radius, size: 18),
-                          SizedBox(width: 10),
+                          const Icon(CustomIcons.radius, size: 18),
+                          const SizedBox(width: 10),
                           makePropEditor(radius.value),
                         ],
                       ),

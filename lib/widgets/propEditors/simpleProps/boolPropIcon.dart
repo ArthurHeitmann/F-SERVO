@@ -41,7 +41,7 @@ class _BoolPropSliderState extends ChangeNotifierState<BoolPropIconButton> {
       return child;
     return Tooltip(
       message: widget.tooltip!,
-      waitDuration: Duration(milliseconds: 750),
+      waitDuration: const Duration(milliseconds: 750),
       child: child,
     );
   }

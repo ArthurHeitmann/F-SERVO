@@ -10,13 +10,13 @@ const List<String> _coordChars = ["X", "Y", "Z"];
 const List<Color> _coordColors = [Colors.red, Colors.green, Colors.blue];
 BoxConstraints constraintsFromCount(int count, bool compactMode) {
   if (compactMode)
-    return BoxConstraints(minWidth: 15);
+    return const BoxConstraints(minWidth: 15);
   if (count < 3)
-    return BoxConstraints(minWidth: 150, maxWidth: 150);
+    return const BoxConstraints(minWidth: 150, maxWidth: 150);
   else if (count == 3)
-    return BoxConstraints(minWidth: 100, maxWidth: 100);
+    return const BoxConstraints(minWidth: 100, maxWidth: 100);
   else
-    return BoxConstraints(minWidth: 35, maxWidth: 60);
+    return const BoxConstraints(minWidth: 35, maxWidth: 60);
 }
 
 class VectorPropEditor<T extends PropTextField> extends StatelessWidget {

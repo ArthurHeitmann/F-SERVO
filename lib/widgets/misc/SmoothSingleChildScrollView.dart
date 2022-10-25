@@ -72,7 +72,7 @@ class _SmoothSingleChildScrollViewState extends State<SmoothSingleChildScrollVie
         onPointerSignal: (event) => event is PointerScrollEvent ? onWheelScroll(event) : null,
         child: SingleChildScrollView(
           controller: widget.controller,
-          physics: overrideScrollBehavior ? NeverScrollableScrollPhysics() : null,
+          physics: overrideScrollBehavior ? const NeverScrollableScrollPhysics() : null,
           child: widget.child,
         ),
       ),

@@ -34,7 +34,7 @@ class _TitleBarButtonState extends State<TitleBarButton> with SingleTickerProvid
           color: isHovered ? widget.primaryColor : getTheme(context).textColor,
           size: titleBarHeight * 0.75,
         ),
-        label: Text(""),
+        label: const Text(""),
         onPressed: widget.onPressed,
         style: TextButton.styleFrom(
           foregroundColor: isHovered ? widget.primaryColor : getTheme(context).textColor,

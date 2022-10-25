@@ -63,7 +63,7 @@ class _FileMetaEditorState extends ChangeNotifierState<FileMetaEditor> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         makeTopRow(),
-        Divider(height: 1),
+        const Divider(height: 1),
         Expanded(
           key: Key(openHierarchyManager.selectedEntry?.name.value ?? "noGroup"),
           child: SmoothSingleChildScrollView(
@@ -87,17 +87,13 @@ class _FileMetaEditorState extends ChangeNotifierState<FileMetaEditor> {
             padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
             child: Text(
               _editorTypeNames[editorType]!.toUpperCase(),
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w300
               ),
               overflow: TextOverflow.ellipsis,
             ),
           ),
-        ),
-        Row(
-          children: [
-          ],
         ),
       ],
     );
@@ -116,13 +112,13 @@ class _FileMetaEditorState extends ChangeNotifierState<FileMetaEditor> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Expanded(flex: 1, child: Text("Name:")),
+              const Expanded(flex: 1, child: Text("Name:")),
               Expanded(flex: 3, child: makePropEditor(groupEntry.name)),
             ],
           ),
-          SizedBox(height: 5),
-          Text("Tokens:"),
-          SizedBox(height: 5),
+          const SizedBox(height: 5),
+          const Text("Tokens:"),
+          const SizedBox(height: 5),
           if (tokens != null)
             XmlArrayEditor(
               tokens,
@@ -143,8 +139,8 @@ class _FileMetaEditorState extends ChangeNotifierState<FileMetaEditor> {
                   ]
                 ), parentTags: groupEntry.prop.nextParents()));
               },
-              constraints: BoxConstraints(maxWidth: 60),
-              child: Icon(Icons.add, size: 20,),
+              constraints: const BoxConstraints(maxWidth: 60),
+              child: const Icon(Icons.add, size: 20,),
             ),
         ]
       );
@@ -182,7 +178,7 @@ class _FileMetaEditorState extends ChangeNotifierState<FileMetaEditor> {
               Row(
                 children: [
                   Text("pak file type", style: getTheme(context).propInputTextStyle,),
-                  SizedBox(width: 10),
+                  const SizedBox(width: 10),
                   Flexible(
                     child: makePropEditor(pakType),
                   ),

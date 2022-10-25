@@ -69,8 +69,8 @@ class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor>
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.link, size: 25,),
-              SizedBox(width: 4,),
+              const Icon(Icons.link, size: 25,),
+              const SizedBox(width: 4,),
               showLookup ? FutureBuilder(
                 future: lookupFuture,
                 builder: (context, AsyncSnapshot<List<IndexedIdData>> snapshot) {
@@ -82,14 +82,14 @@ class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor>
                     child: Column(
                       children: [
                         ConstrainedBox(
-                          constraints: BoxConstraints(maxHeight: 25),
+                          constraints: const BoxConstraints(maxHeight: 25),
                           child: Text(
                             puidRef.type,
-                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        SizedBox(height: 4,),
+                        const SizedBox(height: 4,),
                         if (puidRef is IndexedActionIdData)
                           Text(puidRef.actionName, overflow: TextOverflow.ellipsis,),
                         if (puidRef is IndexedEntityIdData)
@@ -127,10 +127,10 @@ class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor>
   Widget interactionsWrapper(BuildContext context, { required Widget child }) {
     return NestedContextMenu(
       buttons: [
-        ContextMenuButtonConfig("Copy PUID ref", icon: Icon(Icons.content_copy, size: 14), onPressed: copyRef),
-        ContextMenuButtonConfig("Paste PUID ref", icon: Icon(Icons.content_paste, size: 14), onPressed: pasteRef),
-        ContextMenuButtonConfig("Go to Reference", icon: Icon(Icons.east, size: 14), shortcutLabel: "(ctrl + click)", onPressed: goToReference),
-        ContextMenuButtonConfig("Toggle Editing", icon: Icon(Icons.edit, size: 14), shortcutLabel: "(double click)", onPressed: () => setState(() => showLookup = !showLookup)),
+        ContextMenuButtonConfig("Copy PUID ref", icon: const Icon(Icons.content_copy, size: 14), onPressed: copyRef),
+        ContextMenuButtonConfig("Paste PUID ref", icon: const Icon(Icons.content_paste, size: 14), onPressed: pasteRef),
+        ContextMenuButtonConfig("Go to Reference", icon: const Icon(Icons.east, size: 14), shortcutLabel: "(ctrl + click)", onPressed: goToReference),
+        ContextMenuButtonConfig("Toggle Editing", icon: const Icon(Icons.edit, size: 14), shortcutLabel: "(double click)", onPressed: () => setState(() => showLookup = !showLookup)),
       ],
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
@@ -188,7 +188,7 @@ class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor>
         return;
       }
 
-      scrollIntoView(actionContext, duration: Duration(milliseconds: 400), viewOffset: 45);
+      scrollIntoView(actionContext, duration: const Duration(milliseconds: 400), viewOffset: 45);
     }
   }
 

@@ -33,8 +33,8 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("Preferences", style: TextStyle(fontWeight: FontWeight.w300, fontSize: 25),),
-          SizedBox(height: 20,),
+          const Text("Preferences", style: TextStyle(fontWeight: FontWeight.w300, fontSize: 25),),
+          const SizedBox(height: 20,),
           ...makeDataExportEditor(),
           ...makeIndexingEditor(),
           ...makeThemeEditor(),
@@ -59,8 +59,8 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
       return [];
 
     return [
-      Text("Data export path", style: sectionHeaderStyle,),
-      SizedBox(height: 10,),
+      const Text("Data export path", style: sectionHeaderStyle,),
+      const SizedBox(height: 10,),
       RowSeparated(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -69,11 +69,11 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
               prop: exportPathProp,
               onValid: (value) => exportPathProp.value = value,
               validatorOnChange: (value) => value.isEmpty || Directory(value).existsSync() ? null : "Directory does not exist",
-              options: PropTFOptions(constraints: BoxConstraints(minHeight: 30)),
+              options: const PropTFOptions(constraints: BoxConstraints(minHeight: 30)),
             ),
           ),
           SmallButton(
-            constraints: BoxConstraints.tight(Size(30, 30)),
+            constraints: BoxConstraints.tight(const Size(30, 30)),
             onPressed: () async {
               var dir = await FilePicker.platform.getDirectoryPath(
                 dialogTitle: "Select Indexing Directory",
@@ -83,14 +83,14 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
                 widget.prefs.dataExportPath!.value = dir;
               }
             },
-            child: Icon(Icons.folder, size: 17,),
+            child: const Icon(Icons.folder, size: 17,),
           ),
         ],
       ),
-      SizedBox(height: 10,),
+      const SizedBox(height: 10,),
       Row(
         children: [
-          Text("ON EXPORT:", overflow: TextOverflow.ellipsis,),
+          const Text("ON EXPORT:", overflow: TextOverflow.ellipsis,),
           Expanded(
             child: RowSeparated(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -116,14 +116,14 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
           )
         ],
       ),
-      SizedBox(height: 40,),
+      const SizedBox(height: 40,),
     ];
   }
 
   List<Widget> makeIndexingEditor() {
     return [
-      Text("Indexing paths:", style: sectionHeaderStyle,),
-      SizedBox(height: 10,),
+      const Text("Indexing paths:", style: sectionHeaderStyle,),
+      const SizedBox(height: 10,),
       ...(widget.prefs.indexingPaths
         ?.map((path) => RowSeparated(
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -133,11 +133,11 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
                 prop: path,
                 onValid: (value) => widget.prefs.indexingPaths!.setPath(path, value),
                 validatorOnChange: (value) => Directory(value).existsSync() ? null : "Directory does not exist",
-                options: PropTFOptions(constraints: BoxConstraints(minHeight: 30)),
+                options: const PropTFOptions(constraints: BoxConstraints(minHeight: 30)),
               ),
             ),
             SmallButton(
-              constraints: BoxConstraints.tight(Size(30, 30)),
+              constraints: BoxConstraints.tight(const Size(30, 30)),
               onPressed: () async {
                 var dir = await FilePicker.platform.getDirectoryPath(
                   dialogTitle: "Select Indexing Directory",
@@ -147,18 +147,18 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
                   widget.prefs.indexingPaths!.setPath(path, dir);
                 }
               },
-              child: Icon(Icons.folder, size: 17,),
+              child: const Icon(Icons.folder, size: 17,),
             ),
             SmallButton(
-              constraints: BoxConstraints.tight(Size(30, 30)),
+              constraints: BoxConstraints.tight(const Size(30, 30)),
               onPressed: () => widget.prefs.indexingPaths!.removePath(path),
-              child: Icon(Icons.remove, size: 17,),
+              child: const Icon(Icons.remove, size: 17,),
             ),
           ],
         )) ?? []),
-      SizedBox(height: 15,),
+      const SizedBox(height: 15,),
       SmallButton(
-        constraints: BoxConstraints.tight(Size(30, 30)),
+        constraints: BoxConstraints.tight(const Size(30, 30)),
         onPressed: () async {
           var dir = await FilePicker.platform.getDirectoryPath(
             dialogTitle: "Select Indexing Directory",
@@ -167,7 +167,7 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
             widget.prefs.indexingPaths!.addPath(dir);
           }
         },
-        child: Icon(Icons.add, size: 17,),
+        child: const Icon(Icons.add, size: 17,),
       )
     ];
   }
@@ -198,7 +198,7 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
               height: 50,
               decoration: BoxDecoration(
                 color: secondary,
-                borderRadius: BorderRadius.only(
+                borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(15),
                 ),
               ),
@@ -211,16 +211,16 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
 
   List<Widget> makeThemeEditor() {
     return [
-      Text("Theme:", style: sectionHeaderStyle,),
-      SizedBox(height: 10,),
+      const Text("Theme:", style: sectionHeaderStyle,),
+      const SizedBox(height: 10,),
       ChangeNotifierBuilder(
         notifier: widget.prefs.themeType!,
         builder: (context) => Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            makeThemeSelectable(context, ThemeType.dark, Color.fromARGB(255, 50, 50, 50), Colors.white),
-            makeThemeSelectable(context, ThemeType.nier, Color.fromARGB(255, 218, 212, 187), Color.fromARGB(255, 78, 75, 61)),
+            makeThemeSelectable(context, ThemeType.dark, const Color.fromARGB(255, 50, 50, 50), Colors.white),
+            makeThemeSelectable(context, ThemeType.nier, const Color.fromARGB(255, 218, 212, 187), const Color.fromARGB(255, 78, 75, 61)),
           ],
         ),
       ),

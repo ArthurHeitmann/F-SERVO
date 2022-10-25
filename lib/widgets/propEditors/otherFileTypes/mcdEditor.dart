@@ -28,7 +28,7 @@ class _McdEditorState extends ChangeNotifierState<McdEditor> {
   @override
   Widget build(BuildContext context) {
     if (widget.file.loadingState != LoadingState.loaded) {
-      return LinearProgressIndicator();
+      return const LinearProgressIndicator();
     }
 
     return ListView(

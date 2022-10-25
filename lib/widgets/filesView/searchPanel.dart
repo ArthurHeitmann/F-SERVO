@@ -99,7 +99,7 @@ class _SearchPanelState extends State<SearchPanel> {
       children: [
         _makeSearchTypeRow(context),
         _makeIsSearchingIndicator(),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         if (searchType == _SearchType.text)
           _makeTextSearchOptions(),
         if (searchType == _SearchType.id)
@@ -191,7 +191,7 @@ class _SearchPanelState extends State<SearchPanel> {
       builder: (context) {
         return Opacity(
           opacity: isSearching.value ? 1 : 0,
-          child: LinearProgressIndicator(minHeight: 2, backgroundColor: Colors.transparent,),
+          child: const LinearProgressIndicator(minHeight: 2, backgroundColor: Colors.transparent,),
         );
       },
     );
@@ -243,7 +243,7 @@ class _SearchPanelState extends State<SearchPanel> {
           separatorWidth: 5,
           children: [
             Expanded(
-              child: makePropEditor(query, PropTFOptions(hintText: "Search", useIntrinsicWidth: false, isMultiline: true))
+              child: makePropEditor(query, const PropTFOptions(hintText: "Search", useIntrinsicWidth: false, isMultiline: true))
             ),
             BoolPropIconButton(
               prop: isCaseSensitive,
@@ -255,11 +255,11 @@ class _SearchPanelState extends State<SearchPanel> {
               icon: Icons.auto_awesome,
               tooltip: "Regex"
             ),
-            SizedBox()
+            const SizedBox()
           ],
         ),
-        makePropEditor(path, PropTFOptions(hintText: "Path", useIntrinsicWidth: false)),
-        makePropEditor(extensions, PropTFOptions(hintText: "Extensions (.xml, .rb, ...)", useIntrinsicWidth: false)),
+        makePropEditor(path, const PropTFOptions(hintText: "Path", useIntrinsicWidth: false)),
+        makePropEditor(extensions, const PropTFOptions(hintText: "Extensions (.xml, .rb, ...)", useIntrinsicWidth: false)),
       ].map((e) => Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
         child: e,
@@ -278,18 +278,18 @@ class _SearchPanelState extends State<SearchPanel> {
               separatorWidth: 5,
               children: [
                 Expanded(
-                  child: makePropEditor(id, PropTFOptions(hintText: "ID", useIntrinsicWidth: false))
+                  child: makePropEditor(id, const PropTFOptions(hintText: "ID", useIntrinsicWidth: false))
                 ),
                 BoolPropIconButton(
                   prop: useIndexedData,
                   icon: Icons.list,
                   tooltip: "Use indexed data"
                 ),
-                SizedBox()
+                const SizedBox()
               ],
             ),
             if (!useIndexedData.value) ...[
-              makePropEditor(path, PropTFOptions(hintText: "Path", useIntrinsicWidth: false)),
+              makePropEditor(path, const PropTFOptions(hintText: "Path", useIntrinsicWidth: false)),
             ]
           ].map((e) => Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
@@ -349,8 +349,8 @@ class _SearchPanelState extends State<SearchPanel> {
                   padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
                   child: Text(infoText, style: infoStyle),
                 ),
-              SizedBox(height: 5),
-              Divider(height: 1,),
+              const SizedBox(height: 5),
+              const Divider(height: 1,),
               if (errorText == null)
                 Expanded(
                   child: SmoothSingleChildScrollView(
@@ -399,12 +399,12 @@ class _SearchGroupResultState extends State<_SearchGroupResult> {
       buttons: [
         ContextMenuButtonConfig(
           "Open in File Explorer",
-          icon: Icon(Icons.drive_file_move, size: 15,),
+          icon: const Icon(Icons.drive_file_move, size: 15,),
           onPressed: () => openHierarchyManager.openFile(widget.group.filePath),
         ),
         ContextMenuButtonConfig(
           "Reveal in Windows Explorer",
-          icon: Icon(Icons.folder_open, size: 15,),
+          icon: const Icon(Icons.folder_open, size: 15,),
           onPressed: () => revealFileInExplorer(widget.group.filePath),
         ),
       ],
@@ -417,20 +417,20 @@ class _SearchGroupResultState extends State<_SearchGroupResult> {
               onTap: () => setState(() => isExpanded = !isExpanded),
               child: Row(
                 children: [
-                  SizedBox(width: 4),
+                  const SizedBox(width: 4),
                   Transform.rotate(
                     angle: isExpanded ? 0 : -pi / 2,
-                    child: Icon(Icons.expand_more, size: 18)
+                    child: const Icon(Icons.expand_more, size: 18)
                   ),
-                  SizedBox(width: 4),
+                  const SizedBox(width: 4),
                   Icon(Icons.description, color: getTheme(context).filetypeDocColor, size: 18,),
-                  SizedBox(width: 4),
+                  const SizedBox(width: 4),
                   Expanded(
                     child: Text(
                       widget.group.filePath.length > 40
                         ? ".../${basename(dirname(widget.group.filePath))}/${basename(widget.group.filePath)}"
                         : widget.group.filePath,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 13,
                       ),
                       maxLines: 1,
@@ -443,7 +443,7 @@ class _SearchGroupResultState extends State<_SearchGroupResult> {
                       color: getTheme(context).textColor!.withOpacity(0.5),
                     ),
                   ),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 8),
                 ],
               ),
             ),
@@ -465,7 +465,7 @@ class _SearchGroupResultState extends State<_SearchGroupResult> {
     else
       throw "Unknown search result type";
     return ConstrainedBox(
-      constraints: BoxConstraints(minHeight: 25),
+      constraints: const BoxConstraints(minHeight: 25),
       child: InkWell(
         onTap: () => areasManager.openFile(result.filePath),
         child: Padding(
@@ -489,7 +489,7 @@ class _SearchGroupResultState extends State<_SearchGroupResult> {
       textSpans = text.split(regex)
         .map((e) => TextSpan(
           text: e.replaceAll("\t", "  "),
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 13,
           ),
         ))
@@ -556,7 +556,7 @@ class _SearchGroupResultState extends State<_SearchGroupResult> {
 
     return Text(
       title,
-      style: TextStyle(
+      style: const TextStyle(
         fontSize: 14,
       ),
       maxLines: 1,

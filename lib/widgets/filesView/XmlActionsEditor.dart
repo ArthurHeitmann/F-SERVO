@@ -54,7 +54,7 @@ class _XmlActionsEditorState extends XmlArrayEditorState<XmlActionsEditor> {
                   buttons: [
                     ContextMenuButtonConfig(
                       "Delete Action",
-                      icon: Icon(Icons.delete, size: 14),
+                      icon: const Icon(Icons.delete, size: 14),
                       onPressed: () {
                         (widget.root.get("size")!.value as NumberProp).value -= 1;
                         widget.root.remove(action);

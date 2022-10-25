@@ -79,7 +79,7 @@ class XmlArrayEditorState<T extends XmlArrayEditor> extends ChangeNotifierState<
       buttons: [
           ContextMenuButtonConfig(
             "Delete child",
-            icon: Icon(Icons.delete, size: 14,),
+            icon: const Icon(Icons.delete, size: 14,),
             onPressed: () => deleteChild(index),
           ),
       ],
@@ -121,7 +121,7 @@ class XmlArrayEditorState<T extends XmlArrayEditor> extends ChangeNotifierState<
       footer: SmallButton(
         onPressed: addChild,
         constraints: BoxConstraints.tight(const Size(30, 30)),
-        child: Icon(Icons.add)
+        child: const Icon(Icons.add)
       ),
       children: [
         ...children,

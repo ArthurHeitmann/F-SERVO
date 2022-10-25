@@ -34,11 +34,11 @@ class _ConditionEditorState extends ChangeNotifierState<ConditionEditor> {
       padding: const EdgeInsets.all(4.0),
       child: Row(
         children: [
-          Text(
+          const Text(
             "?",
             style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
           ),
-          SizedBox(width: 10),
+          const SizedBox(width: 10),
           Expanded(
             child: NestedContextMenu(
               buttons: [

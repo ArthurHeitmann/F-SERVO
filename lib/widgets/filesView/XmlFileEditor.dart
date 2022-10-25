@@ -31,7 +31,7 @@ class _XmlEditorState extends ChangeNotifierState<XmlFileEditor> {
   Widget build(BuildContext context) {
     return widget.fileContent.root != null
       ? _makeXmlEditor(widget.fileContent.root!)
-      : Text("Loading...");
+      : const Text("Loading...");
   }
 }
 

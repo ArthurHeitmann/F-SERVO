@@ -28,13 +28,13 @@ class _XmlPropEditorState<T extends PropTextField> extends ChangeNotifierState<X
       children: [
         if (widget.showTagName || widget.prop.value.toString().isNotEmpty)
           ConstrainedBox(
-            constraints: BoxConstraints(minHeight: 25),
+            constraints: const BoxConstraints(minHeight: 25),
             child: Row(
               children: [
                 if (widget.showTagName)
                   Text(widget.prop.tagName, style: getTheme(context).propInputTextStyle,),
                 if (widget.showTagName)
-                  SizedBox(width: 10),
+                  const SizedBox(width: 10),
                 if (widget.prop.value.toString().isNotEmpty || widget.prop.isEmpty)
                   Flexible(
                     child: makePropEditor<T>(widget.prop.value),

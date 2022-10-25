@@ -24,7 +24,7 @@ class _XmlActionDetailsEditorState extends ChangeNotifierState<XmlActionDetailsE
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         makeTopRow(),
-        Divider(height: 1),
+        const Divider(height: 1),
         Expanded(
           child: SmoothSingleChildScrollView(
             stepSize: 60,
@@ -43,10 +43,10 @@ class _XmlActionDetailsEditorState extends ChangeNotifierState<XmlActionDetailsE
 
   Widget makeTopRow() {
     return Row(
-      children: [
+      children: const [
         Expanded(
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+            padding: EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
             child: Text("ACTION PROPERTIES", 
               style: TextStyle(
                 fontSize: 14,
@@ -55,10 +55,6 @@ class _XmlActionDetailsEditorState extends ChangeNotifierState<XmlActionDetailsE
               overflow: TextOverflow.ellipsis,
             ),
           ),
-        ),
-        Row(
-          children: [
-          ],
         ),
       ],
     );

@@ -28,7 +28,7 @@ class ScriptVariableEditor<T extends PropTextField> extends StatelessWidget {
           // crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             makePropEditor<TransparentPropTextField>(prop.get("name")!.value),
-            Divider(thickness: 2,),
+            const Divider(thickness: 2,),
             PuidReferenceEditor(prop: prop.get("value")!, showDetails: showDetails),
           ],
         ),

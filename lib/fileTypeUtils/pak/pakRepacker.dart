@@ -8,7 +8,7 @@ import 'package:flutter/foundation.dart';
 import '../../stateManagement/statusInfo.dart';
 import '../utils/ByteDataWrapper.dart';
 
-final ZLibEncoder _zLibEncoder = ZLibEncoder();
+const ZLibEncoder _zLibEncoder = ZLibEncoder();
 
 class _FileEntry {
   int type;

@@ -113,7 +113,7 @@ class SearchService {
 
   Future<void> cancel() {
     _sendPort?.send("cancel");
-    Future.delayed(Duration(milliseconds: 500)).then((_) {
+    Future.delayed(const Duration(milliseconds: 500)).then((_) {
       _isolate?.kill(priority: Isolate.immediate);
       if (!_isDoneCompleter.isCompleted)
         _isDoneCompleter.complete();

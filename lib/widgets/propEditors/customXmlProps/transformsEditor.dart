@@ -84,7 +84,7 @@ class _TransformsEditorState<T extends PropTextField> extends ChangeNotifierStat
         makeIconRow(
           icon: Transform.rotate(
             angle: -pi / 4,
-            child: Icon(Icons.zoom_out_map, size: 18)
+            child: const Icon(Icons.zoom_out_map, size: 18)
           ),
           onAdd: () => addProp(_positionHash, hasLocation ? widget.parent.get("location")! : widget.parent, 0, getPosInsertPos),
           prop: position,
@@ -93,7 +93,7 @@ class _TransformsEditorState<T extends PropTextField> extends ChangeNotifierStat
         ),
         if (widget.canBeRotated)
           makeIconRow(
-            icon: Icon(Icons.flip_camera_android, size: 18),
+            icon: const Icon(Icons.flip_camera_android, size: 18),
             onAdd: () => addProp(_rotationHash, hasLocation ? widget.parent.get("location")! : widget.parent, 0, getRotInsertPos),
             prop: rotation,
             parent: location ?? widget.parent,
@@ -101,7 +101,7 @@ class _TransformsEditorState<T extends PropTextField> extends ChangeNotifierStat
           ),
         if (widget.canBeScaled)
           makeIconRow(
-            icon: Icon(Icons.open_in_full, size: 18),
+            icon: const Icon(Icons.open_in_full, size: 18),
             onAdd: () => addProp(_scaleHash, widget.parent, 1, getScaleInsertPos),
             prop: scale,
             parent: widget.parent,
@@ -124,13 +124,13 @@ class _TransformsEditorState<T extends PropTextField> extends ChangeNotifierStat
         children: [
           Flexible(child: makePropEditor<T>(prop!.value)),
           if (widget.itemsCanBeRemoved)
-            SizedBox(width: 30),
+            const SizedBox(width: 30),
         ],
       );
     return Row(
       children: [
         icon,
-        SizedBox(width: 10),
+        const SizedBox(width: 10),
         Flexible(child: editor),
       ],
     );

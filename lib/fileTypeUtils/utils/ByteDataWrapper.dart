@@ -264,7 +264,7 @@ String decodeString(List<int> codes, StringEncoding encoding) {
     case StringEncoding.utf8:
       return utf8.decode(codes);
     case StringEncoding.utf16:
-      return String.fromCharCodes(codes); // TODO check if actually works
+      return String.fromCharCodes(codes);
     case StringEncoding.shiftJis:
       return ShiftJIS().decode(codes);
   }
@@ -275,7 +275,7 @@ List<int> encodeString(String str, StringEncoding encoding) {
     case StringEncoding.utf8:
       return utf8.encode(str);
     case StringEncoding.utf16:
-      return str.codeUnits; // TODO check if actually works
+      return str.codeUnits;
     case StringEncoding.shiftJis:
       return ShiftJIS().encode(str);
   }

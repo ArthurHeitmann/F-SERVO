@@ -26,6 +26,6 @@ class _TableFileEditorState extends ChangeNotifierState<TableFileEditor> {
   Widget build(BuildContext context) {
     return widget.file.loadingState == LoadingState.loaded
       ? TableEditor(config: widget.getTableConfig())
-      : Text("Loading...");
+      : const Text("Loading...");
   }
 }

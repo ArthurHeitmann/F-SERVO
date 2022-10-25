@@ -53,9 +53,9 @@ class _HexPropTextFieldState<T extends PropTextField> extends ChangeNotifierStat
         opacity: showHashString ? 1.0 : 0.25,
         child: IconButton(
           padding: EdgeInsets.zero,
-          constraints: BoxConstraints(),
+          constraints: const BoxConstraints(),
           splashRadius: 13,
-          icon: Icon(Icons.tag, size: 15,),
+          icon: const Icon(Icons.tag, size: 15,),
           onPressed: toggleHashString,
           isSelected: showHashString,
         ),

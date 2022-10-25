@@ -36,7 +36,7 @@ class UndoHistoryManager with ChangeNotifier {
 
   UndoHistoryManager() {
     _pushSnapshotThrottled =  debounce(_pushSnapshot, 450);
-    Future.delayed(Duration(milliseconds: 500), _pushSnapshot);
+    Future.delayed(const Duration(milliseconds: 500), _pushSnapshot);
   }
 
   void onUndoableEvent() {

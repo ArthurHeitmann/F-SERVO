@@ -106,7 +106,7 @@ class _FlexReorderableState extends State<FlexReorderable> {
   int newDraggedIndex = -1;
   double draggedOffset = 0.0;
   double offsetOffset = 0;
-  BoxConstraints draggedConstraints = BoxConstraints();
+  BoxConstraints draggedConstraints = const BoxConstraints();
   double get draggedExtent => getSizeExtent(draggedConstraints.biggest);
   bool isListeningToDragUpdates = false;
   // drag end:
@@ -271,7 +271,7 @@ class _FlexReorderableState extends State<FlexReorderable> {
     isPlayingDragEndAnimation = true;
     setState(() {});
 
-    await Future.delayed(Duration(milliseconds: animDuration));
+    await Future.delayed(const Duration(milliseconds: animDuration));
 
     widget.onReorder(draggedIndex, newDraggedIndex);
     var prevSize = _childrenSizes.removeAt(draggedIndex);

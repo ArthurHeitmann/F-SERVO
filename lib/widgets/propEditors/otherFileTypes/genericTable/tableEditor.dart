@@ -176,32 +176,32 @@ class _TableEditorState extends ChangeNotifierState<TableEditor> {
           throw Exception("Unknown export type: $newValue");
       },
       itemBuilder: (context) => [
-        PopupMenuItem(
+        const PopupMenuItem(
           value: "E JSON",
           child: ListTile(
-            leading: const Icon(Icons.data_object),
-            title: const Text("Export as JSON"),
+            leading: Icon(Icons.data_object),
+            title: Text("Export as JSON"),
           ),
         ),
-        PopupMenuItem(
+        const PopupMenuItem(
           value: "E CSV",
           child: ListTile(
-            leading: const Icon(Icons.table_chart_outlined),
-            title: const Text("Export as CSV"),
+            leading: Icon(Icons.table_chart_outlined),
+            title: Text("Export as CSV"),
           ),
         ),
-        PopupMenuItem(
+        const PopupMenuItem(
           value: "I JSON",
           child: ListTile(
-            leading: const Icon(Icons.data_object),
-            title: const Text("Import from JSON"),
+            leading: Icon(Icons.data_object),
+            title: Text("Import from JSON"),
           ),
         ),
-        PopupMenuItem(
+        const PopupMenuItem(
           value: "I CSV",
           child: ListTile(
-            leading: const Icon(Icons.table_chart_outlined),
-            title: const Text("Import from CSV"),
+            leading: Icon(Icons.table_chart_outlined),
+            title: Text("Import from CSV"),
           ),
         ),
       ],
@@ -212,7 +212,7 @@ class _TableEditorState extends ChangeNotifierState<TableEditor> {
     return Container(
       decoration: BoxDecoration(
         color: getTheme(context).tableBgColor,
-        borderRadius: BorderRadius.only(
+        borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(10),
           topRight: Radius.circular(10),
         ),
@@ -254,19 +254,19 @@ class _TableEditorState extends ChangeNotifierState<TableEditor> {
                           Flexible(
                             child: Text(
                               widget.config.columnNames[i],
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          SizedBox(width: 6),
+                          const SizedBox(width: 6),
                           columnSort == null || columnSort!.index != i
                             ? Icon(Icons.swap_vert, size: 17, color: Theme.of(context).colorScheme.primary.withOpacity(0.5))
                             : columnSort!.ascending
-                              ? Icon(Icons.arrow_drop_up, size: 20)
-                              : Icon(Icons.arrow_drop_down, size: 20),
+                              ? const Icon(Icons.arrow_drop_up, size: 20)
+                              : const Icon(Icons.arrow_drop_down, size: 20),
                         ],
                       ),
                     ),
@@ -274,7 +274,7 @@ class _TableEditorState extends ChangeNotifierState<TableEditor> {
                       padding: const EdgeInsets.only(bottom: 4, right: 6),
                       child: makePropEditor<UnderlinePropTextField>(
                         columnSearch[i],
-                        PropTFOptions(
+                        const PropTFOptions(
                           constraints: BoxConstraints(maxWidth: 200),
                           useIntrinsicWidth: false,
                           hintText: "Search...",
@@ -295,7 +295,7 @@ class _TableEditorState extends ChangeNotifierState<TableEditor> {
       child: Container(
         decoration: BoxDecoration(
           color: getTheme(context).tableBgColor,
-          borderRadius: BorderRadius.only(
+          borderRadius: const BorderRadius.only(
             bottomLeft: Radius.circular(10),
             bottomRight: Radius.circular(10),
           ),
@@ -375,7 +375,7 @@ class _TableRowState extends State<_TableRow> {
       buttons: [
         ContextMenuButtonConfig(
           "Remove Row",
-          icon: Icon(Icons.remove, size: 15,),
+          icon: const Icon(Icons.remove, size: 15,),
           onPressed: () => widget.config.onRowRemove(widget.index),
         ),
       ],
@@ -398,7 +398,7 @@ class _TableRowState extends State<_TableRow> {
   Widget makeCell({ required CellConfig? cell, required bool drawBorder }) {
     return Expanded(
       child: ConstrainedBox(
-        constraints: BoxConstraints(minHeight: 40),
+        constraints: const BoxConstraints(minHeight: 40),
         child: Container(
           decoration: BoxDecoration(
             border: Border(
@@ -411,7 +411,7 @@ class _TableRowState extends State<_TableRow> {
           child: cell != null ? makePropEditor<TransparentPropTextField>(
             cell.prop,
             PropTFOptions(
-              constraints: BoxConstraints(minWidth: double.infinity, minHeight: 30),
+              constraints: const BoxConstraints(minWidth: double.infinity, minHeight: 30),
               isMultiline: cell.allowMultiline,
               useIntrinsicWidth: false,
             ),

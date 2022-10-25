@@ -36,7 +36,7 @@ class _SidebarState extends State<Sidebar> {
       children: [
         if (widget.switcherPosition == SidebarSwitcherPosition.left) ...[
           _buildSwitcher(),
-          VerticalDivider(width: 1,),
+          const VerticalDivider(width: 1,),
         ],
         Expanded(
           child: IndexedStack(
@@ -45,7 +45,7 @@ class _SidebarState extends State<Sidebar> {
           ),
         ),
         if (widget.switcherPosition == SidebarSwitcherPosition.right) ...[
-          VerticalDivider(width: 1,),
+          const VerticalDivider(width: 1,),
           _buildSwitcher(),
         ],
       ],
@@ -58,7 +58,7 @@ class _SidebarState extends State<Sidebar> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SizedBox(height: 1,),
+          const SizedBox(height: 1,),
           for (var i = 0; i < widget.entries.length; i++)
             _buildSwitcherEntry(i),
         ],
@@ -93,7 +93,7 @@ class _SidebarState extends State<Sidebar> {
             children: [
               if (entry.icon != null)
                 Icon(entry.icon, size: 14,),
-              SizedBox(width: 5),
+              const SizedBox(width: 5),
               Text(entry.name),
             ],
           ),

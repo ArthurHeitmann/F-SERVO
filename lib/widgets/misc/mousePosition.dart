@@ -5,7 +5,7 @@ typedef MousePoseChangeCallback = void Function(Offset offset);
 
 class MousePosition extends StatelessWidget {
   final Widget child;
-  static Offset _mousePos = Offset(0, 0);
+  static Offset _mousePos = const Offset(0, 0);
   static final List<MousePoseChangeCallback> _dragListeners = [];
   static final List<VoidCallback> _dragEndListeners = [];
 

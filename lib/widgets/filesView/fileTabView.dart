@@ -59,9 +59,9 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
     var scrollAreaEnd = tabBarScrollController.offset + viewWidth;
 
     if (tabPos < scrollAreaStart)
-      tabBarScrollController.animateTo(tabPos, duration: Duration(milliseconds: 250), curve: Curves.ease);
+      tabBarScrollController.animateTo(tabPos, duration: const Duration(milliseconds: 250), curve: Curves.ease);
     else if (tabEnd > scrollAreaEnd)
-      tabBarScrollController.animateTo(tabEnd - viewWidth, duration: Duration(milliseconds: 250), curve: Curves.ease);
+      tabBarScrollController.animateTo(tabEnd - viewWidth, duration: const Duration(milliseconds: 250), curve: Curves.ease);
   }
 
   void openFiles(List<XFile> files) async {
@@ -135,7 +135,7 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
               ? getOrMakeFileEditor(widget.viewArea.currentFile!)
               : Center(
                 child: ConstrainedBox(
-                  constraints: BoxConstraints.loose(Size(150, 150)),
+                  constraints: BoxConstraints.loose(const Size(150, 150)),
                   child: Opacity(
                     opacity: 0.25,
                     child: AnimatedRotation(
@@ -144,7 +144,7 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
                       child: AnimatedScale(
                         scale: isDroppingFile ? 1.25 : 1.0,
                         duration: const Duration(milliseconds: 250),
-                        curve: _BezierCurve(0, 1.5, 1.2, 1),
+                        curve: const _BezierCurve(0, 1.5, 1.2, 1),
                         child: Image(
                           image: AssetImage(getTheme(context).editorIconPath!),
                         ),
@@ -184,7 +184,7 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
             newOffset = clamp(newOffset, 0, tabBarScrollController.position.maxScrollExtent);
             tabBarScrollController.jumpTo(
               newOffset,
-              // duration: Duration(milliseconds: 3000 ~/ 60),
+              // duration: const Duration(milliseconds: 3000 ~/ 60),
               // curve: Curves.linear
             );
           },

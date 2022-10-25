@@ -26,12 +26,12 @@ Future<bool?> confirmDialog(BuildContext context, { required String title, Strin
             children: [
               Text(title, style: Theme.of(context).textTheme.headline6),
               if (body != null) ...[
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
                 Text(body, style: Theme.of(context).textTheme.bodyText2),
               ],
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: 300),
+                constraints: const BoxConstraints(maxWidth: 300),
                 child: RowSeparated(
                   separatorWidth: 5,
                   mainAxisAlignment: MainAxisAlignment.end,
@@ -42,7 +42,7 @@ Future<bool?> confirmDialog(BuildContext context, { required String title, Strin
                         Navigator.of(context).pop();
                       },
                       style: getTheme(context).dialogPrimaryButtonStyle,
-                      child: Text("Confirm"),
+                      child: const Text("Confirm"),
                     ),
                     ElevatedButton(
                       onPressed: () {
@@ -50,7 +50,7 @@ Future<bool?> confirmDialog(BuildContext context, { required String title, Strin
                         Navigator.of(context).pop();
                       },
                       style: getTheme(context).dialogSecondaryButtonStyle,
-                      child: Text("Cancel"),
+                      child: const Text("Cancel"),
                     ),
                   ],
                 ),

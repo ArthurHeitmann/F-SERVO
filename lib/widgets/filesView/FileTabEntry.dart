@@ -29,28 +29,28 @@ class _FileTabEntryState extends ChangeNotifierState<FileTabEntry> {
           padding: const EdgeInsets.only(left: 2.5, right: 2.5, bottom: 3),
           child: Container(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.only(bottomLeft: Radius.circular(10), bottomRight: Radius.circular(10)),
+              borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(10), bottomRight: Radius.circular(10)),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.3),
                   blurRadius: 2,
-                  offset: Offset(0, 2),
+                  offset: const Offset(0, 2),
                 ),
                 BoxShadow(
                   color: Colors.black.withOpacity(0.35),
                   blurRadius: 4,
-                  offset: Offset(0, 4),
+                  offset: const Offset(0, 4),
                 ),
                 BoxShadow(
                   color: Colors.black.withOpacity(0.4),
                   blurRadius: 6,
-                  offset: Offset(0, 6),
+                  offset: const Offset(0, 6),
                 ),
               ],
             ),
             child: Material(
               color: widget.file == widget.area.currentFile ? getTheme(context).tabSelectedColor : getTheme(context).tabColor,
-              borderRadius: BorderRadius.only(bottomLeft: Radius.circular(10), bottomRight: Radius.circular(10)),
+              borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(10), bottomRight: Radius.circular(10)),
               child: Padding(
                 padding: const EdgeInsets.only(left: 10, right: 5),
                 child: Row(
@@ -59,7 +59,7 @@ class _FileTabEntryState extends ChangeNotifierState<FileTabEntry> {
                     Expanded(child: 
                       Tooltip(
                         message: widget.file.displayName,
-                        waitDuration: Duration(milliseconds: 500),
+                        waitDuration: const Duration(milliseconds: 500),
                         child: Text(
                           widget.file.displayName,
                           overflow: TextOverflow.ellipsis,
@@ -71,10 +71,10 @@ class _FileTabEntryState extends ChangeNotifierState<FileTabEntry> {
                       onExit: (event) => setState(() => isHoveringCloseButton = false),
                       child: IconButton(
                         padding: EdgeInsets.zero,
-                        constraints: BoxConstraints(),
+                        constraints: const BoxConstraints(),
                         icon: widget.file.hasUnsavedChanges && !isHoveringCloseButton
-                                ? Icon(Icons.circle, size: 11,)
-                                : Icon(Icons.close),
+                                ? const Icon(Icons.circle, size: 11,)
+                                : const Icon(Icons.close),
                         onPressed: () => widget.area.closeFile(widget.file),
                         iconSize: 15,
                         splashRadius: 15,

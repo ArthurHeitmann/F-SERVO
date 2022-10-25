@@ -18,7 +18,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await windowManager.ensureInitialized();
-  WindowOptions windowOptions = WindowOptions(
+  const WindowOptions windowOptions = WindowOptions(
     minimumSize: Size(400, 200),
     titleBarStyle: TitleBarStyle.hidden,
     backgroundColor: Color.fromRGBO(18, 18, 18, 1),
@@ -36,7 +36,7 @@ void main() async {
   idLookup.init();
   await PreferencesData().load();
 
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 final _rootKey = GlobalKey<ScaffoldState>(debugLabel: "RootGlobalKey");
@@ -55,7 +55,7 @@ class MyApp extends StatelessWidget {
           title: "Nier Scripts Editor",
           debugShowCheckedModeBanner: false,
           theme: PreferencesData().makeTheme(),
-          home: MyAppBody()
+          home: const MyAppBody()
         );
       }
     );
@@ -72,7 +72,7 @@ class MyAppBody extends StatelessWidget {
         key: _rootKey,
         child: ContextMenuOverlay(
           cardBuilder: (context, children) => ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: 300, minWidth: 200),
+            constraints: const BoxConstraints(maxWidth: 300, minWidth: 200),
             child: Material(
               color: getTheme(context).contextMenuBgColor,
               borderRadius: const BorderRadius.all(Radius.circular(8)),
@@ -112,9 +112,9 @@ class MyAppBody extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               TitleBar(),
-              Expanded(child: EditorLayout()),
+              const Expanded(child: EditorLayout()),
               Divider(height: 1, color: getTheme(context).dividerColor),
-              Statusbar(),
+              const Statusbar(),
             ],
           ),
         ),

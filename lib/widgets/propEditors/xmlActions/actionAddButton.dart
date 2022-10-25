@@ -16,7 +16,7 @@ class ActionAddButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return ShowOnHover(
       child: ConstrainedBox(
-        constraints: BoxConstraints(minHeight: 20, maxHeight: 20, maxWidth: 400),
+        constraints: const BoxConstraints(minHeight: 20, maxHeight: 20, maxWidth: 400),
         child: Stack(
           fit: StackFit.expand,
           clipBehavior: Clip.none,
@@ -31,9 +31,9 @@ class ActionAddButton extends StatelessWidget {
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Transform.translate(
-                    offset: Offset(15, 0),
+                    offset: const Offset(15, 0),
                     child: IconButton(
-                      constraints: BoxConstraints.tight(Size(30, 30)),
+                      constraints: BoxConstraints.tight(const Size(30, 30)),
                       padding: EdgeInsets.zero,
                       splashRadius: 15,
                       iconSize: 25,
@@ -50,7 +50,7 @@ class ActionAddButton extends StatelessWidget {
                         var sizeProp = parent.get("size")!.value as NumberProp;
                         sizeProp.value += 1;
                       },
-                      icon: Icon(Icons.add),
+                      icon: const Icon(Icons.add),
                     ),
                   ),
                 ),

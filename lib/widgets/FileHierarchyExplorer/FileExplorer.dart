@@ -45,9 +45,9 @@ class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Divider(height: 1),
+          const Divider(height: 1),
           makeTopRow(),
-          Divider(height: 1),
+          const Divider(height: 1),
           Expanded(
             child: Stack(
               children: [
@@ -61,7 +61,7 @@ class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
                   ),
                 ),
                 if (openHierarchyManager.isEmpty)
-                  Center(
+                  const Center(
                     child: Text("No files open"),
                   ),
                 if (isDroppingFile)
@@ -77,9 +77,9 @@ class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
   Widget makeTopRow() {
     return Row(
       children: [
-        Expanded(
+        const Expanded(
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+            padding: EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
             child: Text("FILE EXPLORER", 
               style: TextStyle(
                 fontSize: 14,
@@ -93,17 +93,17 @@ class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
           children: [
             Tooltip(
               message: "Auto translate Jap to Eng",
-              waitDuration: Duration(milliseconds: 500),
+              waitDuration: const Duration(milliseconds: 500),
               child: ValueListenableBuilder(
                 valueListenable: shouldAutoTranslate,
                 builder: (_, __, ___) => Opacity(
                   opacity: shouldAutoTranslate.value ? 1.0 : 0.25,
                   child: IconButton(
-                    padding: EdgeInsets.all(5),
-                    constraints: BoxConstraints(),
+                    padding: const EdgeInsets.all(5),
+                    constraints: const BoxConstraints(),
                     iconSize: 20,
                     splashRadius: 20,
-                    icon: Icon(Icons.translate, size: 15,),
+                    icon: const Icon(Icons.translate, size: 15,),
                     isSelected: shouldAutoTranslate.value,
                     onPressed: () => shouldAutoTranslate.value ^= true,
                   ),
@@ -112,25 +112,25 @@ class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
             ),
             Tooltip(
               message: "Expand all",
-              waitDuration: Duration(milliseconds: 500),
+              waitDuration: const Duration(milliseconds: 500),
               child: IconButton(
-                padding: EdgeInsets.all(5),
-                constraints: BoxConstraints(),
+                padding: const EdgeInsets.all(5),
+                constraints: const BoxConstraints(),
                 iconSize: 20,
                 splashRadius: 20,
-                icon: Icon(Icons.unfold_more, size: 17),
+                icon: const Icon(Icons.unfold_more, size: 17),
                 onPressed: openHierarchyManager.expandAll,
               ),
             ),
             Tooltip(
               message: "Collapse all",
-              waitDuration: Duration(milliseconds: 500),
+              waitDuration: const Duration(milliseconds: 500),
               child: IconButton(
-                padding: EdgeInsets.all(5),
-                constraints: BoxConstraints(),
+                padding: const EdgeInsets.all(5),
+                constraints: const BoxConstraints(),
                 iconSize: 20,
                 splashRadius: 20,
-                icon: Icon(Icons.unfold_less, size: 17),
+                icon: const Icon(Icons.unfold_less, size: 17),
                 onPressed: openHierarchyManager.collapseAll,
               ),
             ),

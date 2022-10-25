@@ -29,7 +29,7 @@ Future<void> saveTableAsJson(CustomTableConfig tableConfig) async {
     return;
   
   var stringsTable = _tablePropsToStrings(tableConfig);
-  var json = JsonEncoder.withIndent("\t").convert(
+  var json = const JsonEncoder.withIndent("\t").convert(
     {
       "columnNames": tableConfig.columnNames,
       "table": stringsTable,

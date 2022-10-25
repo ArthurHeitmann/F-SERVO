@@ -62,7 +62,7 @@ class TitleBarState extends ChangeNotifierState<TitleBar> with WindowListener {
     return Material(
       color: getTheme(context).titleBarColor,
       child: ConstrainedBox(
-        constraints: BoxConstraints(
+        constraints: const BoxConstraints(
           minHeight: titleBarHeight,
           maxHeight: titleBarHeight,
         ),
@@ -72,25 +72,25 @@ class TitleBarState extends ChangeNotifierState<TitleBar> with WindowListener {
             IconButton(
               padding: EdgeInsets.zero,
               splashRadius: 14,
-              icon: Icon(Icons.undo, size: 17),
+              icon: const Icon(Icons.undo, size: 17),
               onPressed: undoHistoryManager.canUndo ? undoHistoryManager.undo : null,
             ),
             IconButton(
               padding: EdgeInsets.zero,
               splashRadius: 14,
-              icon: Icon(Icons.redo, size: 17),
+              icon: const Icon(Icons.redo, size: 17),
               onPressed: undoHistoryManager.canRedo ? undoHistoryManager.redo : null,
             ),
             IconButton(
               padding: EdgeInsets.zero,
               splashRadius: 14,
-              icon: Icon(Icons.save, size: 15),
+              icon: const Icon(Icons.save, size: 15),
               onPressed: () => areasManager.saveAll(),
             ),
             IconButton(
               padding: EdgeInsets.zero,
               splashRadius: 14,
-              icon: Icon(Icons.settings, size: 15),
+              icon: const Icon(Icons.settings, size: 15),
               onPressed: () => areasManager.openPreferences(),
             ),
             Expanded(
@@ -99,7 +99,7 @@ class TitleBarState extends ChangeNotifierState<TitleBar> with WindowListener {
                 onDoubleTap: toggleMaximize,
                 behavior: HitTestBehavior.translucent,
                 child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 15),
+                  padding: const EdgeInsets.symmetric(horizontal: 15),
                   alignment: Alignment.center,
                   child: Text(windowTitle.value, style: TextStyle(color: getTheme(context).titleBarTextColor)),
                 )

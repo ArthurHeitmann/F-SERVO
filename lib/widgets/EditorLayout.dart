@@ -17,7 +17,7 @@ class EditorLayout extends StatelessWidget {
   Widget build(BuildContext context) {
     return ResizableWidget(
       axis: Axis.horizontal,
-      percentages: [0.22, 0.53, 0.25],
+      percentages: const [0.22, 0.53, 0.25],
       draggableThickness: 4,
       lineThickness: 4,
       children: [
@@ -30,7 +30,7 @@ class EditorLayout extends StatelessWidget {
                 icon: Icons.folder,
                 child: ResizableWidget(
                   axis: Axis.vertical,
-                  percentages: [0.55, 0.45],
+                  percentages: const [0.55, 0.45],
                   draggableThickness: 5,
                   children: [
                     FileExplorer(),
@@ -41,7 +41,7 @@ class EditorLayout extends StatelessWidget {
               SidebarEntryConfig(
                 name: "Search",
                 icon: Icons.search,
-                child: SearchPanel(),
+                child: const SearchPanel(),
               )
             ],
           ),
@@ -51,7 +51,7 @@ class EditorLayout extends StatelessWidget {
           color: getTheme(context).sidebarBackgroundColor,
           child: ResizableWidget(
             axis: Axis.vertical,
-            percentages: [0.4, 0.6],
+            percentages: const [0.4, 0.6],
             children: [
               Outliner(),
               XmlActionDetailsEditor(),
