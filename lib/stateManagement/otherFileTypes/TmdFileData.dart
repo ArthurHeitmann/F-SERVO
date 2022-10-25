@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 
 import '../../fileTypeUtils/tmd/tmdReader.dart';
-import '../../widgets/propEditors/customXmlProps/tableEditor.dart';
+import '../../widgets/propEditors/otherFileTypes/genericTable/tableEditor.dart';
 import '../Property.dart';
 import '../hasUuid.dart';
 import '../nestedNotifier.dart';

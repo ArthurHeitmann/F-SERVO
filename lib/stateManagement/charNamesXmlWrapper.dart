@@ -6,7 +6,7 @@ import 'package:convert/convert.dart';
 
 import '../fileTypeUtils/utils/ByteDataWrapper.dart';
 import '../utils.dart';
-import '../widgets/propEditors/customXmlProps/tableEditor.dart';
+import '../widgets/propEditors/otherFileTypes/genericTable/tableEditor.dart';
 import 'Property.dart';
 import 'hasUuid.dart';
 import 'undoable.dart';

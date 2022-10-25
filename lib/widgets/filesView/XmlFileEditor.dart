@@ -5,7 +5,7 @@ import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/charNamesXmlWrapper.dart';
 import '../../stateManagement/openFileTypes.dart';
 import '../../stateManagement/xmlProps/xmlProp.dart';
-import '../propEditors/customXmlProps/tableEditor.dart';
+import '../propEditors/otherFileTypes/genericTable/tableEditor.dart';
 import '../propEditors/simpleProps/XmlPropEditor.dart';
 import 'XmlActionsEditor.dart';
 

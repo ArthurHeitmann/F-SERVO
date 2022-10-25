@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../stateManagement/openFileTypes.dart';
 import '../../stateManagement/preferencesData.dart';
 import '../misc/preferencesEditor.dart';
-import '../propEditors/otherFileTypes/TableFileEditor.dart';
+import '../propEditors/otherFileTypes/genericTable/TableFileEditor.dart';
 import 'TextFileEditor.dart';
 import 'XmlFileEditor.dart';
 

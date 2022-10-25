@@ -2,14 +2,14 @@
 import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 
-import '../../../widgets/theme/customTheme.dart';
-import '../../../stateManagement/ChangeNotifierWidget.dart';
-import '../../../stateManagement/Property.dart';
-import '../../misc/nestedContextMenu.dart';
-import '../simpleProps/UnderlinePropTextField.dart';
-import '../simpleProps/propEditorFactory.dart';
-import '../simpleProps/propTextField.dart';
-import '../simpleProps/transparentPropTextField.dart';
+import '../../../theme/customTheme.dart';
+import '../../../../stateManagement/ChangeNotifierWidget.dart';
+import '../../../../stateManagement/Property.dart';
+import '../../../misc/nestedContextMenu.dart';
+import '../../simpleProps/UnderlinePropTextField.dart';
+import '../../simpleProps/propEditorFactory.dart';
+import '../../simpleProps/propTextField.dart';
+import '../../simpleProps/transparentPropTextField.dart';
 
 class CellConfig {
   final Prop prop;
