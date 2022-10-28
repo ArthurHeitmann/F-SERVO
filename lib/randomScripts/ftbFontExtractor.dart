@@ -19,7 +19,7 @@ const extractPath = r"D:\Cloud\Documents\Programming\dart\nier_scripts_editor\ex
 Map<int, Set<int>> fontMap = {};
 // {
 //   fontId: {
-//     width, height, below, horiz,
+//     id, width, height, below, horiz,
 //     usedBy: [mcdNames],
 //     symbols: [
 //       { fileName, code, char, idx, width, height, above, below, horizontal }

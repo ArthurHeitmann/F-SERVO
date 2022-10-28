@@ -17,6 +17,7 @@ import 'Property.dart';
 import 'changesExporter.dart';
 import 'hasUuid.dart';
 import 'miscValues.dart';
+import 'otherFileTypes/McdData.dart';
 import 'otherFileTypes/SmdFileData.dart';
 import 'otherFileTypes/TmdFileData.dart';
 import 'undoable.dart';
@@ -366,7 +367,7 @@ class SmdFileData extends OpenFileData {
 }
 
 class McdFileData extends OpenFileData {
-  McdFile? mcdData;
+  McdData? mcdData;
 
   McdFileData(super.name, super.path, { super.secondaryName });
 
@@ -376,7 +377,7 @@ class McdFileData extends OpenFileData {
       return;
     _loadingState = LoadingState.loading;
 
-    mcdData = await McdFile.fromFile(path);
+    mcdData = await McdData.fromMcdFile(path);
 
     await super.load();
   }
@@ -386,8 +387,9 @@ class McdFileData extends OpenFileData {
   //   await super.save();
   // }
 
-  // @override
-  // void dispose() {
-  //   super.dispose();
-  // }
+  @override
+  void dispose() {
+    mcdData?.dispose();
+    super.dispose();
+  }
 }

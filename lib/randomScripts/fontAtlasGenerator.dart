@@ -65,7 +65,9 @@ Future<void> genAtlas(String fontDir) async {
 
   await File(join(fontDir, "_atlas.png")).writeAsBytes(encodePng(atlas));
   
+  var fontId = int.parse(basename(fontDir));
   var atlasJsonObj = {
+    "id": fontId,
     "fontWidth": metaJson["width"].toInt(),
     "fontHeight": metaJson["height"].toInt(),
     "fontBelow": metaJson["below"].toInt(),

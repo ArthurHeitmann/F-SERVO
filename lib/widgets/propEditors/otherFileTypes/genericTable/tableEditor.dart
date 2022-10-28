@@ -322,26 +322,22 @@ class _TableEditorState extends ChangeNotifierState<TableEditor> {
       child: SizedBox(
         width: 40,
         height: 40,
-        child: Material(
-          color: Theme.of(context).colorScheme.secondary,
-          borderRadius: BorderRadius.circular(20),
-          clipBehavior: Clip.antiAlias,
-          child: IconButton(
-            onPressed: () {
-              widget.config.onRowAdd();
-              setState(() {});
-              if (columnSort != null)
-                return;
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                scrollController.animateTo(
-                  scrollController.position.maxScrollExtent,
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeOut,
-                );
-              });
-            },
-            icon: const Icon(Icons.add),
-          ),
+        child: FloatingActionButton(
+          onPressed: () {
+            widget.config.onRowAdd();
+            setState(() {});
+            if (columnSort != null)
+              return;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              scrollController.animateTo(
+                scrollController.position.maxScrollExtent,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut,
+              );
+            });
+          },
+          foregroundColor: getTheme(context).textColor,
+          child: const Icon(Icons.add),
         ),
       ),
     );
