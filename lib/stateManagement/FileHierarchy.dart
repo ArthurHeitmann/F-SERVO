@@ -563,11 +563,11 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
       else if (file.endsWith("_scp.bin"))
         futures.add(openBinMrbScript(file, parent: datEntry));
       else if (file.endsWith(".tmd"))
-        openGenericFile<TmdHierarchyEntry>(file, parent, (n, p) => TmdHierarchyEntry(n, p));
+        openGenericFile<TmdHierarchyEntry>(file, datEntry, (n, p) => TmdHierarchyEntry(n, p));
       else if (file.endsWith(".smd"))
-        openGenericFile<SmdHierarchyEntry>(file, parent, (n ,p) => SmdHierarchyEntry(n, p));
+        openGenericFile<SmdHierarchyEntry>(file, datEntry, (n ,p) => SmdHierarchyEntry(n, p));
       else if (file.endsWith(".mcd"))
-        openGenericFile<McdHierarchyEntry>(file, parent, (n ,p) => McdHierarchyEntry(n, p));
+        openGenericFile<McdHierarchyEntry>(file, datEntry, (n ,p) => McdHierarchyEntry(n, p));
       else
         throw FileSystemException("Unsupported file type: $file");
     }
@@ -688,6 +688,14 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
   void remove(HierarchyEntry child) {
     _removeRec(child);
     super.remove(child);
+  }
+
+  @override
+  void clear() {
+    if (isEmpty) return;
+    for (var child in this)
+      _removeRec(child);
+    super.clear();
   }
 
   void removeAny(HierarchyEntry child) {

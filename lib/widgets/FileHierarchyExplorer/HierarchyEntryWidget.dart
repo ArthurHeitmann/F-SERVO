@@ -111,7 +111,7 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
   Widget setupContextMenu({ required Widget child }) {
     var prefs = PreferencesData();
     return ContextMenuRegion(
-      enableLongPress: false,
+      enableLongPress: isMobile,
       contextMenu: GenericContextMenu(
         buttonConfigs: [
           if (widget.entry is XmlScriptHierarchyEntry) ...[ 
@@ -193,12 +193,18 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
               },
             ),
           ],
-          if (openHierarchyManager.contains(widget.entry))
+          if (openHierarchyManager.contains(widget.entry)) ...[
             ContextMenuButtonConfig(
               "Close",
               icon: const Icon(Icons.close, size: 14,),
               onPressed: () => openHierarchyManager.remove(widget.entry),
             ),
+            ContextMenuButtonConfig(
+              "Close All",
+              icon: const Icon(Icons.close, size: 14,),
+              onPressed: () => openHierarchyManager.clear(),
+            ),
+          ],
           if (widget.entry.isNotEmpty)
             ContextMenuButtonConfig(
               "Collapse all",

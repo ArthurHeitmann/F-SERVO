@@ -1,10 +1,14 @@
+
 import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'background/IdLookup.dart';
 import 'fileTypeUtils/ruby/pythonRuby.dart';
 import 'stateManagement/ChangeNotifierWidget.dart';
+import 'utils.dart';
 import 'widgets/theme/customTheme.dart';
 import 'keyboardEvents/globalShortcutsWrapper.dart';
 import 'stateManagement/preferencesData.dart';
@@ -17,19 +21,25 @@ import 'widgets/titlebar/Titlebar.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await windowManager.ensureInitialized();
-  const WindowOptions windowOptions = WindowOptions(
-    minimumSize: Size(400, 200),
-    titleBarStyle: TitleBarStyle.hidden,
-    backgroundColor: Color.fromRGBO(18, 18, 18, 1),
-  );
-  windowManager.waitUntilReadyToShow(windowOptions, () async {
-    await windowManager.show();
-    var windowPos = await windowManager.getPosition();
-    if (windowPos.dy < 50)
-      await windowManager.setPosition(windowPos.translate(0, 50));
-    // await windowManager.focus();
-  });
+  if (isDesktop) {
+    await windowManager.ensureInitialized();
+    const WindowOptions windowOptions = WindowOptions(
+      minimumSize: Size(400, 200),
+      titleBarStyle: TitleBarStyle.hidden,
+      backgroundColor: Color.fromRGBO(18, 18, 18, 1),
+    );
+    windowManager.waitUntilReadyToShow(windowOptions, () async {
+      await windowManager.show();
+      var windowPos = await windowManager.getPosition();
+      if (windowPos.dy < 50)
+        await windowManager.setPosition(windowPos.translate(0, 50));
+      // await windowManager.focus();
+    });
+  }
+  else if (isMobile) {
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.leanBack);
+    await ensureHasStoragePermission();
+  }
 
   startSyncServer();
   findAssetsDir();
@@ -43,12 +53,41 @@ final _rootKey = GlobalKey<ScaffoldState>(debugLabel: "RootGlobalKey");
 
 BuildContext getGlobalContext() => _rootKey.currentContext!;
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({Key? key}) : super(key: key);
 
   @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  bool? hasPermission = isDesktop ? true : null;
+
+  @override
+  void initState() {
+    super.initState();
+    if (isMobile)
+      ensureHasStoragePermission().then((value) => setState(() => hasPermission = value));
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (hasPermission != true) {
+      return MaterialApp(
+        themeMode: ThemeMode.dark,
+        darkTheme: ThemeData.dark(),
+        home: Scaffold(
+          body: hasPermission == false ? const Center(
+            child: Text("Please grant storage permission"),
+          ) : const Center(
+            child: CircularProgressIndicator(),
+          ),
+        ),
+      );
+    }
+
     return ChangeNotifierBuilder(
+      key: _rootKey,
       notifier: PreferencesData().themeType!,
       builder: (context) {
         return MaterialApp(
@@ -69,7 +108,6 @@ class MyAppBody extends StatelessWidget {
   Widget build(BuildContext context) {
     return globalShortcutsWrapper(context,
       child: MousePosition(
-        key: _rootKey,
         child: ContextMenuOverlay(
           cardBuilder: (context, children) => ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 300, minWidth: 200),
@@ -121,4 +159,22 @@ class MyAppBody extends StatelessWidget {
       ),
     );
   }
+}
+
+Future<bool> ensureHasStoragePermission() async {
+  if (!isMobile)
+    return true;
+  var storagePermission = await Permission.storage.status;
+  var externalStoragePermission = await Permission.manageExternalStorage.status;
+  if (!storagePermission.isGranted) {
+    storagePermission = await Permission.storage.request();
+    if (!storagePermission.isGranted)
+      return false;
+  }
+  while (!externalStoragePermission.isGranted) {
+    externalStoragePermission = await Permission.manageExternalStorage.request();
+    if (!externalStoragePermission.isGranted)
+      return false;
+  }
+  return true;
 }

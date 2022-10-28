@@ -1,5 +1,6 @@
 
 import 'package:desktop_drop/desktop_drop.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
 import '../../stateManagement/statusInfo.dart';
@@ -31,6 +32,18 @@ class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
     await Future.wait(futures);
 
     messageLog.add("Opened ${pluralStr(details.files.length, "file")}");
+  }
+
+  Future<void> openFilePicker() async {
+    var files = await FilePicker.platform.pickFiles(allowMultiple: true);
+    if (files == null)
+      return;
+
+    await Future.wait(
+      files.files.map((f) => openHierarchyManager.openFile(f.path!))
+    );
+
+    messageLog.add("Opened ${pluralStr(files.files.length, "file")}");
   }
 
   @override
@@ -91,6 +104,18 @@ class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
         ),
         Row(
           children: [
+            Tooltip(
+              message: "Open file",
+              waitDuration: const Duration(milliseconds: 500),
+              child: IconButton(
+                padding: const EdgeInsets.all(5),
+                constraints: const BoxConstraints(),
+                iconSize: 20,
+                splashRadius: 20,
+                icon: const Icon(Icons.folder_open, size: 15,),
+                onPressed: openFilePicker,
+              ),
+            ),
             Tooltip(
               message: "Auto translate Jap to Eng",
               waitDuration: const Duration(milliseconds: 500),

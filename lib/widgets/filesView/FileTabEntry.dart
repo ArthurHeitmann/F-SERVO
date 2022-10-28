@@ -1,6 +1,7 @@
 import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 
+import '../../utils.dart';
 import '../../widgets/theme/customTheme.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/openFileTypes.dart';
@@ -93,7 +94,7 @@ class _FileTabEntryState extends ChangeNotifierState<FileTabEntry> {
 
   Widget logicWrapper(Widget child) {
     return ContextMenuRegion(
-      enableLongPress: false,
+      enableLongPress: isMobile,
       contextMenu: GenericContextMenu(
         buttonConfigs: [
           ContextMenuButtonConfig(

@@ -2,6 +2,8 @@
 import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 
+import '../../utils.dart';
+
 class _NestedContextMenuIW extends InheritedWidget {
   final List<ContextMenuButtonConfig> contextChildren;
   final BuildContext parentContext;
@@ -43,7 +45,7 @@ class NestedContextMenu extends StatelessWidget {
       child: Builder(
         builder: (context) {
           return ContextMenuRegion(
-            enableLongPress: false,
+            enableLongPress: isMobile,
             contextMenu: GenericContextMenu(
               buttonConfigs: _NestedContextMenuIW.of(context)!.getAllWidgets(),
             ),

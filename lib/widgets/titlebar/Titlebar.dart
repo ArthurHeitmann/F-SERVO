@@ -23,14 +23,17 @@ class TitleBarState extends ChangeNotifierState<TitleBar> with WindowListener {
   @override
   void initState() {
     super.initState();
-    windowManager.addListener(this);
+    if (isDesktop)
+      windowManager.addListener(this);
     init();
   }
 
   void init() async {
-    isExpanded = await windowManager.isMaximized();
-    await windowManager.setTitle(windowTitle.value);
-    windowTitle.value = await windowManager.getTitle();
+    isExpanded = isDesktop ? await windowManager.isMaximized() : true;
+    if (isDesktop) {
+      await windowManager.setTitle(windowTitle.value);
+      windowTitle.value = await windowManager.getTitle();
+    }
   }
 
   @override
@@ -95,8 +98,8 @@ class TitleBarState extends ChangeNotifierState<TitleBar> with WindowListener {
             ),
             Expanded(
               child: GestureDetector(
-                onPanUpdate: (details) => windowManager.startDragging(),
-                onDoubleTap: toggleMaximize,
+                onPanUpdate: isDesktop ? (details) => windowManager.startDragging() : null,
+                onDoubleTap: isDesktop ? toggleMaximize : null,
                 behavior: HitTestBehavior.translucent,
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -105,21 +108,23 @@ class TitleBarState extends ChangeNotifierState<TitleBar> with WindowListener {
                 )
               ),
             ),
-            TitleBarButton(
-              icon: Icons.minimize_rounded,
-              onPressed: windowManager.minimize,
-              primaryColor: getTheme(context).titleBarButtonPrimaryColor!,
-            ),
-            TitleBarButton(
-              icon: isExpanded ? Icons.expand_more_rounded : Icons.expand_less_rounded,
-              onPressed: toggleMaximize,
-              primaryColor: getTheme(context).titleBarButtonPrimaryColor!,
-            ),
-            TitleBarButton(
-              icon: Icons.close_rounded,
-              onPressed: windowManager.close,
-              primaryColor: getTheme(context).titleBarButtonCloseColor!,
-            ),
+            if (isDesktop) ...[
+              TitleBarButton(
+                icon: Icons.minimize_rounded,
+                onPressed: windowManager.minimize,
+                primaryColor: getTheme(context).titleBarButtonPrimaryColor!,
+              ),
+              TitleBarButton(
+                icon: isExpanded ? Icons.expand_more_rounded : Icons.expand_less_rounded,
+                onPressed: toggleMaximize,
+                primaryColor: getTheme(context).titleBarButtonPrimaryColor!,
+              ),
+              TitleBarButton(
+                icon: Icons.close_rounded,
+                onPressed: windowManager.close,
+                primaryColor: getTheme(context).titleBarButtonCloseColor!,
+              ),
+            ]
           ],
         ),
       ),
