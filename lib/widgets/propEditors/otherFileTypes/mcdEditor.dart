@@ -28,12 +28,20 @@ class _McdEditorState extends ChangeNotifierState<McdEditor> {
   @override
   Widget build(BuildContext context) {
     if (widget.file.loadingState != LoadingState.loaded) {
-      return const LinearProgressIndicator();
+      return const SizedBox(
+        height: 2,
+        child: LinearProgressIndicator()
+      );
     }
 
     return ListView(
       children: widget.file.mcdData!.events.map((e) => 
-        Text(e.toString())
+        TextFormField(
+          initialValue: e.toString(),
+          scrollController: ScrollController(keepScrollOffset: false),
+          maxLines: null,
+          keyboardType: TextInputType.multiline,
+        )
       ).toList(),
     );
   }

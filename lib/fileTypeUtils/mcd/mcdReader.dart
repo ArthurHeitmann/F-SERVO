@@ -19,7 +19,7 @@ struct Header
 
 } header;
 */
-class McdHeader {
+class McdFileHeader {
   final int messagesOffset;
   final int messagesCount;
   final int symbolsOffset;
@@ -31,11 +31,11 @@ class McdHeader {
   final int eventsOffset;
   final int eventsCount;
 
-  McdHeader(this.messagesOffset, this.messagesCount, this.symbolsOffset,
+  McdFileHeader(this.messagesOffset, this.messagesCount, this.symbolsOffset,
       this.symbolsCount, this.glyphsOffset, this.glyphsCount, this.fontsOffset,
       this.fontsCount, this.eventsOffset, this.eventsCount);
   
-  McdHeader.read(ByteDataWrapper bytes) :
+  McdFileHeader.read(ByteDataWrapper bytes) :
     messagesOffset = bytes.readUint32(),
     messagesCount = bytes.readUint32(),
     symbolsOffset = bytes.readUint32(),
@@ -55,25 +55,34 @@ struct Symbol {
     uint32 glyphId;
 }
 */
-class McdSymbol {
+class McdFileSymbol {
   final int fontId;
-  final String code;
+  final int charCode;
+  late final String char;
   final int glyphId;
 
-  late final McdFont _font;
-  late final McdGlyph _glyph;
+  late final McdFileFont _font;
+  late final McdFileGlyph _glyph;
 
-  McdSymbol(this.fontId, this.code, this.glyphId, McdFile file) :
+  McdFileSymbol(this.fontId, this.charCode, this.glyphId, McdFile file) :
     _font = file.fonts[fontId],
-    _glyph = file.glyphs[glyphId];
+    _glyph = file.glyphs[glyphId],
+    char = String.fromCharCode(charCode);
   
-  McdSymbol.read(ByteDataWrapper bytes, McdFile file) :
+  McdFileSymbol.read(ByteDataWrapper bytes, List<McdFileFont> fonts, List<McdFileGlyph> glyphs) :
     fontId = bytes.readUint16(),
-    code = bytes.readString(2, encoding: StringEncoding.utf16),
+    charCode = bytes.readUint16(),
     glyphId = bytes.readUint32() {
-      _font = file.fonts.firstWhere((f) => f.id == fontId);
-      _glyph = file.glyphs[glyphId];
-    }
+    char = String.fromCharCode(charCode);
+    _font = fonts.firstWhere((f) => f.id == fontId);
+    _glyph = glyphs[glyphId];
+    // if (_glyph.height != _font.height) {
+    //   print("Warning: Glyph height (${_glyph.height}) does not match font height (${_font.height})");
+    // }
+    // if (_glyph.below != _font.below || _glyph.horizontal != _font.horizontal) {
+    //   print("Warning: Glyph kerning (${_glyph.below}, ${_glyph.horizontal}) does not match font kerning (${_font.below}, ${_font.horizontal})");
+    // }
+  }
 }
 
 /*
@@ -90,7 +99,7 @@ struct Glyph {
 	float horizontal;
 }
 */
-class McdGlyph {
+class McdFileGlyph {
   final int textureId;
   final double u1;
   final double v1;
@@ -102,10 +111,10 @@ class McdGlyph {
   final double below;
   final double horizontal;
 
-  McdGlyph(this.textureId, this.u1, this.v1, this.u2, this.v2, this.width,
+  McdFileGlyph(this.textureId, this.u1, this.v1, this.u2, this.v2, this.width,
       this.height, this.above, this.below, this.horizontal);
   
-  McdGlyph.read(ByteDataWrapper bytes) :
+  McdFileGlyph.read(ByteDataWrapper bytes) :
     textureId = bytes.readUint32(),
     u1 = bytes.readFloat32(),
     v1 = bytes.readFloat32(),
@@ -127,16 +136,16 @@ struct Font {
 	float horizontal;
 }
 */
-class McdFont {
+class McdFileFont {
   final int id;
   final double width;
   final double height;
   final double below;
   final double horizontal;
 
-  McdFont(this.id, this.width, this.height, this.below, this.horizontal);
+  McdFileFont(this.id, this.width, this.height, this.below, this.horizontal);
   
-  McdFont.read(ByteDataWrapper bytes) :
+  McdFileFont.read(ByteDataWrapper bytes) :
     id = bytes.readUint32(),
     width = bytes.readFloat32(),
     height = bytes.readFloat32(),
@@ -150,96 +159,35 @@ struct Letter {
     short positionOffset;
 };
 */
-class McdLetter {
+class McdFileLetter {
   final int code;
-  final int positionOffset;
+  final int idx;
 
-  final List<McdSymbol> _symbols;
+  final List<McdFileSymbol> _symbols;
 
-  McdLetter(this.code, this.positionOffset, this._symbols);
+  McdFileLetter(this.code, this.idx, this._symbols);
   
-  McdLetter.read(ByteDataWrapper bytes, this._symbols) :
+  McdFileLetter.read(ByteDataWrapper bytes, this._symbols) :
     code = bytes.readUint16(),
-    positionOffset = bytes.readInt16();
+    idx = bytes.readInt16();
 
   @override
   String toString() {
-    String s = "";
-    if(code <= 0x8000 && code < _symbols.length) {
-      s += _symbols[code].code;
-    } else if (code == 0x8001) {
-      s += " ";
-    } else if (code == 0x8003) {
-      s += "<";
-      switch(positionOffset) {
-        case 0:
-          s+= "+";
-          break;
-        case 1:
-          s+= "-";
-          break;
-        case 2:
-          s += "B";
-          break;
-        case 3:
-          s += "A";
-          break;
-        case 4:
-          s += "Y";
-          break;
-        case 5:
-          s += "X";
-          break;
-        case 6:
-          s += "R";
-          break;
-        case 8:
-          s += "";
-          break;
-        case 11:
-          s += "DPadUpDown";
-          break;
-        case 12:
-          s += "DPadLeftRight";
-          break;
-        case 17:
-          s += "RightStick";
-          break;
-        case 18:
-          s += "RightStickPress";
-          break;
-        case 19:
-          s += "LeftStick";
-          break;
-        case 20:
-          s += "LeftStickPress";
-          break;
-        case 24:
-          s += "RightStickRotate";
-          break;
-        case 25:
-          s += "LeftStickUpDown";
-          break;
-        case 113:
-          s += "SwapWeapons";
-          break;
-        case 114:
-          s += "Evade";
-          break;
-        case 115:
-          s += "UmbranClimax";
-          break;
-        case 116:
-          s += "LockOn";
-          break;
-        default:
-          s += "[$positionOffset]";
-      }
-      s += ">";
-    } else {
-      s += "<Special0x${(code).toRadixString(16)}_$positionOffset>";
+    if(code < 0x8000) {
+      if (_symbols[code].charCode == 0x80)
+        return "…";
+      return _symbols[code].char;
+    } else if (code == 0x8001)
+      return " ";
+    else if (code == 0x8020) {
+      if (idx == 9)
+        return "≡";  // controller menu button
+      if (idx == 121)
+        return "<Alt>";
     }
-    return s;
+
+    print("<Special_0x${(code).toRadixString(16)}_$idx>");
+    return "<Special_0x${(code).toRadixString(16)}_$idx>";
   }
 }
 
@@ -260,20 +208,20 @@ struct Line {
     FSeek(pos);
 };
 */
-class McdLine {
+class McdFileLine {
   final int lettersOffset;
   final int padding;
   final int lettersCount;
   final int length2;
   final double below;
   final double horizontal;
-  final List<McdLetter> letters;
+  final List<McdFileLetter> letters;
   late final int terminator;
 
-  McdLine(this.lettersOffset, this.padding, this.lettersCount, this.length2,
+  McdFileLine(this.lettersOffset, this.padding, this.lettersCount, this.length2,
       this.below, this.horizontal, this.letters);
   
-  McdLine.read(ByteDataWrapper bytes, List<McdSymbol> symbols) :
+  McdFileLine.read(ByteDataWrapper bytes, List<McdFileSymbol> symbols) :
     lettersOffset = bytes.readUint32(),
     padding = bytes.readUint32(),
     lettersCount = bytes.readUint32(),
@@ -285,7 +233,7 @@ class McdLine {
     bytes.position = lettersOffset;
     var actualLettersCount = (lettersCount - 1) ~/ 2;
     for (int i = 0; i < actualLettersCount; i++) {
-      letters.add(McdLetter.read(bytes, symbols));
+      letters.add(McdFileLetter.read(bytes, symbols));
     }
     terminator = bytes.readUint16();
     bytes.position = pos;
@@ -313,18 +261,18 @@ struct Paragraph {
     FSeek(pos);
 };
 */
-class McdParagraph {
+class McdFileParagraph {
   final int linesOffset;
   final int linesCount;
   final int vPos;
   final int hPos;
   final int fontId;
-  final List<McdLine> lines;
+  final List<McdFileLine> lines;
 
-  McdParagraph(this.linesOffset, this.linesCount, this.vPos, this.hPos, this.fontId,
+  McdFileParagraph(this.linesOffset, this.linesCount, this.vPos, this.hPos, this.fontId,
       this.lines);
   
-  McdParagraph.read(ByteDataWrapper bytes, List<McdSymbol> symbols) :
+  McdFileParagraph.read(ByteDataWrapper bytes, List<McdFileSymbol> symbols) :
     linesOffset = bytes.readUint32(),
     linesCount = bytes.readUint32(),
     vPos = bytes.readUint32(),
@@ -334,7 +282,7 @@ class McdParagraph {
       int pos = bytes.position;
       bytes.position = linesOffset;
       for (int i = 0; i < linesCount; i++) {
-        lines.add(McdLine.read(bytes, symbols));
+        lines.add(McdFileLine.read(bytes, symbols));
       }
       bytes.position = pos;
     }
@@ -360,17 +308,17 @@ struct Message {
     FSeek(pos);
 };
 */
-class McdMessage {
+class McdFileMessage {
   final int paragraphsOffset;
   final int paragraphsCount;
   final int seqNumber;
   final int eventId;
-  final List<McdParagraph> paragraphs;
+  final List<McdFileParagraph> paragraphs;
 
-  McdMessage(this.paragraphsOffset, this.paragraphsCount, this.seqNumber,
+  McdFileMessage(this.paragraphsOffset, this.paragraphsCount, this.seqNumber,
       this.eventId, this.paragraphs);
   
-  McdMessage.read(ByteDataWrapper bytes, List<McdSymbol> symbols) :
+  McdFileMessage.read(ByteDataWrapper bytes, List<McdFileSymbol> symbols) :
     paragraphsOffset = bytes.readUint32(),
     paragraphsCount = bytes.readUint32(),
     seqNumber = bytes.readUint32(),
@@ -379,7 +327,7 @@ class McdMessage {
     int pos = bytes.position;
     bytes.position = paragraphsOffset;
     for (int i = 0; i < paragraphsCount; i++) {
-      paragraphs.add(McdParagraph.read(bytes, symbols));
+      paragraphs.add(McdFileParagraph.read(bytes, symbols));
     }
     bytes.position = pos;
   }
@@ -404,15 +352,15 @@ struct Event {
     FSeek(pos);
 };
 */
-class McdEvent {
+class McdFileEvent {
   final int id;
   final int msgId;
   final String name;
-  late final McdMessage message;
+  late final McdFileMessage message;
 
-  McdEvent(this.id, this.msgId, this.name, this.message);
+  McdFileEvent(this.id, this.msgId, this.name, this.message);
   
-  McdEvent.read(ByteDataWrapper bytes, Map<int, McdMessage> messages) :
+  McdFileEvent.read(ByteDataWrapper bytes, Map<int, McdFileMessage> messages) :
     id = bytes.readUint32(),
     msgId = bytes.readUint32(),
     name = bytes.readString(32).replaceAll("\x00", "") {
@@ -433,15 +381,15 @@ class McdEvent {
 }
 
 class McdFile {
-  late final McdHeader header;
-  late final List<McdMessage> messages;
-  late final List<McdSymbol> symbols;
-  late final List<McdGlyph> glyphs;
-  late final List<McdFont> fonts;
-  late final List<McdEvent> events;
+  late final McdFileHeader header;
+  late final List<McdFileMessage> messages;
+  late final List<McdFileSymbol> symbols;
+  late final List<McdFileGlyph> glyphs;
+  late final List<McdFileFont> fonts;
+  late final List<McdFileEvent> events;
 
   McdFile.read(ByteDataWrapper bytes) {
-    header = McdHeader.read(bytes);
+    header = McdFileHeader.read(bytes);
     messages = [];
     symbols = [];
     glyphs = [];
@@ -451,33 +399,33 @@ class McdFile {
     // glyphs & fonts needed for symbols
     bytes.position = header.glyphsOffset;
     for (int i = 0; i < header.glyphsCount; i++) {
-      glyphs.add(McdGlyph.read(bytes));
+      glyphs.add(McdFileGlyph.read(bytes));
     }
 
     bytes.position = header.fontsOffset;
     for (int i = 0; i < header.fontsCount; i++) {
-      fonts.add(McdFont.read(bytes));
+      fonts.add(McdFileFont.read(bytes));
     }
 
     // symbols needed for messages
     bytes.position = header.symbolsOffset;
     for (int i = 0; i < header.symbolsCount; i++) {
-      symbols.add(McdSymbol.read(bytes, this));
+      symbols.add(McdFileSymbol.read(bytes, fonts, glyphs));
     }
 
     // messages needed for events
     bytes.position = header.messagesOffset;
     for (int i = 0; i < header.messagesCount; i++) {
-      messages.add(McdMessage.read(bytes, symbols));
+      messages.add(McdFileMessage.read(bytes, symbols));
     }
 
     // events
     bytes.position = header.eventsOffset;
-    Map<int, McdMessage> messagesMap = {};
+    Map<int, McdFileMessage> messagesMap = {};
     for (int i = 0; i < messages.length; i++)
       messagesMap[i] = messages[i];
     for (int i = 0; i < header.eventsCount; i++) {
-      events.add(McdEvent.read(bytes, messagesMap));
+      events.add(McdFileEvent.read(bytes, messagesMap));
     }
   }
 
