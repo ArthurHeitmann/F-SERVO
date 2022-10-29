@@ -15,7 +15,7 @@ import '../../stateManagement/nestedNotifier.dart';
 import '../../stateManagement/openFilesManager.dart';
 import '../../utils.dart';
 import '../misc/RowSeparated.dart';
-import '../misc/SmoothSingleChildScrollView.dart';
+import '../misc/SmoothScrollBuilder.dart';
 import '../misc/nestedContextMenu.dart';
 import '../propEditors/simpleProps/boolPropIcon.dart';
 import '../propEditors/simpleProps/propEditorFactory.dart';

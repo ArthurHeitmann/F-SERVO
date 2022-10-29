@@ -9,7 +9,7 @@ import '../../widgets/theme/customTheme.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/FileHierarchy.dart';
 import '../../stateManagement/miscValues.dart';
-import '../misc/SmoothSingleChildScrollView.dart';
+import '../misc/SmoothScrollBuilder.dart';
 import 'HierarchyEntryWidget.dart';
 
 class FileExplorer extends ChangeNotifierWidget {

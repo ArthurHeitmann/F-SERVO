@@ -6,11 +6,9 @@ import '../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../stateManagement/openFileTypes.dart';
 import '../../../stateManagement/otherFileTypes/McdData.dart';
 import '../../../utils.dart';
-import '../../misc/ColumnSeparated.dart';
 import '../../misc/RowSeparated.dart';
-import '../../misc/SmoothSingleChildScrollView.dart';
+import '../../misc/SmoothScrollBuilder.dart';
 import '../../misc/nestedContextMenu.dart';
-import '../../misc/smallButton.dart';
 import '../../theme/customTheme.dart';
 import '../simpleProps/UnderlinePropTextField.dart';
 import '../simpleProps/propEditorFactory.dart';
@@ -35,7 +33,7 @@ class _McdEditorState extends ChangeNotifierState<McdEditor> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.file.loadingState != LoadingState.loaded || true) {
+    if (widget.file.loadingState != LoadingState.loaded) {
       return Column(
         children: const [
           SizedBox(height: 35),
@@ -62,6 +60,8 @@ class _McdEditorBody extends ChangeNotifierWidget {
 }
 
 class _McdEditorBodyState extends ChangeNotifierState<_McdEditorBody> {
+  final scrollController = ScrollController();
+
   @override
   Widget build(BuildContext context) {
     var sortedEvents = widget.mcd.events
@@ -69,24 +69,31 @@ class _McdEditorBodyState extends ChangeNotifierState<_McdEditorBody> {
       ..sort((a, b) => a.msgSeqNum.value.compareTo(b.msgSeqNum.value));
     return Stack(
       children: [
-        ListView.builder(
-          itemCount: widget.mcd.events.length,
-          itemBuilder: (context, i) => NestedContextMenu(
-            key: Key(sortedEvents[i].uuid),
-            clearParent: true,
-            buttons: [
-              ContextMenuButtonConfig(
-                "Remove Event",
-                icon: const Icon(Icons.remove),
-                onPressed: () => widget.mcd.removeEvent(i)
+        SmoothScrollBuilder(
+          controller: scrollController,
+          builder: (context, controller, physics) {
+            return ListView.builder(
+              controller: controller,
+              physics: physics,
+              itemCount: widget.mcd.events.length,
+              itemBuilder: (context, i) => NestedContextMenu(
+                key: Key(sortedEvents[i].uuid),
+                clearParent: true,
+                buttons: [
+                  ContextMenuButtonConfig(
+                    "Remove Event",
+                    icon: const Icon(Icons.remove),
+                    onPressed: () => widget.mcd.removeEvent(i)
+                  ),
+                ],
+                child: _McdEventEditor(
+                  file: widget.file,
+                  event: sortedEvents[i],
+                  altColor: i % 2 == 1,
+                ),
               ),
-            ],
-            child: _McdEventEditor(
-              file: widget.file,
-              event: sortedEvents[i],
-              altColor: i % 2 == 1,
-            ),
-          ),
+            );
+          }
         ),
         Positioned(
           right: 16,
@@ -111,7 +118,7 @@ class _McdEventEditor extends ChangeNotifierWidget {
   final McdEvent event;
   final bool altColor;
 
-  _McdEventEditor({ super.key, required this.file, required this.event, required this.altColor }) : super(notifier: event.paragraphs);
+  _McdEventEditor({ required this.file, required this.event, required this.altColor }) : super(notifier: event.paragraphs);
 
   @override
   State<_McdEventEditor> createState() => _McdEventEditorState();
@@ -190,7 +197,7 @@ class _McdParagraphEditor extends ChangeNotifierWidget {
   final McdFileData file;
   final McdParagraph paragraph;
 
-  _McdParagraphEditor({ super.key, required this.file, required this.paragraph }) : super(notifier: paragraph.lines);
+  _McdParagraphEditor({ required this.file, required this.paragraph }) : super(notifier: paragraph.lines);
 
   @override
   State<_McdParagraphEditor> createState() => __McdParagraphEditorState();

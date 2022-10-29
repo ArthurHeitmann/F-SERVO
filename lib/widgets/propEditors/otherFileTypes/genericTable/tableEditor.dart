@@ -2,6 +2,7 @@
 import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 
+import '../../../misc/SmoothScrollBuilder.dart';
 import '../../../theme/customTheme.dart';
 import '../../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../../stateManagement/Property.dart';
@@ -303,10 +304,16 @@ class _TableEditorState extends ChangeNotifierState<TableEditor> {
         clipBehavior: Clip.antiAlias,
         child: Stack(
           children: [
-            ListView.builder(
+            SmoothScrollBuilder(
               controller: scrollController,
-              itemCount: rows.length,
-              itemBuilder: (context, i) => _TableRow(i % 2 == 1, rows[i].index, rows[i].rowConfig, widget.config),
+              builder: (context, controller, physics) {
+                return ListView.builder(
+                  controller: controller,
+                  physics: physics,
+                  itemCount: rows.length,
+                  itemBuilder: (context, i) => _TableRow(i % 2 == 1, rows[i].index, rows[i].rowConfig, widget.config),
+                );
+              }
             ),
             _makeAddRowButton()
           ],

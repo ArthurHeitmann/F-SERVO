@@ -6,7 +6,7 @@ import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/openFilesManager.dart';
 import '../../stateManagement/xmlProps/xmlActionProp.dart';
 import '../misc/Selectable.dart';
-import '../misc/SmoothSingleChildScrollView.dart';
+import '../misc/SmoothScrollBuilder.dart';
 import '../propEditors/xmlActions/XmlActionDetails.dart';
 
 class XmlActionDetailsEditor extends ChangeNotifierWidget {

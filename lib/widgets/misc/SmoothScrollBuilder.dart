@@ -7,25 +7,27 @@ import 'package:flutter/material.dart';
 
 import '../../utils.dart';
 
-class SmoothSingleChildScrollView extends StatefulWidget {
+class SmoothScrollBuilder extends StatefulWidget {
   final ScrollController controller;
   final Duration duration;
   final double stepSize;
-  final Widget child;
+  final ScrollPhysics? physics;
+  final Widget Function(BuildContext context, ScrollController controller, ScrollPhysics? physics) builder;
 
-  const SmoothSingleChildScrollView({
+  const SmoothScrollBuilder({
     super.key,
     required this.controller,
-    required this.child,
+    required this.builder,
     this.duration = const Duration(milliseconds: 150),
     this.stepSize = 100,
+    this.physics,
   });
 
   @override
-  State<SmoothSingleChildScrollView> createState() => _SmoothSingleChildScrollViewState();
+  State<SmoothScrollBuilder> createState() => _SmoothScrollBuilderState();
 }
 
-class _SmoothSingleChildScrollViewState extends State<SmoothSingleChildScrollView> {
+class _SmoothScrollBuilderState extends State<SmoothScrollBuilder> {
   double targetOffset = 0;
   bool overrideScrollBehavior = true;
   bool isScrolling = false;
@@ -70,12 +72,41 @@ class _SmoothSingleChildScrollViewState extends State<SmoothSingleChildScrollVie
       onPanUpdate: (event) => onContinuosScroll(event.delta.dy),
       child: Listener(
         onPointerSignal: (event) => event is PointerScrollEvent ? onWheelScroll(event) : null,
-        child: SingleChildScrollView(
-          controller: widget.controller,
-          physics: overrideScrollBehavior ? const NeverScrollableScrollPhysics() : null,
-          child: widget.child,
-        ),
+        child: widget.builder(context, widget.controller, overrideScrollBehavior ? const NeverScrollableScrollPhysics() : widget.physics),
       ),
     );
   }
 }
+
+class SmoothSingleChildScrollView extends StatelessWidget {
+  final ScrollController controller;
+  final Duration duration;
+  final double stepSize;
+  final ScrollPhysics? physics;
+  final Widget child;
+
+  const SmoothSingleChildScrollView({
+    super.key,
+    required this.controller,
+    required this.child,
+    this.duration = const Duration(milliseconds: 150),
+    this.stepSize = 100,
+    this.physics,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SmoothScrollBuilder(
+      controller: controller,
+      duration: duration,
+      stepSize: stepSize,
+      physics: physics,
+      builder: (context, controller, physics) => SingleChildScrollView(
+        controller: controller,
+        physics: physics,
+        child: child,
+      ),
+    );
+  }
+}
+

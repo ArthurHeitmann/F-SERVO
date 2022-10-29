@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 import 'package:xml/xml.dart';
 
-import '../fileTypeUtils/mcd/mcdReader.dart';
 import '../fileTypeUtils/smd/smdReader.dart';
 import '../fileTypeUtils/smd/smdWriter.dart';
 import '../fileTypeUtils/tmd/tmdReader.dart';

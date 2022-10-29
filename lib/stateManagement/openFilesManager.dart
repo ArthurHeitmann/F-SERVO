@@ -63,7 +63,8 @@ class FilesAreaManager extends NestedNotifier<OpenFileData> implements Undoable 
 
     if (currentFile == file)
       switchToClosestFile();
-    remove(file);
+    if (!releaseHidden || this != areasManager.hiddenArea)
+      remove(file);
 
     if (length == 0 && areasManager.length > 1)
       areasManager.remove(this);

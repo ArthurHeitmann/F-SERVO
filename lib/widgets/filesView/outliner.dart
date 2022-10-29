@@ -8,7 +8,7 @@ import '../../stateManagement/openFilesManager.dart';
 import '../../stateManagement/xmlProps/xmlActionProp.dart';
 import '../../stateManagement/xmlProps/xmlProp.dart';
 import '../../utils.dart';
-import '../misc/SmoothSingleChildScrollView.dart';
+import '../misc/SmoothScrollBuilder.dart';
 import '../propEditors/xmlActions/XmlActionEditor.dart';
 import 'FileType.dart';
 

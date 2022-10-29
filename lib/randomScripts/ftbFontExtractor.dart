@@ -1,13 +1,11 @@
 
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:image/image.dart';
 import 'package:path/path.dart';
 
 import '../fileTypeUtils/ftb/ftbReader.dart';
-import '../fileTypeUtils/mcd/mcdReader.dart';
 import '../fileTypeUtils/utils/ByteDataWrapper.dart';
 import '../fileTypeUtils/wta/wtaReader.dart';
 
@@ -19,7 +17,7 @@ const extractPath = r"D:\Cloud\Documents\Programming\dart\nier_scripts_editor\ex
 Map<int, Set<int>> fontMap = {};
 // {
 //   fontId: {
-//     id, width, height, below, horiz,
+//     id, width, height, below, horizontal,
 //     usedBy: [mcdNames],
 //     symbols: [
 //       { fileName, code, char, idx, width, height, above, below, horizontal }
@@ -97,7 +95,6 @@ Future<void> processFile(String ftbPath) async {
     // check if already processed
     var charCode = ftbChar.c;
 
-    var datName = basename(dirname(ftbPath));
     if (fontMap[fontId]!.contains(charCode)) {
       continue;
     }
@@ -136,12 +133,12 @@ Future<void> processFile(String ftbPath) async {
 }
 
 void main(List<String> args) async {
-  var existingJsons = await Directory(extractPath)
+  var existingJsonFiles = await Directory(extractPath)
     .list(recursive: true)
     .where((e) => e.path.endsWith("_meta.json"))
     .map((e) => e.path)
     .toList();
-  for (var json in existingJsons) {
+  for (var json in existingJsonFiles) {
     var fontId = int.parse(basename(dirname(json)));
     var jsonFile = File(json);
     var jsonContent = jsonDecode(await jsonFile.readAsString()) as Map<String, dynamic>;

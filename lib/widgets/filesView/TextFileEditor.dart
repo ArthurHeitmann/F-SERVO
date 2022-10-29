@@ -17,7 +17,7 @@ import '../../widgets/theme/customTheme.dart';
 import '../../main.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/openFileTypes.dart';
-import '../misc/SmoothSingleChildScrollView.dart';
+import '../misc/SmoothScrollBuilder.dart';
 
 class TextFileEditor extends ChangeNotifierWidget {
   late final TextFileData fileContent;
