@@ -37,7 +37,6 @@ class SmdData extends NestedNotifier<SmdEntryData> with CustomTableConfig, Undoa
     addAll(rawEntries.map((e) {
       var idProp = StringProp(e.id);
       var textProp = StringProp(e.text);
-      textProp.transform = (str) => str;
       return SmdEntryData(
         id: idProp,
         text: textProp,
@@ -56,7 +55,6 @@ class SmdData extends NestedNotifier<SmdEntryData> with CustomTableConfig, Undoa
   void onRowAdd() {
     var idProp = StringProp("ID");
     var textProp = StringProp("Text");
-    textProp.transform = (str) => str;
     add(SmdEntryData(
       id: idProp,
       text: textProp,
@@ -91,7 +89,6 @@ class SmdData extends NestedNotifier<SmdEntryData> with CustomTableConfig, Undoa
       assert(index == length);
       var idProp = StringProp(values[0]!);
       var textProp = StringProp(values[1]!);
-      textProp.transform = (str) => str;
       add(SmdEntryData(
         id: idProp,
         text: textProp,

@@ -81,7 +81,7 @@ class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
                   makeItemHoveredIndicator()
               ],
             ),
-          )
+          ),
         ],
       ),
     );
@@ -119,9 +119,9 @@ class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
             Tooltip(
               message: "Auto translate Jap to Eng",
               waitDuration: const Duration(milliseconds: 500),
-              child: ValueListenableBuilder(
-                valueListenable: shouldAutoTranslate,
-                builder: (_, __, ___) => Opacity(
+              child: ChangeNotifierBuilder(
+                notifier: shouldAutoTranslate,
+                builder: (context) => Opacity(
                   opacity: shouldAutoTranslate.value ? 1.0 : 0.25,
                   child: IconButton(
                     padding: const EdgeInsets.all(5),

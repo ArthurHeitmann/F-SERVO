@@ -3,6 +3,7 @@ import 'dart:async';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../stateManagement/miscValues.dart';
 import '../stateManagement/openFileTypes.dart';
 import '../stateManagement/openFilesManager.dart';
 import '../utils.dart';
@@ -84,7 +85,12 @@ class IdLookup with Initializable {
           continue;
         if (_openFiles.contains(file))
           continue;
-        var listener = debounce(() => _onFileChanged(file), 1000);
+        var debouncedListener = debounce(() => _onFileChanged(file), 1000);
+        listener() {
+          if (disableFileChanges)
+            return;
+          debouncedListener();
+        }
         _openFiles.add(file);
         _filesChangesListeners.add(listener);
         file.contentNotifier.addListener(listener);

@@ -107,10 +107,7 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
     Widget newEntry = makeFileEditor(file);
     newEntry = Positioned.fill(
       key: PageStorageKey(file),
-        child: Padding(
-          padding: const EdgeInsets.only(top: 30),
-          child: newEntry,
-        ),
+        child: newEntry,
     );
     cachedEditors[file] = newEntry;
     return newEntry;
@@ -150,7 +147,7 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
                         ),
                       ),
                     ),
-                  )
+                  ),
                 ),
               ),
             makeTabBar(),
@@ -200,7 +197,7 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
               physics: const NeverScrollableScrollPhysics(),
               
               children: widget.viewArea
-                .map((file,) => ReorderableDragStartListener(
+                .map((file) => ReorderableDragStartListener(
                   key: Key(file.uuid),
                   index: widget.viewArea.indexOf(file),
                   child: FileTabEntry(

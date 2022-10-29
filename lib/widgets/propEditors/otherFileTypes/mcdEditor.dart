@@ -35,10 +35,15 @@ class _McdEditorState extends ChangeNotifierState<McdEditor> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.file.loadingState != LoadingState.loaded) {
-      return const SizedBox(
-        height: 2,
-        child: LinearProgressIndicator()
+    if (widget.file.loadingState != LoadingState.loaded || true) {
+      return Column(
+        children: const [
+          SizedBox(height: 35),
+          SizedBox(
+            height: 2,
+            child: LinearProgressIndicator(backgroundColor: Colors.transparent,)
+          ),
+        ],
       );
     }
 

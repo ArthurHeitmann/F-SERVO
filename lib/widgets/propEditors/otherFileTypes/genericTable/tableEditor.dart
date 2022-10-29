@@ -134,7 +134,7 @@ class _TableEditorState extends ChangeNotifierState<TableEditor> {
   Widget build(BuildContext context) {
     updateRows();
     return Padding(
-      padding: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.only(top: 32, right: 8, bottom: 8, left: 8),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -152,7 +152,7 @@ class _TableEditorState extends ChangeNotifierState<TableEditor> {
               _makeExportDropdown(),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 8),
           _makeHeader(),
           _makeTableBody(),
         ],

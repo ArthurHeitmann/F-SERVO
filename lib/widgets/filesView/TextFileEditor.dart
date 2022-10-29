@@ -73,23 +73,23 @@ class _TextFileEditorState extends ChangeNotifierState<TextFileEditor> {
 
   @override
   Widget build(BuildContext context) {
-    return controller != null
-      ? SmoothSingleChildScrollView(
-        controller: scrollController,
-        child: CodeField(
-          controller: controller!,
-        ),
-      )
-      : Center(
-        child: ConstrainedBox(
-          constraints: BoxConstraints.loose(const Size(150, 150)),
-          child: const Opacity(
-            opacity: 0.25,
-            child: Image(
-              image: AssetImage("assets/logo/pod_alpha.png"),
+    return Column(
+      children: [
+        const SizedBox(height: 35),
+        controller != null
+          ? Expanded(
+            child: SmoothSingleChildScrollView(
+              controller: scrollController,
+              child: CodeField(
+                controller: controller!,
+              ),
             ),
           )
-        ),
-      );
+          : const SizedBox(
+            height: 2,
+            child: LinearProgressIndicator(backgroundColor: Colors.transparent,)
+          ),
+      ],
+    );
   }
 }

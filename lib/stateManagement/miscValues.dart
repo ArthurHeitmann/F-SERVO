@@ -16,14 +16,37 @@ final windowTitle = _WindowTitleVN();
 /// ugly fix
 bool disableFileChanges = false;
 
-class AutoTranslateValueNotifier extends ValueNotifier<bool> {
-  AutoTranslateValueNotifier(super.value);
+class AutoTranslateValueNotifier extends Listenable {
+  final List<VoidCallback> _listeners = [];
+  bool _value = false;
+
+  AutoTranslateValueNotifier(this._value);
+
+  bool get value => _value;
+  
+  set value(bool newValue) {
+    if (newValue == _value)
+      return;
+    disableFileChanges = true;
+    _value = newValue;
+    notifyListeners();
+    disableFileChanges = false;
+  }
+
+  void notifyListeners() {
+    for (final listener in _listeners) {
+      listener();
+    }
+  }
   
   @override
-  set value(bool newValue) {
-    disableFileChanges = true;
-    super.value = newValue;
-    disableFileChanges = false;
+  void addListener(VoidCallback listener) {
+    _listeners.add(listener);
+  }
+  
+  @override
+  void removeListener(VoidCallback listener) {
+    _listeners.remove(listener);
   }
 }
 

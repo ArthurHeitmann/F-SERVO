@@ -19,7 +19,7 @@ mixin Prop<T> implements Listenable, Undoable {
 
   static Prop fromString(String str, { bool isInteger = false, String? tagName }) {
     if (tagName == "name")
-      return StringProp(str);
+      return StringProp(str, true);
     else if (isHexInt(str))
       return HexProp(int.parse(str));
     else if (isDouble(str))
@@ -27,7 +27,7 @@ mixin Prop<T> implements Listenable, Undoable {
     else if (isVector(str))
       return VectorProp(str.split(" ").map((val) => double.parse(val)).toList());
     else
-      return StringProp(str);
+      return StringProp(str, true);
   }
 }
 
@@ -195,10 +195,13 @@ class StringProp extends ValueProp<String> {
   @override
   final PropType type = PropType.string;
   
-  String Function(String) transform = tryToTranslate;
+  String Function(String)? transform;
 
-  StringProp(super.value) {
-    shouldAutoTranslate.addListener(notifyListeners);
+  StringProp(super.value, [ bool isTranslatable = false ]) {
+    if (isTranslatable) {
+      transform = tryToTranslate;
+      shouldAutoTranslate.addListener(notifyListeners);
+    }
   }
 
   @override
@@ -214,11 +217,11 @@ class StringProp extends ValueProp<String> {
 
   @override
   String toString({ bool shouldTransform = true }) 
-    => shouldTransform ? transform(value) : value;
+    => shouldTransform && transform != null ? transform!(value) : value;
 
   @override
   Undoable takeSnapshot() {
-    return StringProp(value);
+    return StringProp(value, transform != null);
   }
 }
 

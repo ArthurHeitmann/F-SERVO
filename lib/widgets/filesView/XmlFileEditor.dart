@@ -31,7 +31,15 @@ class _XmlEditorState extends ChangeNotifierState<XmlFileEditor> {
   Widget build(BuildContext context) {
     return widget.fileContent.root != null
       ? _makeXmlEditor(widget.fileContent.root!)
-      : const Text("Loading...");
+      : Column(
+        children: const [
+          SizedBox(height: 35),
+          SizedBox(
+            height: 2,
+            child: LinearProgressIndicator(backgroundColor: Colors.transparent,)
+          ),
+        ],
+      );
   }
 }
 

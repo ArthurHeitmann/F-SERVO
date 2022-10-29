@@ -87,14 +87,13 @@ class _MyAppState extends State<MyApp> {
     }
 
     return ChangeNotifierBuilder(
-      key: _rootKey,
       notifier: PreferencesData().themeType!,
       builder: (context) {
         return MaterialApp(
           title: "Nier Scripts Editor",
           debugShowCheckedModeBanner: false,
           theme: PreferencesData().makeTheme(),
-          home: const MyAppBody()
+          home: MyAppBody(key: _rootKey)
         );
       }
     );

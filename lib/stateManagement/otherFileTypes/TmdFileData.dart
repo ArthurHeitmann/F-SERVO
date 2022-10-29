@@ -37,7 +37,6 @@ class TmdData extends NestedNotifier<TmdEntryData> with CustomTableConfig, Undoa
     addAll(rawEntries.map((e) {
       var idProp = StringProp(e.id);
       var textProp = StringProp(e.text);
-      textProp.transform = (str) => str;
       return TmdEntryData(
         id: idProp,
         text: textProp,
@@ -57,7 +56,6 @@ class TmdData extends NestedNotifier<TmdEntryData> with CustomTableConfig, Undoa
   void onRowAdd() {
     var idProp = StringProp("ID");
     var textProp = StringProp("Text");
-    textProp.transform = (str) => str;
     add(TmdEntryData(
       id: idProp,
       text: textProp,
@@ -92,7 +90,6 @@ class TmdData extends NestedNotifier<TmdEntryData> with CustomTableConfig, Undoa
       assert(index == length);
       var idProp = StringProp(values[0]!);
       var textProp = StringProp(values[1]!);
-      textProp.transform = (str) => str;
       add(TmdEntryData(
         id: idProp,
         text: textProp,
