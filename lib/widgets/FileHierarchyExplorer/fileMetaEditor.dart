@@ -7,7 +7,7 @@ import '../../stateManagement/FileHierarchy.dart';
 import '../../stateManagement/openFileTypes.dart';
 import '../../stateManagement/openFilesManager.dart';
 import '../../stateManagement/xmlProps/xmlProp.dart';
-import '../../utils.dart';
+import '../../utils/utils.dart';
 import '../misc/SmoothScrollBuilder.dart';
 import '../misc/smallButton.dart';
 import '../propEditors/simpleProps/XmlPropEditorFactory.dart';

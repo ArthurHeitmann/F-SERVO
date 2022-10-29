@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
-import '../../../utils.dart';
+import '../../../utils/utils.dart';
 import 'propTextField.dart';
 
 class HexPropTextField<T extends PropTextField> extends ChangeNotifierWidget {

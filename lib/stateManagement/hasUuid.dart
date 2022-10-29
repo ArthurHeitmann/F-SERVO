@@ -1,5 +1,5 @@
 
-import '../utils.dart';
+import '../utils/utils.dart';
 
 mixin HasUuid {
   String _uuid = uuidGen.v1();

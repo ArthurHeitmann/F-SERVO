@@ -4,7 +4,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 
-import '../../../../utils.dart';
+import '../../../../utils/utils.dart';
 import 'tableEditor.dart';
 
 List<List<String?>> _tablePropsToStrings(CustomTableConfig tableConfig) {

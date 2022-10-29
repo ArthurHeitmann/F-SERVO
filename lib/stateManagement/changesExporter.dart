@@ -7,7 +7,7 @@ import '../fileTypeUtils/dat/datRepacker.dart';
 import '../fileTypeUtils/pak/pakRepacker.dart';
 import '../fileTypeUtils/ruby/pythonRuby.dart';
 import '../fileTypeUtils/yax/xmlToYax.dart';
-import '../utils.dart';
+import '../utils/utils.dart';
 import 'openFileTypes.dart';
 import 'preferencesData.dart';
 

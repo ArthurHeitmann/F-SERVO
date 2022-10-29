@@ -4,7 +4,7 @@ import 'package:xml/xml.dart';
 import '../../../main.dart';
 import '../../../stateManagement/xmlProps/xmlActionProp.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
-import '../../../utils.dart';
+import '../../../utils/utils.dart';
 import '../../misc/selectionPopup.dart';
 import '../simpleProps/XmlPropEditorFactory.dart';
 import '../simpleProps/propTextField.dart';

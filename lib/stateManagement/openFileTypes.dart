@@ -9,7 +9,7 @@ import '../fileTypeUtils/smd/smdReader.dart';
 import '../fileTypeUtils/smd/smdWriter.dart';
 import '../fileTypeUtils/tmd/tmdReader.dart';
 import '../fileTypeUtils/tmd/tmdWriter.dart';
-import '../utils.dart';
+import '../utils/utils.dart';
 import '../widgets/filesView/FileType.dart';
 import 'FileHierarchy.dart';
 import 'Property.dart';

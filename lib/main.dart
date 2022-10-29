@@ -6,9 +6,9 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'background/IdLookup.dart';
-import 'fileTypeUtils/ruby/pythonRuby.dart';
 import 'stateManagement/ChangeNotifierWidget.dart';
-import 'utils.dart';
+import 'utils/utils.dart';
+import 'utils/assetDirFinder.dart';
 import 'widgets/theme/customTheme.dart';
 import 'keyboardEvents/globalShortcutsWrapper.dart';
 import 'stateManagement/preferencesData.dart';

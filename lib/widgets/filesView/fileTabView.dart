@@ -18,7 +18,7 @@ import 'FileType.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/openFilesManager.dart';
 import '../../widgets/theme/customTheme.dart';
-import '../../utils.dart';
+import '../../utils/utils.dart';
 
 
 class FileTabView extends ChangeNotifierWidget {

@@ -8,7 +8,7 @@ import '../../../main.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/openFileTypes.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
-import '../../../utils.dart';
+import '../../../utils/utils.dart';
 import '../../misc/CustomIcons.dart';
 import '../../misc/selectionPopup.dart';
 import '../customXmlProps/areaEditor.dart';

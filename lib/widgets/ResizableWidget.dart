@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
 import '../widgets/theme/customTheme.dart';
-import '../utils.dart';
+import '../utils/utils.dart';
 
 class ResizableWidget extends StatefulWidget {
   final List<Widget> children;

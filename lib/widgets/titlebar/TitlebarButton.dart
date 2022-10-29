@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 
 import '../../widgets/theme/customTheme.dart';
-import '../../utils.dart';
+import '../../utils/utils.dart';
 
 class TitleBarButton extends StatefulWidget {
   final IconData icon;

@@ -13,7 +13,7 @@ import '../../stateManagement/FileHierarchy.dart';
 import '../../stateManagement/miscValues.dart';
 import '../../stateManagement/openFilesManager.dart';
 import '../../stateManagement/preferencesData.dart';
-import '../../utils.dart';
+import '../../utils/utils.dart';
 
 class HierarchyEntryWidget extends ChangeNotifierWidget {
   final HierarchyEntry entry;

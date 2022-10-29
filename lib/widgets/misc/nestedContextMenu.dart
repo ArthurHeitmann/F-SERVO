@@ -2,7 +2,7 @@
 import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 
-import '../../utils.dart';
+import '../../utils/utils.dart';
 
 class _NestedContextMenuIW extends InheritedWidget {
   final List<ContextMenuButtonConfig> contextChildren;

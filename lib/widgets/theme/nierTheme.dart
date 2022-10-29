@@ -118,8 +118,8 @@ class NierNierThemeExtension extends NierThemeExtension {
       ),
       textSelectionTheme: const TextSelectionThemeData(
         cursorColor: _ncDark,
-        selectionColor: _ncBrownDark,
-        selectionHandleColor: _ncBrownDark,
+        selectionColor: _ncRed,
+        selectionHandleColor: _ncRed,
       ),
     );
   } 

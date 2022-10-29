@@ -6,7 +6,7 @@ import '../../../widgets/theme/customTheme.dart';
 import '../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
-import '../../../utils.dart';
+import '../../../utils/utils.dart';
 import '../../misc/FlexReorderable.dart';
 import '../../misc/nestedContextMenu.dart';
 import '../../misc/smallButton.dart';

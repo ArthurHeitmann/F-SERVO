@@ -4,7 +4,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
-import '../../utils.dart';
+import '../../utils/utils.dart';
 import 'WidgetSizeWrapper.dart';
 import 'mousePosition.dart';
 

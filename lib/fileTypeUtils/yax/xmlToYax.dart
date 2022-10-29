@@ -5,7 +5,7 @@ import 'package:path/path.dart' as path;
 import 'package:xml/xml.dart';
 
 import '../../stateManagement/statusInfo.dart';
-import '../../utils.dart';
+import '../../utils/utils.dart';
 import '../utils/ByteDataWrapper.dart';
 
 int _getTagId(XmlElement tag) {

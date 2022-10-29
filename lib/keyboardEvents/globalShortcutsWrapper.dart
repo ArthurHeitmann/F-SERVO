@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../utils.dart';
+import '../utils/utils.dart';
 import 'actions.dart';
 import 'intents.dart';
 

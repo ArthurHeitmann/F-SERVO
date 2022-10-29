@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:convert/convert.dart';
 
 import '../fileTypeUtils/utils/ByteDataWrapper.dart';
-import '../utils.dart';
+import '../utils/utils.dart';
 import '../widgets/propEditors/otherFileTypes/genericTable/tableEditor.dart';
 import 'Property.dart';
 import 'hasUuid.dart';

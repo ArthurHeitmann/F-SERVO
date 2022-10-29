@@ -10,7 +10,7 @@ import 'package:xml/xml.dart';
 import '../../fileTypeUtils/dat/datExtractor.dart';
 import '../../fileTypeUtils/utils/ByteDataWrapper.dart';
 import '../../fileTypeUtils/yax/yaxToXml.dart';
-import '../../utils.dart';
+import '../utils/utils.dart';
 import '../fileTypeUtils/pak/pakExtractor.dart';
 import '../fileTypeUtils/yax/hashToStringMap.dart';
 

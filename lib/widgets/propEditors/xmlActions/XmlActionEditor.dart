@@ -7,7 +7,7 @@ import '../../../widgets/theme/customTheme.dart';
 import '../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../stateManagement/openFilesManager.dart';
 import '../../../stateManagement/xmlProps/xmlActionProp.dart';
-import '../../../utils.dart';
+import '../../../utils/utils.dart';
 import '../../misc/FlexReorderable.dart';
 import '../../misc/Selectable.dart';
 import '../../misc/nestedContextMenu.dart';

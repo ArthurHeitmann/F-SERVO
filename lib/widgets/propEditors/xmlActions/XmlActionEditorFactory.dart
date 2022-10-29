@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../stateManagement/xmlProps/xmlActionProp.dart';
-import '../../../utils.dart';
+import '../../../utils/utils.dart';
 import 'DelayAction.dart';
 import 'XmlActionEditor.dart';
 

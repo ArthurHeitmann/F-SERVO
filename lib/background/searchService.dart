@@ -9,7 +9,7 @@ import 'package:xml/xml.dart';
 import '../fileTypeUtils/tmd/tmdReader.dart';
 import '../fileTypeUtils/yax/hashToStringMap.dart';
 import '../stateManagement/Property.dart';
-import '../utils.dart';
+import '../utils/utils.dart';
 import 'IdLookup.dart';
 import 'IdsIndexer.dart';
 

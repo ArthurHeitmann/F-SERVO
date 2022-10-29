@@ -4,7 +4,7 @@ import 'package:xml/xml.dart';
 
 import '../../fileTypeUtils/yax/hashToStringMap.dart';
 import '../../fileTypeUtils/yax/japToEng.dart';
-import '../../utils.dart';
+import '../../utils/utils.dart';
 import '../Property.dart';
 import '../charNamesXmlWrapper.dart';
 import '../nestedNotifier.dart';

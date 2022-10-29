@@ -13,7 +13,7 @@ import '../../stateManagement/FileHierarchy.dart';
 import '../../stateManagement/Property.dart';
 import '../../stateManagement/nestedNotifier.dart';
 import '../../stateManagement/openFilesManager.dart';
-import '../../utils.dart';
+import '../../utils/utils.dart';
 import '../misc/RowSeparated.dart';
 import '../misc/SmoothScrollBuilder.dart';
 import '../misc/nestedContextMenu.dart';

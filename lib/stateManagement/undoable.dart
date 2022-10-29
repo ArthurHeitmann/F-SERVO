@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
 
-import '../utils.dart';
+import '../utils/utils.dart';
 import 'FileHierarchy.dart';
 import 'miscValues.dart';
 import 'openFilesManager.dart';

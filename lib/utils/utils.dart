@@ -15,13 +15,13 @@ import 'package:uuid/uuid.dart';
 import 'package:path/path.dart' as path;
 import 'package:xml/xml.dart';
 
-import 'fileTypeUtils/utils/ByteDataWrapper.dart';
-import 'fileTypeUtils/yax/hashToStringMap.dart';
-import 'fileTypeUtils/yax/japToEng.dart';
-import 'main.dart';
-import 'stateManagement/Property.dart';
-import 'stateManagement/miscValues.dart';
-import 'stateManagement/xmlProps/xmlProp.dart';
+import '../fileTypeUtils/utils/ByteDataWrapper.dart';
+import '../fileTypeUtils/yax/hashToStringMap.dart';
+import '../fileTypeUtils/yax/japToEng.dart';
+import '../main.dart';
+import '../stateManagement/Property.dart';
+import '../stateManagement/miscValues.dart';
+import '../stateManagement/xmlProps/xmlProp.dart';
 
 const uuidGen = Uuid();
 

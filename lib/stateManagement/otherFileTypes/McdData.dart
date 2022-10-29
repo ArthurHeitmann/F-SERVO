@@ -6,7 +6,7 @@ import 'dart:math';
 import 'package:path/path.dart';
 
 import '../../fileTypeUtils/mcd/mcdReader.dart';
-import '../../utils.dart';
+import '../../utils/utils.dart';
 import '../Property.dart';
 import '../hasUuid.dart';
 import '../nestedNotifier.dart';
@@ -20,6 +20,27 @@ class McdFontSymbol {
   final int height;
 
   McdFontSymbol(this.code, this.char, this.x, this.y, this.width, this.height);
+}
+
+class UsedFontSymbol {
+  final int code;
+  final String char;
+  final int fontId;
+
+  UsedFontSymbol(this.code, this.char, [this.fontId = -1]);
+
+  UsedFontSymbol.withFont(UsedFontSymbol other, this.fontId) :
+    code = other.code,
+    char = other.char;
+
+  @override
+  bool operator ==(Object other) =>
+    other is UsedFontSymbol &&
+      code == other.code &&
+      fontId == other.fontId;
+          
+    @override
+    int get hashCode => Object.hash(code, fontId);
 }
 
 class McdFont {
@@ -93,6 +114,15 @@ class McdLine with HasUuid {
   void dispose() {
     text.dispose();
   }
+
+  Set<UsedFontSymbol> getUsedSymbolCodes() {
+    var charMatcher = RegExp(r"<[^>]+>|[^ ≡]");
+    var symbols = charMatcher.allMatches(text.value)
+      .map((m) => m.group(0)!)
+      .map((c) => UsedFontSymbol(c != "…" ? c.codeUnitAt(0) : 0x80, c))
+      .toSet();
+    return symbols;
+  }
 }
 
 class McdParagraph with HasUuid {
@@ -121,6 +151,17 @@ class McdParagraph with HasUuid {
     for (var line in lines)
       line.dispose();
     lines.dispose();
+  }
+
+  Set<UsedFontSymbol> getUsedSymbols() {
+    Set<UsedFontSymbol> symbols = {};
+    for (var line in lines) {
+      var lineSymbols = line
+        .getUsedSymbolCodes()
+        .map((c) => UsedFontSymbol.withFont(c, font.fontId));
+      symbols.addAll(lineSymbols);
+    }
+    return symbols;
   }
 }
 
@@ -162,6 +203,13 @@ class McdEvent with HasUuid {
     for (var paragraph in paragraphs)
       paragraph.dispose();
     paragraphs.dispose();
+  }
+
+  Set<UsedFontSymbol> getUsedSymbols() {
+    Set<UsedFontSymbol> symbols = {};
+    for (var paragraph in paragraphs)
+      symbols.addAll(paragraph.getUsedSymbols());
+    return symbols;
   }
 }
 
@@ -214,6 +262,15 @@ class McdData {
     );
   }
 
+  void dispose() {
+    textureWtaPath?.dispose();
+    textureWtpPath?.dispose();
+    usedFonts.dispose();
+    for (var event in events)
+      event.dispose();
+    events.dispose();
+  }
+
   void addEvent() {
     events.add(McdEvent(
       HexProp(events.isNotEmpty ? events.last.eventId.value + 1 : randomId()),
@@ -234,12 +291,30 @@ class McdData {
       .reduce(max);
   }
 
-  void dispose() {
-    textureWtaPath?.dispose();
-    textureWtpPath?.dispose();
-    usedFonts.dispose();
+  Set<UsedFontSymbol> getUsedSymbols() {
+    Set<UsedFontSymbol> symbols = {};
     for (var event in events)
-      event.dispose();
-    events.dispose();
+      symbols.addAll(event.getUsedSymbols());
+    return symbols;
+  }
+
+  Set<UsedFontSymbol> getLocalFontUnsupportedSymbols() {
+    var usedSymbols = getUsedSymbols();
+    return usedSymbols
+      .where((usedSym) => !usedFonts
+        .firstWhere((f) => f.fontId == usedSym.fontId)
+        .supportedSymbols
+        .any((supSym) => supSym.code == usedSym.code))
+      .toSet();
+  }
+
+  Set<UsedFontSymbol> getGlobalFontUnsupportedSymbols() {
+    var usedSymbols = getUsedSymbols();
+    return usedSymbols
+      .where((usedSym) => !availableFonts
+        .firstWhere((f) => f.fontId == usedSym.fontId)
+        .supportedSymbols
+        .any((supSym) => supSym.code == usedSym.code))
+      .toSet();
   }
 }

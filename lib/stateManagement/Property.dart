@@ -4,7 +4,7 @@ import 'dart:collection';
 import 'package:flutter/foundation.dart';
 
 import '../fileTypeUtils/yax/hashToStringMap.dart';
-import '../utils.dart';
+import '../utils/utils.dart';
 import 'miscValues.dart';
 import 'undoable.dart';
 

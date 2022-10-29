@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import '../../stateManagement/Property.dart';
 import '../../stateManagement/xmlProps/xmlProp.dart';
 import '../../stateManagement/xmlProps/xmlActionProp.dart';
-import '../../utils.dart';
+import '../../utils/utils.dart';
 import '../misc/FlexReorderable.dart';
 import '../misc/SmoothScrollBuilder.dart';
 import '../misc/nestedContextMenu.dart';

@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import '../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../stateManagement/openFileTypes.dart';
 import '../../../stateManagement/otherFileTypes/McdData.dart';
-import '../../../utils.dart';
+import '../../../utils/utils.dart';
 import '../../misc/RowSeparated.dart';
 import '../../misc/SmoothScrollBuilder.dart';
 import '../../misc/nestedContextMenu.dart';
@@ -130,7 +130,7 @@ class _McdEventEditorState extends ChangeNotifierState<_McdEventEditor> {
     return Material(
       color: widget.altColor ? getTheme(context).tableBgAltColor : getTheme(context).tableBgColor,
       child: Padding(
-        padding: const EdgeInsets.all(8.0),
+        padding: const EdgeInsets.only(top: 40, right: 8, bottom: 8, left: 8),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,

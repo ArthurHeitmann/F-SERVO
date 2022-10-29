@@ -5,7 +5,7 @@ import 'dart:async';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
-import '../../utils.dart';
+import '../../utils/utils.dart';
 
 class SmoothScrollBuilder extends StatefulWidget {
   final ScrollController controller;

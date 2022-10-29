@@ -4,7 +4,7 @@ import 'dart:convert';
 
 import 'package:xml/xml.dart';
 
-import '../../utils.dart';
+import '../../utils/utils.dart';
 import '../Property.dart';
 import '../xmlProps/xmlProp.dart';
 import 'syncServer.dart';

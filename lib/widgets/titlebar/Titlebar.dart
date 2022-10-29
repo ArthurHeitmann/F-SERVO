@@ -6,7 +6,7 @@ import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/miscValues.dart';
 import '../../stateManagement/openFilesManager.dart';
 import '../../stateManagement/undoable.dart';
-import '../../utils.dart';
+import '../../utils/utils.dart';
 import 'TitlebarButton.dart';
 
 

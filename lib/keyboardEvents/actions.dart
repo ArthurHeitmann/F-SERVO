@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../stateManagement/openFilesManager.dart';
 import '../stateManagement/undoable.dart';
-import '../utils.dart';
+import '../utils/utils.dart';
 import 'intents.dart';
 
 class TabChangeAction extends Action<TabChangeIntent> {

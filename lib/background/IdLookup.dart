@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../stateManagement/miscValues.dart';
 import '../stateManagement/openFileTypes.dart';
 import '../stateManagement/openFilesManager.dart';
-import '../utils.dart';
+import '../utils/utils.dart';
 import 'IdsIndexer.dart';
 import 'Initializable.dart';
 import 'isolateCommunicator.dart';

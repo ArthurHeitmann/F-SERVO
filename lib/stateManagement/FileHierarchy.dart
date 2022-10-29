@@ -7,7 +7,7 @@ import '../fileTypeUtils/dat/datExtractor.dart';
 import '../fileTypeUtils/ruby/pythonRuby.dart';
 import '../fileTypeUtils/yax/yaxToXml.dart';
 import '../main.dart';
-import '../utils.dart';
+import '../utils/utils.dart';
 import '../widgets/misc/confirmDialog.dart';
 import '../widgets/propEditors/xmlActions/XmlActionPresets.dart';
 import 'Property.dart';

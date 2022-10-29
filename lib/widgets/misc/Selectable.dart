@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 
 import '../../widgets/theme/customTheme.dart';
-import '../../utils.dart';
+import '../../utils/utils.dart';
 
 class _SelectedData<T> {
   final T? data;
