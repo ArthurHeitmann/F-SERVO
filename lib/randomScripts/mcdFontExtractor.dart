@@ -5,7 +5,7 @@ import 'dart:io';
 import 'package:image/image.dart';
 import 'package:path/path.dart';
 
-import '../fileTypeUtils/mcd/mcdReader.dart';
+import '../fileTypeUtils/mcd/mcdIO.dart';
 import '../fileTypeUtils/utils/ByteDataWrapper.dart';
 
 const rootDir = r"D:\delete\mods\na\blender\extracted";

@@ -53,17 +53,24 @@ Future<bool> hasMrubyAssets() async {
 
 bool _hasMagickBinsComplete = false;
 bool _hasMagickBins = false;
+String? magickBinPath;
 Future<bool> hasMagickBins() async {
   if (_hasMagickBinsComplete)
     return _hasMagickBins;
   await assetDirDone;
-  var magickDir = join(assetsDir!, "MrubyDecompiler", "bins");
+  var magickDir = join(assetsDir!, "bins");
   var magickFiles = await Directory(magickDir)
     .list()
     .map((f) => basename(f.path))
     .toList();
-  _hasMagickBins = magickFiles.contains("magick.exe") && magickFiles.contains("magick.exe.manifest");
   _hasMagickBinsComplete = true;
+  _hasMagickBins = magickFiles.contains("magick.exe") && magickFiles.contains("magickLin");
+  if (_hasMagickBins) {
+    if (Platform.isWindows)
+      magickBinPath = join(magickDir, "magick.exe");
+    else
+      magickBinPath = join(magickDir, "magickLin");
+  }
   return _hasMagickBins;
 }
 

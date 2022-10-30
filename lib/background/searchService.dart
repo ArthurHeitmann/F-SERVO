@@ -6,6 +6,7 @@ import 'dart:isolate';
 import 'package:path/path.dart' as path;
 import 'package:xml/xml.dart';
 
+import '../fileTypeUtils/mcd/mcdIO.dart';
 import '../fileTypeUtils/tmd/tmdReader.dart';
 import '../fileTypeUtils/yax/hashToStringMap.dart';
 import '../stateManagement/Property.dart';
@@ -260,6 +261,10 @@ class _SearchServiceWorker {
       var entries = await readTmdFile(file.path);
       return entries.map((e) => e.toString()).join("\n");
     }
+    else if (file.path.endsWith(".mcd")) {
+      var mcd = await McdFile.fromFile(file.path);
+      return mcd.toString();
+    }
     try {
       return await file.readAsString();
     }
@@ -279,6 +284,13 @@ class _SearchServiceWorker {
     else if (file.path.endsWith(".tmd")) {
       var entries = await readTmdFile(file.path);
       return entries
+        .map((e) => e.toString().split("\n"))
+        .expand((e) => e)
+        .toList();
+    }
+    else if (file.path.endsWith(".mcd")) {
+      var mcd = await McdFile.fromFile(file.path);
+      return mcd.events
         .map((e) => e.toString().split("\n"))
         .expand((e) => e)
         .toList();

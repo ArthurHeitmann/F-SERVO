@@ -1,8 +1,10 @@
 
 import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
+import 'package:tuple/tuple.dart';
 
 import '../../../stateManagement/ChangeNotifierWidget.dart';
+import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/openFileTypes.dart';
 import '../../../stateManagement/otherFileTypes/McdData.dart';
 import '../../../utils/utils.dart';
@@ -61,54 +63,103 @@ class _McdEditorBody extends ChangeNotifierWidget {
 
 class _McdEditorBodyState extends ChangeNotifierState<_McdEditorBody> {
   final scrollController = ScrollController();
+  List<Tuple2<int, McdEvent>> events = [];
+  StringProp search = StringProp("");
+
+  @override
+  void initState() {
+    search.addListener(() => setState(() {}));
+    super.initState();
+  }
+
+  void updateEvents() {
+    var searchLower = search.value.toLowerCase();
+    var allEvents = List.generate(
+      widget.mcd.events.length,
+      (index) => Tuple2(index, widget.mcd.events[index])
+    );
+
+    events = allEvents.where((e) {
+      var event = e.item2;
+      return event.name.value.toLowerCase().contains(searchLower) ||
+        event.paragraphs.any((p) => p.lines.any((l) => l.text.value.toLowerCase().contains(searchLower)));
+    }).toList();
+    
+    events.sort((a, b) => a.item2.msgSeqNum.value.compareTo(b.item2.msgSeqNum.value));
+  }
 
   @override
   Widget build(BuildContext context) {
-    var sortedEvents = widget.mcd.events
-      .toList()
-      ..sort((a, b) => a.msgSeqNum.value.compareTo(b.msgSeqNum.value));
-    return Stack(
+    updateEvents();
+    
+    return Column(
       children: [
-        SmoothScrollBuilder(
-          controller: scrollController,
-          builder: (context, controller, physics) {
-            return ListView.builder(
-              controller: controller,
-              physics: physics,
-              itemCount: widget.mcd.events.length,
-              itemBuilder: (context, i) => NestedContextMenu(
-                key: Key(sortedEvents[i].uuid),
-                clearParent: true,
-                buttons: [
-                  ContextMenuButtonConfig(
-                    "Remove Event",
-                    icon: const Icon(Icons.remove),
-                    onPressed: () => widget.mcd.removeEvent(i)
+        _makeHeader(),
+        Expanded(
+          child: Stack(
+            children: [
+              SmoothScrollBuilder(
+                controller: scrollController,
+                builder: (context, controller, physics) {
+                  return ListView.builder(
+                    controller: controller,
+                    physics: physics,
+                    itemCount: events.length,
+                    itemBuilder: (context, i) => NestedContextMenu(
+                      key: Key(events[i].item2.uuid),
+                      clearParent: true,
+                      buttons: [
+                        ContextMenuButtonConfig(
+                          "Remove Event",
+                          icon: const Icon(Icons.remove),
+                          onPressed: () => widget.mcd.removeEvent(events[i].item1),
+                        ),
+                      ],
+                      child: _McdEventEditor(
+                        file: widget.file,
+                        event: events[i].item2,
+                        altColor: i % 2 == 1,
+                      ),
+                    ),
+                  );
+                }
+              ),
+              Positioned(
+                right: 16,
+                bottom: 16,
+                child: SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: FloatingActionButton(
+                    onPressed: () => widget.mcd.addEvent(),
+                    foregroundColor: getTheme(context).textColor,
+                    child: const Icon(Icons.add),
                   ),
-                ],
-                child: _McdEventEditor(
-                  file: widget.file,
-                  event: sortedEvents[i],
-                  altColor: i % 2 == 1,
                 ),
               ),
-            );
-          }
-        ),
-        Positioned(
-          right: 16,
-          bottom: 16,
-          child: SizedBox(
-            width: 40,
-            height: 40,
-            child: FloatingActionButton(
-              onPressed: () => widget.mcd.addEvent(),
-              foregroundColor: getTheme(context).textColor,
-              child: const Icon(Icons.add),
-            ),
+            ],
           ),
         ),
       ],
+    );
+  }
+
+  Widget _makeHeader() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 40, right: 8, left: 8, bottom: 8),
+      child: RowSeparated(
+        children: [
+          Expanded(
+            child: UnderlinePropTextField(
+              prop: search,
+              options: const PropTFOptions(
+                hintText: "Search",
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
     );
   }
 }
@@ -130,7 +181,7 @@ class _McdEventEditorState extends ChangeNotifierState<_McdEventEditor> {
     return Material(
       color: widget.altColor ? getTheme(context).tableBgAltColor : getTheme(context).tableBgColor,
       child: Padding(
-        padding: const EdgeInsets.only(top: 40, right: 8, bottom: 8, left: 8),
+        padding: const EdgeInsets.all(8),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -178,7 +229,7 @@ class _McdEventEditorState extends ChangeNotifierState<_McdEventEditor> {
                 message: "Add Paragraph",
                 waitDuration: const Duration(milliseconds: 500),
                 child: IconButton(
-                  onPressed: () => widget.event.addParagraph(widget.file.mcdData!.usedFonts.firstWhere((f) => f.fontId != 0)),
+                  onPressed: () => widget.event.addParagraph(widget.file.mcdData!.usedFonts.keys.firstWhere((id) => id != 0)),
                   constraints: BoxConstraints.tight(const Size(30, 30)),
                   padding: EdgeInsets.zero,
                   icon: const Icon(Icons.add),
@@ -220,6 +271,8 @@ class __McdParagraphEditorState extends ChangeNotifierState<_McdParagraphEditor>
               ),
             ),
             const SizedBox(width: 10,),
+            const Text("fontID "),
+            makePropEditor<UnderlinePropTextField>(widget.paragraph.fontId),
             const Text("vPos "),
             makePropEditor<UnderlinePropTextField>(widget.paragraph.vPos),
           ],

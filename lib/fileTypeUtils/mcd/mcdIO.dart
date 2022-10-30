@@ -53,10 +53,7 @@ class McdFileSymbol {
   late final String char;
   final int glyphId;
 
-  late final McdFileFont _font;
-  late final McdFileGlyph _glyph;
-
-  McdFileSymbol(this.fontId, this.charCode, this.glyphId, this._font, this._glyph) :
+  McdFileSymbol(this.fontId, this.charCode, this.glyphId) :
     char = String.fromCharCode(charCode);
   
   McdFileSymbol.read(ByteDataWrapper bytes, List<McdFileFont> fonts, List<McdFileGlyph> glyphs) :
@@ -64,8 +61,6 @@ class McdFileSymbol {
     charCode = bytes.readUint16(),
     glyphId = bytes.readUint32() {
     char = String.fromCharCode(charCode);
-    _font = fonts.firstWhere((f) => f.id == fontId);
-    _glyph = glyphs[glyphId];
     // if (_glyph.height != _font.height) {
     //   print("Warning: Glyph height (${_glyph.height}) does not match font height (${_font.height})");
     // }
@@ -459,5 +454,10 @@ class McdFile {
       event.write(bytes);
     
     await File(path).writeAsBytes(bytes.buffer.asUint8List());
+  }
+
+  @override
+  String toString() {
+    return events.join("\n\n");
   }
 }

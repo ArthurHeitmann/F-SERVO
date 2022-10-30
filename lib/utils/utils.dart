@@ -520,3 +520,22 @@ Future<SizeInt> getDdsFileSize(String path) async {
   var width = reader.readUint32();
   return SizeInt(width, height);
 }
+
+num sum(Iterable<num> values) {
+  num sum = 0;
+  for (var value in values)
+    sum += value;
+  return sum;
+}
+
+num sumM<T>(Iterable<T> values, num Function(T) mapper) {
+  return sum(values.map(mapper));
+}
+
+num avr(Iterable<num> values) {
+  return sum(values) / values.length;
+}
+
+num avrM<T>(Iterable<T> values, num Function(T) mapper) {
+  return avr(values.map(mapper));
+}
