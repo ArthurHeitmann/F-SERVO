@@ -1,16 +1,25 @@
-# nier_scripts_editor
+# Nier Scripts Editor
 
-A new Flutter project.
+A tool for modding a variety of files in Nier:Automata. Primarily for editing quest scripting files.
 
-## Getting Started
+Supported file types:
+- DAT
+- PAK
+- YAX
+- XML
+- TMD
+- SMD
+- MCD
+- BIN
 
-This project is a starting point for a Flutter application.
+## Building
 
-A few resources to get you started if this is your first Flutter project:
+1. [Setup Flutter for Windows](https://docs.flutter.dev/get-started/install/windows)
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+2. Git clone this repository
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+3. Get all assets
+   1. `git submodule update --init`
+   2. Download additional assets from [here](https://github.com/ArthurHeitmann/NierScriptsEditor/releases/tag/assetsV0.1.0) and extract the folders inside into the `assets` folder. (This is so that the raw git repo is 100+ MB large)
+
+4. Run with your IDE of choice or for release build `flutter build windows --release`
