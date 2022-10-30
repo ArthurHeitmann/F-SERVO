@@ -502,3 +502,21 @@ bool strEndsWithDat(String str) {
 
 bool get isDesktop => Platform.isWindows || Platform.isLinux || Platform.isMacOS;
 bool get isMobile => Platform.isAndroid || Platform.isIOS;
+
+class SizeInt {
+  final int width;
+  final int height;
+
+  const SizeInt(this.width, this.height);
+
+  @override
+  String toString() => "$width x $height";
+}
+Future<SizeInt> getDdsFileSize(String path) async {
+  var bytes = await File(path).readAsBytes();
+  var reader = ByteDataWrapper(bytes.buffer);
+  reader.position = 0xc;
+  var height = reader.readUint32();
+  var width = reader.readUint32();
+  return SizeInt(width, height);
+}

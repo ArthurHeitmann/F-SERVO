@@ -47,5 +47,5 @@ app.*.map.json
 /android/app/release
 
 .vscode
-extractedFonts
-assets/bins/*
+assets/bins
+assets/mcdFonts

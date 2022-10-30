@@ -376,15 +376,18 @@ class McdFileData extends OpenFileData {
       return;
     _loadingState = LoadingState.loading;
 
-    mcdData = await McdData.fromMcdFile(path);
+    mcdData = await McdData.fromMcdFile(this, path);
 
     await super.load();
   }
 
-  // @override
-  // Future<void> save() async {
-  //   await super.save();
-  // }
+  @override
+  Future<void> save() async {
+    await mcdData?.save();
+    var datDir = dirname(path);
+    changedDatFiles.add(datDir);
+    await super.save();
+  }
 
   @override
   void dispose() {

@@ -38,15 +38,27 @@ class HashInfo {
 
     List<List<dynamic>> namesIndicesHashes = [];
     for (int i = 0; i < filenames.length; i++)
-      namesIndicesHashes.add([filenames[i], i, (crc32(filenames[i].toLowerCase()) & 0x7fffffff)]);
+      namesIndicesHashes.add([
+        filenames[i],
+        i,
+        (crc32(filenames[i].toLowerCase()) & 0x7fffffff)
+      ]);
 
-    namesIndicesHashes.sort((a, b) => a[2] >> preHashShift);
+    namesIndicesHashes.sort((a, b) {
+      int kA = a[2] >> preHashShift;
+      int kB = b[2] >> preHashShift;
+      return kA.compareTo(kB);
+    });
 
     hashes = namesIndicesHashes
       .map((e) => e[2] as int)
       .toList();
 
-    hashes.sort((a, b) => a >> preHashShift);
+    hashes.sort((a, b) {
+      int kA = a >> preHashShift;
+      int kB = b >> preHashShift;
+      return kA.compareTo(kB);
+    });
 
     for (int i = 0; i < namesIndicesHashes.length; i++) {
       if (bucketOffsets[namesIndicesHashes[i][2] >> preHashShift] == -1)

@@ -2,6 +2,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 
 String? assetsDir;
@@ -32,4 +33,66 @@ Future<bool> findAssetsDir() async {
   }
   print("Couldn't find assets dir");
   return false;
+}
+
+bool _hasMrubyAssetsComplete = false;
+bool _hasMrubyAssets = false;
+Future<bool> hasMrubyAssets() async {
+  if (_hasMrubyAssetsComplete)
+    return _hasMrubyAssets;
+  await assetDirDone;
+  var mrubyDir = join(assetsDir!, "MrubyDecompiler");
+  var mrubyFiles = await Directory(mrubyDir)
+    .list()
+    .map((f) => basename(f.path))
+    .toList();
+  _hasMrubyAssets = mrubyFiles.contains("__init__.py") && mrubyFiles.contains("bins");
+  _hasMrubyAssetsComplete = true;
+  return _hasMrubyAssets;
+}
+
+bool _hasMagickBinsComplete = false;
+bool _hasMagickBins = false;
+Future<bool> hasMagickBins() async {
+  if (_hasMagickBinsComplete)
+    return _hasMagickBins;
+  await assetDirDone;
+  var magickDir = join(assetsDir!, "MrubyDecompiler", "bins");
+  var magickFiles = await Directory(magickDir)
+    .list()
+    .map((f) => basename(f.path))
+    .toList();
+  _hasMagickBins = magickFiles.contains("magick.exe") && magickFiles.contains("magick.exe.manifest");
+  _hasMagickBinsComplete = true;
+  return _hasMagickBins;
+}
+
+bool _hasMcdFontsComplete = false;
+bool _hasMcdFonts = false;
+const fontIds = [ "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "19", "20", "35", "36", "37" ];
+Future<bool> hasMcdFonts() async {
+  if (_hasMcdFontsComplete)
+    return _hasMcdFonts;
+  await assetDirDone;
+  var fontsDir = join(assetsDir!, "mcdFonts");
+  var fontDirs = await Directory(fontsDir)
+    .list()
+    .where((f) => f is Directory)
+    .map((f) => basename(f.path))
+    .where((f) => fontIds.contains(f))
+    .toList();
+  fontDirs.sort((a, b) => int.parse(a).compareTo(int.parse(b)));
+  if (!listEquals(fontDirs, fontIds))
+    return false;
+  var allFontsComplete = await Future.wait(fontDirs.map((f) async {
+    var fontDir = join(fontsDir, f);
+    var fontFiles = await Directory(fontDir)
+      .list()
+      .map((f) => basename(f.path))
+      .toList();
+    return fontFiles.contains("_atlas.png") && fontFiles.contains("_atlas.json");
+  }));
+  _hasMcdFonts = allFontsComplete.every((f) => f);
+  _hasMcdFontsComplete = true;
+  return _hasMcdFonts;
 }

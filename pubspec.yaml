@@ -55,6 +55,23 @@ flutter:
     - assets/MrubyDecompiler/bins/linux/
     - assets/MrubyDecompiler/bins/windows/
     - assets/MrubyDecompiler/mrbToRb/
+    - assets/mcdFonts/
+    - assets/mcdFonts/1/
+    - assets/mcdFonts/2/
+    - assets/mcdFonts/3/
+    - assets/mcdFonts/4/
+    - assets/mcdFonts/5/
+    - assets/mcdFonts/6/
+    - assets/mcdFonts/7/
+    - assets/mcdFonts/8/
+    - assets/mcdFonts/9/
+    - assets/mcdFonts/10/
+    - assets/mcdFonts/11/
+    - assets/mcdFonts/19/
+    - assets/mcdFonts/20/
+    - assets/mcdFonts/35/
+    - assets/mcdFonts/36/
+    - assets/mcdFonts/37/
 
   fonts:
     - family: FiraCode
