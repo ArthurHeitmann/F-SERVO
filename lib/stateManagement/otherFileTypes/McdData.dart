@@ -5,9 +5,11 @@ import 'dart:math';
 
 import 'package:image/image.dart';
 import 'package:path/path.dart';
+import 'package:tuple/tuple.dart';
 
 import '../../fileTypeUtils/dat/datExtractor.dart';
 import '../../fileTypeUtils/dat/datRepacker.dart';
+import '../../fileTypeUtils/mcd/fontAtlasGeneratorTypes.dart';
 import '../../fileTypeUtils/mcd/mcdIO.dart';
 import '../../fileTypeUtils/wta/wtaReader.dart';
 import '../../utils/assetDirFinder.dart';
@@ -143,6 +145,18 @@ class McdLocalFont extends McdFont {
   }
 
   McdLocalFont.zero() : super(0, 0, 4, -6, {});
+}
+
+class McdFontOverride with HasUuid {
+  final NumberProp fontId;
+  final StringProp fontPath;
+
+  McdFontOverride(this.fontId, this.fontPath);
+
+  void dispose() {
+    fontId.dispose();
+    fontPath.dispose();
+  }
 }
 
 class McdLine extends _McdFilePart with HasUuid {
@@ -322,11 +336,12 @@ class McdEvent extends _McdFilePart with HasUuid {
 
 class McdData extends _McdFilePart {
   static Map<int, McdGlobalFont> availableFonts = {};
+  static ValueNestedNotifier<McdFontOverride> fontOverrides = ValueNestedNotifier([]);
 
   final StringProp? textureWtaPath;
   final StringProp? textureWtpPath;
-  Map<int, McdLocalFont> usedFonts;
   ValueNestedNotifier<McdEvent> events;
+  Map<int, McdLocalFont> usedFonts;
 
   McdData(super.file, this.textureWtaPath, this.textureWtpPath, this.usedFonts, this.events) {
     events.addListener(onDataChanged);
@@ -371,6 +386,9 @@ class McdData extends _McdFilePart {
 
     var events = mcd.events.map((e) => McdEvent.fromMcd(file, e, usedFonts)).toList();
 
+    if (availableFonts.isEmpty)
+      await loadAvailableFonts();
+
     return McdData(
       file,
       wtaPath != null ? StringProp(wtaPath) : null,
@@ -390,7 +408,7 @@ class McdData extends _McdFilePart {
     super.dispose();
   }
 
-  Future<void> loadAvailableFonts() async {
+  static Future<void> loadAvailableFonts() async {
     if (!await hasMcdFonts()) {
       showToast("No MCD font assets found");
       return;
@@ -420,6 +438,19 @@ class McdData extends _McdFilePart {
 
   void removeEvent(int index) {
     events.removeAt(index)
+      .dispose();
+  }
+
+  static void addFontOverride() {
+    var nextFontId = availableFonts.keys.firstWhere((fId) => !fontOverrides.any((fo) => fo.fontId.value == fId), orElse: () => 0);
+    fontOverrides.add(McdFontOverride(
+      NumberProp(nextFontId, true),
+      StringProp("")
+    ));
+  }
+
+  static void removeFontOverride(int index) {
+    fontOverrides.removeAt(index)
       .dispose();
   }
 
@@ -618,77 +649,111 @@ class McdData extends _McdFilePart {
   }
   
   Future<Map<int, McdLocalFont>> makeFontsForSymbols(List<UsedFontSymbol> symbols) async {
-    // group by font id
-    Map<int, List<McdFontSymbol>> symbolFontGroups = {};
-    for (var sym in symbols) {
-      var fontId = sym.fontId;
-      if (!symbolFontGroups.containsKey(fontId))
-        symbolFontGroups[fontId] = [];
-      var fontSym = availableFonts[fontId]!.supportedSymbols[sym.code]!;
-      symbolFontGroups[fontId]!.add(fontSym);
+    var fontOverridesMap = { for (var font in fontOverrides) font.fontId.value: font.fontPath.value };
+    var allValidPaths = await Future.wait(fontOverridesMap.values.map((path) => File(path).exists()));
+    if (allValidPaths.any((valid) => !valid)) {
+      showToast("One or more font paths are invalid");
+      throw Exception("Some font override paths are invalid");
+    }
+    if (fontOverridesMap.keys.any((id) => !availableFonts.containsKey(id))) {
+      showToast("One or more font overrides use an invalid font ID");
+      throw Exception("One or more font overrides use an invalid font ID");
     }
 
-    // initialize texture
-    double avrSymbolWidthSum = 0;
-    double avrSymbolHeightSum = 0;
-    int avrCount = 0;
-    for (var globalFont in availableFonts.values) {
-      if (!symbolFontGroups.containsKey(globalFont.fontId))
-        continue;
-      var fontAvrSymbolWidth = avrM<McdFontSymbol>(globalFont.supportedSymbols.values, (sym) => sym.width);
-      var fontAvrSymbolHeight = avrM<McdFontSymbol>(globalFont.supportedSymbols.values, (sym) => sym.height);
-      avrSymbolWidthSum += fontAvrSymbolWidth.toDouble();
-      avrSymbolHeightSum += fontAvrSymbolHeight.toDouble();
-      avrCount++;
-    }
-    double avrSymbolWidth = avrSymbolWidthSum / avrCount;
-    double avrSymbolHeight = avrSymbolHeightSum / avrCount;
-    var approxTotalSize = avrSymbolWidth * avrSymbolHeight * symbols.length * 1.5;
-    var texSize = 128;
-    while (texSize * texSize < approxTotalSize)
-      texSize *= 2;
-    var texture = Image(texSize, texSize);
-
-    // draw letters from global fonts to texture
-    Map<int, McdLocalFont> exportFonts = {};
-    var curX = 0;
-    var curY = 0;
-    var curLineHeight = 0;
-    for (var fontSymGroup in symbolFontGroups.entries) {
-      Map<int, McdFontSymbol> newSymbols = {};
-      var fontId = fontSymGroup.key;
-      var font = availableFonts[fontId]!;
-      var fontTexture = await font.loadAtlasTexture();
-      for (var sym in fontSymGroup.value) {
-        // check insert position
-        if (curX + sym.width > texSize) {
-          curX = 0;
-          curY += curLineHeight;
-          curLineHeight = 0;
+    // generate cli json args
+    List<String> srcTexPaths = [];
+    Map<int, Map<String, dynamic>> fonts = {};
+    List<CliImgOperation> imgOperations = [];
+    for (int i = 0; i < symbols.length; i++) {
+      var symbol = symbols[i];
+      if (fontOverridesMap.containsKey(symbol.fontId)) {
+        if (!fonts.containsKey(symbol.fontId)) {
+          fonts[symbol.fontId] = {
+            "path": fontOverridesMap[symbol.fontId],
+            "size": availableFonts[symbol.fontId]!.fontHeight,
+          };
         }
-        if (curY + sym.height > texSize)
-          throw Exception("Texture is too small");
-        curLineHeight = max(curLineHeight, sym.height);
+        imgOperations.add(CliImgOperationDrawFromFont(
+          i, symbol.char, symbol.fontId
+        ));
+      } else {
+        var globalTex = availableFonts[symbol.fontId]!;
+        int texId = srcTexPaths.indexOf(globalTex.atlasTexturePath);
+        if (texId == -1) {
+          srcTexPaths.add(globalTex.atlasTexturePath);
+          texId = srcTexPaths.length - 1;
+        }
+        var fontSymbol = availableFonts[symbol.fontId]!.supportedSymbols[symbol.code]!;
+        imgOperations.add(
+          CliImgOperationDrawFromTexture(
+            i, texId,
+            fontSymbol.x, fontSymbol.y,
+            fontSymbol.width, fontSymbol.height,
+          )
+        );
+      }
+    }
 
-        // draw symbol
-        var symImg = copyCrop(fontTexture, sym.x, sym.y, sym.width, sym.height);
-        copyInto(texture, symImg, dstX: curX, dstY: curY);
-        var newSym = McdFontSymbol(
-          sym.code, sym.char,
-          curX, curY, sym.width, sym.height,
+    var texPngPath = join(dirname(textureWtpPath!.value), "${basename(textureWtpPath!.value)}.png");
+    var cliArgs = FontAtlasGenCliOptions(
+      texPngPath, srcTexPaths, fonts, imgOperations
+    );
+    var cliJson = jsonEncode(cliArgs.toJson());
+
+    // run cli tool
+    var cliToolPath = join(assetsDir!, "FontAtlasGenerator", "__init__.py");
+    var cliToolProcess = await Process.start("python", [cliToolPath]);
+    cliToolProcess.stdin.writeln(cliJson);
+    cliToolProcess.stdin.close();
+    var stdout = cliToolProcess.stdout.transform(utf8.decoder).join();
+    var stderr = cliToolProcess.stderr.transform(utf8.decoder).join();
+    if (await cliToolProcess.exitCode != 0) {
+      showToast("Font atlas generator failed");
+      print(await stdout);
+      print(await stderr);
+      throw Exception("Font atlas generator failed");
+    }
+    // parse cli output
+    FontAtlasGenResult atlasInfo;
+    try {
+      var atlasInfoJson = jsonDecode(await stdout);
+      atlasInfo = FontAtlasGenResult.fromJson(atlasInfoJson);
+    } catch (e) {
+      showToast("Font atlas generator failed");
+      print(await stdout);
+      print(await stderr);
+      throw Exception("Font atlas generator failed");
+    }
+    
+    // generate fonts
+    Map<int, List<Tuple2<UsedFontSymbol, FontAtlasGenSymbol>>> generatedSymbols = {};
+    for (var genSym in atlasInfo.symbols.entries) {
+      var usedSym = symbols[genSym.key];
+      if (!generatedSymbols.containsKey(usedSym.fontId))
+        generatedSymbols[usedSym.fontId] = [];
+      generatedSymbols[usedSym.fontId]!.add(Tuple2(usedSym, genSym.value));
+    }
+    Map<int, McdLocalFont> exportFonts = {};
+    for (var fontId in generatedSymbols.keys) {
+      var font = availableFonts[fontId]!;
+      Map<int, McdFontSymbol> exportSymbols = {};
+      for (var genSym in generatedSymbols[fontId]!) {
+        var usedSym = genSym.item1;
+        var genSymInfo = genSym.item2;
+        exportSymbols[usedSym.code] = McdFontSymbol(
+          usedSym.code, usedSym.char,
+          genSymInfo.x, genSymInfo.y,
+          genSymInfo.width, genSymInfo.height,
           fontId
         );
-        newSymbols[sym.code] = newSym;
-
-        curX += sym.width;
       }
-      var newFont = McdLocalFont(fontId, font.fontWidth, font.fontHeight, font.fontBelow, newSymbols);
-      exportFonts[fontId] = newFont;
+      exportFonts[fontId] = McdLocalFont(
+        fontId, font.fontWidth, font.fontHeight,
+        font.fontBelow , exportSymbols
+      );
     }
 
     // save texture
-    var texPngPath = join(dirname(textureWtpPath!.value), "${basename(textureWtpPath!.value)}.png");
-    await File(texPngPath).writeAsBytes(encodePng(texture));
     var texDdsPath = "${texPngPath.substring(0, texPngPath.length - 3)}dds";
     var result = await Process.run(
       magickBinPath!,

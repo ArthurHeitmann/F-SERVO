@@ -1,5 +1,6 @@
 
 import 'package:context_menus/context_menus.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:tuple/tuple.dart';
 
@@ -8,9 +9,11 @@ import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/openFileTypes.dart';
 import '../../../stateManagement/otherFileTypes/McdData.dart';
 import '../../../utils/utils.dart';
+import '../../misc/ColumnSeparated.dart';
 import '../../misc/RowSeparated.dart';
 import '../../misc/SmoothScrollBuilder.dart';
 import '../../misc/nestedContextMenu.dart';
+import '../../misc/smallButton.dart';
 import '../../theme/customTheme.dart';
 import '../simpleProps/UnderlinePropTextField.dart';
 import '../simpleProps/propEditorFactory.dart';
@@ -26,6 +29,8 @@ class McdEditor extends ChangeNotifierWidget {
 }
 
 class _McdEditorState extends ChangeNotifierState<McdEditor> {
+  int activeTab = 0;
+
   @override
   void initState() {
     widget.file.load()
@@ -35,19 +40,60 @@ class _McdEditorState extends ChangeNotifierState<McdEditor> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.file.loadingState != LoadingState.loaded) {
-      return Column(
-        children: const [
-          SizedBox(height: 35),
-          SizedBox(
-            height: 2,
-            child: LinearProgressIndicator(backgroundColor: Colors.transparent,)
+    return Column(
+      children: [
+        const SizedBox(height: 35),
+        Row(
+          children: [
+            _makeTabButton(0, "MCD Events"),
+            _makeTabButton(1, "Font overrides"),
+          ]
+        ),
+        const Divider(height: 1,),
+        Expanded(
+          child: IndexedStack(
+            index: activeTab,
+            children: [
+              widget.file.loadingState == LoadingState.loaded
+                ? _McdEditorBody(file: widget.file, mcd: widget.file.mcdData!)
+                : const SizedBox(
+                  height: 2,
+                  child: LinearProgressIndicator(backgroundColor: Colors.transparent,)
+                ),
+              _McdFontsManager(),
+            ],
           ),
-        ],
-      );
-    }
+        ),
+      ],
+    );
+  }
 
-    return _McdEditorBody(file: widget.file, mcd: widget.file.mcdData!);
+  Widget _makeTabButton(int index, String text) {
+    return Flexible(
+      child: SizedBox(
+        width: 150,
+        height: 40,
+        child: TextButton(
+            onPressed: () {
+              if (activeTab == index)
+                return;
+              setState(() => activeTab = index);
+            },
+            style: ButtonStyle(
+              backgroundColor: activeTab == index
+                ? MaterialStateProperty.all(getTheme(context).textColor!.withOpacity(0.1))
+                : MaterialStateProperty.all(Colors.transparent),
+              foregroundColor: activeTab == index
+                ? MaterialStateProperty.all(getTheme(context).textColor)
+                : MaterialStateProperty.all(getTheme(context).textColor!.withOpacity(0.5)),
+            ),
+            child: Text(
+              text,
+              textScaleFactor: 1.25,
+            ),
+          ),
+      ),
+    );
   }
 }
 
@@ -94,7 +140,7 @@ class _McdEditorBodyState extends ChangeNotifierState<_McdEditorBody> {
     
     return Column(
       children: [
-        _makeHeader(),
+        _makeHeader(context),
         Expanded(
           child: Stack(
             children: [
@@ -144,16 +190,21 @@ class _McdEditorBodyState extends ChangeNotifierState<_McdEditorBody> {
     );
   }
 
-  Widget _makeHeader() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 40, right: 8, left: 8, bottom: 8),
+  Widget _makeHeader(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.only(top: 8, right: 8, left: 8, bottom: 8),
+      color: getTheme(context).tableBgColor,
       child: RowSeparated(
         children: [
-          Expanded(
-            child: UnderlinePropTextField(
-              prop: search,
-              options: const PropTFOptions(
-                hintText: "Search",
+          Flexible(
+            child: SizedBox(
+              width: 300,
+              child: UnderlinePropTextField(
+                prop: search,
+                options: const PropTFOptions(
+                  hintText: "Search",
+                  useIntrinsicWidth: false,
+                ),
               ),
             ),
           ),
@@ -322,6 +373,79 @@ class __McdParagraphEditorState extends ChangeNotifierState<_McdParagraphEditor>
         ),
         const SizedBox(width: 10,),
       ],
+    );
+  }
+}
+
+class _McdFontsManager extends ChangeNotifierWidget {
+  _McdFontsManager() : super(notifier: McdData.fontOverrides);
+
+  @override
+  State<_McdFontsManager> createState() => __McdFontsManagerState();
+}
+
+class __McdFontsManagerState extends ChangeNotifierState<_McdFontsManager> {
+  final scrollController = ScrollController();
+
+  @override
+  Widget build(BuildContext context) {
+    return SmoothSingleChildScrollView(
+      controller: scrollController,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: ColumnSeparated(
+          children: [
+            const Text("Font Overrides", textScaleFactor: 1.1,),
+            for (int i = 0; i < McdData.fontOverrides.length; i++)
+              Row(
+                key: Key(McdData.fontOverrides[i].uuid),
+                children: [
+                  makePropEditor(
+                    McdData.fontOverrides[i].fontId,
+                    const PropTFOptions(
+                      hintText: "ID",
+                      constraints: BoxConstraints.tightFor(height: 30, width: 60),
+                    ),
+                  ),
+                  const SizedBox(width: 10,),
+                  Expanded(
+                    child: makePropEditor(
+                      McdData.fontOverrides[i].fontPath,
+                      const PropTFOptions(hintText: "Font Path", constraints: BoxConstraints.tightFor(height: 30),),
+                    ),
+                  ),
+                  const SizedBox(width: 10,),
+                  SmallButton(
+                    onPressed: () async {
+                      var selectedFontFile = await FilePicker.platform.pickFiles(
+                        type: FileType.custom,
+                        allowedExtensions: ["ttf", "otf"],
+                        allowMultiple: false,
+                      );
+                      if (selectedFontFile == null)
+                        return;
+                      var fontPath = selectedFontFile.files.first.path!;
+                      McdData.fontOverrides[i].fontPath.value = fontPath;
+                    },
+                    constraints: BoxConstraints.tight(const Size(30, 30)),
+                    child: const Icon(Icons.folder, size: 18),
+                  ),
+                  const SizedBox(width: 10,),
+                  SmallButton(
+                    onPressed: () => McdData.fontOverrides.removeAt(i),
+                    constraints: BoxConstraints.tight(const Size(30, 30)),
+                    child: const Icon(Icons.remove, size: 18),
+                  ),
+                ],
+              ),
+              SmallButton(
+                onPressed: () => McdData.addFontOverride(),
+                constraints: BoxConstraints.tight(const Size(30, 30)),
+                child: const Icon(Icons.add),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }

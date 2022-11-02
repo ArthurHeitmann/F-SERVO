@@ -1,3 +1,6 @@
 [submodule "lib/fileTypeUtils/ruby/MrubyDecompiler"]
 	path = assets/MrubyDecompiler
 	url = https://github.com/ArthurHeitmann/MrubyDecompiler.git
+[submodule "assets/FontAtlasGenerator"]
+	path = assets/FontAtlasGenerator
+	url = https://github.com/ArthurHeitmann/FontAtlasGenerator.git
