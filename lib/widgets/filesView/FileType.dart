@@ -20,16 +20,16 @@ enum FileType {
 Widget makeFileEditor(OpenFileData content) {
   switch (content.type) {
     case FileType.xml:
-      return XmlFileEditor(fileContent: content as XmlFileData);
+      return XmlFileEditor(key: Key(content.uuid), fileContent: content as XmlFileData);
     case FileType.preferences:
-      return PreferencesEditor(prefs: content as PreferencesData);
+      return PreferencesEditor(key: Key(content.uuid), prefs: content as PreferencesData);
     case FileType.tmd:
-      return TableFileEditor(file: content, getTableConfig: () => (content as TmdFileData).tmdData!);
+      return TableFileEditor(key: Key(content.uuid), file: content, getTableConfig: () => (content as TmdFileData).tmdData!);
     case FileType.smd:
-      return TableFileEditor(file: content, getTableConfig: () => (content as SmdFileData).smdData!);
+      return TableFileEditor(key: Key(content.uuid), file: content, getTableConfig: () => (content as SmdFileData).smdData!);
     case FileType.mcd:
-      return McdEditor(file: content as McdFileData);
+      return McdEditor(key: Key(content.uuid), file: content as McdFileData);
     default:
-      return TextFileEditor(fileContent: content as TextFileData);
+      return TextFileEditor(key: Key(content.uuid), fileContent: content as TextFileData);
   }
 }

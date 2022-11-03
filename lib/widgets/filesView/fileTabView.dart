@@ -2,7 +2,6 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:desktop_drop/desktop_drop.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:cross_file/cross_file.dart';
@@ -12,7 +11,6 @@ import 'package:window_manager/window_manager.dart';
 import '../../stateManagement/FileHierarchy.dart';
 import '../../stateManagement/openFileTypes.dart';
 import '../../stateManagement/statusInfo.dart';
-import '../misc/Selectable.dart';
 import 'FileTabEntry.dart';
 import 'FileType.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';
@@ -35,7 +33,6 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
   ScrollController tabBarScrollController = ScrollController();
   String? prevActiveUuid;
   bool isDroppingFile = false;
-  Map<OpenFileData, Widget> cachedEditors = {};
 
   @override
   void onNotified() {
@@ -87,36 +84,8 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
     messageLog.add("Opened ${pluralStr(files.length, "file")}");
   }
 
-  void pruneCachedWidgets() {
-    var toRemove = <OpenFileData>[];
-    for (var entry in cachedEditors.entries) {
-      if (entry.key != widget.viewArea.currentFile && !widget.viewArea.contains(entry.key)) {
-        toRemove.add(entry.key);
-      }
-    }
-   
-    for (var key in toRemove)
-      cachedEditors.remove(key);
-  }
-
-  Widget getOrMakeFileEditor(OpenFileData file) {
-    if (!kDebugMode) {
-      if (cachedEditors.containsKey(file))
-        return cachedEditors[file]!;
-    }
-    Widget newEntry = makeFileEditor(file);
-    newEntry = Positioned.fill(
-      key: PageStorageKey(file),
-        child: newEntry,
-    );
-    cachedEditors[file] = newEntry;
-    return newEntry;
-  }
-
   @override
   Widget build(BuildContext context) {
-    pruneCachedWidgets();
-
     return DropTarget(
       onDragEntered: (details) => setState(() => isDroppingFile = true),
       onDragExited: (details) => setState(() => isDroppingFile = false),
@@ -127,29 +96,9 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
       child: setupShortcuts(
         child: Stack(
           children: [
-            makeBackgroundClickArea(),
             widget.viewArea.currentFile != null
-              ? getOrMakeFileEditor(widget.viewArea.currentFile!)
-              : Center(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints.loose(const Size(150, 150)),
-                  child: Opacity(
-                    opacity: 0.25,
-                    child: AnimatedRotation(
-                      duration: const Duration(milliseconds: 250),
-                      turns: Random().nextInt(100) == 69 ? 1 : 0,
-                      child: AnimatedScale(
-                        scale: isDroppingFile ? 1.25 : 1.0,
-                        duration: const Duration(milliseconds: 250),
-                        curve: const _BezierCurve(0, 1.5, 1.2, 1),
-                        child: Image(
-                          image: AssetImage(getTheme(context).editorIconPath!),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+              ? makeFilesStack(context)
+              : makeEmptyTab(context),
             makeTabBar(),
           ],
         ),
@@ -161,6 +110,36 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
     return GestureDetector(
       onTapDown: (_) => areasManager.activeArea = widget.viewArea,
       child: child,
+    );
+  }
+
+  Widget makeFilesStack(BuildContext context) {
+    return IndexedStack(
+      index: widget.viewArea.indexOf(widget.viewArea.currentFile!),
+      children: widget.viewArea.map((file) => makeFileEditor(file)).toList(),
+    );
+  }
+
+  Widget makeEmptyTab(BuildContext context) {
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints.loose(const Size(150, 150)),
+        child: Opacity(
+          opacity: 0.25,
+          child: AnimatedRotation(
+            duration: const Duration(milliseconds: 250),
+            turns: Random().nextInt(100) == 69 ? 1 : 0,
+            child: AnimatedScale(
+              scale: isDroppingFile ? 1.25 : 1.0,
+              duration: const Duration(milliseconds: 250),
+              curve: const _BezierCurve(0, 1.5, 1.2, 1),
+              child: Image(
+                image: AssetImage(getTheme(context).editorIconPath!),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -210,17 +189,6 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget makeBackgroundClickArea() {
-    // TODO fix
-    return Positioned.fill(
-      child: GestureDetector(
-        onTapDown: (_) {
-          selectable.deselectAll(widget.viewArea);
-        },
       ),
     );
   }

@@ -14,8 +14,12 @@ Future<bool> _processFile(String filePath) async {
     showToast("Assets directory not found");
     return false;
   }
+  if (!await hasPython()) {
+    showToast("Python not found");
+    return false;
+  }
   var pyToolPath = join(assetsDir!, "MrubyDecompiler", "__init__.py");
-  var result = await Process.run("python", [pyToolPath, filePath]);
+  var result = await Process.run(pythonCmd!, [pyToolPath, filePath]);
   return result.exitCode == 0;
 }
 

@@ -108,12 +108,26 @@ class FontAtlasGenSymbol {
     height = map["height"];
 }
 
+class FontAtlasGenResultFontParams {
+  final int baseline;
+  final double scale;
+
+  FontAtlasGenResultFontParams.fromJson(Map<String, dynamic> map) :
+    baseline = map["baseline"],
+    scale = map["scale"];
+}
+
 class FontAtlasGenResult {
   final int texSize;
+  final Map<int, FontAtlasGenResultFontParams> fonts;
   final Map<int, FontAtlasGenSymbol> symbols;
 
   FontAtlasGenResult.fromJson(Map<String, dynamic> map) :
     texSize = map["size"],
+    fonts = {
+      for (final entry in (map["fontParams"] as Map).entries)
+        int.parse(entry.key): FontAtlasGenResultFontParams.fromJson(entry.value)
+    },
     symbols = {
       for (final entry in (map["symbols"] as Map).entries)
         int.parse(entry.key): FontAtlasGenSymbol.fromJson(entry.value)

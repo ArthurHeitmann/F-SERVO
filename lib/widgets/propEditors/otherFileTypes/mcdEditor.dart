@@ -6,6 +6,7 @@ import 'package:tuple/tuple.dart';
 
 import '../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
+import '../../../stateManagement/changesExporter.dart';
 import '../../../stateManagement/openFileTypes.dart';
 import '../../../stateManagement/otherFileTypes/McdData.dart';
 import '../../../stateManagement/otherFileTypes/McdFontDebugger.dart';
@@ -48,12 +49,31 @@ class _McdEditorState extends ChangeNotifierState<McdEditor> {
     return Column(
       children: [
         const SizedBox(height: 35),
-        Row(
-          children: [
-            _makeTabButton(0, "MCD Events"),
-            _makeTabButton(1, "Font overrides"),
-            _makeTabButton(2, "Font debugger"),
-          ]
+        Material(
+          color: Colors.transparent,
+          child: Row(
+            children: [
+              _makeTabButton(0, "MCD Events"),
+              _makeTabButton(1, "Font overrides"),
+              _makeTabButton(2, "Font debugger"),
+              const SizedBox(width: 12),
+              Container(
+                width: 1,
+                height: 20,
+                decoration: BoxDecoration(
+                  color: getTheme(context).textColor!.withOpacity(0.25),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.save),
+                splashRadius: 24,
+                onPressed: () async {
+                  await widget.file.save();
+                  await processChangedFiles();
+                },
+              ),
+            ]
+          ),
         ),
         const Divider(height: 1,),
         Expanded(
@@ -62,7 +82,10 @@ class _McdEditorState extends ChangeNotifierState<McdEditor> {
             children: widget.file.loadingState == LoadingState.loaded ? [
               _McdEditorBody(file: widget.file, mcd: widget.file.mcdData!),
               _McdFontsManager(widget.file.mcdData!),
-              McdFontDebugger(texturePath: widget.file.mcdData!.textureWtpPath!.value, fonts: widget.file.mcdData!.usedFonts.values.toList()),
+              McdFontDebugger(
+                texturePath: widget.file.mcdData!.textureWtpPath!.value,
+                fonts: widget.file.mcdData!.usedFonts.values.toList(),
+              ),
             ] : List.filled(3, loadingIndicator),
           ),
         ),
@@ -404,9 +427,10 @@ class __McdFontsManagerState extends ChangeNotifierState<_McdFontsManager> {
             // 1: fontHeight
             // 2: fontFilePath
             // 3: file path selector
+            // 3:x: apply to all
             // 4: scale
-            // 5: x Offset
-            // 6: y Offset
+            // -: x Offset
+            // -: y Offset
             // 7: remove button
             // 8: spacer
             columnWidths: const {
@@ -415,16 +439,15 @@ class __McdFontsManagerState extends ChangeNotifierState<_McdFontsManager> {
               2: FixedColumnWidth(50 + 8),
               3: FlexColumnWidth(1),
               4: FixedColumnWidth(30 + 8),
-              5: FixedColumnWidth(50 + 8),
+              5: FixedColumnWidth(30 + 8),
               6: FixedColumnWidth(50 + 8),
-              7: FixedColumnWidth(50 + 8),
-              8: FixedColumnWidth(30 + 8),
-              9: FixedColumnWidth(16),
+              7: FixedColumnWidth(30 + 8),
+              8: FixedColumnWidth(16),
             },
             defaultVerticalAlignment: TableCellVerticalAlignment.middle,
             children: [
               TableRow(
-                children: ["", "Font ID", "Height", "File Path", "", "Scale", "xOff", "yOff", "", ""]
+                children: ["", "Font ID", "Height", "File Path", "", "", "Scale", "", ""]
                   .map((e) => Container(
                     color: getTheme(context).tableBgColor,
                     padding: const EdgeInsets.symmetric(vertical: 12),
@@ -463,24 +486,29 @@ class __McdFontsManagerState extends ChangeNotifierState<_McdFontsManager> {
                         var fontPath = selectedFontFile.files.first.path!;
                         McdData.fontOverrides[i].fontPath.value = fontPath;
                       },
-                      constraints: BoxConstraints.tight(const Size(25, 25)),
+                      constraints: BoxConstraints.tight(const Size(30, 30)),
                       child: const Icon(Icons.folder, size: 17),
+                    ),
+                    Tooltip(
+                      message: "Apply to all",
+                      waitDuration: const Duration(milliseconds: 500),
+                      child: SmallButton(
+                        onPressed: () {
+                          var ownPath = McdData.fontOverrides[i].fontPath.value;
+                          for (var fontOverride in McdData.fontOverrides)
+                            fontOverride.fontPath.value = ownPath;
+                        },
+                        constraints: BoxConstraints.tight(const Size(30, 30)),
+                        child: const Icon(Icons.sync_alt, size: 17),
+                      ),
                     ),
                     makePropEditor(
                       McdData.fontOverrides[i].fontScale,
                       const PropTFOptions(hintText: "scale", constraints: BoxConstraints.tightFor(height: 30)),
                     ),
-                    makePropEditor(
-                      McdData.fontOverrides[i].letXOffset,
-                      const PropTFOptions(hintText: "xOff", constraints: BoxConstraints.tightFor(height: 30)),
-                    ),
-                    makePropEditor(
-                      McdData.fontOverrides[i].letYOffset,
-                      const PropTFOptions(hintText: "yOff", constraints: BoxConstraints.tightFor(height: 30)),
-                    ),
                     SmallButton(
                       onPressed: () => McdData.fontOverrides.removeAt(i),
-                      constraints: BoxConstraints.tight(const Size(25, 25)),
+                      constraints: BoxConstraints.tight(const Size(30, 30)),
                       child: const Icon(Icons.remove, size: 18),
                     ),
                     const SizedBox(),
@@ -505,17 +533,30 @@ class __McdFontsManagerState extends ChangeNotifierState<_McdFontsManager> {
             ),
           ),
           ChangeNotifierBuilder(
-            notifier: widget.mcd.file!.contentNotifier,
+            notifier: McdData.fontOverrides,
             builder: (context) {
               var usedFontIds = widget.mcd.usedFonts.keys.toList();
               usedFontIds.sort();
-              var usedFontsStatus = usedFontIds.map((e) => "$e${widget.mcd.usedFonts.containsKey(e) ? "*" : ""}");
-              return Padding(
-                padding: const EdgeInsets.only(left: 20, top: 10),
-                child: Text(
-                  "Font IDs used in this file: ${usedFontsStatus.join(", ")}",
-                  style: TextStyle(color: getTheme(context).textColor!.withOpacity(0.5)),
-                ),
+              var usedFontsStatus = usedFontIds.map((e) => "$e${McdData.fontOverrides.any((fo) => fo.fontId.value == e) ? "*" : ""}");
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(left: 20, top: 10),
+                    child: Text(
+                      "Font IDs used in this file: ${usedFontsStatus.join(", ")}",
+                      style: TextStyle(color: getTheme(context).textColor!.withOpacity(0.5)),
+                    ),
+                  ),
+                  if (McdData.fontOverrides.any((fo) => fo.fontId.value == 8 || fo.fontId.value == 9))
+                    Padding(
+                      padding: const EdgeInsets.only(left: 20, top: 10),
+                      child: Text(
+                        "Font IDs 8 and 9 are Angelic fonts. Don't override them unless you know what you're doing.",
+                        style: TextStyle(color: Colors.orange.shade700),
+                      ),
+                    ),
+                ],
               );
             }
           ),

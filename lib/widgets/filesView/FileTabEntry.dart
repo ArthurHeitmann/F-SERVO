@@ -1,6 +1,7 @@
 import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 
+import '../../stateManagement/changesExporter.dart';
 import '../../utils/utils.dart';
 import '../../widgets/theme/customTheme.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';
@@ -99,7 +100,10 @@ class _FileTabEntryState extends ChangeNotifierState<FileTabEntry> {
         buttonConfigs: [
           ContextMenuButtonConfig(
             "Save",
-            onPressed: () => widget.file.save(),
+            onPressed: () async {
+              await widget.file.save();
+              await processChangedFiles();
+            },
           ),
           ContextMenuButtonConfig(
             "Close",

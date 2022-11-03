@@ -103,3 +103,44 @@ Future<bool> hasMcdFonts() async {
   _hasMcdFontsComplete = true;
   return _hasMcdFonts;
 }
+
+String? pythonCmd;
+bool _hasPythonComplete = false;
+bool _hasPython = false;
+Future<bool> checkPythonVersion(String cmd) async {
+  var result = await Process.run(cmd, ["--version"]);
+  if (result.exitCode != 0)
+    return false;
+  var versionStr = result.stdout.toString();
+  var versionMatches = RegExp(r"Python (\d+)\.(\d+)\.(\d+)").allMatches(versionStr).first;
+  if (versionMatches.groupCount < 3)
+    return false;
+  var major = int.parse(versionMatches.group(1)!);
+  var minor = int.parse(versionMatches.group(2)!);
+
+  if (major < 3)
+    return false;
+  if (major == 3 && minor < 7)
+    return false;
+  
+  return true;
+}
+Future<bool> hasPython() async {
+  if (_hasPythonComplete)
+    return _hasPython;
+  
+  if (await checkPythonVersion("python3")) {
+    pythonCmd = "python3";
+    _hasPython = true;
+    _hasPythonComplete = true;
+    return true;
+  }
+  if (await checkPythonVersion("python")) {
+    pythonCmd = "python";
+    _hasPython = true;
+    _hasPythonComplete = true;
+    return true;
+  }
+  _hasPythonComplete = true;
+  return false;
+}
