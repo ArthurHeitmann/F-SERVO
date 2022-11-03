@@ -48,10 +48,39 @@ class CliImgOperationDrawFromFont extends CliImgOperation {
   }
 }
 
+/*
+class FontOptions:
+	fontPath: str
+	font: FreeTypeFont
+	fontHeight: int
+	fontScale: int
+	letXOffset: int
+	letYOffset: int
+*/
+class CliFontOptions {
+  final String fontPath;
+  final int fontHeight;
+  final double fontScale;
+  final double letXOffset;
+  final double letYOffset;
+
+  CliFontOptions(this.fontPath, this.fontHeight, this.fontScale, this.letXOffset, this.letYOffset);
+
+  Map<String, dynamic> toJson() {
+    return {
+      "path": fontPath,
+      "height": fontHeight,
+      "scale": fontScale,
+      "letXOffset": letXOffset,
+      "letYOffset": letYOffset,
+    };
+  }
+}
+
 class FontAtlasGenCliOptions {
   final String dstTexPath;
   final List<String> srcTexPaths;
-  final Map<int, Map<String, dynamic>> fonts;
+  final Map<int, CliFontOptions> fonts;
   final List<CliImgOperation> imgOperations;
 
   FontAtlasGenCliOptions(this.dstTexPath, this.srcTexPaths, this.fonts, this.imgOperations);
@@ -60,7 +89,7 @@ class FontAtlasGenCliOptions {
     return {
       "dstTexPath": dstTexPath,
       "srcTexPaths": srcTexPaths,
-      "fonts": { for (final entry in fonts.entries) entry.key.toString(): entry.value },
+      "fonts": { for (final entry in fonts.entries) entry.key.toString(): entry.value.toJson() },
       "operations": imgOperations.map((e) => e.toJson()).toList(),
     };
   }

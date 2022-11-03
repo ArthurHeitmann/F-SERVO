@@ -149,9 +149,17 @@ class McdLocalFont extends McdFont {
 
 class McdFontOverride with HasUuid {
   final NumberProp fontId;
+  final NumberProp fontHeight;
+  final NumberProp fontScale;
+  final NumberProp letXOffset;
+  final NumberProp letYOffset;
   final StringProp fontPath;
 
-  McdFontOverride(this.fontId, this.fontPath);
+  McdFontOverride(this.fontId, this.fontHeight) :
+    fontScale = NumberProp(1.0, false),
+    letXOffset = NumberProp(0.0, false),
+    letYOffset = NumberProp(0.0, false),
+    fontPath = StringProp("");
 
   void dispose() {
     fontId.dispose();
@@ -445,7 +453,7 @@ class McdData extends _McdFilePart {
     var nextFontId = availableFonts.keys.firstWhere((fId) => !fontOverrides.any((fo) => fo.fontId.value == fId), orElse: () => 0);
     fontOverrides.add(McdFontOverride(
       NumberProp(nextFontId, true),
-      StringProp("")
+      NumberProp(nextFontId != 0 ? availableFonts[nextFontId]!.fontHeight : 0, true)
     ));
   }
 
@@ -483,14 +491,10 @@ class McdData extends _McdFilePart {
         showToast("No ImageMagick binaries found");
         return;
       }
-      var newFonts = await makeFontsForSymbols(getUsedSymbols().toList());
-      usedFonts.clear();
-      usedFonts.addAll(newFonts);
-      for (var event in events) {
-        for (var paragraph in event.paragraphs) {
-          paragraph.fontId.value = paragraph.fontId.value;
-        }
-      }
+      await updateFontsTexture();
+    }
+    else if (fontOverrides.isNotEmpty) {
+      await updateFontsTexture();
     }
 
     var usedSymbols = getUsedSymbols().toList();
@@ -647,10 +651,27 @@ class McdData extends _McdFilePart {
 
     print("Saved MCD file");
   }
+
+  Future<void> updateFontsTexture() async {
+      var newFonts = await makeFontsForSymbols(getUsedSymbols().toList());
+      usedFonts.clear();
+      usedFonts.addAll(newFonts);
+      for (var event in events) {
+        for (var paragraph in event.paragraphs) {
+          paragraph.fontId.value = paragraph.fontId.value;
+        }
+      }
+  }
   
   Future<Map<int, McdLocalFont>> makeFontsForSymbols(List<UsedFontSymbol> symbols) async {
-    var fontOverridesMap = { for (var font in fontOverrides) font.fontId.value: font.fontPath.value };
-    var allValidPaths = await Future.wait(fontOverridesMap.values.map((path) => File(path).exists()));
+    if (!await hasMagickBins()) {
+      showToast("No ImageMagick binaries found");
+      throw Exception("No ImageMagick binaries found");
+    }
+
+    var fontOverridesMap = { for (var font in fontOverrides) font.fontId.value: font };
+    var allValidPaths = await Future.wait(
+      fontOverridesMap.values.map((f) => File(f.fontPath.value).exists()));
     if (allValidPaths.any((valid) => !valid)) {
       showToast("One or more font paths are invalid");
       throw Exception("Some font override paths are invalid");
@@ -662,16 +683,19 @@ class McdData extends _McdFilePart {
 
     // generate cli json args
     List<String> srcTexPaths = [];
-    Map<int, Map<String, dynamic>> fonts = {};
+    Map<int, CliFontOptions> fonts = {};
     List<CliImgOperation> imgOperations = [];
     for (int i = 0; i < symbols.length; i++) {
       var symbol = symbols[i];
       if (fontOverridesMap.containsKey(symbol.fontId)) {
         if (!fonts.containsKey(symbol.fontId)) {
-          fonts[symbol.fontId] = {
-            "path": fontOverridesMap[symbol.fontId],
-            "size": availableFonts[symbol.fontId]!.fontHeight,
-          };
+          fonts[symbol.fontId] = CliFontOptions(
+            fontOverridesMap[symbol.fontId]!.fontPath.value,
+            fontOverridesMap[symbol.fontId]!.fontHeight.value.toInt(),
+            fontOverridesMap[symbol.fontId]!.fontScale.value.toDouble(),
+            fontOverridesMap[symbol.fontId]!.letXOffset.value.toDouble(),
+            availableFonts[symbol.fontId]!.fontBelow.toDouble(),
+          );
         }
         imgOperations.add(CliImgOperationDrawFromFont(
           i, symbol.char, symbol.fontId

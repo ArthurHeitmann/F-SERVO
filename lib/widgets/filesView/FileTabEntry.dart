@@ -98,6 +98,10 @@ class _FileTabEntryState extends ChangeNotifierState<FileTabEntry> {
       contextMenu: GenericContextMenu(
         buttonConfigs: [
           ContextMenuButtonConfig(
+            "Save",
+            onPressed: () => widget.file.save(),
+          ),
+          ContextMenuButtonConfig(
             "Close",
             onPressed: () => widget.area.closeFile(widget.file),
           ),

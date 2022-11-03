@@ -8,6 +8,7 @@ import '../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/openFileTypes.dart';
 import '../../../stateManagement/otherFileTypes/McdData.dart';
+import '../../../stateManagement/otherFileTypes/McdFontDebugger.dart';
 import '../../../utils/utils.dart';
 import '../../misc/ColumnSeparated.dart';
 import '../../misc/RowSeparated.dart';
@@ -40,6 +41,10 @@ class _McdEditorState extends ChangeNotifierState<McdEditor> {
 
   @override
   Widget build(BuildContext context) {
+    var loadingIndicator = const SizedBox(
+      height: 2,
+      child: LinearProgressIndicator(backgroundColor: Colors.transparent,)
+    );
     return Column(
       children: [
         const SizedBox(height: 35),
@@ -47,21 +52,18 @@ class _McdEditorState extends ChangeNotifierState<McdEditor> {
           children: [
             _makeTabButton(0, "MCD Events"),
             _makeTabButton(1, "Font overrides"),
+            _makeTabButton(2, "Font debugger"),
           ]
         ),
         const Divider(height: 1,),
         Expanded(
           child: IndexedStack(
             index: activeTab,
-            children: [
-              widget.file.loadingState == LoadingState.loaded
-                ? _McdEditorBody(file: widget.file, mcd: widget.file.mcdData!)
-                : const SizedBox(
-                  height: 2,
-                  child: LinearProgressIndicator(backgroundColor: Colors.transparent,)
-                ),
-              _McdFontsManager(),
-            ],
+            children: widget.file.loadingState == LoadingState.loaded ? [
+              _McdEditorBody(file: widget.file, mcd: widget.file.mcdData!),
+              _McdFontsManager(widget.file.mcdData!),
+              McdFontDebugger(texturePath: widget.file.mcdData!.textureWtpPath!.value, fonts: widget.file.mcdData!.usedFonts.values.toList()),
+            ] : List.filled(3, loadingIndicator),
           ),
         ),
       ],
@@ -378,7 +380,9 @@ class __McdParagraphEditorState extends ChangeNotifierState<_McdParagraphEditor>
 }
 
 class _McdFontsManager extends ChangeNotifierWidget {
-  _McdFontsManager() : super(notifier: McdData.fontOverrides);
+  final McdData mcd;
+
+  _McdFontsManager(this.mcd) : super(notifier: McdData.fontOverrides);
 
   @override
   State<_McdFontsManager> createState() => __McdFontsManagerState();
@@ -391,60 +395,131 @@ class __McdFontsManagerState extends ChangeNotifierState<_McdFontsManager> {
   Widget build(BuildContext context) {
     return SmoothSingleChildScrollView(
       controller: scrollController,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: ColumnSeparated(
-          children: [
-            const Text("Font Overrides", textScaleFactor: 1.1,),
-            for (int i = 0; i < McdData.fontOverrides.length; i++)
-              Row(
-                key: Key(McdData.fontOverrides[i].uuid),
-                children: [
-                  makePropEditor(
-                    McdData.fontOverrides[i].fontId,
-                    const PropTFOptions(
-                      hintText: "ID",
-                      constraints: BoxConstraints.tightFor(height: 30, width: 60),
+      child: ColumnSeparated(
+        children: [
+          Table(
+            // columns:
+            // -1: spacer
+            // 0: fontID
+            // 1: fontHeight
+            // 2: fontFilePath
+            // 3: file path selector
+            // 4: scale
+            // 5: x Offset
+            // 6: y Offset
+            // 7: remove button
+            // 8: spacer
+            columnWidths: const {
+              0: FixedColumnWidth(16),
+              1: FixedColumnWidth(50 + 8),
+              2: FixedColumnWidth(50 + 8),
+              3: FlexColumnWidth(1),
+              4: FixedColumnWidth(30 + 8),
+              5: FixedColumnWidth(50 + 8),
+              6: FixedColumnWidth(50 + 8),
+              7: FixedColumnWidth(50 + 8),
+              8: FixedColumnWidth(30 + 8),
+              9: FixedColumnWidth(16),
+            },
+            defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+            children: [
+              TableRow(
+                children: ["", "Font ID", "Height", "File Path", "", "Scale", "xOff", "yOff", "", ""]
+                  .map((e) => Container(
+                    color: getTheme(context).tableBgColor,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: Center(
+                      child: Text(e, textScaleFactor: 1,)
                     ),
-                  ),
-                  const SizedBox(width: 10,),
-                  Expanded(
-                    child: makePropEditor(
+                  ))
+                  .toList(),
+              ),
+              for (int i = 0; i < McdData.fontOverrides.length; i++)
+                TableRow(
+                  key: ValueKey(McdData.fontOverrides[i].uuid),
+                  children: [
+                    const SizedBox(),
+                    makePropEditor(
+                      McdData.fontOverrides[i].fontId,
+                      const PropTFOptions(hintText: "ID", constraints: BoxConstraints.tightFor(height: 30)),
+                    ),
+                    makePropEditor(
+                      McdData.fontOverrides[i].fontHeight,
+                      const PropTFOptions(hintText: "height", constraints: BoxConstraints.tightFor(height: 30)),
+                    ),
+                    makePropEditor(
                       McdData.fontOverrides[i].fontPath,
-                      const PropTFOptions(hintText: "Font Path", constraints: BoxConstraints.tightFor(height: 30),),
+                      const PropTFOptions(hintText: "Font Path", constraints: BoxConstraints.tightFor(height: 30)),
                     ),
-                  ),
-                  const SizedBox(width: 10,),
-                  SmallButton(
-                    onPressed: () async {
-                      var selectedFontFile = await FilePicker.platform.pickFiles(
-                        type: FileType.custom,
-                        allowedExtensions: ["ttf", "otf"],
-                        allowMultiple: false,
-                      );
-                      if (selectedFontFile == null)
-                        return;
-                      var fontPath = selectedFontFile.files.first.path!;
-                      McdData.fontOverrides[i].fontPath.value = fontPath;
-                    },
-                    constraints: BoxConstraints.tight(const Size(30, 30)),
-                    child: const Icon(Icons.folder, size: 18),
-                  ),
-                  const SizedBox(width: 10,),
-                  SmallButton(
-                    onPressed: () => McdData.fontOverrides.removeAt(i),
-                    constraints: BoxConstraints.tight(const Size(30, 30)),
-                    child: const Icon(Icons.remove, size: 18),
-                  ),
-                ],
-              ),
-              SmallButton(
-                onPressed: () => McdData.addFontOverride(),
-                constraints: BoxConstraints.tight(const Size(30, 30)),
-                child: const Icon(Icons.add),
-              ),
-          ],
-        ),
+                    SmallButton(
+                      onPressed: () async {
+                        var selectedFontFile = await FilePicker.platform.pickFiles(
+                          type: FileType.custom,
+                          allowedExtensions: ["ttf", "otf"],
+                          allowMultiple: false,
+                        );
+                        if (selectedFontFile == null)
+                          return;
+                        var fontPath = selectedFontFile.files.first.path!;
+                        McdData.fontOverrides[i].fontPath.value = fontPath;
+                      },
+                      constraints: BoxConstraints.tight(const Size(25, 25)),
+                      child: const Icon(Icons.folder, size: 17),
+                    ),
+                    makePropEditor(
+                      McdData.fontOverrides[i].fontScale,
+                      const PropTFOptions(hintText: "scale", constraints: BoxConstraints.tightFor(height: 30)),
+                    ),
+                    makePropEditor(
+                      McdData.fontOverrides[i].letXOffset,
+                      const PropTFOptions(hintText: "xOff", constraints: BoxConstraints.tightFor(height: 30)),
+                    ),
+                    makePropEditor(
+                      McdData.fontOverrides[i].letYOffset,
+                      const PropTFOptions(hintText: "yOff", constraints: BoxConstraints.tightFor(height: 30)),
+                    ),
+                    SmallButton(
+                      onPressed: () => McdData.fontOverrides.removeAt(i),
+                      constraints: BoxConstraints.tight(const Size(25, 25)),
+                      child: const Icon(Icons.remove, size: 18),
+                    ),
+                    const SizedBox(),
+                  ].map((e) => Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    child: e,
+                  )).toList(),
+                ),
+            ],
+          ),
+          if (McdData.fontOverrides.isEmpty)
+            const Padding(
+                padding: EdgeInsets.only(left: 20),
+              child: Text("No font overrides"),
+            ),
+          Padding(
+            padding: const EdgeInsets.only(left: 20),
+            child: SmallButton(
+              onPressed: () => McdData.addFontOverride(),
+              constraints: BoxConstraints.tight(const Size(30, 30)),
+              child: const Icon(Icons.add),
+            ),
+          ),
+          ChangeNotifierBuilder(
+            notifier: widget.mcd.file!.contentNotifier,
+            builder: (context) {
+              var usedFontIds = widget.mcd.usedFonts.keys.toList();
+              usedFontIds.sort();
+              var usedFontsStatus = usedFontIds.map((e) => "$e${widget.mcd.usedFonts.containsKey(e) ? "*" : ""}");
+              return Padding(
+                padding: const EdgeInsets.only(left: 20, top: 10),
+                child: Text(
+                  "Font IDs used in this file: ${usedFontsStatus.join(", ")}",
+                  style: TextStyle(color: getTheme(context).textColor!.withOpacity(0.5)),
+                ),
+              );
+            }
+          ),
+        ],
       ),
     );
   }
