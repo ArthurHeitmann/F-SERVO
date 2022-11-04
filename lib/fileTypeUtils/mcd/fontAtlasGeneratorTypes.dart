@@ -48,29 +48,24 @@ class CliImgOperationDrawFromFont extends CliImgOperation {
   }
 }
 
-/*
-class FontOptions:
-	fontPath: str
-	font: FreeTypeFont
-	fontHeight: int
-	fontScale: int
-	letXOffset: int
-	letYOffset: int
-*/
 class CliFontOptions {
   final String fontPath;
   final int fontHeight;
   final double fontScale;
+  final int letXPadding;
+  final int letYPadding;
   final double letXOffset;
   final double letYOffset;
 
-  CliFontOptions(this.fontPath, this.fontHeight, this.fontScale, this.letXOffset, this.letYOffset);
+  CliFontOptions(this.fontPath, this.fontHeight, this.fontScale, this.letXPadding, this.letYPadding, this.letXOffset, this.letYOffset);
 
   Map<String, dynamic> toJson() {
     return {
       "path": fontPath,
       "height": fontHeight,
       "scale": fontScale,
+      "letXPadding": letXPadding,
+      "letYPadding": letYPadding,
       "letXOffset": letXOffset,
       "letYOffset": letYOffset,
     };
@@ -80,15 +75,17 @@ class CliFontOptions {
 class FontAtlasGenCliOptions {
   final String dstTexPath;
   final List<String> srcTexPaths;
+  final int letterSpacing;
   final Map<int, CliFontOptions> fonts;
   final List<CliImgOperation> imgOperations;
 
-  FontAtlasGenCliOptions(this.dstTexPath, this.srcTexPaths, this.fonts, this.imgOperations);
+  FontAtlasGenCliOptions(this.dstTexPath, this.srcTexPaths, this.letterSpacing, this.fonts, this.imgOperations);
 
   Map<String, dynamic> toJson() {
     return {
-      "dstTexPath": dstTexPath,
       "srcTexPaths": srcTexPaths,
+      "dstTexPath": dstTexPath,
+      "letterSpacing": letterSpacing,
       "fonts": { for (final entry in fonts.entries) entry.key.toString(): entry.value.toJson() },
       "operations": imgOperations.map((e) => e.toJson()).toList(),
     };

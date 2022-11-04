@@ -150,20 +150,27 @@ class McdLocalFont extends McdFont {
 }
 
 class McdFontOverride with HasUuid {
-  final NumberProp fontId;
-  final NumberProp fontHeight;
-  int fontBelow;
-  final NumberProp fontScale;
+  final ValueNestedNotifier<int> fontIds;
   final StringProp fontPath;
+  final NumberProp scale;
+  final NumberProp letXPadding;
+  final NumberProp letYPadding;
+  final NumberProp xOffset;
+  final NumberProp yOffset;
 
-  McdFontOverride(this.fontId, this.fontHeight, this.fontBelow) :
-    fontScale = NumberProp(1.0, false),
-    fontPath = StringProp("");
+  McdFontOverride(int firstFontId) :
+    fontIds = ValueNestedNotifier([firstFontId]),
+    fontPath = StringProp(""),
+    scale = NumberProp(1.0, false),
+    letXPadding = NumberProp(0.0, true),
+    letYPadding = NumberProp(0.0, true),
+    xOffset = NumberProp(0.0, false),
+    yOffset = NumberProp(0.0, false);
 
   void dispose() {
-    fontId.dispose();
-    fontHeight.dispose();
-    fontScale.dispose();
+    fontIds.dispose();
+    scale.dispose();
+    yOffset.dispose();
     fontPath.dispose();
   }
 }
@@ -346,6 +353,7 @@ class McdEvent extends _McdFilePart with HasUuid {
 class McdData extends _McdFilePart {
   static Map<int, McdGlobalFont> availableFonts = {};
   static ValueNestedNotifier<McdFontOverride> fontOverrides = ValueNestedNotifier([]);
+  static NumberProp fontAtlasLetterSpacing = NumberProp(0, true);
   static ChangeNotifier fontChanges = ChangeNotifier();
 
   final StringProp? textureWtaPath;
@@ -452,12 +460,17 @@ class McdData extends _McdFilePart {
   }
 
   static void addFontOverride() {
-    var nextFontId = availableFonts.keys.firstWhere((fId) => !fontOverrides.any((fo) => fo.fontId.value == fId), orElse: () => 0);
-    fontOverrides.add(McdFontOverride(
-      NumberProp(nextFontId, true),
-      NumberProp(nextFontId != 0 ? availableFonts[nextFontId]!.fontHeight : 38, true),
-      nextFontId != 0 ? availableFonts[nextFontId]!.fontBelow : -10,
-    ));
+    var overriddenFontIds = fontOverrides
+      .expand((fo) => fo.fontIds)
+      .toSet();
+    var nextFontId = availableFonts.keys
+      .firstWhere((fId) => 
+        !overriddenFontIds.contains(fId), orElse: () => -1);
+    if (nextFontId == -1) {
+      showToast("No more fonts to override");
+      return;
+    }
+    fontOverrides.add(McdFontOverride(nextFontId,));
   }
 
   static void removeFontOverride(int index) {
@@ -678,11 +691,12 @@ class McdData extends _McdFilePart {
     }
 
     var fontOverridesMap = {
-      for (var font in fontOverrides)
-        font.fontId.value: font
+      for (var fontOverride in fontOverrides)
+        for (var fontId in fontOverride.fontIds)
+          fontId: fontOverride
     };
     var allValidPaths = await Future.wait(
-      fontOverridesMap.values.map((f) => File(f.fontPath.value).exists()));
+      fontOverrides.map((f) => File(f.fontPath.value).exists()));
     if (allValidPaths.any((valid) => !valid)) {
       showToast("One or more font paths are invalid");
       throw Exception("Some font override paths are invalid");
@@ -700,11 +714,15 @@ class McdData extends _McdFilePart {
       var symbol = symbols[i];
       if (fontOverridesMap.containsKey(symbol.fontId)) {
         if (!fonts.containsKey(symbol.fontId)) {
+          var scaleFact = 44 / availableFonts[symbol.fontId]!.fontHeight;
           fonts[symbol.fontId] = CliFontOptions(
             fontOverridesMap[symbol.fontId]!.fontPath.value,
-            fontOverridesMap[symbol.fontId]!.fontHeight.value.toInt(),
-            fontOverridesMap[symbol.fontId]!.fontScale.value.toDouble(),
-            0, 0,
+            availableFonts[symbol.fontId]!.fontHeight,
+            fontOverridesMap[symbol.fontId]!.scale.value.toDouble(),
+            (fontOverridesMap[symbol.fontId]!.letXPadding.value * scaleFact).toInt(),
+            (fontOverridesMap[symbol.fontId]!.letYPadding.value * scaleFact).toInt(),
+            fontOverridesMap[symbol.fontId]!.xOffset.value.toDouble() * scaleFact,
+            fontOverridesMap[symbol.fontId]!.yOffset.value.toDouble() * scaleFact,
           );
         }
         imgOperations.add(CliImgOperationDrawFromFont(
@@ -730,7 +748,9 @@ class McdData extends _McdFilePart {
 
     var texPngPath = join(dirname(textureWtpPath!.value), "${basename(textureWtpPath!.value)}.png");
     var cliArgs = FontAtlasGenCliOptions(
-      texPngPath, srcTexPaths, fonts, imgOperations
+      texPngPath, srcTexPaths,
+      McdData.fontAtlasLetterSpacing.value.toInt(),
+      fonts, imgOperations
     );
     var cliJson = jsonEncode(cliArgs.toJson());
     cliJson = base64Encode(utf8.encode(cliJson));
@@ -755,18 +775,12 @@ class McdData extends _McdFilePart {
       atlasInfo = FontAtlasGenResult.fromJson(atlasInfoJson);
     } catch (e) {
       showToast("Font atlas generator failed");
+      print(e);
       print(await stdout);
       print(await stderr);
       throw Exception("Font atlas generator failed");
     }
     
-    // update font override options
-    for (var fontId in fontOverridesMap.keys.where((k) => atlasInfo.fonts.containsKey(k))) {
-      var font = atlasInfo.fonts[fontId]!;
-      var fontOverride = fontOverridesMap[fontId]!;
-      fontOverride.fontScale.value = font.scale;
-      fontOverride.fontBelow = font.baseline - fontOverride.fontHeight.value.toInt();
-    }
     // generate fonts
     Map<int, List<Tuple2<UsedFontSymbol, FontAtlasGenSymbol>>> generatedSymbols = {};
     for (var genSym in atlasInfo.symbols.entries) {
@@ -790,7 +804,7 @@ class McdData extends _McdFilePart {
         );
       }
       var fontBelow = atlasInfo.fonts.containsKey(fontId)
-        ? atlasInfo.fonts[fontId]!.baseline - fontOverridesMap[fontId]!.fontHeight.value.toInt()
+        ? atlasInfo.fonts[fontId]!.baseline - availableFonts[fontId]!.fontHeight
         : font.fontBelow;
       exportFonts[fontId] = McdLocalFont(
         fontId, font.fontWidth, font.fontHeight,

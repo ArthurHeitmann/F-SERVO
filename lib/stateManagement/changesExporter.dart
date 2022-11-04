@@ -31,7 +31,7 @@ Future<void> processChangedFiles() async {
   }
 
   Set<String> dats = changedDatFiles;
-  changedPakFiles = {};
+  changedDatFiles = {};
   for (var pakDir in paks) {
     var datDir = dirname(dirname(pakDir));
     if (!datDir.endsWith(".dat"))
