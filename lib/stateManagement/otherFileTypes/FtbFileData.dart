@@ -166,6 +166,10 @@ class FtbData extends ChangeNotifier {
       showToast("No Python found");
       throw Exception("No Python found");
     }
+    if (!await hasPipDeps()) {
+      showToast("Couldn't install Python dependencies");
+      throw Exception("Couldn't install Python dependencies");
+    }
     
     var fontOverrideRes = McdData.fontOverrides.where((fo) => fo.fontIds.contains(fontId));
     var fontOverride = fontOverrideRes.isNotEmpty ? fontOverrideRes.first : null;

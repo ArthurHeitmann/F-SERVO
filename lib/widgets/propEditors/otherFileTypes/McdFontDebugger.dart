@@ -97,13 +97,13 @@ class _McdFontDebuggerState extends ChangeNotifierState<McdFontDebugger> {
             areaWidth = squareSize * imageSize!.width / imageSize!.height;
         }
         var symbolsCount = sum(widget.fonts.map((e) => e.supportedSymbols.length));
-        return Center(
-          child: SizedBox(
-            width: areaWidth,
-            height: areaHeight,
-            child: InteractiveViewer(
-              minScale: 1,
-              maxScale: 10,
+        return InteractiveViewer(
+          minScale: 1,
+          maxScale: 10,
+          child: Center(
+            child: SizedBox(
+              width: areaWidth,
+              height: areaHeight,
               child: Stack(
                 children: [
                   Positioned.fill(

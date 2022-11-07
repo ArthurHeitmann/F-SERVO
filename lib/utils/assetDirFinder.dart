@@ -144,3 +144,20 @@ Future<bool> hasPython() async {
   _hasPythonComplete = true;
   return false;
 }
+
+bool _hasPipDepsComplete = false;
+bool _hasPipDeps = false;
+Future<bool> hasPipDeps() async {
+  if (_hasPipDepsComplete)
+    return _hasPipDeps;
+  await assetDirDone;
+  if (!await hasPython())
+    return false;
+
+  var pipDepsCheckerPath = join(assetsDir!, "pythonDepsChecker.py");
+  var result = await Process.run(pythonCmd!, [pipDepsCheckerPath]);
+  print(result.stdout);
+  _hasPipDeps = result.exitCode == 0;
+  _hasPipDepsComplete = true;
+  return _hasPipDeps;
+}

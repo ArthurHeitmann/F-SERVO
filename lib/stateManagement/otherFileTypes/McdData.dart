@@ -691,6 +691,10 @@ class McdData extends _McdFilePart {
       showToast("No Python found");
       throw Exception("No Python found");
     }
+    if (!await hasPipDeps()) {
+      showToast("Couldn't install Python dependencies");
+      throw Exception("Couldn't install Python dependencies");
+    }
 
     var fontOverridesMap = {
       for (var fontOverride in fontOverrides)
