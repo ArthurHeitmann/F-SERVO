@@ -64,12 +64,12 @@ class WtaFileTextureInfo {
 }
 
 class WtaFile {
-  late final WtaFileHeader header;
-  late final List<int> textureOffsets;
-  late final List<int> textureSizes;
-  late final List<int> textureFlags;
-  late final List<int> textureIdx;
-  late final List<WtaFileTextureInfo> textureInfo;
+  late WtaFileHeader header;
+  late List<int> textureOffsets;
+  late List<int> textureSizes;
+  late List<int> textureFlags;
+  late List<int> textureIdx;
+  late List<WtaFileTextureInfo> textureInfo;
   
   WtaFile.read(ByteDataWrapper bytes) {
     header = WtaFileHeader.read(bytes);
@@ -119,5 +119,14 @@ class WtaFile {
       textureInfo[i].write(bytes);
 
     await File(path).writeAsBytes(bytes.buffer.asUint8List());
+  }
+
+  void updateHeader() {
+    header.numTex = textureOffsets.length;
+    header.offsetTextureOffsets = 0x20;
+    header.offsetTextureSizes = header.offsetTextureOffsets + textureOffsets.length * 4;
+    header.offsetTextureFlags = header.offsetTextureSizes + textureSizes.length * 4;
+    header.offsetTextureIdx = header.offsetTextureFlags + textureFlags.length * 4;
+    header.offsetTextureInfo = header.offsetTextureIdx + textureIdx.length * 4;
   }
 }

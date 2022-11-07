@@ -5,7 +5,7 @@ import 'dart:io';
 import 'package:image/image.dart';
 import 'package:path/path.dart';
 
-import '../fileTypeUtils/ftb/ftbReader.dart';
+import '../fileTypeUtils/ftb/ftbIO.dart';
 import '../fileTypeUtils/utils/ByteDataWrapper.dart';
 import '../fileTypeUtils/wta/wtaReader.dart';
 

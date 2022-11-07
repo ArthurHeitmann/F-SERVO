@@ -429,6 +429,11 @@ class McdHierarchyEntry extends FileHierarchyEntry {
     : super(name, path, false, true);
 }
 
+class FtbHierarchyEntry extends FileHierarchyEntry {
+  FtbHierarchyEntry(StringProp name, String path)
+    : super(name, path, false, true);
+}
+
 class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable {
   HierarchyEntry? _selectedEntry;
 
@@ -501,6 +506,12 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
         else
           throw FileSystemException("File not found: $filePath");
       }
+      else if (filePath.endsWith(".ftb")) {
+        if (await File(filePath).exists())
+          entry = openGenericFile<FtbHierarchyEntry>(filePath, parent, (n ,p) => FtbHierarchyEntry(n, p));
+        else
+          throw FileSystemException("File not found: $filePath");
+      }
       else
         throw FileSystemException("Unsupported file type: $filePath");
       
@@ -549,7 +560,7 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
     // process DAT files
     List<Future<void>> futures = [];
     datFilePaths ??= await getDatFileList(datExtractDir);
-    const supportedFileEndings = { ".pak", "_scp.bin", ".tmd", ".smd", ".mcd" };
+    const supportedFileEndings = { ".pak", "_scp.bin", ".tmd", ".smd", ".mcd", ".ftb" };
     for (var file in datFilePaths) {
       if (supportedFileEndings.every((ending) => !file.endsWith(ending)))
         continue;
@@ -568,6 +579,8 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
         openGenericFile<SmdHierarchyEntry>(file, datEntry, (n ,p) => SmdHierarchyEntry(n, p));
       else if (file.endsWith(".mcd"))
         openGenericFile<McdHierarchyEntry>(file, datEntry, (n ,p) => McdHierarchyEntry(n, p));
+      else if (file.endsWith(".ftb"))
+        openGenericFile<FtbHierarchyEntry>(file, datEntry, (n ,p) => FtbHierarchyEntry(n, p));
       else
         throw FileSystemException("Unsupported file type: $file");
     }

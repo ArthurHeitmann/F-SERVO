@@ -34,8 +34,9 @@ class CliImgOperationDrawFromTexture extends CliImgOperation {
 class CliImgOperationDrawFromFont extends CliImgOperation {
   final String drawChar;
   final int charFontId;
+  final CliImgOperationDrawFromTexture? fallback;
 
-  CliImgOperationDrawFromFont(int id, this.drawChar, this.charFontId) : super(1, id);
+  CliImgOperationDrawFromFont(int id, this.drawChar, this.charFontId, this.fallback) : super(1, id);
 
   @override
   Map<String, dynamic> toJson() {
@@ -44,6 +45,8 @@ class CliImgOperationDrawFromFont extends CliImgOperation {
       "id": id.toString(),
       "drawChar": drawChar,
       "charFontId": charFontId.toString(),
+      if (fallback != null)
+        "fallback": fallback!.toJson(),
     };
   }
 }
@@ -76,10 +79,11 @@ class FontAtlasGenCliOptions {
   final String dstTexPath;
   final List<String> srcTexPaths;
   final int letterSpacing;
+  final int minTexSize;
   final Map<int, CliFontOptions> fonts;
   final List<CliImgOperation> imgOperations;
 
-  FontAtlasGenCliOptions(this.dstTexPath, this.srcTexPaths, this.letterSpacing, this.fonts, this.imgOperations);
+  FontAtlasGenCliOptions(this.dstTexPath, this.srcTexPaths, this.letterSpacing, this.minTexSize, this.fonts, this.imgOperations);
 
   Map<String, dynamic> toJson() {
     return {

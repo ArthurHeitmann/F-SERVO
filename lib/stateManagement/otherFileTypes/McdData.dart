@@ -197,6 +197,7 @@ class McdLine extends _McdFilePart with HasUuid {
     var charMatcher = RegExp(r"<[^>]+>|[^ ≡]");
     var symbols = charMatcher.allMatches(text.value)
       .map((m) => m.group(0)!)
+      .where((s) => s.length == 1)
       .map((c) {
         var code = c != "…" ? c.codeUnitAt(0) : 0x80;
         return UsedFontSymbol(code, c, -1);
@@ -217,9 +218,10 @@ class McdLine extends _McdFilePart with HasUuid {
         letters.add(McdFileLetter(0x80, 0, const []));
       else if (char == "≡")
         letters.add(McdFileLetter(0x8020, 9, const []));
-      else if (char == "<" && str.substring(i, i + 5) == "<Alt>")
+      else if (char == "<" && i + 5 <= str.length && str.substring(i, i + 5) == "<Alt>") {
         letters.add(McdFileLetter(0x8020, 121, const []));
-      else if (char == "<" && str.substring(i, i + 11) == "<Special_0x")
+        i += 4;
+      } else if (char == "<" && i + 11 <= str.length && str.substring(i, i + 11) == "<Special_0x")
         throw Exception("Special symbols are not supported");
       else {
         var charCode = char.codeUnitAt(0);
@@ -725,8 +727,23 @@ class McdData extends _McdFilePart {
             fontOverridesMap[symbol.fontId]!.yOffset.value.toDouble() * scaleFact,
           );
         }
+        CliImgOperationDrawFromTexture? fallback;
+        var fontSymbol = availableFonts[symbol.fontId]?.supportedSymbols[symbol.code];
+        if (fontSymbol != null) {
+          var globalTex = availableFonts[symbol.fontId]!;
+          int texId = srcTexPaths.indexOf(globalTex.atlasTexturePath);
+          if (texId == -1) {
+            srcTexPaths.add(globalTex.atlasTexturePath);
+            texId = srcTexPaths.length - 1;
+          }
+          fallback = CliImgOperationDrawFromTexture(
+            i, texId,
+            fontSymbol.x, fontSymbol.y,
+            fontSymbol.width, fontSymbol.height,
+          );
+        }
         imgOperations.add(CliImgOperationDrawFromFont(
-          i, symbol.char, symbol.fontId
+          i, symbol.char, symbol.fontId, fallback
         ));
       } else {
         var globalTex = availableFonts[symbol.fontId]!;
@@ -750,6 +767,7 @@ class McdData extends _McdFilePart {
     var cliArgs = FontAtlasGenCliOptions(
       texPngPath, srcTexPaths,
       McdData.fontAtlasLetterSpacing.value.toInt(),
+      256,
       fonts, imgOperations
     );
     var cliJson = jsonEncode(cliArgs.toJson());
@@ -766,7 +784,7 @@ class McdData extends _McdFilePart {
       showToast("Font atlas generator failed");
       print(await stdout);
       print(await stderr);
-      throw Exception("Font atlas generator failed");
+      throw Exception("Font atlas generator failed for file $texPngPath");
     }
     // parse cli output
     FontAtlasGenResult atlasInfo;
@@ -806,6 +824,7 @@ class McdData extends _McdFilePart {
       var fontBelow = atlasInfo.fonts.containsKey(fontId)
         ? atlasInfo.fonts[fontId]!.baseline - availableFonts[fontId]!.fontHeight
         : font.fontBelow;
+      fontBelow = min(fontBelow, 0);
       exportFonts[fontId] = McdLocalFont(
         fontId, font.fontWidth, font.fontHeight,
         fontBelow , exportSymbols

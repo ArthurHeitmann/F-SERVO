@@ -16,6 +16,7 @@ import 'Property.dart';
 import 'changesExporter.dart';
 import 'hasUuid.dart';
 import 'miscValues.dart';
+import 'otherFileTypes/FtbFileData.dart';
 import 'otherFileTypes/McdData.dart';
 import 'otherFileTypes/SmdFileData.dart';
 import 'otherFileTypes/TmdFileData.dart';
@@ -55,6 +56,8 @@ class OpenFileData extends ChangeNotifier with Undoable, HasUuid {
       return SmdFileData(name, path, secondaryName: secondaryName);
     else if (path.endsWith(".mcd"))
       return McdFileData(name, path, secondaryName: secondaryName);
+    else if (path.endsWith(".ftb"))
+      return FtbFileData(name, path, secondaryName: secondaryName);
     else
       return TextFileData(name, path, secondaryName: secondaryName);
   }
@@ -70,6 +73,8 @@ class OpenFileData extends ChangeNotifier with Undoable, HasUuid {
       return FileType.smd;
     else if (path.endsWith(".mcd"))
       return FileType.mcd;
+    else if (path.endsWith(".ftb"))
+      return FileType.ftb;
     else
       return FileType.text;
   }
@@ -392,6 +397,38 @@ class McdFileData extends OpenFileData {
   @override
   void dispose() {
     mcdData?.dispose();
+    super.dispose();
+  }
+}
+
+class FtbFileData extends OpenFileData {
+  FtbData? ftbData;
+
+  FtbFileData(super.name, super.path, { super.secondaryName });
+
+  @override
+  Future<void> load() async {
+    if (_loadingState != LoadingState.notLoaded)
+      return;
+    _loadingState = LoadingState.loading;
+
+    ftbData = await FtbData.fromFtbFile(path);
+    await ftbData!.extractTextures();
+
+    await super.load();
+  }
+
+  @override
+  Future<void> save() async {
+    await ftbData?.save();
+    var datDir = dirname(path);
+    changedDatFiles.add(datDir);
+    await super.save();
+  }
+
+  @override
+  void dispose() {
+    ftbData?.dispose();
     super.dispose();
   }
 }
