@@ -183,14 +183,17 @@ class FtbData extends ChangeNotifier {
     }
 
     // generate cli json args
+    var heightScale = fontOverride.heightScale.value.toDouble();
+    var fontHeight = McdData.availableFonts[fontId]!.fontHeight * heightScale;
+    var scaleFact = 44 / fontHeight;
     CliFontOptions? font = CliFontOptions(
       fontOverride.fontPath.value,
-      chars[0].height,
+      fontHeight.toInt(),
       fontOverride.scale.value.toDouble(),
-      fontOverride.letXPadding.value.toInt(),
-      fontOverride.letYPadding.value.toInt(),
-      fontOverride.xOffset.value.toDouble(),
-      fontOverride.yOffset.value.toDouble(),
+      (fontOverride.letXPadding.value * scaleFact).toInt(),
+      (fontOverride.letYPadding.value * scaleFact).toInt(),
+      (fontOverride.xOffset.value * scaleFact).toDouble(),
+      (fontOverride.yOffset.value * scaleFact).toDouble(),
     );
     const textureBatchesCount = 4;
     var charsPerBatch = (chars.length / textureBatchesCount).ceil();

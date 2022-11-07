@@ -32,7 +32,7 @@ class __McdFontsManagerState extends ChangeNotifierState<FontsManager> {
 
   @override
   Widget build(BuildContext context) {
-    const columnNames = ["", "Font IDs", "TTF/OTF Path", "", "Scale", "xPadding", "yPadding", "xOffset", "yOffset", "", ""];
+    const columnNames = ["", "Font IDs", "absScale", "TTF/OTF Path", "", "locScale", "xPadding", "yPadding", "xOffset", "yOffset", "", ""];
 
     int iStart = 0;
     int iEnd = McdData.fontOverrides.length;
@@ -50,27 +50,29 @@ class __McdFontsManagerState extends ChangeNotifierState<FontsManager> {
             // columns:
             // X: spacer
             // 0: fontIDs
-            // 1: fontFilePath
-            // 2: file path selector
-            // 3: scale
-            // 4: x letter padding
-            // 5: y letter padding
-            // 6: y Offset
+            // 1: height scale
+            // 2: fontFilePath
+            // 3: file path selector
+            // 4: scale
+            // 5: x letter padding
+            // 6: y letter padding
             // 7: y Offset
-            // 8: remove button
+            // 8: y Offset
+            // 9: remove button
             // X: spacer
             columnWidths: const {
               0: FixedColumnWidth(16),
               1: FixedColumnWidth(100 + 8),
-              2: FlexColumnWidth(1),
-              3: FixedColumnWidth(30 + 8),
-              4: FixedColumnWidth(60 + 8),
+              2: FixedColumnWidth(60 + 8),
+              3: FlexColumnWidth(1),
+              4: FixedColumnWidth(30 + 8),
               5: FixedColumnWidth(60 + 8),
               6: FixedColumnWidth(60 + 8),
               7: FixedColumnWidth(60 + 8),
               8: FixedColumnWidth(60 + 8),
-              9: FixedColumnWidth(30 + 8),
-              10: FixedColumnWidth(16),
+              9: FixedColumnWidth(60 + 8),
+              10: FixedColumnWidth(30 + 8),
+              11: FixedColumnWidth(16),
             },
             defaultVerticalAlignment: TableCellVerticalAlignment.middle,
             children: [
@@ -120,6 +122,10 @@ class __McdFontsManagerState extends ChangeNotifierState<FontsManager> {
                           icon: const Icon(Icons.edit_outlined),
                         ),
                       ],
+                    ),
+                    makePropEditor(
+                      McdData.fontOverrides[i].heightScale,
+                      const PropTFOptions(hintText: "absScale", constraints: BoxConstraints.tightFor(height: 30)),
                     ),
                     PrimaryPropTextField(
                       prop: McdData.fontOverrides[i].fontPath,
