@@ -91,7 +91,7 @@ XmlElement yaxToXml(ByteDataWrapper bytes, { includeAnnotations = true }) {
 
 Future<void> yaxFileToXmlFile(String yaxFilePath) async {
   print("Converting $yaxFilePath to xml");
-  messageLog.add("Converting ${path.basename(yaxFilePath)}");
+  messageLog.add("Converting ${path.basename(yaxFilePath)}...");
 
   var rawBytes = await File(yaxFilePath).readAsBytes();
   var bytes = ByteDataWrapper(rawBytes.buffer);
@@ -102,4 +102,6 @@ Future<void> yaxFileToXmlFile(String yaxFilePath) async {
   await xmlFile.writeAsString('<?xml version="1.0" encoding="utf-8"?>\n');
   await xmlFile.writeAsString(xmlString, mode: FileMode.append);
   await xmlFile.writeAsString("\n", mode: FileMode.append);
+  
+  messageLog.add("Converting ${path.basename(yaxFilePath)} done");
 }

@@ -10,7 +10,7 @@ import '../utils/ByteDataWrapper.dart';
 import 'datHashGenerator.dart';
 
 Future<void> repackDat(String datDir, String exportPath) async {
-  messageLog.add("Repacking ${path.basename(exportPath)}");
+  messageLog.add("Repacking ${path.basename(exportPath)}...");
   
   var fileList = await getDatFileList(datDir);
   var fileNames = fileList.map((e) => path.basename(e)).toList();
@@ -124,4 +124,6 @@ Future<void> repackDat(String datDir, String exportPath) async {
   }
 
   await datFile.writeAsBytes(datBytes.buffer.asUint8List());
+
+  messageLog.add("Repacking ${path.basename(exportPath)} done");
 }

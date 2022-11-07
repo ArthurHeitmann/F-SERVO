@@ -51,7 +51,7 @@ Future<void> _extractPakYax(_HeaderEntry meta, int size, ByteDataWrapper bytes, 
 
 Future<List<String>> extractPakFiles(String pakPath, { bool yaxToXml = false }) async {
   print("Extracting pak files from $pakPath");
-  messageLog.add("Extracting ${path.basename(pakPath)}");
+  messageLog.add("Extracting ${path.basename(pakPath)}...");
 
   var pakFile = File(pakPath);
   var rawBytes = await pakFile.readAsBytes();
@@ -94,6 +94,8 @@ Future<List<String>> extractPakFiles(String pakPath, { bool yaxToXml = false }) 
       await yaxFileToXmlFile(yaxPath);
     }));
   }
+  
+  messageLog.add("Extracting ${path.basename(pakPath)} done");
 
   return List<String>.generate(fileCount, (index) => path.join(extractDir, "$index.yax"));
 }

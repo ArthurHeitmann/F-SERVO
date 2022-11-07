@@ -73,7 +73,7 @@ class _FileEntry {
 }
 
 Future<void> repackPak(String pakDir) async {
-  messageLog.add("Repacking ${path.basename(pakDir)}");
+  messageLog.add("Repacking ${path.basename(pakDir)}...");
   
   var infoJsonFile = File(path.join(pakDir, "pakInfo.json"));
   var pakInfo = jsonDecode(await infoJsonFile.readAsString());
@@ -104,4 +104,5 @@ Future<void> repackPak(String pakDir) async {
   await pakFile.writeAsBytes(bytes.buffer.asUint8List());
 
   print("Pak file $pakFileName created (${fileEntries.length} file repacked)");
+  messageLog.add("Repacking ${path.basename(pakDir)} done");
 }

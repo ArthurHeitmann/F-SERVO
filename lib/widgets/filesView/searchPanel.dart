@@ -61,7 +61,7 @@ class _SearchPanelState extends State<SearchPanel> {
 
   @override
   void initState() {
-    updateSearchStream = debounce(_updateSearchStream, 250);
+    updateSearchStream = debounce(_updateSearchStream, 750);
 
     extensions.addListener(updateSearchStream);
     path.addListener(updateSearchStream);
