@@ -14,6 +14,7 @@ import '../../misc/selectionPopup.dart';
 import '../customXmlProps/areaEditor.dart';
 import '../customXmlProps/commandEditor.dart';
 import '../customXmlProps/conditionEditor.dart';
+import '../customXmlProps/curveEditor.dart';
 import '../customXmlProps/entityEditor.dart';
 import '../customXmlProps/layoutsEditor.dart';
 import '../customXmlProps/paramEditor.dart';
@@ -325,6 +326,11 @@ class XmlPresets {
     ),
   );
 
+  static XmlRawPreset curve = XmlRawPreset(
+    <T extends PropTextField>(prop, showDetails) => CurveEditor(prop: prop, showDetails: showDetails),
+    (cxt) => null,
+  );
+
   static XmlRawPreset fallback = XmlRawPreset(
     <T extends PropTextField>(prop, showDetails) => XmlPropEditor<T>(prop: prop, showDetails: showDetails),
     (cxt) {
@@ -371,6 +377,10 @@ XmlRawPreset getXmlPropPreset(XmlProp prop) {
   // variable
   if (prop.length == 3 && prop[0].tagName == "id" && prop[1].tagName == "name" && prop[2].tagName == "value") {
     return XmlPresets.variable;
+  }
+  // curve
+  if (prop.get("controls") != null && prop.get("nodes") != null) {
+    return XmlPresets.curve;
   }
   // fallback
   return XmlPresets.fallback;

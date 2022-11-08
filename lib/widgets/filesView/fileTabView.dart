@@ -96,9 +96,11 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
       child: setupShortcuts(
         child: Stack(
           children: [
-            widget.viewArea.currentFile != null
-              ? makeFilesStack(context)
-              : makeEmptyTab(context),
+            Positioned.fill(
+              child: widget.viewArea.currentFile != null
+                ? makeFilesStack(context)
+                : makeEmptyTab(context),
+            ),
             makeTabBar(),
           ],
         ),

@@ -17,10 +17,10 @@ class XmlPropEditor<T extends PropTextField> extends ChangeNotifierWidget {
   XmlPropEditor({super.key, required this.prop, required this.showDetails, this.showTagName = true}) : super(notifier: prop);
 
   @override
-  State<XmlPropEditor> createState() => _XmlPropEditorState<T>();
+  State<XmlPropEditor> createState() => XmlPropEditorState<T>();
 }
 
-class _XmlPropEditorState<T extends PropTextField> extends ChangeNotifierState<XmlPropEditor> {
+class XmlPropEditorState<T extends PropTextField> extends ChangeNotifierState<XmlPropEditor> {
   @override
   Widget build(BuildContext context) {
     return Column(

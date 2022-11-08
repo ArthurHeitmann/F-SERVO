@@ -1,6 +1,7 @@
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:xml/xml.dart';
 
@@ -261,5 +262,59 @@ class EntitySyncedObject extends SyncedObject {
     
     updateXmlPropWithStr(prop, "scale", propXml);
     updateXmlPropWithStr(prop, "objId", propXml);
+  }
+}
+
+class BezierSyncedObject extends SyncedObject {
+  // syncable props: attribute, parent?, controls, nodes
+
+  BezierSyncedObject(XmlProp prop) : super(SyncedObjectsType.bezier, prop) {
+    _syncedProps.addAll(["attribute", "parent", "controls", "nodes"]);
+  }
+
+  @override
+  void updateInternal(SyncMessage message) {
+    print("updating bezier $uuid");
+    var propXmlString = message.args["propXml"] as String;
+    var propXml = XmlDocument.parse(propXmlString).rootElement;
+
+    var controlsCur = prop.get("controls")!;
+    var controlsNew = propXml.getElement("controls")!;
+    updateXmlPropChildren(controlsCur, controlsNew, "cp");
+
+    var nodesCur = prop.get("nodes")!;
+    var nodesNew = propXml.getElement("nodes")!;
+    updateXmlPropChildren(nodesCur, nodesNew, "point");
+  }
+
+  void updateXmlPropChildren(XmlProp root, XmlElement newRoot, String childTag) {
+    var children = root
+      .getAll("value")
+      .map((e) => e.get(childTag)!)
+      .toList();
+    var newChildren = newRoot
+      .findElements("value")
+      .map((e) => e.getElement(childTag)!)
+      .toList();
+    var newChildrenCount = newChildren.length;
+    var childrenCount = children.length;
+    var minCount = min(childrenCount, newChildrenCount);
+    for (var i = 0; i < minCount; i++) {
+      var childProp = children[i];
+      var childXml = newChildren[i];
+      childProp.value.updateWith(childXml.text);
+    }
+    if (childrenCount > newChildrenCount) {
+      for (var i = newChildrenCount; i < childrenCount; i++)
+        children[i].dispose();
+      for (var i = newChildrenCount; i < childrenCount; i++)
+        root.remove(children[i]);
+    } else if (childrenCount < newChildrenCount) {
+      for (var i = childrenCount; i < newChildrenCount; i++) {
+        var newProp = XmlProp.fromXml(newChildren[i], parentTags: root.nextParents());
+        _addChangeListeners(newProp);
+        root.add(newProp);
+      }
+    }
   }
 }
