@@ -55,6 +55,7 @@ flutter:
     - assets/MrubyDecompiler/bins/linux/
     - assets/MrubyDecompiler/bins/windows/
     - assets/MrubyDecompiler/mrbToRb/
+    - assets/FontAtlasGenerator/
     - assets/bins/
     - assets/mcdFonts/
     - assets/mcdFonts/1/
