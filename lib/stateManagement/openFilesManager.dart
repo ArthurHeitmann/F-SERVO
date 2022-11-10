@@ -185,7 +185,7 @@ class FilesAreaManager extends NestedNotifier<OpenFileData> implements Undoable 
   @override
   Undoable takeSnapshot() {
     var snapshot = FilesAreaManager();
-    snapshot.overrideUuidForUndoable(uuid);
+    snapshot.overrideUuid(uuid);
     snapshot.replaceWith(map((entry) => entry.takeSnapshot() as OpenFileData).toList());
     snapshot._currentFile = _currentFile != null ? _currentFile!.takeSnapshot() as OpenFileData : null;
     return snapshot;

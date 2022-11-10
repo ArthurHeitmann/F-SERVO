@@ -69,7 +69,7 @@ class HierarchyEntry extends NestedNotifier<HierarchyEntry> with Undoable {
   @override
   Undoable takeSnapshot() {
     var snapshot = HierarchyEntry(name.takeSnapshot() as StringProp, isSelectable, isCollapsible, isOpenable);
-    snapshot.overrideUuidForUndoable(uuid);
+    snapshot.overrideUuid(uuid);
     snapshot._isSelected = _isSelected;
     snapshot._isCollapsed = _isCollapsed;
     snapshot.replaceWith(map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
@@ -97,7 +97,7 @@ class FileHierarchyEntry extends HierarchyEntry {
   @override
   Undoable takeSnapshot() {
     var snapshot = FileHierarchyEntry(name.takeSnapshot() as StringProp, path, isCollapsible, isOpenable);
-    snapshot.overrideUuidForUndoable(uuid);
+    snapshot.overrideUuid(uuid);
     snapshot._isSelected = _isSelected;
     snapshot._isCollapsed = _isCollapsed;
     snapshot.replaceWith(map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
@@ -123,7 +123,7 @@ class ExtractableHierarchyEntry extends FileHierarchyEntry {
   @override
   Undoable takeSnapshot() {
     var snapshot = ExtractableHierarchyEntry(name.takeSnapshot() as StringProp, this.path, extractedPath, isCollapsible, isOpenable);
-    snapshot.overrideUuidForUndoable(uuid);
+    snapshot.overrideUuid(uuid);
     snapshot._isSelected = _isSelected;
     snapshot._isCollapsed = _isCollapsed;
     snapshot.replaceWith(map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
@@ -229,7 +229,7 @@ class PakHierarchyEntry extends ExtractableHierarchyEntry {
   @override
   Undoable takeSnapshot() {
     var snapshot = PakHierarchyEntry(name.takeSnapshot() as StringProp, this.path, extractedPath);
-    snapshot.overrideUuidForUndoable(uuid);
+    snapshot.overrideUuid(uuid);
     snapshot._isSelected = _isSelected;
     snapshot._isCollapsed = _isCollapsed;
     snapshot._flatGroups.addAll(_flatGroups);
@@ -324,7 +324,7 @@ class HapGroupHierarchyEntry extends FileHierarchyEntry {
   @override
   Undoable takeSnapshot() {
     var snapshot = HapGroupHierarchyEntry(name.takeSnapshot() as StringProp, prop.takeSnapshot() as XmlProp);
-    snapshot.overrideUuidForUndoable(uuid);
+    snapshot.overrideUuid(uuid);
     snapshot._isSelected = _isSelected;
     snapshot._isCollapsed = _isCollapsed;
     snapshot.replaceWith(map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
@@ -387,7 +387,7 @@ class XmlScriptHierarchyEntry extends FileHierarchyEntry {
   @override
   Undoable takeSnapshot() {
     var snapshot = XmlScriptHierarchyEntry(name.takeSnapshot() as StringProp, this.path);
-    snapshot.overrideUuidForUndoable(uuid);
+    snapshot.overrideUuid(uuid);
     snapshot._isSelected = _isSelected;
     snapshot._isCollapsed = _isCollapsed;
     snapshot._hasReadMeta = _hasReadMeta;

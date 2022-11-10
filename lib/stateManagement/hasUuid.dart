@@ -6,7 +6,7 @@ mixin HasUuid {
 
   String get uuid => _uuid;
 
-  void overrideUuidForUndoable(String uuid) {
+  void overrideUuid(String uuid) {
     _uuid = uuid;
   }
 }

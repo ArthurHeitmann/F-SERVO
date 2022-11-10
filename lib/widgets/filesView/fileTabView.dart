@@ -118,7 +118,12 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
   Widget makeFilesStack(BuildContext context) {
     return IndexedStack(
       index: widget.viewArea.indexOf(widget.viewArea.currentFile!),
-      children: widget.viewArea.map((file) => makeFileEditor(file)).toList(),
+      children: widget.viewArea.map((file) => 
+        ConstrainedBox(
+          constraints: const BoxConstraints.expand(),
+          child: makeFileEditor(file)
+        )
+      ).toList(),
     );
   }
 

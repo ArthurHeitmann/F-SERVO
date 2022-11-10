@@ -45,11 +45,11 @@ class _AreaEditorState extends ChangeNotifierState<AreaEditor> {
       padding: const EdgeInsets.symmetric(vertical: 3.0),
       child: NestedContextMenu(
         buttons: [
-          ContextMenuButtonConfig(
-            "Sync to Blender",
-            icon: const Icon(Icons.sync, size: 14,),
-            onPressed: () => startSyncingObject(AreaSyncedObject(widget.prop))
-          ),
+          // ContextMenuButtonConfig(
+          //   "Sync to Blender",
+          //   icon: const Icon(Icons.sync, size: 14,),
+          //   onPressed: () => startSyncingObject(AreaSyncedObject(widget.prop))
+          // ),
         ],
         child: Row(
           mainAxisSize: MainAxisSize.min,

@@ -127,7 +127,7 @@ void dispose() {
     var content = OpenFileData(_name, _path);
     content._unsavedChanges = _unsavedChanges;
     content._loadingState = _loadingState;
-    content.overrideUuidForUndoable(uuid);
+    content.overrideUuid(uuid);
     return content;
   }
   
@@ -174,7 +174,7 @@ class TextFileData extends OpenFileData {
     snapshot._unsavedChanges = _unsavedChanges;
     snapshot._loadingState = _loadingState;
     snapshot._text = _text;
-    snapshot.overrideUuidForUndoable(uuid);
+    snapshot.overrideUuid(uuid);
     return snapshot;
   }
 
@@ -269,7 +269,7 @@ class XmlFileData extends OpenFileData {
     snapshot._unsavedChanges = _unsavedChanges;
     snapshot._loadingState = _loadingState;
     snapshot._root = _root != null ? _root!.takeSnapshot() as XmlProp : null;
-    snapshot.overrideUuidForUndoable(uuid);
+    snapshot.overrideUuid(uuid);
     return snapshot;
   }
 

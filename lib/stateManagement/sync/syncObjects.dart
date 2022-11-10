@@ -7,13 +7,16 @@ import 'package:xml/xml.dart';
 
 import '../../utils/utils.dart';
 import '../Property.dart';
+import '../hasUuid.dart';
+import '../nestedNotifier.dart';
 import '../xmlProps/xmlProp.dart';
 import 'syncServer.dart';
 
 enum SyncedObjectsType {
+  list,
   area,
   entity,
-  bezier
+  bezier,
 }
 
 Map<String, SyncedObject> _syncedObjects = {};
@@ -38,7 +41,6 @@ void startSyncingObject(SyncedObject obj) {
   else {
     showToast("Can't sync! Connect from Blender first");
   }
-
 }
 
 void _handleSyncMessage(SyncMessage message) {
@@ -68,20 +70,55 @@ void _handleSyncMessage(SyncMessage message) {
   }
 }
 
-abstract class SyncedObject {
-  final String uuid;
+abstract class SyncedObject with HasUuid {
   final SyncedObjectsType type;
+  final String parentUuid;
+  bool _isUpdating = false;
+
+  SyncedObject({ required this.type, required String uuid, required this.parentUuid }) {
+    overrideUuid(uuid);
+  }
+
+  void _onPropDispose(_) {
+    endSync();
+  }
+
+  void startSync([String? nameHint]);
+
+  void endSync() {
+    print("Ending sync for $uuid");
+    wsSend(SyncMessage(
+      "endSync",
+      uuid,
+      {}
+    ));
+    _syncedObjects.remove(uuid);
+    dispose();
+  }
+
+  void updateInternal(SyncMessage message);
+
+  void dispose() {}
+
+  void update(SyncMessage message) async {
+    _isUpdating = true;
+    updateInternal(message);
+    // prevent received changes to self to be synced back to client
+    await Future.delayed(const Duration(milliseconds: 10));
+    _isUpdating = false;
+  }
+}
+
+abstract class SyncedXmlObject extends SyncedObject {
   final XmlProp prop;
   final List<String> _syncedProps = [];
-  bool _isUpdating = false;
   late final StreamSubscription _propDisposeSub;
   late final void Function() syncToClient;
 
-  SyncedObject(this.type, this.prop)
-    : uuid = prop.uuid {
-    syncToClient = throttle(_syncToClient, 40, trailing: true);
+  SyncedXmlObject({ required super.type, required this.prop, required super.parentUuid }) : super(uuid: prop.uuid) {
     _addChangeListeners(prop);
     _propDisposeSub = prop.onDisposed.listen(_onPropDispose);
+    syncToClient = throttle(_syncToClient, 40, trailing: true);
   }
 
   void _addChangeListeners(XmlProp prop) {
@@ -98,30 +135,14 @@ abstract class SyncedObject {
     }
   }
 
+  @override
   void dispose() {
     _removeChangeListeners(prop);
     _propDisposeSub.cancel();
+    super.dispose();
   }
 
-  void _onPropChange() {
-    if (_isUpdating)
-      return;
-    syncToClient();
-  }
-
-  void _onPropDispose(_) {
-    endSync();
-  }
-
-  XmlElement getPropXml() {
-    var xml = prop.toXml();
-    xml.childElements
-      .toList()
-      .where((element) => !_syncedProps.contains(element.name.local))
-      .forEach((element) => xml.children.remove(element));
-    return xml;
-  }
-
+  @override
   void startSync([String? nameHint]) {
     print("Starting sync for $uuid");
     wsSend(SyncMessage(
@@ -135,17 +156,6 @@ abstract class SyncedObject {
     ));
   }
 
-  void endSync() {
-    print("Ending sync for $uuid");
-    wsSend(SyncMessage(
-      "endSync",
-      uuid,
-      {}
-    ));
-    _syncedObjects.remove(uuid);
-    dispose();
-  }
-
   void _syncToClient() {
     print("Syncing to client: $uuid");
     wsSend(SyncMessage(
@@ -157,14 +167,19 @@ abstract class SyncedObject {
     ));
   }
 
-  void updateInternal(SyncMessage message);
+  void _onPropChange() {
+    if (_isUpdating)
+      return;
+    syncToClient();
+  }
 
-  void update(SyncMessage message) async {
-    _isUpdating = true;
-    updateInternal(message);
-    // prevent received changes to self to be synced back to client
-    await Future.delayed(const Duration(milliseconds: 10));
-    _isUpdating = false;
+  XmlElement getPropXml() {
+    var xml = prop.toXml();
+    xml.childElements
+      .toList()
+      .where((element) => !_syncedProps.contains(element.name.local))
+      .forEach((element) => xml.children.remove(element));
+    return xml;
   }
 
   void updateXmlPropWithStr(XmlProp root, String tagName, XmlElement newRoot) {
@@ -185,7 +200,80 @@ abstract class SyncedObject {
   }
 }
 
-class AreaSyncedObject extends SyncedObject {
+class SyncedList<T extends HasUuid> extends SyncedObject {
+  final NestedNotifier<T> list;
+  final bool Function(T) filter;
+  final SyncedObject Function(T, String parentUuid) makeSyncedObj;
+  final T Function(T, String uuid) makeCopy;
+  List<String> _syncedUuids = [];
+  
+  SyncedList({
+    required this.list, required super.parentUuid, required this.filter,
+    required this.makeSyncedObj, required this.makeCopy
+  })
+  : super(type: SyncedObjectsType.list, uuid: list.uuid) {
+    list.addListener(_onListChange);
+    list.onDisposed.listen(_onPropDispose);
+    _syncedUuids = list.map((e) => e.uuid).toList();
+  }
+
+  void _onListChange() {
+    var newUuids = list.map((e) => e.uuid).toList();
+    var added = newUuids.where((uuid) => !_syncedUuids.contains(uuid)).toList();
+    var removed = _syncedUuids.where((uuid) => !newUuids.contains(uuid)).toList();
+    _syncedUuids = newUuids;
+
+    for (var uuid in added) {
+      var obj = makeSyncedObj(list.firstWhere((e) => e.uuid == uuid), uuid);
+      obj.startSync();
+      _syncedObjects[uuid] = obj;
+    }
+
+    for (var uuid in removed) {
+      _syncedObjects[uuid]?.endSync();
+    }
+  }
+
+  @override
+  void startSync([String? nameHint]) {
+    print("Starting sync for $uuid");
+    wsSend(SyncMessage(
+      "startSync",
+      uuid,
+      {
+        "type": SyncedObjectsType.values.indexOf(type),
+        "nameHint": nameHint
+      }
+    ));
+
+    for (var obj in list) {
+      var syncedObj = makeSyncedObj(obj, uuid);
+      syncedObj.startSync();
+      _syncedObjects[obj.uuid] = syncedObj;
+    }
+  }
+
+  @override
+  void updateInternal(SyncMessage message) {
+    var duplicatedObjects = message.args["duplicatedObjects"] as List;
+    var removedUuids = message.args["removedUuids"] as List;
+
+    for (var dupedObj in duplicatedObjects) {
+      var prevUuid = dupedObj["prevUuid"] as String;
+      var newUuid = dupedObj["newUuid"] as String;
+      var prevObj = list.firstWhere((e) => e.uuid == prevUuid);
+      var newObj = makeCopy(prevObj, newUuid);
+      list.add(newObj);
+      _syncedObjects[newUuid] = makeSyncedObj(newObj, uuid);
+    }
+
+    for (var uuid in removedUuids) {
+      _syncedObjects[uuid]?.endSync();
+    }
+  }
+}
+
+class AreaSyncedObject extends SyncedXmlObject {
   static const _typeBoxArea = "app::area::BoxArea";
   static const _typeCylinderArea = "app::area::CylinderArea";
   static const _typeSphereArea = "app::area::SphereArea";
@@ -196,7 +284,7 @@ class AreaSyncedObject extends SyncedObject {
   // syncable props: position, radius
   static final _typeSphereAreaHash = crc32(_typeSphereArea);
 
-  AreaSyncedObject(XmlProp prop) : super(SyncedObjectsType.area, prop) {
+  AreaSyncedObject(XmlProp prop, {required super.parentUuid}) : super(type: SyncedObjectsType.area, prop: prop) {
     _updateSyncedProps();
   }
 
@@ -242,10 +330,10 @@ class AreaSyncedObject extends SyncedObject {
   }
 }
 
-class EntitySyncedObject extends SyncedObject {
+class EntitySyncedObject extends SyncedXmlObject {
   // syncable props: location{ position, rotation?, }, scale?, objId
 
-  EntitySyncedObject(XmlProp prop) : super(SyncedObjectsType.entity, prop) {
+  EntitySyncedObject(XmlProp prop, {required super.parentUuid}) : super(type: SyncedObjectsType.entity, prop: prop) {
     _syncedProps.addAll(["location", "scale", "objId"]);
   }
 
@@ -265,10 +353,10 @@ class EntitySyncedObject extends SyncedObject {
   }
 }
 
-class BezierSyncedObject extends SyncedObject {
+class BezierSyncedObject extends SyncedXmlObject {
   // syncable props: attribute, parent?, controls, nodes
 
-  BezierSyncedObject(XmlProp prop) : super(SyncedObjectsType.bezier, prop) {
+  BezierSyncedObject(XmlProp prop, {required super.parentUuid}) : super(type: SyncedObjectsType.bezier, prop: prop) {
     _syncedProps.addAll(["attribute", "parent", "controls", "nodes"]);
   }
 

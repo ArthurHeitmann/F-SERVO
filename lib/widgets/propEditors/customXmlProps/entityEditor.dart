@@ -39,11 +39,11 @@ class _EntityEditorState extends ChangeNotifierState<EntityEditor> {
               icon: const Icon(Icons.content_copy, size: 14,),
               onPressed: () => copyPuidRef("app::EntityLayout", (widget.prop.get("id")!.value as HexProp).value)
             ),
-          ContextMenuButtonConfig(
-            "Sync to Blender",
-            icon: const Icon(Icons.sync, size: 14,),
-            onPressed: () => startSyncingObject(EntitySyncedObject(widget.prop))
-          ),
+          // ContextMenuButtonConfig(
+          //   "Sync to Blender",
+          //   icon: const Icon(Icons.sync, size: 14,),
+          //   onPressed: () => startSyncingObject(EntitySyncedObject(widget.prop))
+          // ),
           optionalPropButtonConfig(
             widget.prop,
             "param",

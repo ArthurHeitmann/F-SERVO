@@ -19,11 +19,11 @@ class _CurveEditorState extends XmlPropEditorState {
   Widget build(BuildContext context) {
     return NestedContextMenu(
       buttons: [
-        ContextMenuButtonConfig(
-          "Sync Curve to Blender",
-          icon: const Icon(Icons.sync, size: 14,),
-          onPressed: () => startSyncingObject(BezierSyncedObject(widget.prop))
-        ),
+        // ContextMenuButtonConfig(
+        //   "Sync Curve to Blender",
+        //   icon: const Icon(Icons.sync, size: 14,),
+        //   onPressed: () => startSyncingObject(BezierSyncedObject(widget.prop))
+        // ),
       ],
       child: super.build(context),
     );
