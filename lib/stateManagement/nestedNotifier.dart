@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:collection';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
@@ -8,14 +7,11 @@ import 'undoable.dart';
 
 abstract class NestedNotifier<T> extends ChangeNotifier with IterableMixin<T>, Undoable, HasUuid {
   final List<T> _children;
-  final StreamController<void> _onDisposed;
-  late final Stream<void> onDisposed;
+  late final ChangeNotifier onDisposed;
 
   NestedNotifier(List<T> children)
     : _children = children,
-    _onDisposed = StreamController.broadcast() {
-      onDisposed = _onDisposed.stream;
-    }
+    onDisposed = ChangeNotifier();
     
   @override
   Iterator<T> get iterator => _children.iterator;
@@ -162,7 +158,7 @@ abstract class NestedNotifier<T> extends ChangeNotifier with IterableMixin<T>, U
         child.dispose();
     }
     super.dispose();
-    _onDisposed.add(null);
+    onDisposed.notifyListeners();
   }
 }
 

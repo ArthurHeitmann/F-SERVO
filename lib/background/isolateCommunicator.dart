@@ -24,7 +24,7 @@ enum CommandTypes {
 Map _makeMessage(CommandTypes command, Map data, { String? uuid }) {
   return {
     "command": command.index,
-    "uuid": uuid ?? uuidGen.v1(),
+    "uuid": uuid ?? uuidGen.v4(),
     ...data,
   };
 }
@@ -34,7 +34,7 @@ void _sendMessage(SendPort sendPort, CommandTypes command, Map data, { String? u
 }
 
 Future<Map> _sendMessageWithCompleter(SendPort sendPort, CommandTypes command, Map data, Map<String, Completer> completerMap) async {
-  var uuid = uuidGen.v1();
+  var uuid = uuidGen.v4();
   var completer = Completer<Map>();
   completerMap[uuid] = completer;
   _sendMessage(sendPort, command, data, uuid: uuid);

@@ -38,8 +38,9 @@ class LayoutsEditor extends StatelessWidget {
               icon: const Icon(Icons.sync, size: 14,),
               onPressed: () => startSyncingObject(SyncedList<XmlProp>(
                 list: prop.get("normal")!.get("layouts")!,
+                parentUuid: "",
+                listType: "entity",
                 filter: (prop) => prop.tagName == "value",
-                parentUuid: prop.file?.uuid ?? "root",
                 makeSyncedObj: (prop, parentUuid) => EntitySyncedObject(prop, parentUuid: parentUuid),
                 makeCopy: (prop, uuid) {
                   var newProp = XmlProp.fromXml(prop.toXml(), parentTags: prop.parentTags, file: prop.file);
