@@ -2,9 +2,7 @@
 import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 
-import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/sync/syncObjects.dart';
-import '../../../utils/utils.dart';
 import '../../../widgets/theme/customTheme.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
 import '../../misc/nestedContextMenu.dart';
@@ -36,17 +34,9 @@ class LayoutsEditor extends StatelessWidget {
             ContextMenuButtonConfig(
               "Sync to Blender",
               icon: const Icon(Icons.sync, size: 14,),
-              onPressed: () => startSyncingObject(SyncedList<XmlProp>(
+              onPressed: () => startSyncingObject(SyncedEntityList(
                 list: prop.get("normal")!.get("layouts")!,
                 parentUuid: "",
-                listType: "entity",
-                filter: (prop) => prop.tagName == "value",
-                makeSyncedObj: (prop, parentUuid) => EntitySyncedObject(prop, parentUuid: parentUuid),
-                makeCopy: (prop, uuid) {
-                  var newProp = XmlProp.fromXml(prop.toXml(), parentTags: prop.parentTags, file: prop.file);
-                  (newProp.get("id")!.value as HexProp).value = randomId();
-                  return newProp;
-                },
               ))
             ),
           ],

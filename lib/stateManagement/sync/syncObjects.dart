@@ -9,6 +9,7 @@ import '../../utils/utils.dart';
 import '../Property.dart';
 import '../hasUuid.dart';
 import '../nestedNotifier.dart';
+import '../statusInfo.dart';
 import '../xmlProps/xmlProp.dart';
 import 'syncServer.dart';
 
@@ -30,8 +31,10 @@ Map<String, SyncedObject> _syncedObjects = {};
 bool _hasAddedListener = false;
 
 void startSyncingObject(SyncedObject obj) {
-  if (_syncedObjects.containsKey(obj.uuid))
+  if (_syncedObjects.containsKey(obj.uuid)) {
+    showToast("Already syncing this object");
     return;
+  }
   if (!_hasAddedListener) {
     _hasAddedListener = true;
     wsMessageStream.listen(_handleSyncMessage);
@@ -70,16 +73,33 @@ void _handleSyncMessage(SyncMessage message) {
       break;
 
     case "reparent":
+      var childUuid = message.uuid;
       var srcListUuid = message.args["srcListUuid"];
       var destListUuid = message.args["destListUuid"];
-      if (!_syncedObjects.containsKey(srcListUuid) || !_syncedObjects.containsKey(destListUuid) ||
+      if (!_syncedObjects.containsKey(childUuid) ||
+          !_syncedObjects.containsKey(srcListUuid) || !_syncedObjects.containsKey(destListUuid) ||
           _syncedObjects[srcListUuid] is! SyncedList || _syncedObjects[destListUuid] is! SyncedList) {
         print("Invalid reparent from $srcListUuid to $destListUuid");
+        messageLog.add("Invalid reparent from $srcListUuid to $destListUuid");
         wsSend(SyncMessage("endSync", message.uuid, {}));
+        return;
+      }
+      if (!_syncedObjects[childUuid]!.allowReparent) {
+        print("Can't reparent ${_syncedObjects[childUuid]}");
+        messageLog.add("Can't reparent ${_syncedObjects[childUuid]}");
+        wsSend(SyncMessage("endSync", message.uuid, {}));
+        return;
       }
 
       var srcList = _syncedObjects[srcListUuid] as SyncedList;
       var destList = _syncedObjects[destListUuid] as SyncedList;
+      if (srcList.listType != destList.listType) {
+        print("Can't reparent ${_syncedObjects[childUuid]} from $srcList to $destList");
+        messageLog.add("Can't reparent ${_syncedObjects[childUuid]} from $srcList to $destList");
+        wsSend(SyncMessage("endSync", message.uuid, {}));
+        return;
+      }
+
       var removed = srcList.reparentRemove(message.uuid);
       destList.reparentAdd(removed!);
       break;
@@ -91,10 +111,11 @@ void _handleSyncMessage(SyncMessage message) {
 abstract class SyncedObject with HasUuid {
   final SyncedObjectsType type;
   final String parentUuid;
-  bool _isUpdating = false;
   String? nameHint;
+  final bool allowReparent;
+  bool _isUpdating = false;
 
-  SyncedObject({ required this.type, required String uuid, required this.parentUuid }) {
+  SyncedObject({ required this.type, required String uuid, required this.parentUuid, required this.allowReparent }) {
     overrideUuid(uuid);
   }
 
@@ -136,7 +157,8 @@ abstract class SyncedXmlObject extends SyncedObject {
   final XmlProp prop;
   late final void Function() syncToClient;
 
-  SyncedXmlObject({ required super.type, required this.prop, required super.parentUuid }) : super(uuid: prop.uuid) {
+  SyncedXmlObject({ required super.type, required this.prop, required super.parentUuid })
+    : super(uuid: prop.uuid, allowReparent: true) {
     _addChangeListeners(prop);
     prop.onDisposed.addListener(_onPropDispose);
     syncToClient = throttle(_syncToClient, 40, trailing: true);
@@ -174,6 +196,7 @@ abstract class SyncedXmlObject extends SyncedObject {
         "parentUuid": parentUuid,
         "propXml": prop.toXml().toXmlString(),
         "nameHint": nameHint,
+        "allowReparent": allowReparent,
       }
     );
   }
@@ -213,18 +236,20 @@ abstract class SyncedXmlObject extends SyncedObject {
     }
   }
 }
-  
+
 class SyncedList<T extends HasUuid> extends SyncedObject {
   final NestedNotifier<T> list;
   final bool Function(T) filter;
   final SyncedObject Function(T, String parentUuid) makeSyncedObj;
   final T Function(T, String uuid) makeCopy;
-  String listType;
+  final String listType;
+  final bool allowListChange;
   List<String> _syncedUuids = [];
   
   SyncedList({
     required this.list, required super.parentUuid, required this.filter,
-    required this.makeSyncedObj, required this.makeCopy, required this.listType
+    required this.makeSyncedObj, required this.makeCopy, required this.listType,
+    required super.allowReparent, required this.allowListChange
   })
   : super(type: SyncedObjectsType.list, uuid: list.uuid) {
     list.addListener(_onListChange);
@@ -237,6 +262,7 @@ class SyncedList<T extends HasUuid> extends SyncedObject {
   @override
   SyncMessage getStartSyncMsg() {
     print("Starting sync for $uuid");
+    removeExistingSyncedObjects(this);
     return SyncMessage(
       "startSync",
       uuid,
@@ -244,6 +270,8 @@ class SyncedList<T extends HasUuid> extends SyncedObject {
         "type": type.index,
         "parentUuid": parentUuid,
         "listType": listType,
+        "allowReparent": allowReparent,
+        "allowListChange": allowListChange,
         "children": list.where(filter).map((e) {
           var syncedObj = makeSyncedObj(e, uuid);
           _syncedObjects[e.uuid] = syncedObj;
@@ -258,6 +286,11 @@ class SyncedList<T extends HasUuid> extends SyncedObject {
     var updateType = SyncUpdateType.values[message.args["type"]];
     switch (updateType) {
       case SyncUpdateType.remove:
+        if (!allowListChange) {
+          print("Not allowed to remove from list: $uuid");
+          endSync();
+          return;
+        }
         var removedUuid = message.args["uuid"];
         var index = _syncedUuids.indexOf(removedUuid);
         if (index == -1) {
@@ -271,6 +304,11 @@ class SyncedList<T extends HasUuid> extends SyncedObject {
         removedSyncObj?.dispose();
         break;
       case SyncUpdateType.duplicate:
+        if (!allowListChange) {
+          print("Not allowed to duplicate in list: $uuid");
+          endSync();
+          return;
+        }
         var srcObjUuid = message.args["srcObjUuid"];
         var newObjUuid = message.args["newObjUuid"];
         var srcObj = list.firstWhere((e) => e.uuid == srcObjUuid);
@@ -338,6 +376,17 @@ class SyncedList<T extends HasUuid> extends SyncedObject {
     super.dispose();
   }
 
+  void removeExistingSyncedObjects(SyncedObject parent) {
+    // remove existing synced objects
+    // they will be re-added on startSync
+    for (var child in list) {
+      if (_syncedObjects.containsKey(child.uuid))
+        _syncedObjects[child.uuid]!.endSync();
+      else if (child is SyncedList)
+        removeExistingSyncedObjects(child);
+    }
+  }
+
   void reparentAdd(T obj) {
     if (!filter(obj))
       return;
@@ -357,6 +406,33 @@ class SyncedList<T extends HasUuid> extends SyncedObject {
     _isUpdating = false;
     return removed;
   }
+}
+
+class SyncedXmlList extends SyncedList<XmlProp> {
+  SyncedXmlList({
+    required super.list, required super.parentUuid, required super.listType,
+    required super.allowReparent, required super.allowListChange
+  }) : super(
+    filter: (prop) => prop.tagName == "value",
+    makeSyncedObj: (prop, parentUuid) => EntitySyncedObject(prop, parentUuid: parentUuid),
+    makeCopy: (prop, uuid) {
+      var newProp = XmlProp.fromXml(prop.toXml(), parentTags: prop.parentTags, file: prop.file);
+      var idProp = newProp.get("id");
+      if (idProp != null)
+        (idProp.value as HexProp).value = randomId();
+      return newProp;
+    }
+  );
+}
+
+class SyncedEntityList extends SyncedXmlList {
+  SyncedEntityList({ required super.list, required super.parentUuid })
+    : super(listType: "entity", allowReparent: false, allowListChange: true);
+}
+
+class SyncedAreaList extends SyncedXmlList {
+  SyncedAreaList({ required super.list, required super.parentUuid })
+    : super(listType: "area", allowReparent: false, allowListChange: true);
 }
 
 class AreaSyncedObject extends SyncedXmlObject {
