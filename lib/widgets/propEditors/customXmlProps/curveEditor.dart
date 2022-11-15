@@ -1,9 +1,7 @@
 
 
-import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 
-import '../../../stateManagement/sync/syncObjects.dart';
 import '../../misc/nestedContextMenu.dart';
 import '../simpleProps/XmlPropEditor.dart';
 
@@ -18,7 +16,7 @@ class _CurveEditorState extends XmlPropEditorState {
   @override
   Widget build(BuildContext context) {
     return NestedContextMenu(
-      buttons: [
+      buttons: const [
         // ContextMenuButtonConfig(
         //   "Sync Curve to Blender",
         //   icon: const Icon(Icons.sync, size: 14,),

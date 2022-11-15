@@ -133,7 +133,7 @@ abstract class NestedNotifier<T> extends ChangeNotifier with IterableMixin<T>, H
     var curUuidsSet = curUuids.toSet();
     var newUuidsSet = newUuids.toSet();
     var sameUuids = curUuidsSet.intersection(newUuidsSet);
-    var removedUuids = curUuidsSet.difference(sameUuids);
+    // var removedUuids = curUuidsSet.difference(sameUuids);
     if (curUuidsSet.length != _children.length) {
       print("WARNING: ${(curUuids.length - _children.length).abs()} duplicate uuids in children");
     }

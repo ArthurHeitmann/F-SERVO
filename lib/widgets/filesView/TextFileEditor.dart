@@ -13,8 +13,6 @@ import 'package:highlight/languages/ruby.dart';
 import 'package:highlight/languages/xml.dart';
 import 'package:path/path.dart';
 
-import '../../widgets/theme/customTheme.dart';
-import '../../main.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/openFileTypes.dart';
 import '../misc/SmoothScrollBuilder.dart';
@@ -40,10 +38,10 @@ final _highlightLanguages = {
   ".rb": ruby,
 };
 
-Map<String, TextStyle> get _customTheme => {
-  ...atomOneDarkTheme,
-  "root": TextStyle(color: const Color(0xffabb2bf), backgroundColor: getTheme(getGlobalContext()).editorBackgroundColor),
-};
+// Map<String, TextStyle> get _customTheme => {
+//   ...atomOneDarkTheme,
+//   "root": TextStyle(color: const Color(0xffabb2bf), backgroundColor: getTheme(getGlobalContext()).editorBackgroundColor),
+// };
 
 class _TextFileEditorState extends ChangeNotifierState<TextFileEditor> {
   CodeController? controller;

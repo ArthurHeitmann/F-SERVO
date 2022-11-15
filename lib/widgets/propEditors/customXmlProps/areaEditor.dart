@@ -1,8 +1,6 @@
 
-import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 
-import '../../../stateManagement/sync/syncObjects.dart';
 import '../../../widgets/theme/customTheme.dart';
 import '../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
@@ -44,7 +42,7 @@ class _AreaEditorState extends ChangeNotifierState<AreaEditor> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3.0),
       child: NestedContextMenu(
-        buttons: [
+        buttons: const [
           // ContextMenuButtonConfig(
           //   "Sync to Blender",
           //   icon: const Icon(Icons.sync, size: 14,),
