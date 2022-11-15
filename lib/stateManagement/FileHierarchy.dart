@@ -5,12 +5,14 @@ import 'package:xml/xml.dart';
 
 import '../fileTypeUtils/dat/datExtractor.dart';
 import '../fileTypeUtils/ruby/pythonRuby.dart';
+import '../fileTypeUtils/yax/xmlToYax.dart';
 import '../fileTypeUtils/yax/yaxToXml.dart';
 import '../main.dart';
 import '../utils/utils.dart';
 import '../widgets/misc/confirmDialog.dart';
 import '../widgets/propEditors/xmlActions/XmlActionPresets.dart';
 import 'Property.dart';
+import 'hasUuid.dart';
 import 'nestedNotifier.dart';
 import '../fileTypeUtils/pak/pakExtractor.dart';
 import 'openFileTypes.dart';
@@ -247,7 +249,7 @@ class PakHierarchyEntry extends ExtractableHierarchyEntry {
   }
 }
 
-class GroupToken with Undoable {
+class GroupToken with HasUuid, Undoable {
   final HexProp code;
   final HexProp id;
   GroupToken(this.code, this.id);
@@ -755,7 +757,7 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
     doc.children.add(content.toXml());
     var xmlStr = "${doc.toXmlString(pretty: true, indent: '\t')}\n";
     await file.writeAsString(xmlStr);
-    // TODO xml to yax
+    xmlFileToYaxFile(filePath);
     
     // add file to pakInfo.json
     var yaxPath = "${filePath.substring(0, filePath.length - 4)}.yax";

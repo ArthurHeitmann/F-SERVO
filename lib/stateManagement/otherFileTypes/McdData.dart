@@ -22,8 +22,9 @@ import '../hasUuid.dart';
 import '../nestedNotifier.dart';
 import '../openFileTypes.dart';
 import '../preferencesData.dart';
+import '../undoable.dart';
 
-abstract class _McdFilePart {
+abstract class _McdFilePart with HasUuid, Undoable {
   McdFileData? file;
 
   _McdFilePart(this.file);
@@ -177,7 +178,7 @@ class McdFontOverride with HasUuid {
   }
 }
 
-class McdLine extends _McdFilePart with HasUuid {
+class McdLine extends _McdFilePart {
   StringProp text;
 
   McdLine(super.file, this.text) {
@@ -236,9 +237,19 @@ class McdLine extends _McdFilePart with HasUuid {
     }
     return letters;
   }
+
+  @override
+  Undoable takeSnapshot() {
+    return McdLine(file, text.takeSnapshot() as StringProp);
+  }
+
+  @override
+  void restoreWith(Undoable snapshot) {
+    text.restoreWith(snapshot);
+  }
 }
 
-class McdParagraph extends _McdFilePart with HasUuid {
+class McdParagraph extends _McdFilePart {
   NumberProp vPos;
   NumberProp fontId;
   ValueNestedNotifier<McdLine> lines;
@@ -264,11 +275,13 @@ class McdParagraph extends _McdFilePart with HasUuid {
 
   void addLine() {
     lines.add(McdLine(file, StringProp("")));
+    undoHistoryManager.onUndoableEvent();
   }
 
   void removeLine(int index) {
     lines.removeAt(index)
       .dispose();
+    undoHistoryManager.onUndoableEvent();
   }
 
   @override
@@ -291,9 +304,26 @@ class McdParagraph extends _McdFilePart with HasUuid {
     }
     return symbols;
   }
+
+  @override
+  Undoable takeSnapshot() {
+    return McdParagraph(
+      file,
+      vPos.takeSnapshot() as NumberProp,
+      fontId.takeSnapshot() as NumberProp,
+      lines.takeSnapshot() as ValueNestedNotifier<McdLine>
+    );
+  }
+
+  @override
+  void restoreWith(Undoable snapshot) {
+    vPos.restoreWith(snapshot);
+    fontId.restoreWith(snapshot);
+    lines.restoreWith(snapshot);
+  }
 }
 
-class McdEvent extends _McdFilePart with HasUuid {
+class McdEvent extends _McdFilePart {
   HexProp eventId;
   StringProp name;
   NumberProp msgSeqNum;
@@ -328,11 +358,13 @@ class McdEvent extends _McdFilePart with HasUuid {
       NumberProp(fontId, true),
       ValueNestedNotifier([])
     ));
+    undoHistoryManager.onUndoableEvent();
   }
 
   void removeParagraph(int index) {
     paragraphs.removeAt(index)
       .dispose();
+    undoHistoryManager.onUndoableEvent();
   }
 
   @override
@@ -351,6 +383,25 @@ class McdEvent extends _McdFilePart with HasUuid {
     for (var paragraph in paragraphs)
       symbols.addAll(paragraph.getUsedSymbols());
     return symbols;
+  }
+
+  @override
+  Undoable takeSnapshot() {
+    return McdEvent(
+      file,
+      eventId.takeSnapshot() as HexProp,
+      name.takeSnapshot() as StringProp,
+      msgSeqNum.takeSnapshot() as NumberProp,
+      paragraphs.takeSnapshot() as ValueNestedNotifier<McdParagraph>
+    );
+  }
+
+  @override
+  void restoreWith(Undoable snapshot) {
+    eventId.restoreWith(snapshot);
+    name.restoreWith(snapshot);
+    msgSeqNum.restoreWith(snapshot);
+    paragraphs.restoreWith(snapshot);
   }
 }
 
@@ -456,11 +507,13 @@ class McdData extends _McdFilePart {
       NumberProp(getLastSeqNum() + 1, true),
       ValueNestedNotifier([])
     ));
+    undoHistoryManager.onUndoableEvent();
   }
 
   void removeEvent(int index) {
     events.removeAt(index)
       .dispose();
+    undoHistoryManager.onUndoableEvent();
   }
 
   static void addFontOverride() {
@@ -905,5 +958,27 @@ class McdData extends _McdFilePart {
         .values
         .any((supSym) => supSym.code == usedSym.code))
       .toSet();
+  }
+
+  @override
+  Undoable takeSnapshot() {
+    return McdData(
+      file,
+      textureWtaPath?.takeSnapshot() as StringProp?,
+      textureWtpPath?.takeSnapshot() as StringProp?,
+      usedFonts.map((id, font) => MapEntry(id, font)),
+      events.takeSnapshot() as ValueNestedNotifier<McdEvent>,
+    );
+  }
+
+  @override
+  void restoreWith(Undoable snapshot) {
+    var data = snapshot as McdData;
+    if (textureWtaPath != null && data.textureWtaPath != null)
+      textureWtaPath!.restoreWith(data.textureWtaPath!);
+    if (textureWtpPath != null && data.textureWtpPath != null)
+      textureWtpPath!.restoreWith(data.textureWtpPath!);
+    usedFonts = data.usedFonts.map((id, font) => MapEntry(id, font));
+    events.restoreWith(data.events);
   }
 }

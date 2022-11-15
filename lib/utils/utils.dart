@@ -539,3 +539,5 @@ num avr(Iterable<num> values) {
 num avrM<T>(Iterable<T> values, num Function(T) mapper) {
   return avr(values.map(mapper));
 }
+
+bool isSubtype<S, T>() => <S>[] is List<T>;

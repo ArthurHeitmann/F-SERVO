@@ -9,7 +9,7 @@ import '../hasUuid.dart';
 import '../nestedNotifier.dart';
 import '../undoable.dart';
 
-class TmdEntryData with HasUuid {
+class TmdEntryData with HasUuid, Undoable {
   final StringProp id;
   final StringProp text;
   final ChangeNotifier _anyChangeNotifier;
@@ -18,6 +18,22 @@ class TmdEntryData with HasUuid {
     : _anyChangeNotifier = anyChangeNotifier {
     id.addListener(_anyChangeNotifier.notifyListeners);
     text.addListener(_anyChangeNotifier.notifyListeners);
+  }
+  
+  @override
+  Undoable takeSnapshot() {
+    return TmdEntryData(
+      id: id.takeSnapshot() as StringProp,
+      text: text.takeSnapshot() as StringProp,
+      anyChangeNotifier: _anyChangeNotifier,
+    );
+  }
+  
+  @override
+  void restoreWith(Undoable snapshot) {
+    var data = snapshot as TmdEntryData;
+    id.restoreWith(data.id);
+    text.restoreWith(data.text);
   }
 }
 
@@ -101,16 +117,21 @@ class TmdData extends NestedNotifier<TmdEntryData> with CustomTableConfig, Undoa
     var entry = this[index];
     entry.id.value = values[0] ?? "";
     entry.text.value = values[1] ?? "";
-  }  
-  
-  @override
-  void restoreWith(Undoable snapshot) {
-    // TODO: implement restoreWith
   }
   
   @override
   Undoable takeSnapshot() {
-    // TODO: implement takeSnapshot
-    throw UnimplementedError();
-  }  
+    return TmdData(
+      map((e) => e.takeSnapshot() as TmdEntryData).toList(),
+      name,
+      fileChangeNotifier,
+    );
+  }
+  
+  @override
+  void restoreWith(Undoable snapshot) {
+    var data = snapshot as TmdData;
+    updateOrReplaceWith(data.toList(), (e) => e.takeSnapshot() as TmdEntryData);
+    rowCount.value = length;
+  }
 }

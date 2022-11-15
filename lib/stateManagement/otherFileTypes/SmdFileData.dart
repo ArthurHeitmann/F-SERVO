@@ -9,7 +9,7 @@ import '../hasUuid.dart';
 import '../nestedNotifier.dart';
 import '../undoable.dart';
 
-class SmdEntryData with HasUuid {
+class SmdEntryData with HasUuid, Undoable {
   final StringProp id;
   final StringProp text;
   final ChangeNotifier _anyChangeNotifier;
@@ -18,6 +18,22 @@ class SmdEntryData with HasUuid {
     : _anyChangeNotifier = anyChangeNotifier {
     id.addListener(_anyChangeNotifier.notifyListeners);
     text.addListener(_anyChangeNotifier.notifyListeners);
+  }
+  
+  @override
+  Undoable takeSnapshot() {
+    return SmdEntryData(
+      id: id.takeSnapshot() as StringProp,
+      text: text.takeSnapshot() as StringProp,
+      anyChangeNotifier: _anyChangeNotifier,
+    );
+  }
+  
+  @override
+  void restoreWith(Undoable snapshot) {
+    var data = snapshot as SmdEntryData;
+    id.restoreWith(data.id);
+    text.restoreWith(data.text);
   }
 }
 
@@ -100,16 +116,21 @@ class SmdData extends NestedNotifier<SmdEntryData> with CustomTableConfig, Undoa
     var entry = this[index];
     entry.id.value = values[0] ?? "";
     entry.text.value = values[1] ?? "";
-  }  
-  
-  @override
-  void restoreWith(Undoable snapshot) {
-    // TODO: implement restoreWith
   }
   
   @override
   Undoable takeSnapshot() {
-    // TODO: implement takeSnapshot
-    throw UnimplementedError();
+    return SmdData(
+      map((e) => e.takeSnapshot() as SmdEntryData).toList(),
+      name,
+      fileChangeNotifier,
+    );
+  }
+  
+  @override
+  void restoreWith(Undoable snapshot) {
+    var data = snapshot as SmdData;
+    updateOrReplaceWith(data.toList(), (e) => e.takeSnapshot() as SmdEntryData);
+    rowCount.value = length;
   }
 }

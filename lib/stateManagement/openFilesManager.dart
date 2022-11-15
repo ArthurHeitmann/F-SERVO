@@ -187,7 +187,7 @@ class FilesAreaManager extends NestedNotifier<OpenFileData> implements Undoable 
     var snapshot = FilesAreaManager();
     snapshot.overrideUuid(uuid);
     snapshot.replaceWith(map((entry) => entry.takeSnapshot() as OpenFileData).toList());
-    snapshot._currentFile = _currentFile != null ? _currentFile!.takeSnapshot() as OpenFileData : null;
+    snapshot._currentFile = _currentFile != null ? snapshot[indexOf(_currentFile!)] : null;
     return snapshot;
   }
   
@@ -389,7 +389,7 @@ class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
   Undoable takeSnapshot() {
     var snapshot = OpenFilesAreasManager(hiddenArea.takeSnapshot() as FilesAreaManager);
     snapshot.replaceWith(map((area) => area.takeSnapshot() as FilesAreaManager).toList());
-    snapshot._activeArea = _activeArea != null ? _activeArea!.takeSnapshot() as FilesAreaManager : null;
+    snapshot._activeArea = _activeArea != null ? snapshot[indexOf(_activeArea!)] : null;
     return snapshot;
   }
   

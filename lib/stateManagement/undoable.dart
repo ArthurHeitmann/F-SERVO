@@ -3,10 +3,11 @@ import 'package:flutter/material.dart';
 
 import '../utils/utils.dart';
 import 'FileHierarchy.dart';
+import 'hasUuid.dart';
 import 'miscValues.dart';
 import 'openFilesManager.dart';
 
-mixin Undoable {
+mixin Undoable on HasUuid {
   Undoable takeSnapshot();
   void restoreWith(Undoable snapshot);
 }

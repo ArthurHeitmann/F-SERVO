@@ -131,6 +131,15 @@ class PreferencesData extends OpenFileData {
   void dispose() {
     // never dispose, because singleton
   }
+  
+  @override
+  void restoreWith(Undoable snapshot) {
+  }
+  
+  @override
+  Undoable takeSnapshot() {
+    return this;
+  }
 }
 
 class IndexingPathsProp extends NestedNotifier<StringProp> {

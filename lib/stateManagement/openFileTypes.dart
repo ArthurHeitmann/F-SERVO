@@ -29,7 +29,7 @@ enum LoadingState {
   loaded,
 }
 
-class OpenFileData extends ChangeNotifier with Undoable, HasUuid {
+abstract class OpenFileData extends ChangeNotifier with HasUuid, Undoable {
   late final FileType type;
   String _name;
   String? _secondaryName;
@@ -120,23 +120,6 @@ class OpenFileData extends ChangeNotifier with Undoable, HasUuid {
 void dispose() {
     scrollController.dispose();
     super.dispose();
-  }
-
-  @override
-  Undoable takeSnapshot() {
-    var content = OpenFileData(_name, _path);
-    content._unsavedChanges = _unsavedChanges;
-    content._loadingState = _loadingState;
-    content.overrideUuid(uuid);
-    return content;
-  }
-  
-  @override
-  void restoreWith(Undoable snapshot) {
-    var content = snapshot as OpenFileData;
-    name = content._name;
-    path = content._path;
-    hasUnsavedChanges = content._unsavedChanges;
   }
 }
 
@@ -308,6 +291,7 @@ class TmdFileData extends OpenFileData {
     _loadingState = LoadingState.loading;
 
     var tmdEntries = await readTmdFile(path);
+    tmdData?.dispose();
     tmdData = TmdData.from(tmdEntries, basenameWithoutExtension(path));
     tmdData!.fileChangeNotifier.addListener(() {
       hasUnsavedChanges = true;
@@ -324,6 +308,28 @@ class TmdFileData extends OpenFileData {
     changedDatFiles.add(datDir);
 
     await super.save();
+  }
+
+  @override
+  Undoable takeSnapshot() {
+    var snapshot = TmdFileData(_name, _path);
+    snapshot._unsavedChanges = _unsavedChanges;
+    snapshot._loadingState = _loadingState;
+    snapshot.tmdData = tmdData?.takeSnapshot() as TmdData?;
+    snapshot.overrideUuid(uuid);
+    return snapshot;
+  }
+
+  @override
+  void restoreWith(Undoable snapshot) {
+    var content = snapshot as TmdFileData;
+    name = content._name;
+    path = content._path;
+    hasUnsavedChanges = content._unsavedChanges;
+    if (content.tmdData != null)
+      tmdData?.restoreWith(content.tmdData as Undoable);
+    else
+      tmdData = null;
   }
 
   @override
@@ -345,6 +351,7 @@ class SmdFileData extends OpenFileData {
     _loadingState = LoadingState.loading;
 
     var smdEntries = await readSmdFile(path);
+    smdData?.dispose();
     smdData = SmdData.from(smdEntries, basenameWithoutExtension(path));
     smdData!.fileChangeNotifier.addListener(() {
       hasUnsavedChanges = true;
@@ -368,6 +375,28 @@ class SmdFileData extends OpenFileData {
     smdData?.dispose();
     super.dispose();
   }
+
+  @override
+  Undoable takeSnapshot() {
+    var snapshot = SmdFileData(_name, _path);
+    snapshot._unsavedChanges = _unsavedChanges;
+    snapshot._loadingState = _loadingState;
+    snapshot.smdData = smdData?.takeSnapshot() as SmdData?;
+    snapshot.overrideUuid(uuid);
+    return snapshot;
+  }
+
+  @override
+  void restoreWith(Undoable snapshot) {
+    var content = snapshot as SmdFileData;
+    name = content._name;
+    path = content._path;
+    hasUnsavedChanges = content._unsavedChanges;
+    if (content.smdData != null)
+      smdData?.restoreWith(content.smdData as Undoable);
+    else
+      smdData = null;
+  }
 }
 
 class McdFileData extends OpenFileData {
@@ -381,6 +410,7 @@ class McdFileData extends OpenFileData {
       return;
     _loadingState = LoadingState.loading;
 
+    mcdData?.dispose();
     mcdData = await McdData.fromMcdFile(this, path);
 
     await super.load();
@@ -398,6 +428,28 @@ class McdFileData extends OpenFileData {
   void dispose() {
     mcdData?.dispose();
     super.dispose();
+  }
+
+  @override
+  Undoable takeSnapshot() {
+    var snapshot = McdFileData(_name, _path);
+    snapshot._unsavedChanges = _unsavedChanges;
+    snapshot._loadingState = _loadingState;
+    snapshot.mcdData = mcdData?.takeSnapshot() as McdData?;
+    snapshot.overrideUuid(uuid);
+    return snapshot;
+  }
+
+  @override
+  void restoreWith(Undoable snapshot) {
+    var content = snapshot as McdFileData;
+    name = content._name;
+    path = content._path;
+    hasUnsavedChanges = content._unsavedChanges;
+    if (content.mcdData != null)
+      mcdData?.restoreWith(content.mcdData as Undoable);
+    else
+      mcdData = null;
   }
 }
 
@@ -430,5 +482,15 @@ class FtbFileData extends OpenFileData {
   void dispose() {
     ftbData?.dispose();
     super.dispose();
+  }
+
+  @override
+  Undoable takeSnapshot() {
+    return this;
+  }
+
+  @override
+  void restoreWith(Undoable snapshot) {
+    // nothing to do
   }
 }

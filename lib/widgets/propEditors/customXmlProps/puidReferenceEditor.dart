@@ -48,7 +48,8 @@ class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor>
     var idProp = id.value as HexProp;
     lookupFuture = idLookup.lookupId(idProp.value);
     await lookupFuture;
-    setState(() {});
+    if (mounted)
+      setState(() {});
   }
 
   @override

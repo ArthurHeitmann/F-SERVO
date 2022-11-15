@@ -8,6 +8,7 @@ import '../../misc/nestedContextMenu.dart';
 import 'XmlActionEditor.dart';
 
 class XmlEntityActionEditor extends XmlActionEditor {
+  // ignore: use_key_in_widget_constructors
   XmlEntityActionEditor({ required super.action, required super.showDetails });
 
   @override

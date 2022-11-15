@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 
 import '../fileTypeUtils/yax/hashToStringMap.dart';
 import '../utils/utils.dart';
+import 'hasUuid.dart';
 import 'miscValues.dart';
 import 'undoable.dart';
 
@@ -31,7 +32,7 @@ mixin Prop<T> implements Listenable, Undoable {
   }
 }
 
-abstract class ValueProp<T> extends ValueNotifier<T> with Prop<T> {
+abstract class ValueProp<T> extends ValueNotifier<T> with Prop<T>, HasUuid {
   bool changesUndoable = true;
 
   ValueProp(super.value);
@@ -132,7 +133,7 @@ class NumberProp extends ValueProp<num> {
   }
 }
 
-class VectorProp extends ChangeNotifier with Prop<List<num>>, IterableMixin<NumberProp> {
+class VectorProp extends ChangeNotifier with Prop<List<num>>, IterableMixin<NumberProp>, HasUuid {
   @override
   final PropType type = PropType.vector;
   late final List<NumberProp> _values;

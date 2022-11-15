@@ -309,7 +309,6 @@ class FtbData extends ChangeNotifier {
     var wtpBytes = await File(wtpPath).readAsBytes();
     var extractDir = join(dirname(wtpPath), "textures");
     await Directory(extractDir).create(recursive: true);
-    var wtpByteData = ByteData.view(wtpBytes.buffer);
     for (var i = 0; i < textures.length; i++) {
       // extract dds
       var texStart = wtaFile.textureOffsets[i];
