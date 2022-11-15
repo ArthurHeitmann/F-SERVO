@@ -116,8 +116,8 @@ abstract class OpenFileData extends ChangeNotifier with HasUuid, Undoable {
     hasUnsavedChanges = false;
   }
   
-@override
-void dispose() {
+  @override
+  void dispose() {
     scrollController.dispose();
     super.dispose();
   }
@@ -264,8 +264,6 @@ class XmlFileData extends OpenFileData {
     hasUnsavedChanges = content._unsavedChanges;
     if (content._root != null)
       _root?.restoreWith(content._root as Undoable);
-    else
-      _root = null;
   }
 }
 
@@ -328,8 +326,6 @@ class TmdFileData extends OpenFileData {
     hasUnsavedChanges = content._unsavedChanges;
     if (content.tmdData != null)
       tmdData?.restoreWith(content.tmdData as Undoable);
-    else
-      tmdData = null;
   }
 
   @override
@@ -394,8 +390,6 @@ class SmdFileData extends OpenFileData {
     hasUnsavedChanges = content._unsavedChanges;
     if (content.smdData != null)
       smdData?.restoreWith(content.smdData as Undoable);
-    else
-      smdData = null;
   }
 }
 
@@ -448,8 +442,6 @@ class McdFileData extends OpenFileData {
     hasUnsavedChanges = content._unsavedChanges;
     if (content.mcdData != null)
       mcdData?.restoreWith(content.mcdData as Undoable);
-    else
-      mcdData = null;
   }
 }
 

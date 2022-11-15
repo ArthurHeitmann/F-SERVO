@@ -100,6 +100,7 @@ class HexProp extends ValueProp<int> {
   @override
   Undoable takeSnapshot() {
     var prop = HexProp(value);
+    prop.overrideUuid(uuid);
     prop._strVal = _strVal;
     return prop;
   }
@@ -129,7 +130,9 @@ class NumberProp extends ValueProp<num> {
 
   @override
   Undoable takeSnapshot() {
-    return NumberProp(value, isInteger);
+    var prop = NumberProp(value, isInteger);
+    prop.overrideUuid(uuid);
+    return prop;
   }
 }
 
@@ -180,7 +183,9 @@ class VectorProp extends ChangeNotifier with Prop<List<num>>, IterableMixin<Numb
 
   @override
   Undoable takeSnapshot() {
-    return VectorProp(_values.map((p) => p.value).toList());
+    var prop = VectorProp(_values.map((p) => p.value).toList());
+    prop.overrideUuid(uuid);
+    return prop;
   }
 
   @override
@@ -222,7 +227,9 @@ class StringProp extends ValueProp<String> {
 
   @override
   Undoable takeSnapshot() {
-    return StringProp(value, transform != null);
+    var prop = StringProp(value, transform != null);
+    prop.overrideUuid(uuid);
+    return prop;
   }
 }
 
@@ -242,7 +249,9 @@ class BoolProp extends ValueProp<bool> {
 
   @override
   Undoable takeSnapshot() {
-    return BoolProp(value);
+    var prop = BoolProp(value);
+    prop.overrideUuid(uuid);
+    return prop;
   }
 }
   

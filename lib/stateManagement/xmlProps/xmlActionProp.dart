@@ -24,7 +24,7 @@ class XmlActionProp extends XmlProp {
   
   @override
   Undoable takeSnapshot() {
-    return XmlActionProp(XmlProp(
+    var prop = XmlActionProp(XmlProp(
       tagId: tagId,
       tagName: tagName,
       value: value.takeSnapshot() as Prop,
@@ -32,5 +32,7 @@ class XmlActionProp extends XmlProp {
       children: map((child) => child.takeSnapshot() as XmlProp).toList(),
       parentTags: parentTags
     ));
+    prop.overrideUuid(uuid);
+    return prop;
   }
 }

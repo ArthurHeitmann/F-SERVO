@@ -184,7 +184,9 @@ class IndexingPathsProp extends NestedNotifier<StringProp> {
 
   @override
   Undoable takeSnapshot() {
-    return IndexingPathsProp(_prefs, _getPaths());
+    var snapshot = IndexingPathsProp(_prefs, _getPaths());
+    snapshot.overrideUuid(uuid);
+    return snapshot;
   }
 
   @override

@@ -155,7 +155,7 @@ class XmlProp extends NestedNotifier<XmlProp> {
 
   @override
   Undoable takeSnapshot() {
-    return XmlProp(
+    var prop = XmlProp(
       tagId: tagId,
       tagName: tagName,
       value: value.takeSnapshot() as Prop,
@@ -163,6 +163,8 @@ class XmlProp extends NestedNotifier<XmlProp> {
       children: map((child) => child.takeSnapshot() as XmlProp).toList(),
       parentTags: parentTags,
     );
+    prop.overrideUuid(uuid);
+    return prop;
   }
   
   @override

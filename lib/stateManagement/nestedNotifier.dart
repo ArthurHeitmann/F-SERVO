@@ -128,43 +128,47 @@ abstract class NestedNotifier<T> extends ChangeNotifier with IterableMixin<T>, H
   }
 
   void updateOrReplaceWithUuid(List<Undoable> newChildren, T Function(Undoable) copy) {
-    bool hasChanged = false;
-
-    // use uuid comparison instead
-    var curUuids = _children.map((e) => (e as HasUuid).uuid).toSet();
-    if (curUuids.length != _children.length) {
+    var curUuids = _children.map((e) => (e as HasUuid).uuid).toList();
+    var newUuids = newChildren.map((e) => e.uuid).toList();
+    var curUuidsSet = curUuids.toSet();
+    var newUuidsSet = newUuids.toSet();
+    var sameUuids = curUuidsSet.intersection(newUuidsSet);
+    var removedUuids = curUuidsSet.difference(sameUuids);
+    if (curUuidsSet.length != _children.length) {
       print("WARNING: ${(curUuids.length - _children.length).abs()} duplicate uuids in children");
     }
-    var newUuids = newChildren.map((e) => e.uuid).toSet();
-    var sameUuids = curUuids.intersection(newUuids);
-    var addedUuids = newUuids.difference(sameUuids);
-    var removedUuids = curUuids.difference(sameUuids);
 
-    var addedChildren = newChildren.where((e) => addedUuids.contains(e.uuid)).map(copy).toList();
-    var removedChildren = _children.where((e) => removedUuids.contains((e as HasUuid).uuid)).toList();
-    var sameChildren = _children.where((e) => sameUuids.contains((e as HasUuid).uuid)).toList();
-
-    for (int i = 0; i < sameChildren.length; i++) {
-      if (sameChildren[i].runtimeType == newChildren[i].runtimeType && sameChildren[i] is Undoable) {
-        (sameChildren[i] as Undoable).restoreWith(newChildren[i]);
-        hasChanged = true;
-      }
-      else {
-        sameChildren[i] = copy(newChildren[i]);
-        hasChanged = true;
-      }
-    }
-    if (addedChildren.isNotEmpty) {
-      _children.addAll(addedChildren);
-      hasChanged = true;
-    }
-    if (removedChildren.isNotEmpty) {
-      _children.removeWhere((e) => removedChildren.contains(e));
-      hasChanged = true;
+    List<T> nextChildren;
+    if (listEquals(curUuids, newUuids)) {
+      nextChildren = _children;
+    } else {
+      nextChildren = newUuids.map((uuid) {
+        if (sameUuids.contains(uuid))
+          return _children[curUuids.indexOf(uuid)];
+        else
+          return copy(newChildren[newUuids.indexOf(uuid)]);
+      }).toList();
     }
 
-    if (hasChanged)
-      notifyListeners();
+    for (var uuid in sameUuids) {
+      var childI = curUuids.indexOf(uuid);
+      var child = _children[childI];
+      var newChildI = newUuids.indexOf(uuid);
+      var newChild = newChildren[newChildI];
+      if (child.runtimeType == newChild.runtimeType && child is Undoable)
+        child.restoreWith(newChild);
+      else
+        nextChildren[newChildI] = copy(newChild);
+    }
+
+    // for (var uuid in removedUuids) {
+    //   var childI = curUuids.indexOf(uuid);
+    //   var child = _children[childI];
+    //   if (child is ChangeNotifier)
+    //     child.dispose();
+    // }
+
+    replaceWith(nextChildren);
   }
 
   void updateOrReplaceWithIndex(List<Undoable> newChildren, T Function(Undoable) copy) {
@@ -217,16 +221,19 @@ class ValueNestedNotifier<T> extends NestedNotifier<T> {
 
   @override
   Undoable takeSnapshot() {
+    Undoable snapshot;
     if (isSubtype<T, Undoable>())
-      return ValueNestedNotifier(_children.map((e) => (e as Undoable).takeSnapshot() as T).toList());
+      snapshot = ValueNestedNotifier(_children.map((e) => (e as Undoable).takeSnapshot() as T).toList());
     else
-      return ValueNestedNotifier<T>(toList());
+      snapshot = ValueNestedNotifier<T>(toList());
+    snapshot.overrideUuid(uuid);
+    return snapshot;
   }
 
   @override
   void restoreWith(Undoable snapshot) {
     var list = snapshot as ValueNestedNotifier<T>;
-    if (T is Undoable) {
+    if (isSubtype<T, Undoable>()) {
       updateOrReplaceWith(list.toList() as List<Undoable>, (e) => e.takeSnapshot() as T);
     }
     else {

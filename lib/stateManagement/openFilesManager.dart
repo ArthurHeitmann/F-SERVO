@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:path/path.dart' as path;
 
 import '../main.dart';
+import '../utils/utils.dart';
 import '../widgets/misc/confirmCancelDialog.dart';
 import 'changesExporter.dart';
 import 'miscValues.dart';
@@ -132,7 +133,7 @@ class FilesAreaManager extends NestedNotifier<OpenFileData> implements Undoable 
     FilesAreaManager leftArea;
     if (leftAreaIndex < 0 || leftAreaIndex >= areasManager.length) {
       leftArea = FilesAreaManager();
-      areasManager.insert(leftAreaIndex, leftArea);
+      areasManager.insert(clamp(leftAreaIndex, 0, areasManager.length), leftArea);
     }
     else {
       leftArea = areasManager[leftAreaIndex];
@@ -350,24 +351,30 @@ class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
 
   @override
   void remove(child) {
-    if (child == _activeArea)
-      _activeArea = this[0];
     child.removeListener(subEvents.notifyListeners);
     child.dispose();
     super.remove(child);
+    if (child == _activeArea)
+      _activeArea = isNotEmpty ? this[0] : null;
   }
 
   @override
   FilesAreaManager removeAt(int index) {
-    if (this[index] == _activeArea)
-      _activeArea = this[0];
     this[index].removeListener(subEvents.notifyListeners);
-    return super.removeAt(index);
+    var ret = super.removeAt(index);
+    ret.dispose();
+    if (ret == _activeArea)
+      _activeArea = isNotEmpty ? this[0] : null;
+    return ret;
   }
 
   @override
   void clear() {
     _activeArea = null;
+    for (var area in this) {
+      area.removeListener(subEvents.notifyListeners);
+      area.dispose();
+    }
     super.clear();
   }
   
@@ -388,6 +395,7 @@ class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
   @override
   Undoable takeSnapshot() {
     var snapshot = OpenFilesAreasManager(hiddenArea.takeSnapshot() as FilesAreaManager);
+    snapshot.overrideUuid(uuid);
     snapshot.replaceWith(map((area) => area.takeSnapshot() as FilesAreaManager).toList());
     snapshot._activeArea = _activeArea != null ? snapshot[indexOf(_activeArea!)] : null;
     return snapshot;

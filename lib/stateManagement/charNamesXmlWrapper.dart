@@ -56,7 +56,9 @@ class CharNamesXmlProp extends XmlProp with CustomTableConfig {
   final List<CharNameTranslations> names = [];
   String _lastString = "";
   final ChangeNotifier anyChangeNotifier = ChangeNotifier();
-  bool ignoreUpdates = false;
+  bool _ignoreUpdates = false;
+  bool _ignoreAnyChanges = false;
+  bool _hasPendingAnyChanges = false;
 
   CharNamesXmlProp({ super.file, super.children })
     : super(tagId: _textHash, tagName: "root", value: StringProp(""), parentTags: []) {
@@ -72,6 +74,10 @@ class CharNamesXmlProp extends XmlProp with CustomTableConfig {
     deserialize();
 
     anyChangeNotifier.addListener(() {
+      if (_ignoreAnyChanges) {
+        _hasPendingAnyChanges = true;
+        return;
+      }
       serialize();
       file?.hasUnsavedChanges = true;
       file?.contentNotifier.notifyListeners();
@@ -81,11 +87,11 @@ class CharNamesXmlProp extends XmlProp with CustomTableConfig {
 
   @override
   void notifyListeners() {
-    if (ignoreUpdates)
+    if (_ignoreUpdates)
       return;
-    ignoreUpdates = true;
+    _ignoreUpdates = true;
     super.notifyListeners();
-    ignoreUpdates = false;
+    _ignoreUpdates = false;
   }
 
   String _getString() {
@@ -99,6 +105,7 @@ class CharNamesXmlProp extends XmlProp with CustomTableConfig {
 
   void deserialize() {
     print("deserialize");
+    _ignoreAnyChanges = true;
     // convert prop rows of hex to single string
     var text = _getString();
     if (text == _lastString)
@@ -178,6 +185,12 @@ class CharNamesXmlProp extends XmlProp with CustomTableConfig {
     }
     rowCount.value = names.length;
     rowCount.notifyListeners();
+
+    _ignoreAnyChanges = false;
+    if (_hasPendingAnyChanges) {
+      _hasPendingAnyChanges = false;
+      anyChangeNotifier.notifyListeners();
+    }
   }
 
   void serialize() {
@@ -313,6 +326,7 @@ class CharNamesXmlProp extends XmlProp with CustomTableConfig {
       file: file,
       children: map((p) => p.takeSnapshot() as XmlProp).toList(),
     );
+    snapshot.overrideUuid(uuid);
     return snapshot;
   }
 

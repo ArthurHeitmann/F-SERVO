@@ -256,7 +256,9 @@ class GroupToken with HasUuid, Undoable {
 
   @override
   Undoable takeSnapshot() {
-    return GroupToken(code.takeSnapshot() as HexProp, id.takeSnapshot() as HexProp);
+    var snapshot = GroupToken(code.takeSnapshot() as HexProp, id.takeSnapshot() as HexProp);
+    snapshot.overrideUuid(uuid);
+    return snapshot;
   }
 
   @override
@@ -814,6 +816,7 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
   @override
   Undoable takeSnapshot() {
     var snapshot = OpenHierarchyManager();
+    snapshot.overrideUuid(uuid);
     snapshot.replaceWith(map((entry) => entry.clone()).toList());
     snapshot._selectedEntry = _selectedEntry != null ? _selectedEntry?.takeSnapshot() as HierarchyEntry : null;
     return snapshot;

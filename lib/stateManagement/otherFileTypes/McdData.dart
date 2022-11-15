@@ -240,12 +240,15 @@ class McdLine extends _McdFilePart {
 
   @override
   Undoable takeSnapshot() {
-    return McdLine(file, text.takeSnapshot() as StringProp);
+    var snapshot = McdLine(file, text.takeSnapshot() as StringProp);
+    snapshot.overrideUuid(uuid);
+    return snapshot;
   }
 
   @override
   void restoreWith(Undoable snapshot) {
-    text.restoreWith(snapshot);
+    var line = snapshot as McdLine;
+    text.restoreWith(line.text);
   }
 }
 
@@ -307,19 +310,22 @@ class McdParagraph extends _McdFilePart {
 
   @override
   Undoable takeSnapshot() {
-    return McdParagraph(
+    var snapshot = McdParagraph(
       file,
       vPos.takeSnapshot() as NumberProp,
       fontId.takeSnapshot() as NumberProp,
       lines.takeSnapshot() as ValueNestedNotifier<McdLine>
     );
+    snapshot.overrideUuid(uuid);
+    return snapshot;
   }
 
   @override
   void restoreWith(Undoable snapshot) {
-    vPos.restoreWith(snapshot);
-    fontId.restoreWith(snapshot);
-    lines.restoreWith(snapshot);
+    var paragraph = snapshot as McdParagraph;
+    vPos.restoreWith(paragraph.vPos);
+    fontId.restoreWith(paragraph.fontId);
+    lines.restoreWith(paragraph.lines);
   }
 }
 
@@ -387,21 +393,24 @@ class McdEvent extends _McdFilePart {
 
   @override
   Undoable takeSnapshot() {
-    return McdEvent(
+    var snapshot =  McdEvent(
       file,
       eventId.takeSnapshot() as HexProp,
       name.takeSnapshot() as StringProp,
       msgSeqNum.takeSnapshot() as NumberProp,
       paragraphs.takeSnapshot() as ValueNestedNotifier<McdParagraph>
     );
+    snapshot.overrideUuid(uuid);
+    return snapshot;
   }
 
   @override
   void restoreWith(Undoable snapshot) {
-    eventId.restoreWith(snapshot);
-    name.restoreWith(snapshot);
-    msgSeqNum.restoreWith(snapshot);
-    paragraphs.restoreWith(snapshot);
+    var event = snapshot as McdEvent;
+    eventId.restoreWith(event.eventId);
+    name.restoreWith(event.name);
+    msgSeqNum.restoreWith(event.msgSeqNum);
+    paragraphs.restoreWith(event.paragraphs);
   }
 }
 
@@ -962,13 +971,15 @@ class McdData extends _McdFilePart {
 
   @override
   Undoable takeSnapshot() {
-    return McdData(
+    var snapshot = McdData(
       file,
       textureWtaPath?.takeSnapshot() as StringProp?,
       textureWtpPath?.takeSnapshot() as StringProp?,
       usedFonts.map((id, font) => MapEntry(id, font)),
       events.takeSnapshot() as ValueNestedNotifier<McdEvent>,
     );
+    snapshot.overrideUuid(uuid);
+    return snapshot;
   }
 
   @override

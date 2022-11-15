@@ -22,11 +22,13 @@ class TmdEntryData with HasUuid, Undoable {
   
   @override
   Undoable takeSnapshot() {
-    return TmdEntryData(
+    var snapshot = TmdEntryData(
       id: id.takeSnapshot() as StringProp,
       text: text.takeSnapshot() as StringProp,
       anyChangeNotifier: _anyChangeNotifier,
     );
+    snapshot.overrideUuid(uuid);
+    return snapshot;
   }
   
   @override
@@ -121,11 +123,13 @@ class TmdData extends NestedNotifier<TmdEntryData> with CustomTableConfig, Undoa
   
   @override
   Undoable takeSnapshot() {
-    return TmdData(
+    var snapshot = TmdData(
       map((e) => e.takeSnapshot() as TmdEntryData).toList(),
       name,
       fileChangeNotifier,
     );
+    snapshot.overrideUuid(uuid);
+    return snapshot;
   }
   
   @override

@@ -22,11 +22,13 @@ class SmdEntryData with HasUuid, Undoable {
   
   @override
   Undoable takeSnapshot() {
-    return SmdEntryData(
+    var snapshot = SmdEntryData(
       id: id.takeSnapshot() as StringProp,
       text: text.takeSnapshot() as StringProp,
       anyChangeNotifier: _anyChangeNotifier,
     );
+    snapshot.overrideUuid(uuid);
+    return snapshot;
   }
   
   @override
@@ -120,11 +122,13 @@ class SmdData extends NestedNotifier<SmdEntryData> with CustomTableConfig, Undoa
   
   @override
   Undoable takeSnapshot() {
-    return SmdData(
+    var snapshot = SmdData(
       map((e) => e.takeSnapshot() as SmdEntryData).toList(),
       name,
       fileChangeNotifier,
     );
+    snapshot.overrideUuid(uuid);
+    return snapshot;
   }
   
   @override
