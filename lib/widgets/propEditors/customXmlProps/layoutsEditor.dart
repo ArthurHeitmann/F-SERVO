@@ -29,19 +29,7 @@ class LayoutsEditor extends StatelessWidget {
               ),
             ],
           ),
-        NestedContextMenu(
-          buttons: [
-            ContextMenuButtonConfig(
-              "Sync to Blender",
-              icon: const Icon(Icons.sync, size: 14,),
-              onPressed: () => startSyncingObject(SyncedEntityList(
-                list: prop.get("normal")!.get("layouts")!,
-                parentUuid: "",
-              ))
-            ),
-          ],
-          child: makeXmlPropEditor(prop.get("normal")!.get("layouts")!, showDetails),
-        ),
+        makeXmlPropEditor(prop.get("normal")!.get("layouts")!, showDetails),
       ],
     );
   }

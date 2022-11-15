@@ -10,6 +10,7 @@ import '../Property.dart';
 import '../hasUuid.dart';
 import '../nestedNotifier.dart';
 import '../statusInfo.dart';
+import '../xmlProps/xmlActionProp.dart';
 import '../xmlProps/xmlProp.dart';
 import 'syncServer.dart';
 
@@ -115,7 +116,10 @@ abstract class SyncedObject with HasUuid {
   final bool allowReparent;
   bool _isUpdating = false;
 
-  SyncedObject({ required this.type, required String uuid, required this.parentUuid, required this.allowReparent }) {
+  SyncedObject({
+    required this.type, required String uuid, required this.parentUuid,
+    required this.allowReparent, this.nameHint,
+  }) {
     overrideUuid(uuid);
   }
 
@@ -242,14 +246,16 @@ class SyncedList<T extends HasUuid> extends SyncedObject {
   final bool Function(T) filter;
   final SyncedObject Function(T, String parentUuid) makeSyncedObj;
   final T Function(T, String uuid) makeCopy;
+  final void Function()? onLengthChange;
   final String listType;
   final bool allowListChange;
   List<String> _syncedUuids = [];
   
   SyncedList({
     required this.list, required super.parentUuid, required this.filter,
-    required this.makeSyncedObj, required this.makeCopy, required this.listType,
-    required super.allowReparent, required this.allowListChange
+    required this.makeSyncedObj, required this.makeCopy, this.onLengthChange,
+    required this.listType, required super.allowReparent, required this.allowListChange,
+    super.nameHint,
   })
   : super(type: SyncedObjectsType.list, uuid: list.uuid) {
     list.addListener(_onListChange);
@@ -270,11 +276,12 @@ class SyncedList<T extends HasUuid> extends SyncedObject {
         "type": type.index,
         "parentUuid": parentUuid,
         "listType": listType,
+        "nameHint": nameHint,
         "allowReparent": allowReparent,
         "allowListChange": allowListChange,
         "children": list.where(filter).map((e) {
           var syncedObj = makeSyncedObj(e, uuid);
-          _syncedObjects[e.uuid] = syncedObj;
+          _syncedObjects[syncedObj.uuid] = syncedObj;
           return syncedObj.getStartSyncMsg().toJson();
         }).toList(),
       }
@@ -302,6 +309,7 @@ class SyncedList<T extends HasUuid> extends SyncedObject {
         list.removeWhere((e) => e.uuid == removedUuid);
         var removedSyncObj = _syncedObjects.remove(removedUuid);
         removedSyncObj?.dispose();
+        onLengthChange?.call();
         break;
       case SyncUpdateType.duplicate:
         if (!allowListChange) {
@@ -317,6 +325,7 @@ class SyncedList<T extends HasUuid> extends SyncedObject {
         list.add(newObj);
         _syncedUuids.add(newObj.uuid);
         _syncedObjects[newObj.uuid] = makeSyncedObj(newObj, uuid);
+        onLengthChange?.call();
         break;
       case SyncUpdateType.add:
         print("Adding from blender is not supported");
@@ -394,45 +403,98 @@ class SyncedList<T extends HasUuid> extends SyncedObject {
     list.add(obj);
     _syncedUuids.add(obj.uuid);
     _isUpdating = false;
+    onLengthChange?.call();
   }
 
   T? reparentRemove(String uuid) {
-    var index = _syncedUuids.indexOf(uuid);
-    if (index == -1)
+    if (!_syncedUuids.contains(uuid))
       return null;
     _isUpdating = true;
-    var removed = list.removeAt(index);
-    _syncedUuids.removeAt(index);
+    var obj = list.firstWhere((e) => e.uuid == uuid);
+    list.remove(obj);
+    _syncedUuids.remove(uuid);
     _isUpdating = false;
-    return removed;
+    onLengthChange?.call();
+    return obj;
   }
 }
 
 class SyncedXmlList extends SyncedList<XmlProp> {
   SyncedXmlList({
     required super.list, required super.parentUuid, required super.listType,
-    required super.allowReparent, required super.allowListChange
+    required super.makeSyncedObj,
+    required super.allowReparent, required super.allowListChange, super.nameHint
   }) : super(
     filter: (prop) => prop.tagName == "value",
-    makeSyncedObj: (prop, parentUuid) => EntitySyncedObject(prop, parentUuid: parentUuid),
     makeCopy: (prop, uuid) {
       var newProp = XmlProp.fromXml(prop.toXml(), parentTags: prop.parentTags, file: prop.file);
       var idProp = newProp.get("id");
       if (idProp != null)
         (idProp.value as HexProp).value = randomId();
       return newProp;
+    },
+    onLengthChange: () {
+      var valuesLength = list.where((e) => e.tagName == "value").length;
+      var sizeProp = list.firstWhere((e) => e.tagName == "size");
+      (sizeProp.value as NumberProp).value = valuesLength;
     }
   );
 }
 
 class SyncedEntityList extends SyncedXmlList {
-  SyncedEntityList({ required super.list, required super.parentUuid })
-    : super(listType: "entity", allowReparent: false, allowListChange: true);
+  SyncedEntityList({ required super.list, required super.parentUuid }) : super(
+    listType: "entity", nameHint: "Entities",
+    allowReparent: false, allowListChange: true,
+    makeSyncedObj: (prop, parentUuid) => EntitySyncedObject(prop, parentUuid: parentUuid),
+);
 }
 
 class SyncedAreaList extends SyncedXmlList {
-  SyncedAreaList({ required super.list, required super.parentUuid })
-    : super(listType: "area", allowReparent: false, allowListChange: true);
+  SyncedAreaList({ required super.list, required super.parentUuid }) : super(
+    listType: "area", nameHint: "Areas",
+    allowReparent: false, allowListChange: true,
+    makeSyncedObj: (prop, parentUuid) => AreaSyncedObject(prop, parentUuid: parentUuid),
+  );
+}
+
+class SyncedAction extends SyncedList<XmlProp> {
+  final Set<String> syncedTags;
+
+  SyncedAction({ required XmlActionProp action, required super.parentUuid, required super.makeSyncedObj, required this.syncedTags }) : super(
+    list: action,
+    nameHint: action.name.value,
+    filter: (prop) => syncedTags.contains(prop.tagName),
+    makeCopy: (prop, uuid) => throw UnimplementedError(),
+    listType: "entityAction",
+    allowReparent: true,
+    allowListChange: false
+  );
+}
+
+class SyncedEntityAction extends SyncedAction {
+  SyncedEntityAction({ required super.action, required super.parentUuid }) : super(
+    syncedTags: const { "layouts", "area" },
+    makeSyncedObj: (prop, parentUuid) {
+      if (prop.tagName == "layouts") {
+        return SyncedEntityList(
+          list: prop.get("normal")?.get("layouts")! ?? prop.get("layouts")!,
+          parentUuid: parentUuid,
+        );
+      } else {
+        return SyncedAreaList(
+          list: prop,
+          parentUuid: parentUuid,
+        );
+      }
+    }
+  );
+}
+
+class SyncedBezierAction extends SyncedAction {
+  SyncedBezierAction({ required super.action, required super.parentUuid }) : super(
+    syncedTags: const { "curve", "bezier_", "route", "upRoute_" },
+    makeSyncedObj: (prop, parentUuid) => BezierSyncedObject(prop, parentUuid: parentUuid),
+  );
 }
 
 class AreaSyncedObject extends SyncedXmlObject {

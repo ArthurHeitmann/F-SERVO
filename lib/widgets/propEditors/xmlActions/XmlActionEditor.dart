@@ -56,7 +56,7 @@ class XmlActionEditor extends ChangeNotifierWidget {
   State<XmlActionEditor> createState() => XmlActionEditorState();
 }
 
-class XmlActionEditorState extends ChangeNotifierState<XmlActionEditor> {
+class XmlActionEditorState<T extends XmlActionEditor> extends ChangeNotifierState<T> {
   @override
   Widget build(BuildContext context) {
     return SelectableWidget<XmlActionProp>(
