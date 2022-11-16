@@ -101,11 +101,11 @@ class XmlActionEditorState<T extends XmlActionEditor> extends ChangeNotifierStat
   }
 
   Widget makeActionHeader(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
+    return Material(
+      // decoration: BoxDecoration(
         color: getActionPrimaryColor(context),
         borderRadius: BorderRadius.only(topLeft: Radius.circular(getTheme(context).actionBorderRadius!), topRight: Radius.circular(getTheme(context).actionBorderRadius!)),
-      ),
+      // ),
       child: Theme(
         data: Theme.of(context).copyWith(
           textSelectionTheme: TextSelectionThemeData(
@@ -144,14 +144,20 @@ class XmlActionEditorState<T extends XmlActionEditor> extends ChangeNotifierStat
                   ],
                 ),
               ),
-              FlexDraggableHandle(
-                child: Icon(Icons.drag_handle, color: getTheme(context).textColor!.withOpacity(0.5),),
-              )
+              ...getRightHeaderButtons(context),
             ],
           ),
         ),
       ),
     );
+  }
+
+  List<Widget> getRightHeaderButtons(BuildContext context) {
+    return [
+      FlexDraggableHandle(
+        child: Icon(Icons.drag_handle, color: getTheme(context).textColor!.withOpacity(0.5),),
+      )
+    ];
   }
 
   Widget makeActionBody() {

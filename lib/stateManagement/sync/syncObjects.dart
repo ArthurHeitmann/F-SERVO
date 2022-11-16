@@ -1,8 +1,11 @@
 
+// ignore_for_file: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:xml/xml.dart';
 
 import '../../utils/utils.dart';
@@ -28,11 +31,12 @@ enum SyncUpdateType {
   duplicate,
 }
 
-Map<String, SyncedObject> _syncedObjects = {};
+Map<String, SyncedObject> syncedObjects = {};
+ChangeNotifier syncedObjectsNotifier = ChangeNotifier();
 bool _hasAddedListener = false;
 
 void startSyncingObject(SyncedObject obj) {
-  if (_syncedObjects.containsKey(obj.uuid)) {
+  if (syncedObjects.containsKey(obj.uuid)) {
     showToast("Already syncing this object");
     return;
   }
@@ -42,14 +46,16 @@ void startSyncingObject(SyncedObject obj) {
     canSync.addListener(() {
       if (canSync.value)
         return;
-      for (var obj in _syncedObjects.values)
+      for (var obj in syncedObjects.values)
         obj.dispose();
-      _syncedObjects.clear();
+      syncedObjects.clear();
+      syncedObjectsNotifier.notifyListeners();
     });
   }
 
   if (canSync.value) {
-    _syncedObjects[obj.uuid] = obj;
+    syncedObjects[obj.uuid] = obj;
+    syncedObjectsNotifier.notifyListeners();
     obj.startSync();
   }
   else {
@@ -60,7 +66,7 @@ void startSyncingObject(SyncedObject obj) {
 void _handleSyncMessage(SyncMessage message) {
   switch (message.method) {
     case "update":
-      var obj = _syncedObjects[message.uuid];
+      var obj = syncedObjects[message.uuid];
       if (obj != null)
         obj.update(message);
       else
@@ -69,34 +75,35 @@ void _handleSyncMessage(SyncMessage message) {
 
     case "endSync":
       print("endSync ${message.uuid}");
-      _syncedObjects[message.uuid]?.dispose();
-      _syncedObjects.remove(message.uuid);
+      syncedObjects[message.uuid]?.dispose();
+      syncedObjects.remove(message.uuid);
+      syncedObjectsNotifier.notifyListeners();
       break;
 
     case "reparent":
       var childUuid = message.uuid;
       var srcListUuid = message.args["srcListUuid"];
       var destListUuid = message.args["destListUuid"];
-      if (!_syncedObjects.containsKey(childUuid) ||
-          !_syncedObjects.containsKey(srcListUuid) || !_syncedObjects.containsKey(destListUuid) ||
-          _syncedObjects[srcListUuid] is! SyncedList || _syncedObjects[destListUuid] is! SyncedList) {
+      if (!syncedObjects.containsKey(childUuid) ||
+          !syncedObjects.containsKey(srcListUuid) || !syncedObjects.containsKey(destListUuid) ||
+          syncedObjects[srcListUuid] is! SyncedList || syncedObjects[destListUuid] is! SyncedList) {
         print("Invalid reparent from $srcListUuid to $destListUuid");
         messageLog.add("Invalid reparent from $srcListUuid to $destListUuid");
         wsSend(SyncMessage("endSync", message.uuid, {}));
         return;
       }
-      if (!_syncedObjects[childUuid]!.allowReparent) {
-        print("Can't reparent ${_syncedObjects[childUuid]}");
-        messageLog.add("Can't reparent ${_syncedObjects[childUuid]}");
+      if (!syncedObjects[childUuid]!.allowReparent) {
+        print("Can't reparent ${syncedObjects[childUuid]}");
+        messageLog.add("Can't reparent ${syncedObjects[childUuid]}");
         wsSend(SyncMessage("endSync", message.uuid, {}));
         return;
       }
 
-      var srcList = _syncedObjects[srcListUuid] as SyncedList;
-      var destList = _syncedObjects[destListUuid] as SyncedList;
+      var srcList = syncedObjects[srcListUuid] as SyncedList;
+      var destList = syncedObjects[destListUuid] as SyncedList;
       if (srcList.listType != destList.listType) {
-        print("Can't reparent ${_syncedObjects[childUuid]} from $srcList to $destList");
-        messageLog.add("Can't reparent ${_syncedObjects[childUuid]} from $srcList to $destList");
+        print("Can't reparent ${syncedObjects[childUuid]} from $srcList to $destList");
+        messageLog.add("Can't reparent ${syncedObjects[childUuid]} from $srcList to $destList");
         wsSend(SyncMessage("endSync", message.uuid, {}));
         return;
       }
@@ -140,7 +147,8 @@ abstract class SyncedObject with HasUuid {
       uuid,
       {}
     ));
-    _syncedObjects.remove(uuid);
+    syncedObjects.remove(uuid);
+    syncedObjectsNotifier.notifyListeners();
     dispose();
   }
 
@@ -281,7 +289,8 @@ class SyncedList<T extends HasUuid> extends SyncedObject {
         "allowListChange": allowListChange,
         "children": list.where(filter).map((e) {
           var syncedObj = makeSyncedObj(e, uuid);
-          _syncedObjects[syncedObj.uuid] = syncedObj;
+          syncedObjects[syncedObj.uuid] = syncedObj;
+          syncedObjectsNotifier.notifyListeners();
           return syncedObj.getStartSyncMsg().toJson();
         }).toList(),
       }
@@ -307,7 +316,8 @@ class SyncedList<T extends HasUuid> extends SyncedObject {
         }
         _syncedUuids.removeAt(index);
         list.removeWhere((e) => e.uuid == removedUuid);
-        var removedSyncObj = _syncedObjects.remove(removedUuid);
+        var removedSyncObj = syncedObjects.remove(removedUuid);
+        syncedObjectsNotifier.notifyListeners();
         removedSyncObj?.dispose();
         onLengthChange?.call();
         break;
@@ -324,7 +334,8 @@ class SyncedList<T extends HasUuid> extends SyncedObject {
         newObj.overrideUuid(newObjUuid);
         list.add(newObj);
         _syncedUuids.add(newObj.uuid);
-        _syncedObjects[newObj.uuid] = makeSyncedObj(newObj, uuid);
+        syncedObjects[newObj.uuid] = makeSyncedObj(newObj, uuid);
+        syncedObjectsNotifier.notifyListeners();
         onLengthChange?.call();
         break;
       case SyncUpdateType.add:
@@ -352,7 +363,8 @@ class SyncedList<T extends HasUuid> extends SyncedObject {
       if (!filter(newObj))
         continue;
       var syncObj = makeSyncedObj(newObj, this.uuid);
-      _syncedObjects[uuid] = syncObj;
+      syncedObjects[uuid] = syncObj;
+      syncedObjectsNotifier.notifyListeners();
       wsSend(SyncMessage(
         "update",
         this.uuid,
@@ -365,7 +377,8 @@ class SyncedList<T extends HasUuid> extends SyncedObject {
     }
 
     for (var uuid in removed) {
-      var syncObj = _syncedObjects.remove(uuid);
+      var syncObj = syncedObjects.remove(uuid);
+      syncedObjectsNotifier.notifyListeners();
       syncObj?.dispose();
       wsSend(SyncMessage(
         "update",
@@ -389,8 +402,8 @@ class SyncedList<T extends HasUuid> extends SyncedObject {
     // remove existing synced objects
     // they will be re-added on startSync
     for (var child in list) {
-      if (_syncedObjects.containsKey(child.uuid))
-        _syncedObjects[child.uuid]!.endSync();
+      if (syncedObjects.containsKey(child.uuid))
+        syncedObjects[child.uuid]!.endSync();
       else if (child is SyncedList)
         removeExistingSyncedObjects(child);
     }
