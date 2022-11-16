@@ -253,25 +253,21 @@ class McdLine extends _McdFilePart {
 }
 
 class McdParagraph extends _McdFilePart {
-  NumberProp vPos;
   NumberProp fontId;
   ValueNestedNotifier<McdLine> lines;
 
-  McdParagraph(super.file, this.vPos, this.fontId, this.lines) {
-    vPos.addListener(onDataChanged);
+  McdParagraph(super.file, this.fontId, this.lines) {
     fontId.addListener(onDataChanged);
     lines.addListener(onDataChanged);
   }
   
   McdParagraph.fromMcd(super.file, McdFileParagraph paragraph, List<McdLocalFont> fonts) : 
-    vPos = NumberProp(paragraph.vPos, true),
     fontId = NumberProp(paragraph.fontId, true),
     lines = ValueNestedNotifier(
       paragraph.lines
         .map((l) => McdLine.fromMcd(file, l))
         .toList()
     ) {
-    vPos.addListener(onDataChanged);
     fontId.addListener(onDataChanged);
     lines.addListener(onDataChanged);
   }
@@ -289,7 +285,6 @@ class McdParagraph extends _McdFilePart {
 
   @override
   void dispose() {
-    vPos.dispose();
     fontId.dispose();
     for (var line in lines)
       line.dispose();
@@ -312,7 +307,6 @@ class McdParagraph extends _McdFilePart {
   Undoable takeSnapshot() {
     var snapshot = McdParagraph(
       file,
-      vPos.takeSnapshot() as NumberProp,
       fontId.takeSnapshot() as NumberProp,
       lines.takeSnapshot() as ValueNestedNotifier<McdLine>
     );
@@ -323,7 +317,6 @@ class McdParagraph extends _McdFilePart {
   @override
   void restoreWith(Undoable snapshot) {
     var paragraph = snapshot as McdParagraph;
-    vPos.restoreWith(paragraph.vPos);
     fontId.restoreWith(paragraph.fontId);
     lines.restoreWith(paragraph.lines);
   }
@@ -332,20 +325,17 @@ class McdParagraph extends _McdFilePart {
 class McdEvent extends _McdFilePart {
   HexProp eventId;
   StringProp name;
-  NumberProp msgSeqNum;
   ValueNestedNotifier<McdParagraph> paragraphs;
 
-  McdEvent(super.file, this.eventId, this.name, this.msgSeqNum, this.paragraphs) {
+  McdEvent(super.file, this.eventId, this.name, this.paragraphs) {
     eventId.addListener(onDataChanged);
     name.addListener(onDataChanged);
-    msgSeqNum.addListener(onDataChanged);
     paragraphs.addListener(onDataChanged);
   }
 
   McdEvent.fromMcd(super.file, McdFileEvent event, List<McdLocalFont> fonts) : 
     eventId = HexProp(event.id),
     name = StringProp(event.name),
-    msgSeqNum = NumberProp(event.message.seqNumber, true),
     paragraphs = ValueNestedNotifier(
       event.message.paragraphs
         .map((p) => McdParagraph.fromMcd(file, p, fonts))
@@ -353,14 +343,12 @@ class McdEvent extends _McdFilePart {
     ) {
     eventId.addListener(onDataChanged);
     name.addListener(onDataChanged);
-    msgSeqNum.addListener(onDataChanged);
     paragraphs.addListener(onDataChanged);
   }
 
   void addParagraph(int fontId) {
     paragraphs.add(McdParagraph(
       file,
-      NumberProp(0, true),
       NumberProp(fontId, true),
       ValueNestedNotifier([])
     ));
@@ -377,7 +365,6 @@ class McdEvent extends _McdFilePart {
   void dispose() {
     eventId.dispose();
     name.dispose();
-    msgSeqNum.dispose();
     for (var paragraph in paragraphs)
       paragraph.dispose();
     paragraphs.dispose();
@@ -397,7 +384,6 @@ class McdEvent extends _McdFilePart {
       file,
       eventId.takeSnapshot() as HexProp,
       name.takeSnapshot() as StringProp,
-      msgSeqNum.takeSnapshot() as NumberProp,
       paragraphs.takeSnapshot() as ValueNestedNotifier<McdParagraph>
     );
     snapshot.overrideUuid(uuid);
@@ -409,7 +395,6 @@ class McdEvent extends _McdFilePart {
     var event = snapshot as McdEvent;
     eventId.restoreWith(event.eventId);
     name.restoreWith(event.name);
-    msgSeqNum.restoreWith(event.msgSeqNum);
     paragraphs.restoreWith(event.paragraphs);
   }
 }
@@ -422,10 +407,11 @@ class McdData extends _McdFilePart {
 
   final StringProp? textureWtaPath;
   final StringProp? textureWtpPath;
+  final int firstMsgSeqNum;
   ValueNestedNotifier<McdEvent> events;
   Map<int, McdLocalFont> usedFonts;
 
-  McdData(super.file, this.textureWtaPath, this.textureWtpPath, this.usedFonts, this.events) {
+  McdData(super.file, this.textureWtaPath, this.textureWtpPath, this.usedFonts, this.firstMsgSeqNum, this.events) {
     events.addListener(onDataChanged);
   }
   
@@ -476,6 +462,7 @@ class McdData extends _McdFilePart {
       wtaPath != null ? StringProp(wtaPath) : null,
       wtpPath != null ? StringProp(wtpPath) : null,
       {for (var f in usedFonts) f.fontId: f},
+      mcd.messages.first.seqNumber,
       ValueNestedNotifier<McdEvent>(events)
     );
   }
@@ -513,7 +500,6 @@ class McdData extends _McdFilePart {
       file,
       HexProp(events.isNotEmpty ? events.last.eventId.value + 1 : randomId()),
       StringProp("NEW_EVENT_NAME"),
-      NumberProp(getLastSeqNum() + 1, true),
       ValueNestedNotifier([])
     ));
     undoHistoryManager.onUndoableEvent();
@@ -542,12 +528,6 @@ class McdData extends _McdFilePart {
   static void removeFontOverride(int index) {
     fontOverrides.removeAt(index)
       .dispose();
-  }
-
-  int getLastSeqNum() {
-    return events
-      .map((e) => e.msgSeqNum.value as int)
-      .reduce(max);
   }
 
   Future<void> save() async {
@@ -643,13 +623,11 @@ class McdData extends _McdFilePart {
     List<McdFileLetterBase> exportLetters = [];
 
     // messages and events
-    var sortedEvents = events.toList();
-    sortedEvents.sort((a, b) => a.msgSeqNum.value.compareTo(b.msgSeqNum.value));
-    for (int i = 0; i < sortedEvents.length; i++) {
-      var event = sortedEvents[i];
+    for (int i = 0; i < events.length; i++) {
+      var event = events[i];
       var eventMsg = McdFileMessage(
         -1, event.paragraphs.length,
-        event.msgSeqNum.value.toInt(), event.eventId.value,
+        firstMsgSeqNum + i, event.eventId.value,
         [],
       );
       exportMessages.add(eventMsg);
@@ -663,8 +641,9 @@ class McdData extends _McdFilePart {
     }
 
     // paragraphs, lines, letters
-    for (int i = 0; i < exportMessages.length; i++) {
-      for (var paragraph in sortedEvents[i].paragraphs) {
+    for (int msgI = 0; msgI < exportMessages.length; msgI++) {
+      for (int parI = 0; parI < events[parI].paragraphs.length; parI++) {
+        var paragraph = events[parI].paragraphs[parI];
         List<McdFileLine> paragraphLines = [];
         var font = exportFontMap[paragraph.fontId.value.toInt()]!;
         for (var line in paragraph.lines) {
@@ -682,12 +661,12 @@ class McdData extends _McdFilePart {
 
         var par = McdFileParagraph(
           -1, paragraphLines.length,
-          paragraph.vPos.value.toInt(), 0,
+          parI, 0,
           font.id,
           paragraphLines
         );
         exportParagraphs.add(par);
-        exportMessages[i].paragraphs.add(par);
+        exportMessages[parI].paragraphs.add(par);
       }
     }
 
@@ -976,6 +955,7 @@ class McdData extends _McdFilePart {
       textureWtaPath?.takeSnapshot() as StringProp?,
       textureWtpPath?.takeSnapshot() as StringProp?,
       usedFonts.map((id, font) => MapEntry(id, font)),
+      firstMsgSeqNum,
       events.takeSnapshot() as ValueNestedNotifier<McdEvent>,
     );
     snapshot.overrideUuid(uuid);

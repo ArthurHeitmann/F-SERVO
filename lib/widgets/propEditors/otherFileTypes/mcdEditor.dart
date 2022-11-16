@@ -147,8 +147,6 @@ class _McdEditorBodyState extends ChangeNotifierState<_McdEditorBody> {
       return event.name.value.toLowerCase().contains(searchLower) ||
         event.paragraphs.any((p) => p.lines.any((l) => l.text.value.toLowerCase().contains(searchLower)));
     }).toList();
-    
-    events.sort((a, b) => a.item2.msgSeqNum.value.compareTo(b.item2.msgSeqNum.value));
   }
 
   @override
@@ -266,8 +264,6 @@ class _McdEventEditorState extends ChangeNotifierState<_McdEventEditor> {
                 const SizedBox(width: 10,),
                 const Text("ID"),
                 makePropEditor(widget.event.eventId),
-                const Text("SeqNum"),
-                makePropEditor(widget.event.msgSeqNum),
               ]
             ),
             const SizedBox(height: 5,),
@@ -341,8 +337,6 @@ class __McdParagraphEditorState extends ChangeNotifierState<_McdParagraphEditor>
             const SizedBox(width: 10,),
             const Text("fontID "),
             makePropEditor<UnderlinePropTextField>(widget.paragraph.fontId),
-            const Text("vPos "),
-            makePropEditor<UnderlinePropTextField>(widget.paragraph.vPos),
           ],
         ),
         const SizedBox(height: 5,),
