@@ -148,8 +148,8 @@ abstract class SyncedObject with HasUuid {
       {}
     ));
     syncedObjects.remove(uuid);
-    syncedObjectsNotifier.notifyListeners();
     dispose();
+    syncedObjectsNotifier.notifyListeners();
   }
 
   void updateInternal(SyncMessage message);
@@ -169,7 +169,7 @@ abstract class SyncedXmlObject extends SyncedObject {
   final XmlProp prop;
   late final void Function() syncToClient;
 
-  SyncedXmlObject({ required super.type, required this.prop, required super.parentUuid })
+  SyncedXmlObject({ required super.type, required this.prop, required super.parentUuid, super.nameHint })
     : super(uuid: prop.uuid, allowReparent: true) {
     _addChangeListeners(prop);
     prop.onDisposed.addListener(_onPropDispose);
@@ -434,84 +434,6 @@ class SyncedList<T extends HasUuid> extends SyncedObject {
   }
 }
 
-class SyncedXmlList extends SyncedList<XmlProp> {
-  SyncedXmlList({
-    required super.list, required super.parentUuid, required super.listType,
-    required super.makeSyncedObj,
-    required super.allowReparent, required super.allowListChange, super.nameHint
-  }) : super(
-    filter: (prop) => prop.tagName == "value",
-    makeCopy: (prop, uuid) {
-      var newProp = XmlProp.fromXml(prop.toXml(), parentTags: prop.parentTags, file: prop.file);
-      var idProp = newProp.get("id");
-      if (idProp != null)
-        (idProp.value as HexProp).value = randomId();
-      return newProp;
-    },
-    onLengthChange: () {
-      var valuesLength = list.where((e) => e.tagName == "value").length;
-      var sizeProp = list.firstWhere((e) => e.tagName == "size");
-      (sizeProp.value as NumberProp).value = valuesLength;
-    }
-  );
-}
-
-class SyncedEntityList extends SyncedXmlList {
-  SyncedEntityList({ required super.list, required super.parentUuid }) : super(
-    listType: "entity", nameHint: "Entities",
-    allowReparent: false, allowListChange: true,
-    makeSyncedObj: (prop, parentUuid) => EntitySyncedObject(prop, parentUuid: parentUuid),
-);
-}
-
-class SyncedAreaList extends SyncedXmlList {
-  SyncedAreaList({ required super.list, required super.parentUuid, String? nameHint }) : super(
-    listType: "area", nameHint: nameHint ?? "Areas",
-    allowReparent: false, allowListChange: true,
-    makeSyncedObj: (prop, parentUuid) => AreaSyncedObject(prop, parentUuid: parentUuid),
-  );
-}
-
-class SyncedAction extends SyncedList<XmlProp> {
-  final Set<String> syncedTags;
-
-  SyncedAction({ required XmlActionProp action, required super.parentUuid, required super.makeSyncedObj, required this.syncedTags }) : super(
-    list: action,
-    nameHint: action.name.value,
-    filter: (prop) => syncedTags.contains(prop.tagName),
-    makeCopy: (prop, uuid) => throw UnimplementedError(),
-    listType: "entityAction",
-    allowReparent: true,
-    allowListChange: false
-  );
-}
-
-class SyncedEntityAction extends SyncedAction {
-  SyncedEntityAction({ required super.action, required super.parentUuid }) : super(
-    syncedTags: const { "layouts", "area" },
-    makeSyncedObj: (prop, parentUuid) {
-      if (prop.tagName == "layouts") {
-        return SyncedEntityList(
-          list: prop.get("normal")?.get("layouts")! ?? prop.get("layouts")!,
-          parentUuid: parentUuid,
-        );
-      } else {
-        return SyncedAreaList(
-          list: prop,
-          parentUuid: parentUuid,
-        );
-      }
-    }
-  );
-}
-
-class SyncedBezierAction extends SyncedAction {
-  SyncedBezierAction({ required super.action, required super.parentUuid }) : super(
-    syncedTags: const { "curve", "bezier_", "route", "upRoute_" },
-    makeSyncedObj: (prop, parentUuid) => BezierSyncedObject(prop, parentUuid: parentUuid),
-  );
-}
-
 class AreaSyncedObject extends SyncedXmlObject {
   static const _typeBoxArea = "app::area::BoxArea";
   static const _typeCylinderArea = "app::area::CylinderArea";
@@ -523,7 +445,8 @@ class AreaSyncedObject extends SyncedXmlObject {
   // syncable props: position, radius
   static final _typeSphereAreaHash = crc32(_typeSphereArea);
 
-  AreaSyncedObject(XmlProp prop, {required super.parentUuid}) : super(type: SyncedObjectsType.area, prop: prop);
+  AreaSyncedObject(XmlProp prop, { required super.parentUuid, super.nameHint })
+    : super(type: SyncedObjectsType.area, prop: prop);
 
   @override
   void updateInternal(SyncMessage message) {
@@ -553,7 +476,8 @@ class AreaSyncedObject extends SyncedXmlObject {
 class EntitySyncedObject extends SyncedXmlObject {
   // syncable props: location{ position, rotation?, }, scale?, objId
 
-  EntitySyncedObject(XmlProp prop, {required super.parentUuid}) : super(type: SyncedObjectsType.entity, prop: prop);
+  EntitySyncedObject(XmlProp prop, { required super.parentUuid, super.nameHint})
+    : super(type: SyncedObjectsType.entity, prop: prop);
 
   @override
   void updateInternal(SyncMessage message) {
@@ -574,7 +498,8 @@ class EntitySyncedObject extends SyncedXmlObject {
 class BezierSyncedObject extends SyncedXmlObject {
   // syncable props: attribute, parent?, controls, nodes
 
-  BezierSyncedObject(XmlProp prop, {required super.parentUuid}) : super(type: SyncedObjectsType.bezier, prop: prop);
+  BezierSyncedObject(XmlProp prop, { required super.parentUuid, super.nameHint})
+    : super(type: SyncedObjectsType.bezier, prop: prop);
 
   @override
   void updateInternal(SyncMessage message) {
@@ -620,5 +545,8 @@ class BezierSyncedObject extends SyncedXmlObject {
         root.add(newProp);
       }
     }
+
+    var sizeProp = root.get("size")!;
+    (sizeProp.value as NumberProp).value = newChildrenCount;
   }
 }

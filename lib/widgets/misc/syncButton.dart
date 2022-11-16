@@ -69,14 +69,14 @@ class _SyncButtonState extends ChangeNotifierState<SyncButton> {
         duration: const Duration(milliseconds: 200),
         opacity: _isHovering ? 1 : 0.5,
         child: IconButton(
-          icon: const Icon(Icons.sync),
+          icon: const Icon(Icons.sync, size: 20),
           splashRadius: 20,
           onPressed: () => startSyncingObject(widget.makeSyncedObject()),
         ),
       );
     }
     return IconButton(
-      icon: _isHovering ? const Icon(Icons.sync_disabled) : const Icon(Icons.sync_alt),
+      icon: _isHovering ? const Icon(Icons.sync_disabled, size: 20) : const Icon(Icons.sync_alt, size: 20),
       splashRadius: 20,
       onPressed: () => syncedObjects[widget.uuid]?.endSync(),
     );

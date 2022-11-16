@@ -5,20 +5,20 @@ import '../../../stateManagement/sync/syncListImplementations.dart';
 import '../../misc/syncButton.dart';
 import 'XmlActionEditor.dart';
 
-class XmlActionWithAreaEditor extends XmlActionEditor {
-  XmlActionWithAreaEditor({ super.key, required super.action, required super.showDetails});
+class XmlBezierActionEditor extends XmlActionEditor {
+  XmlBezierActionEditor({super.key, required super.action, required super.showDetails});
 
   @override
-  State<XmlActionWithAreaEditor> createState() => _XmlActionWithAreaEditorState();
+  State<XmlBezierActionEditor> createState() => _XmlBezierActionEditorState();
 }
 
-class _XmlActionWithAreaEditorState extends XmlActionEditorState<XmlActionWithAreaEditor> {
+class _XmlBezierActionEditorState extends XmlActionEditorState<XmlBezierActionEditor> {
   @override
   List<Widget> getRightHeaderButtons(BuildContext context) {
     return [
       SyncButton(
         uuid: widget.action.uuid,
-        makeSyncedObject: () => SyncedAreasAction(
+        makeSyncedObject: () => SyncedBezierAction(
           action: widget.action,
           parentUuid: "",
         )
