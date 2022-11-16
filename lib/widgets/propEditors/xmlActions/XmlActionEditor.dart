@@ -49,8 +49,8 @@ class XmlActionEditor extends ChangeNotifierWidget {
   final bool showDetails;
   final XmlActionProp action;
 
-  XmlActionEditor({ required this.action, required this.showDetails })
-    : super(key: _getOrMakeKey(action.id.value), notifiers: [action, action.attribute]);
+  XmlActionEditor({ Key? key, required this.action, required this.showDetails })
+    : super(key: key ?? _getOrMakeKey(action.id.value), notifiers: [action, action.attribute]);
 
   @override
   State<XmlActionEditor> createState() => XmlActionEditorState();

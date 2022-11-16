@@ -164,9 +164,14 @@ class FilesAreaManager extends NestedNotifier<OpenFileData> implements Undoable 
   }
   
   Future<void> saveAll() async {
-    await Future.wait(
-      where((file) => file.hasUnsavedChanges)
-      .map((file) => file.save()));
+    try {
+      await Future.wait(
+        where((file) => file.hasUnsavedChanges)
+        .map((file) => file.save()));
+    } catch (e) {
+      print("Error while saving all files");
+      print(e);
+    }
   }
 
   @override

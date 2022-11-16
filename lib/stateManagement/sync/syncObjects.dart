@@ -268,9 +268,6 @@ class SyncedList<T extends HasUuid> extends SyncedObject {
   : super(type: SyncedObjectsType.list, uuid: list.uuid) {
     list.addListener(_onListChange);
     list.onDisposed.addListener(_onPropDispose);
-    _syncedUuids = list
-      .where(filter)
-      .map((e) => e.uuid).toList();
   }
 
   @override
@@ -289,6 +286,7 @@ class SyncedList<T extends HasUuid> extends SyncedObject {
         "allowListChange": allowListChange,
         "children": list.where(filter).map((e) {
           var syncedObj = makeSyncedObj(e, uuid);
+          _syncedUuids.add(syncedObj.uuid);
           syncedObjects[syncedObj.uuid] = syncedObj;
           syncedObjectsNotifier.notifyListeners();
           return syncedObj.getStartSyncMsg().toJson();
@@ -395,6 +393,10 @@ class SyncedList<T extends HasUuid> extends SyncedObject {
   void dispose() {
     list.removeListener(_onListChange);
     list.onDisposed.removeListener(_onPropDispose);
+    for (var uuid in _syncedUuids) {
+      var syncObj = syncedObjects.remove(uuid);
+      syncObj?.dispose();
+    }
     super.dispose();
   }
 
@@ -463,8 +465,8 @@ class SyncedEntityList extends SyncedXmlList {
 }
 
 class SyncedAreaList extends SyncedXmlList {
-  SyncedAreaList({ required super.list, required super.parentUuid }) : super(
-    listType: "area", nameHint: "Areas",
+  SyncedAreaList({ required super.list, required super.parentUuid, String? nameHint }) : super(
+    listType: "area", nameHint: nameHint ?? "Areas",
     allowReparent: false, allowListChange: true,
     makeSyncedObj: (prop, parentUuid) => AreaSyncedObject(prop, parentUuid: parentUuid),
   );

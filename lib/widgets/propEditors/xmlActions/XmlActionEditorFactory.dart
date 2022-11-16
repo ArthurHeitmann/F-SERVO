@@ -5,6 +5,7 @@ import '../../../stateManagement/xmlProps/xmlActionProp.dart';
 import '../../../utils/utils.dart';
 import 'DelayAction.dart';
 import 'XmlActionEditor.dart';
+import 'XmlActionWithAreaEditor.dart';
 import 'XmlEntityActionEditor.dart';
 
 final Map<int, Widget Function(XmlActionProp, bool)> actionsFactories = {
@@ -20,5 +21,7 @@ Widget makeXmlActionEditor({ required XmlActionProp action, required bool showDe
   var factory = actionsFactories[action.code.value];
   if (factory != null)
     return factory(action, showDetails);
+  if (action.skip(4).any((prop) => prop.tagName.toLowerCase().contains("area")))
+    return XmlActionWithAreaEditor(action: action, showDetails: showDetails);
   return XmlActionEditor(action: action, showDetails: showDetails);
 }

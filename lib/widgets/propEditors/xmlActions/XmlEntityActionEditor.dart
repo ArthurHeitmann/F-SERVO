@@ -1,16 +1,13 @@
 
-import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 
 import '../../../stateManagement/sync/syncObjects.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
-import '../../misc/nestedContextMenu.dart';
 import '../../misc/syncButton.dart';
 import 'XmlActionEditor.dart';
 
 class XmlEntityActionEditor extends XmlActionEditor {
-  // ignore: use_key_in_widget_constructors
-  XmlEntityActionEditor({ required super.action, required super.showDetails });
+  XmlEntityActionEditor({ super.key,  required super.action, required super.showDetails });
 
   @override
   State<XmlEntityActionEditor> createState() => _XmlEntityActionEditorState();
@@ -25,8 +22,8 @@ class _XmlEntityActionEditorState extends XmlActionEditorState<XmlEntityActionEd
         makeSyncedObject: () => SyncedList<XmlProp>(
           list: widget.action,
           parentUuid: "",
-          nameHint: widget.action.get("name")!.value.toString(),
-          filter: (prop) => { "layouts", "area" }.contains(prop.tagName),
+          nameHint: widget.action.name.value,
+          filter: (prop) => prop.tagName == "layouts" || prop.tagName.toLowerCase().contains("area"),
           makeSyncedObj: (prop, parentUuid) {
             if (prop.tagName == "layouts") {
               return SyncedEntityList(
@@ -37,6 +34,7 @@ class _XmlEntityActionEditorState extends XmlActionEditorState<XmlEntityActionEd
               return SyncedAreaList(
                 list: prop,
                 parentUuid: parentUuid,
+                nameHint: prop.tagName,
               );
             }
           },
