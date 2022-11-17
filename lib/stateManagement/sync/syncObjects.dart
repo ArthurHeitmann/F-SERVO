@@ -580,8 +580,8 @@ class EMGeneratorDistSyncedObject extends SyncedXmlObject {
     var propXmlString = message.args["propXml"] as String;
     var propXml = XmlDocument.parse(propXmlString).rootElement;
 
-    var distCur = prop.get("dist")!;
-    var distNew = propXml.getElement("dist")!;
+    var distCur = prop;
+    var distNew = propXml;
     updateXmlPropWithStr(distCur, "position", distNew);
     updateXmlPropWithStr(distCur, "rotation", distNew);
     updateXmlPropWithStr(distCur, "areaDist", distNew);

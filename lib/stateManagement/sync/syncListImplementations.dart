@@ -153,7 +153,7 @@ class SyncedEMGeneratorAction extends SyncedAction {
       }
       if (prop.tagName == "points") {
         return SyncedEMGeneratorNodeList(
-          list: prop,
+          list: prop.get("nodes")!,
           parentUuid: parentUuid,
         );
       }
@@ -168,7 +168,7 @@ class SyncedEMGeneratorAction extends SyncedAction {
   );
 
   static bool isEMGeneratorAction(XmlProp prop) {
-    return prop is XmlActionProp && prop.any((prop) => prop.tagName == "EnemyGenerator");
+    return prop is XmlActionProp && prop.code.strVal == "EnemyGenerator";
   }
 }
 
@@ -198,6 +198,7 @@ class SyncedXmlFile extends SyncedList<XmlProp> {
     filter: (prop) => prop is XmlActionProp && (
       SyncedEntityAction.isEntityAction(prop) ||
       SyncedBezierAction.isBezierAction(prop) ||
+      SyncedEMGeneratorAction.isEMGeneratorAction(prop) ||
       SyncedAreasAction.isAreasAction(prop)
     ),
     makeSyncedObj: (prop, parentUuid) {
@@ -210,6 +211,8 @@ class SyncedXmlFile extends SyncedList<XmlProp> {
         return SyncedEntityAction(action: action, parentUuid: parentUuid);
       else if (SyncedBezierAction.isBezierAction(prop))
         return SyncedBezierAction(action: action, parentUuid: parentUuid);
+      else if (SyncedEMGeneratorAction.isEMGeneratorAction(prop))
+        return SyncedEMGeneratorAction(action: action, parentUuid: parentUuid);
       else if (SyncedAreasAction.isAreasAction(prop))
         return SyncedAreasAction(action: action, parentUuid: parentUuid);
       else
