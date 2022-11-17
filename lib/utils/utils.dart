@@ -541,3 +541,7 @@ num avrM<T>(Iterable<T> values, num Function(T) mapper) {
 }
 
 bool isSubtype<S, T>() => <S>[] is List<T>;
+
+bool isAreaProp(XmlProp prop) {
+  return prop.tagName.toLowerCase().contains("area") && prop.get("size") != null;
+}
