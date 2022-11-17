@@ -32,7 +32,7 @@ class SyncedXmlList extends SyncedList<XmlProp> {
 
 class SyncedEntityList extends SyncedXmlList {
   SyncedEntityList({ required super.list, required super.parentUuid }) : super(
-    listType: "entity", nameHint: "Entities",
+    listType: "entity", nameHint: "layout",
     allowReparent: false, allowListChange: true,
     makeSyncedObj: (prop, parentUuid) => EntitySyncedObject(prop, parentUuid: parentUuid),
 );
@@ -40,9 +40,17 @@ class SyncedEntityList extends SyncedXmlList {
 
 class SyncedAreaList extends SyncedXmlList {
   SyncedAreaList({ required super.list, required super.parentUuid, String? nameHint }) : super(
-    listType: "area", nameHint: nameHint ?? "Areas",
+    listType: "area", nameHint: nameHint ?? "area",
     allowReparent: false, allowListChange: true,
     makeSyncedObj: (prop, parentUuid) => AreaSyncedObject(prop, parentUuid: parentUuid),
+  );
+}
+
+class SyncedEMGeneratorNodeList extends SyncedXmlList {
+  SyncedEMGeneratorNodeList({ required super.list, required super.parentUuid }) : super(
+    listType: "node", nameHint: "nodes",
+    allowReparent: false, allowListChange: true,
+    makeSyncedObj: (prop, parentUuid) => EMGeneratorNodeSyncedObject(prop, parentUuid: parentUuid),
   );
 }
 
@@ -70,7 +78,7 @@ class SyncedAction extends SyncedList<XmlProp> {
 
 class SyncedEntityAction extends SyncedAction {
   SyncedEntityAction({ required super.action, required super.parentUuid }) : super(
-    filter: (prop) => prop.tagName == "layouts" || prop.tagName.toLowerCase().contains("area") && prop.get("size") != null,
+    filter: (prop) => prop.tagName == "layouts" || isAreaProp(prop),
     makeSyncedObj: (prop, parentUuid) {
       if (prop.tagName == "layouts") {
         return SyncedEntityList(
@@ -110,12 +118,21 @@ class SyncedEntityAction extends SyncedAction {
 
 class SyncedBezierAction extends SyncedAction {
   SyncedBezierAction({ required super.action, required super.parentUuid }) : super(
-    filter: (prop) => const { "curve", "bezier_", "route", "upRoute_" }.contains(prop.tagName),
-    makeSyncedObj: (prop, parentUuid) => BezierSyncedObject(
-      prop,
-      parentUuid: parentUuid,
-      nameHint: prop.tagName,
-    ),
+    filter: (prop) => const { "curve", "bezier_", "route", "upRoute_" }.contains(prop.tagName) || isAreaProp(prop),
+    makeSyncedObj: (prop, parentUuid) {
+      if (isAreaProp(prop)) {
+        return SyncedAreaList(
+          list: prop,
+          parentUuid: parentUuid,
+          nameHint: prop.tagName,
+        );
+      }
+      return BezierSyncedObject(
+        prop,
+        parentUuid: parentUuid,
+        nameHint: prop.tagName,
+      );
+    },
   );
 
   static bool isBezierAction(XmlProp prop) {
@@ -123,9 +140,41 @@ class SyncedBezierAction extends SyncedAction {
   }
 }
 
+class SyncedEMGeneratorAction extends SyncedAction {
+  SyncedEMGeneratorAction({ required super.action, required super.parentUuid }) : super(
+    filter: (prop) => { "points", "dist" }.contains(prop.tagName) || isAreaProp(prop),
+    makeSyncedObj: (prop, parentUuid) {
+      if (isAreaProp(prop)) {
+        return SyncedAreaList(
+          list: prop,
+          parentUuid: parentUuid,
+          nameHint: prop.tagName,
+        );
+      }
+      if (prop.tagName == "points") {
+        return SyncedEMGeneratorNodeList(
+          list: prop,
+          parentUuid: parentUuid,
+        );
+      }
+      if (prop.tagName == "dist") {
+        return EMGeneratorDistSyncedObject(
+          prop,
+          parentUuid: parentUuid,
+        );
+      }
+      throw UnimplementedError();
+    },
+  );
+
+  static bool isEMGeneratorAction(XmlProp prop) {
+    return prop is XmlActionProp && prop.any((prop) => prop.tagName == "EnemyGenerator");
+  }
+}
+
 class SyncedAreasAction extends SyncedAction {
   SyncedAreasAction({ required super.action, required super.parentUuid }) : super(
-    filter: (prop) => prop.tagName.toLowerCase().contains("area") && prop.get("size") != null,
+    filter: isAreaProp,
     makeSyncedObj: (prop, parentUuid) => SyncedXmlList(
       list: prop,
       parentUuid: parentUuid,
@@ -138,7 +187,7 @@ class SyncedAreasAction extends SyncedAction {
   );
 
   static bool isAreasAction(XmlProp prop) {
-    return prop is XmlActionProp && prop.any((prop) => prop.tagName.toLowerCase().contains("area") && prop.get("size") != null);
+    return prop is XmlActionProp && prop.any(isAreaProp);
   }
 }
 

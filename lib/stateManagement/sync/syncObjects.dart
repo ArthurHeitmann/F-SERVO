@@ -13,7 +13,6 @@ import '../Property.dart';
 import '../hasUuid.dart';
 import '../nestedNotifier.dart';
 import '../statusInfo.dart';
-import '../xmlProps/xmlActionProp.dart';
 import '../xmlProps/xmlProp.dart';
 import 'syncServer.dart';
 
@@ -22,6 +21,8 @@ enum SyncedObjectsType {
   area,
   entity,
   bezier,
+  enemyGeneratorNode,
+  enemyGeneratorDist,
 }
 
 enum SyncUpdateType {
@@ -548,5 +549,46 @@ class BezierSyncedObject extends SyncedXmlObject {
 
     var sizeProp = root.get("size")!;
     (sizeProp.value as NumberProp).value = newChildrenCount;
+  }
+}
+
+class EMGeneratorNodeSyncedObject extends SyncedXmlObject {
+  // syncable props: point, radius
+
+  EMGeneratorNodeSyncedObject(XmlProp prop, { required super.parentUuid, super.nameHint })
+    : super(prop: prop, type: SyncedObjectsType.enemyGeneratorNode);
+  
+  @override
+  void updateInternal(SyncMessage message) {
+    print("updating enemy generator node $uuid");
+    var propXmlString = message.args["propXml"] as String;
+    var propXml = XmlDocument.parse(propXmlString).rootElement;
+
+    updateXmlPropWithStr(prop, "point", propXml);
+    updateXmlPropWithStr(prop, "radius", propXml);
+  }
+}
+class EMGeneratorDistSyncedObject extends SyncedXmlObject {
+  // syncable props: dist { position, rotation?, areaDist?, resetDist?, searchDist?, guardSDist?, guardLDist?, escapeDist? }
+
+  EMGeneratorDistSyncedObject(XmlProp prop, { required super.parentUuid })
+    : super(prop: prop, type: SyncedObjectsType.enemyGeneratorDist, nameHint: "dist");
+  
+  @override
+  void updateInternal(SyncMessage message) {
+    print("updating enemy generator dist $uuid");
+    var propXmlString = message.args["propXml"] as String;
+    var propXml = XmlDocument.parse(propXmlString).rootElement;
+
+    var distCur = prop.get("dist")!;
+    var distNew = propXml.getElement("dist")!;
+    updateXmlPropWithStr(distCur, "position", distNew);
+    updateXmlPropWithStr(distCur, "rotation", distNew);
+    updateXmlPropWithStr(distCur, "areaDist", distNew);
+    updateXmlPropWithStr(distCur, "resetDist", distNew);
+    updateXmlPropWithStr(distCur, "searchDist", distNew);
+    updateXmlPropWithStr(distCur, "guardSDist", distNew);
+    updateXmlPropWithStr(distCur, "guardLDist", distNew);
+    updateXmlPropWithStr(distCur, "escapeDist", distNew);
   }
 }
