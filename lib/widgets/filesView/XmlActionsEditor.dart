@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 
 import '../../stateManagement/Property.dart';
 import '../../stateManagement/sync/syncListImplementations.dart';
-import '../../stateManagement/sync/syncObjects.dart';
 import '../../stateManagement/xmlProps/xmlProp.dart';
 import '../../stateManagement/xmlProps/xmlActionProp.dart';
 import '../../utils/utils.dart';

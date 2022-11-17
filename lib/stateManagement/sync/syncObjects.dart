@@ -13,7 +13,6 @@ import '../Property.dart';
 import '../hasUuid.dart';
 import '../nestedNotifier.dart';
 import '../statusInfo.dart';
-import '../xmlProps/xmlActionProp.dart';
 import '../xmlProps/xmlProp.dart';
 import 'syncServer.dart';
 
@@ -46,7 +45,7 @@ void startSyncingObject(SyncedObject obj) {
     canSync.addListener(() {
       if (canSync.value)
         return;
-      for (var obj in syncedObjects.values)
+      for (var obj in syncedObjects.values.toList())
         obj.dispose();
       syncedObjects.clear();
       syncedObjectsNotifier.notifyListeners();
