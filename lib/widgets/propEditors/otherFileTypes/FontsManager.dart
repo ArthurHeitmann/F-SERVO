@@ -289,6 +289,7 @@ class _FontOverrideIdsSelectorState extends State<_FontOverrideIdsSelector> {
                         ),
                         for (var fontId in McdData.availableFonts.keys)
                           GestureDetector(
+                            key: ValueKey(fontId),
                             onTap: !blockedFontIds.contains(fontId) ? () {
                               if (widget.fontOverride.fontIds.contains(fontId))
                                 widget.fontOverride.fontIds.remove(fontId);

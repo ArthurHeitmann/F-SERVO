@@ -120,6 +120,7 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
       index: widget.viewArea.indexOf(widget.viewArea.currentFile!),
       children: widget.viewArea.map((file) => 
         ConstrainedBox(
+          key: Key(file.uuid),
           constraints: const BoxConstraints.expand(),
           child: makeFileEditor(file)
         )

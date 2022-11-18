@@ -82,7 +82,7 @@ class _OutlinerState extends ChangeNotifierState<Outliner> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: xmlProp
         .whereType<XmlActionProp>()
-        .map((e) => _OutlinerEntry(action: e))
+        .map((e) => _OutlinerEntry(key: Key(e.uuid), action: e))
         .toList(),
     );
   }
@@ -91,7 +91,7 @@ class _OutlinerState extends ChangeNotifierState<Outliner> {
 class _OutlinerEntry extends ChangeNotifierWidget {
   final XmlActionProp action;
 
-  _OutlinerEntry({required this.action}) : super(notifier: action);
+  _OutlinerEntry({ super.key, required this.action }) : super(notifier: action);
 
   @override
   State<_OutlinerEntry> createState() => __OutlinerEntryState();

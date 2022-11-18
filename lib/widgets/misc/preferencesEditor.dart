@@ -126,6 +126,7 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
       const SizedBox(height: 10,),
       ...(widget.prefs.indexingPaths
         ?.map((path) => RowSeparated(
+          key: Key(path.uuid),
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Expanded(

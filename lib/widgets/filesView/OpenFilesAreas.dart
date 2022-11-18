@@ -28,7 +28,9 @@ class _OpenFilesAreasState extends ChangeNotifierState<OpenFilesAreas> {
       child: ResizableWidget(
         axis: Axis.horizontal,
         draggableThickness: 5,
-        children: areasManager.map((area) => FileTabView(area)).toList(),
+        children: areasManager.map((area) => 
+          FileTabView(area, key: Key(area.uuid))
+        ).toList(),
       )
     );
   }
