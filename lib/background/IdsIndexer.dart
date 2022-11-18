@@ -222,7 +222,23 @@ class IdsIndexer {
     int t1 = DateTime.now().millisecondsSinceEpoch;
 
     if (await Directory(indexPath).exists()) {
-      await _indexAllIdsInDir(indexPath);
+      if (indexPath.endsWith(".pak")) {
+        String datExtractDir = dirname(dirname(indexPath));
+        String datName = basename(datExtractDir);
+        String datPath = join(dirname(dirname(datExtractDir)), datName);
+        String pakFile = join(datExtractDir, basename(indexPath));
+        String pakInfoPath = join(indexPath, "pakInfo.json");
+        if (await File(pakInfoPath).exists())
+          await _indexPakInfo(datPath, pakFile, indexPath, pakInfoPath);
+      }
+      else if (indexPath.endsWith(".dat")) {
+        String datName = basename(indexPath);
+        String datPath = join(dirname(dirname(indexPath)), datName);
+        await _indexDatExtractDir(datPath, indexPath);
+      }
+      else {
+        await _indexAllIdsInDir(indexPath);
+      }
     }
     else if (indexPath.endsWith(".dat")) {
       _indexDatContents(indexPath);
@@ -279,35 +295,39 @@ class IdsIndexer {
   Future<void> _indexDatContents(String datPath) async {
     if (_stop)
       return;
-    List<Future<void>> futures = [];
+    // List<Future<void>> futures = [];
     var fileName = basename(datPath);
     var datFolder = dirname(datPath);
     var datExtractDir = join(datFolder, "nier2blender_extracted", fileName);
 
-    if (await Directory(datExtractDir).exists()) {
-      var pakFiles = (await getDatFiles(datExtractDir))
-                    .where((f) => f.endsWith(".pak"));
-      for (var pakFile in pakFiles) {
-        var pakPath = join(datExtractDir, pakFile);
-        var pakExtractDir = join(datExtractDir, "pakExtracted", basename(pakFile));
-        var pakFileBytes = (await File(pakPath).readAsBytes()).buffer;
-        // futures.add(_indexPakContents(datPath, pakPath, pakExtractDir, pakFileBytes));
-        await _indexPakContents(datPath, pakPath, pakExtractDir, ByteDataWrapper(pakFileBytes));
-      }
-    }
-    else {
-      await for (var fileData in extractDatFilesAsStream(datPath)) {
-        if (_stop)
-          return;
-        if (!fileData.path.endsWith(".pak"))
-          continue;
-        var pakExtractDir = join(datExtractDir, "pakExtracted", basename(fileData.path));
-        // futures.add(_indexPakContents(datPath, fileData.path, pakExtractDir, fileData.bytes.asByteData()));
-        await _indexPakContents(datPath, fileData.path, pakExtractDir, fileData.bytes);
-      }
-    }
+    if (await Directory(datExtractDir).exists())
+      await _indexDatExtractDir(datPath, datExtractDir);
+    else
+      await _indexDatFile(datPath, datExtractDir);
 
-    await Future.wait(futures);
+    // await Future.wait(futures);
+  }
+
+  Future<void> _indexDatExtractDir(String datPath, String datExtractDir) async {
+    var pakFiles = (await getDatFiles(datExtractDir))
+                    .where((f) => f.endsWith(".pak"));
+    for (var pakFile in pakFiles) {
+      var pakPath = join(datExtractDir, pakFile);
+      var pakExtractDir = join(datExtractDir, "pakExtracted", basename(pakFile));
+      var pakFileBytes = (await File(pakPath).readAsBytes()).buffer;
+      await _indexPakContents(datPath, pakPath, pakExtractDir, ByteDataWrapper(pakFileBytes));
+    }
+  }
+
+  Future<void> _indexDatFile(String datPath, String datExtractDir) async {
+    await for (var fileData in extractDatFilesAsStream(datPath)) {
+      if (_stop)
+        return;
+      if (!fileData.path.endsWith(".pak"))
+        continue;
+      var pakExtractDir = join(datExtractDir, "pakExtracted", basename(fileData.path));
+      await _indexPakContents(datPath, fileData.path, pakExtractDir, fileData.bytes);
+    }
   }
 
   Future<void> _indexPakContents(String datPath, String pakPath, String pakExtractPath, ByteDataWrapper bytes) async {
@@ -316,28 +336,31 @@ class IdsIndexer {
     List<Future<void>> futures = [];
     var pakInfoPath = join(pakExtractPath, "pakInfo.json");
 
-    if (await File(pakInfoPath).exists()) {
-      var pakInfoJson = jsonDecode(await File(pakInfoPath).readAsString());
-      var pakFiles = (pakInfoJson["files"] as List)
-                      .map((f) => f["name"])
-                      .toList();
-      for (var yaxFile in pakFiles) {
-        var yaxPath = join(pakExtractPath, yaxFile);
-        var yaxBytes = (await File(yaxPath).readAsBytes());
-        // futures.add(_indexYaxContents(datPath, pakPath, yaxPath, yaxBytes.buffer.asByteData()));
-        await _indexYaxContents(datPath, pakPath, yaxPath, ByteDataWrapper(yaxBytes.buffer));
-      }
-    }
-    else {
-      await for (var fileData in extractPakBytesAsStream(pakPath, bytes)) {
-        if (_stop)
-          return;
-        // futures.add(_indexYaxContents(datPath, pakPath, fileData.path, fileData.bytes.asByteData()));
-        await _indexYaxContents(datPath, pakPath, fileData.path, fileData.bytes);
-      }
-    }
+    if (await File(pakInfoPath).exists())
+      await _indexPakInfo(datPath, pakPath, pakExtractPath, pakInfoPath);
+    else
+      await _indexPakFiles(datPath, pakPath, pakExtractPath, bytes);
 
     await Future.wait(futures);
+  }
+
+  Future<void> _indexPakInfo(String datPath, String pakPath, String pakExtractPath, String pakInfoPath) async {var pakInfoJson = jsonDecode(await File(pakInfoPath).readAsString());
+    var pakFiles = (pakInfoJson["files"] as List)
+                    .map((f) => f["name"])
+                    .toList();
+    for (var yaxFile in pakFiles) {
+      var yaxPath = join(pakExtractPath, yaxFile);
+      var yaxBytes = (await File(yaxPath).readAsBytes());
+      await _indexYaxContents(datPath, pakPath, yaxPath, ByteDataWrapper(yaxBytes.buffer));
+    }
+  }
+
+  Future<void> _indexPakFiles(String datPath, String pakPath, String pakExtractPath, ByteDataWrapper bytes) async {
+    await for (var fileData in extractPakBytesAsStream(pakPath, bytes)) {
+      if (_stop)
+        return;
+      await _indexYaxContents(datPath, pakPath, fileData.path, fileData.bytes);
+    }
   }
 
   Future<void> _indexYaxContents(String datPath, String pakPath, String yaxPath, ByteDataWrapper bytes) async {

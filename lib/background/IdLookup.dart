@@ -1,24 +1,30 @@
 
 import 'dart:async';
 
+import 'package:path/path.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../stateManagement/FileHierarchy.dart';
 import '../stateManagement/miscValues.dart';
 import '../stateManagement/openFileTypes.dart';
 import '../stateManagement/openFilesManager.dart';
+import '../stateManagement/preferencesData.dart';
 import '../utils/utils.dart';
 import 'IdsIndexer.dart';
 import 'Initializable.dart';
 import 'isolateCommunicator.dart';
 
 class IdLookup with Initializable {
-  /// (3. level) one time (or occasional) indexing of ids from paths in preferences
+  /// (4. level) one time (or occasional) indexing of ids from paths in preferences
   final IsolateCommunicator _heavyWorker = IsolateCommunicator();
+  /// (3. level) when new files are opened (in hierarchy), they are indexed here
+  final IsolateCommunicator _openFilesWorker = IsolateCommunicator();
   /// (2. level) ids of changed files
   final IsolateCommunicator _coldStorage = IsolateCommunicator();
   /// (1. level) ids of currently changed files
   final List<IdsIndexer> _changedFiles = [];
   final List<OpenFileData> _openFiles = [];
+  final List<HierarchyEntry> _openHierarchyFiles = [];
   final List<void Function()> _filesChangesListeners = [];
 
   IdLookup();
@@ -31,6 +37,7 @@ class IdLookup with Initializable {
     
     areasManager.subEvents.addListener(_onFilesAddedOrRemoved);
     areasManager.onSaveAll.addListener(_onFilesSaved);
+    openHierarchyManager.addListener(_onHierarchyFilesAddedOrRemoved);
 
     completeInitialization();
   }
@@ -52,16 +59,24 @@ class IdLookup with Initializable {
     var result = await _lookupIdLevel1(id);
     if (result.isEmpty) {
       result = await _lookupIdLevel2(id);
-      if (result.isEmpty)
+      if (result.isEmpty) {
         result = await _lookupIdLevel3(id);
+        if (result.isEmpty) {
+          result = await _lookupIdLevel4(id);
+        }
+      }
     }
     
     // remove duplicates
     return result.toSet().toList();
   }
 
-  Future<List<IndexedIdData>> _lookupIdLevel3(int id) async {
+  Future<List<IndexedIdData>> _lookupIdLevel4(int id) async {
     return _heavyWorker.lookupId(id);
+  }
+
+  Future<List<IndexedIdData>> _lookupIdLevel3(int id) async {
+    return _openFilesWorker.lookupId(id);
   }
 
   Future<List<IndexedIdData>> _lookupIdLevel2(int id) async {
@@ -103,6 +118,35 @@ class IdLookup with Initializable {
       _openFiles[i].contentNotifier.removeListener(_filesChangesListeners[i]);
       _openFiles.removeAt(i);
       _filesChangesListeners.removeAt(i);
+    }
+  }
+
+  void _onHierarchyFilesAddedOrRemoved() async {
+    // fallback for when a file is not covered by the heavy worker
+    var prefs = PreferencesData();
+    var lvl4Paths = prefs.indexingPaths?.map((p) => p.value).toList() ?? [];
+    // search for new files
+    for (var file in openHierarchyManager) {
+      if (file is! FileHierarchyEntry)
+        continue;
+      if (_openHierarchyFiles.contains(file))
+        continue;
+      if (lvl4Paths.any((path) => isWithin(path, file.path)))
+        continue;
+      if (file is ExtractableHierarchyEntry) {
+        _openFilesWorker.addIndexingPaths([file.extractedPath]);
+        _openHierarchyFiles.add(file);
+      }
+    }
+    // search for removed files
+    for (var i = _openHierarchyFiles.length - 1; i >= 0; i--) {
+      if (openHierarchyManager.contains(_openHierarchyFiles[i]))
+        continue;
+      var file = _openHierarchyFiles[i];
+      if (file is ExtractableHierarchyEntry) {
+        _openFilesWorker.removeIndexingPaths([file.extractedPath]);
+        _openHierarchyFiles.removeAt(i);
+      }
     }
   }
 
