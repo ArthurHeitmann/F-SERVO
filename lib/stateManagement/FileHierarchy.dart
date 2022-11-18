@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:path/path.dart' as path;
@@ -23,7 +24,7 @@ import 'xmlProps/xmlProp.dart';
 
 final _pakGroupIdMatcher = RegExp(r"^\w+_([a-f0-9]+)_grp\.pak$", caseSensitive: false);
 
-class HierarchyEntry extends NestedNotifier<HierarchyEntry> with Undoable {
+abstract class HierarchyEntry extends NestedNotifier<HierarchyEntry> with Undoable {
   StringProp name;
   final bool isSelectable;
   bool _isSelected = false;
@@ -67,79 +68,44 @@ class HierarchyEntry extends NestedNotifier<HierarchyEntry> with Undoable {
       child.setCollapsedRecursive(value, true);
     }
   }
-
-  @override
-  Undoable takeSnapshot() {
-    var snapshot = HierarchyEntry(name.takeSnapshot() as StringProp, isSelectable, isCollapsible, isOpenable);
-    snapshot.overrideUuid(uuid);
-    snapshot._isSelected = _isSelected;
-    snapshot._isCollapsed = _isCollapsed;
-    snapshot.replaceWith(map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
-    return snapshot;
-  }
-
-  HierarchyEntry clone() => takeSnapshot() as HierarchyEntry;
-  
-  @override
-  void restoreWith(Undoable snapshot) {
-    var entry = snapshot as HierarchyEntry;
-    name.restoreWith(entry.name);
-    _isSelected = entry._isSelected;
-    _isCollapsed = entry._isCollapsed;
-    updateOrReplaceWith(entry.toList(), (obj) => (obj as HierarchyEntry).clone());
-  }
 }
 
-class FileHierarchyEntry extends HierarchyEntry {
+abstract class FileHierarchyEntry extends HierarchyEntry {
   final String path;
 
   FileHierarchyEntry(StringProp name, this.path, bool isCollapsible, bool isOpenable)
     : super(name, true, isCollapsible, isOpenable);
+}
+
+abstract class GenericFileHierarchyEntry extends FileHierarchyEntry {
+  GenericFileHierarchyEntry(super.name, super.path, super.isCollapsible, super.isOpenable);
   
+  HierarchyEntry clone();
+
   @override
   Undoable takeSnapshot() {
-    var snapshot = FileHierarchyEntry(name.takeSnapshot() as StringProp, path, isCollapsible, isOpenable);
-    snapshot.overrideUuid(uuid);
-    snapshot._isSelected = _isSelected;
-    snapshot._isCollapsed = _isCollapsed;
-    snapshot.replaceWith(map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
-    return snapshot;
+    var entry = clone();
+    entry.overrideUuid(uuid);
+    entry._isSelected = _isSelected;
+    entry._isCollapsed = _isCollapsed;
+    entry.replaceWith(map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
+    return entry;
   }
-  
+
   @override
   void restoreWith(Undoable snapshot) {
-    var entry = snapshot as FileHierarchyEntry;
-    name.restoreWith(entry.name);
+    var entry = snapshot as HierarchyEntry;
     _isSelected = entry._isSelected;
     _isCollapsed = entry._isCollapsed;
-    updateOrReplaceWith(entry.toList(), (obj) => (obj as HierarchyEntry).clone());
+    replaceWith(entry.map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
   }
 }
 
-class ExtractableHierarchyEntry extends FileHierarchyEntry {
+abstract class ExtractableHierarchyEntry extends FileHierarchyEntry {
   final String extractedPath;
 
   ExtractableHierarchyEntry(StringProp name, String filePath, this.extractedPath, bool isCollapsible, bool isOpenable)
     : super(name, filePath, isCollapsible, isOpenable);
-  
-  @override
-  Undoable takeSnapshot() {
-    var snapshot = ExtractableHierarchyEntry(name.takeSnapshot() as StringProp, this.path, extractedPath, isCollapsible, isOpenable);
-    snapshot.overrideUuid(uuid);
-    snapshot._isSelected = _isSelected;
-    snapshot._isCollapsed = _isCollapsed;
-    snapshot.replaceWith(map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
-    return snapshot;
-  }
-  
-  @override
-  void restoreWith(Undoable snapshot) {
-    var entry = snapshot as ExtractableHierarchyEntry;
-    name.restoreWith(entry.name);
-    _isSelected = entry._isSelected;
-    _isCollapsed = entry._isCollapsed;
-    updateOrReplaceWith(entry.toList(), (obj) => (obj as HierarchyEntry).clone());
-  }
 }
 
 class DatHierarchyEntry extends ExtractableHierarchyEntry {
@@ -147,12 +113,22 @@ class DatHierarchyEntry extends ExtractableHierarchyEntry {
     : super(name, path, extractedPath, true, false);
 
   @override
-  HierarchyEntry clone() {
+  Undoable takeSnapshot() {
     var entry = DatHierarchyEntry(name.takeSnapshot() as StringProp, this.path, extractedPath);
+    entry.overrideUuid(uuid);
     entry._isSelected = _isSelected;
     entry._isCollapsed = _isCollapsed;
     entry.replaceWith(map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
     return entry;
+  }
+
+  @override
+  void restoreWith(Undoable snapshot) {
+    var entry = snapshot as DatHierarchyEntry;
+    name.restoreWith(entry.name);
+    _isSelected = entry._isSelected;
+    _isCollapsed = entry._isCollapsed;
+    replaceWith(entry.map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
   }
 }
 
@@ -245,7 +221,7 @@ class PakHierarchyEntry extends ExtractableHierarchyEntry {
     name.restoreWith(entry.name);
     _isSelected = entry._isSelected;
     _isCollapsed = entry._isCollapsed;
-    updateOrReplaceWith(entry.toList(), (obj) => (obj as HierarchyEntry).clone());
+    updateOrReplaceWith(entry.toList(), (obj) => obj.takeSnapshot() as HierarchyEntry);
   }
 }
 
@@ -342,7 +318,7 @@ class HapGroupHierarchyEntry extends FileHierarchyEntry {
     _isSelected = entry._isSelected;
     _isCollapsed = entry._isCollapsed;
     prop.restoreWith(entry.prop);
-    updateOrReplaceWith(entry.toList(), (obj) => (obj as HierarchyEntry).clone());
+    updateOrReplaceWith(entry.toList(), (obj) => obj.takeSnapshot() as HierarchyEntry);
   }
 }
 
@@ -409,33 +385,58 @@ class XmlScriptHierarchyEntry extends FileHierarchyEntry {
     _isCollapsed = entry._isCollapsed;
     _hasReadMeta = entry._hasReadMeta;
     hapName = entry.hapName;
-    updateOrReplaceWith(entry.toList(), (obj) => (obj as HierarchyEntry).clone());
+    updateOrReplaceWith(entry.toList(), (obj) => obj.takeSnapshot() as HierarchyEntry);
   }
 }
 
-class RubyScriptHierarchyEntry extends FileHierarchyEntry {
+class RubyScriptHierarchyEntry extends GenericFileHierarchyEntry {
   RubyScriptHierarchyEntry(StringProp name, String path)
     : super(name, path, false, true);
+  
+  @override
+  HierarchyEntry clone() {
+    return RubyScriptHierarchyEntry(name.takeSnapshot() as StringProp, this.path);
+  }
 }
 
-class TmdHierarchyEntry extends FileHierarchyEntry {
+class TmdHierarchyEntry extends GenericFileHierarchyEntry {
   TmdHierarchyEntry(StringProp name, String path)
     : super(name, path, false, true);
+  
+  @override
+  HierarchyEntry clone() {
+    return TmdHierarchyEntry(name.takeSnapshot() as StringProp, this.path);
+  }
 }
 
-class SmdHierarchyEntry extends FileHierarchyEntry {
+class SmdHierarchyEntry extends GenericFileHierarchyEntry {
   SmdHierarchyEntry(StringProp name, String path)
     : super(name, path, false, true);
+  
+  @override
+  HierarchyEntry clone() {
+    return SmdHierarchyEntry(name.takeSnapshot() as StringProp, this.path);
+  }
 }
 
-class McdHierarchyEntry extends FileHierarchyEntry {
+class McdHierarchyEntry extends GenericFileHierarchyEntry {
   McdHierarchyEntry(StringProp name, String path)
     : super(name, path, false, true);
+  
+  @override
+  HierarchyEntry clone() {
+    return McdHierarchyEntry(name.takeSnapshot() as StringProp, this.path);
+  }
 }
 
-class FtbHierarchyEntry extends FileHierarchyEntry {
+class FtbHierarchyEntry extends GenericFileHierarchyEntry {
   FtbHierarchyEntry(StringProp name, String path)
     : super(name, path, false, true);
+  
+  @override
+  HierarchyEntry clone() {
+    return FtbHierarchyEntry(name.takeSnapshot() as StringProp, this.path);
+  }
 }
 
 class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable {
@@ -573,20 +574,7 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
         datEntry.add(existingEntries[existingEntryI]);
         continue;
       }
-      if (file.endsWith(".pak"))
-        futures.add(openPak(file, parent: datEntry));
-      else if (file.endsWith("_scp.bin"))
-        futures.add(openBinMrbScript(file, parent: datEntry));
-      else if (file.endsWith(".tmd"))
-        openGenericFile<TmdHierarchyEntry>(file, datEntry, (n, p) => TmdHierarchyEntry(n, p));
-      else if (file.endsWith(".smd"))
-        openGenericFile<SmdHierarchyEntry>(file, datEntry, (n ,p) => SmdHierarchyEntry(n, p));
-      else if (file.endsWith(".mcd"))
-        openGenericFile<McdHierarchyEntry>(file, datEntry, (n ,p) => McdHierarchyEntry(n, p));
-      else if (file.endsWith(".ftb"))
-        openGenericFile<FtbHierarchyEntry>(file, datEntry, (n ,p) => FtbHierarchyEntry(n, p));
-      else
-        throw FileSystemException("Unsupported file type: $file");
+      futures.add(openFile(file, parent: datEntry));
     }
 
     await Future.wait(futures);
@@ -817,7 +805,7 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
   Undoable takeSnapshot() {
     var snapshot = OpenHierarchyManager();
     snapshot.overrideUuid(uuid);
-    snapshot.replaceWith(map((entry) => entry.clone()).toList());
+    snapshot.replaceWith(map((e) => e.takeSnapshot() as HierarchyEntry).toList());
     snapshot._selectedEntry = _selectedEntry != null ? _selectedEntry?.takeSnapshot() as HierarchyEntry : null;
     return snapshot;
   }
@@ -825,7 +813,7 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
   @override
   void restoreWith(Undoable snapshot) {
     var entry = snapshot as OpenHierarchyManager;
-    updateOrReplaceWith(entry.toList(), (obj) => (obj as HierarchyEntry).clone());
+    updateOrReplaceWith(entry.toList(), (obj) => obj.takeSnapshot() as HierarchyEntry);
     if (entry.selectedEntry != null)
       selectedEntry = findRecWhere((e) => entry.selectedEntry!.uuid == e.uuid);
     else

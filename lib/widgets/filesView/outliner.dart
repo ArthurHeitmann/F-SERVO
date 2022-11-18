@@ -98,37 +98,21 @@ class _OutlinerEntry extends ChangeNotifierWidget {
 }
 
 class __OutlinerEntryState extends ChangeNotifierState<_OutlinerEntry> {
-  bool isHovering = false;
-  bool isClicked = false;
-
   @override
   Widget build(BuildContext context) {
-    Color bgColor;
-    if (isClicked)
-      bgColor = getTheme(context).hierarchyEntryClicked!;
-    else if (isHovering)
-      bgColor = getTheme(context).hierarchyEntryHovered!;
-    else
-      bgColor = Colors.transparent;
-
-    return GestureDetector(
-      onTapDown: (_) => setState(() => isClicked = true),
-      onTapUp: (_) => setState(() => isClicked = false),
-      onTap: () {
-        var actionContext = getActionKey(widget.action.id.value)?.currentContext;
-        if (actionContext != null)
-          scrollIntoView(actionContext, duration: const Duration(milliseconds: 400), viewOffset: 45);
-      },
-      child: MouseRegion(
-        onEnter: (event) => setState(() => isHovering = true),
-        onExit: (event) => setState(() {
-          isHovering = false;
-          isClicked = false;
-        }),
-        cursor: SystemMouseCursors.click,
+    var textColor = getTheme(context).textColor!;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          var actionContext = getActionKey(widget.action.id.value)?.currentContext;
+          if (actionContext != null)
+            scrollIntoView(actionContext, duration: const Duration(milliseconds: 400), viewOffset: 45);
+        },
+        splashColor: textColor.withOpacity(0.2),
+        hoverColor: textColor.withOpacity(0.1),
+        highlightColor: textColor.withOpacity(0.1),
         child: Container(
-          color: bgColor,
-          // duration: const Duration(milliseconds: 75),
           height: 25,
           padding: const EdgeInsets.symmetric(vertical: 3),
           child: Row(
@@ -144,7 +128,7 @@ class __OutlinerEntryState extends ChangeNotifierState<_OutlinerEntry> {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w300,
-                        color: isClicked ? getTheme(context).hierarchyEntrySelectedTextColor : null,
+                        color: textColor,
                       ),
                       overflow: TextOverflow.ellipsis,
                     );

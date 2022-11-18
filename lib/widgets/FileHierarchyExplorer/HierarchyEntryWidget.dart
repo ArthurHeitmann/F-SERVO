@@ -27,9 +27,6 @@ class HierarchyEntryWidget extends ChangeNotifierWidget {
 }
 
 class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
-  bool isHovered = false;
-  bool isClicked = false;
-
   Icon? getEntryIcon(BuildContext context) {
     var iconColor = getTheme(context).colorOfFiletype(widget.entry);
     if (widget.entry is DatHierarchyEntry)
@@ -45,7 +42,7 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
   }
 
   Color getTextColor(BuildContext context) {
-    return isClicked || widget.entry.isSelected
+    return widget.entry.isSelected
       ? getTheme(context).hierarchyEntrySelectedTextColor!
       : getTheme(context).textColor!;
   }
@@ -227,33 +224,16 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
     if (!widget.entry.isSelectable && !widget.entry.isCollapsible)
       return child;
     
-    Color bgColor;
-    if (widget.entry.isSelectable && widget.entry.isSelected)
-      bgColor = getTheme(context).hierarchyEntrySelected!;
-    else if (isClicked)
-      bgColor = getTheme(context).hierarchyEntryClicked!;
-    else if (isHovered)
-      bgColor = getTheme(context).hierarchyEntryHovered!;
-    else
-      bgColor = Colors.transparent;
-    
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => isHovered = true),
-      onExit: (_) {
-        isHovered = false;
-        isClicked = false;
-        setState(() {});
-      },
-      child: GestureDetector(
+    var bgColor = widget.entry.isSelected ? getTheme(context).hierarchyEntrySelected! : Colors.transparent;
+
+    return Material(
+      color: bgColor,
+      child: InkWell(
         onTap: onClick,
-        onTapDown: (_) => setState(() => isClicked = true),
-        onTapUp: (_) => setState(() => isClicked = false),
-        child: Container(
-          color: bgColor,
-          // duration: const Duration(milliseconds: 75),
-          child: child
-        ),
+        splashColor: getTextColor(context).withOpacity(0.2),
+        hoverColor: getTextColor(context).withOpacity(0.1),
+        highlightColor: getTextColor(context).withOpacity(0.1),
+        child: child,
       ),
     );
   }
