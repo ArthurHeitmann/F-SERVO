@@ -172,6 +172,29 @@ class SyncedEMGeneratorAction extends SyncedAction {
   }
 }
 
+class SyncedCameraTargetAction extends SyncedAction {
+  SyncedCameraTargetAction({ required super.action, required super.parentUuid }) : super(
+    filter: (prop) => prop.tagName == "location" || isAreaProp(prop),
+    makeSyncedObj: (prop, parentUuid) {
+      if (isAreaProp(prop)) {
+        return SyncedAreaList(
+          list: prop,
+          parentUuid: parentUuid,
+          nameHint: prop.tagName,
+        );
+      }
+      return CameraTargetLocationSyncedObject(
+        prop,
+        parentUuid: parentUuid,
+      );
+    },
+  );
+
+  static bool isCameraTargetAction(XmlProp prop) {
+    return prop is XmlActionProp && prop.code.strVal == "CameraTargetAction";
+  }
+}
+
 class SyncedAreasAction extends SyncedAction {
   SyncedAreasAction({ required super.action, required super.parentUuid }) : super(
     filter: isAreaProp,
@@ -199,6 +222,7 @@ class SyncedXmlFile extends SyncedList<XmlProp> {
       SyncedEntityAction.isEntityAction(prop) ||
       SyncedBezierAction.isBezierAction(prop) ||
       SyncedEMGeneratorAction.isEMGeneratorAction(prop) ||
+      SyncedCameraTargetAction.isCameraTargetAction(prop) ||
       SyncedAreasAction.isAreasAction(prop)
     ),
     makeSyncedObj: (prop, parentUuid) {
@@ -213,6 +237,8 @@ class SyncedXmlFile extends SyncedList<XmlProp> {
         return SyncedBezierAction(action: action, parentUuid: parentUuid);
       else if (SyncedEMGeneratorAction.isEMGeneratorAction(prop))
         return SyncedEMGeneratorAction(action: action, parentUuid: parentUuid);
+      else if (SyncedCameraTargetAction.isCameraTargetAction(prop))
+        return SyncedCameraTargetAction(action: action, parentUuid: parentUuid);
       else if (SyncedAreasAction.isAreasAction(prop))
         return SyncedAreasAction(action: action, parentUuid: parentUuid);
       else

@@ -23,6 +23,7 @@ enum SyncedObjectsType {
   bezier,
   enemyGeneratorNode,
   enemyGeneratorDist,
+  camTargetLocation
 }
 
 enum SyncUpdateType {
@@ -185,7 +186,7 @@ abstract class SyncedXmlObject extends SyncedObject {
   }
 
   void _removeChangeListeners(XmlProp prop) {
-    prop.removeListener(syncToClient);
+    prop.removeListener(_onPropChange);
     for (var child in prop) {
       _removeChangeListeners(child);
     }
@@ -568,6 +569,7 @@ class EMGeneratorNodeSyncedObject extends SyncedXmlObject {
     updateXmlPropWithStr(prop, "radius", propXml);
   }
 }
+
 class EMGeneratorDistSyncedObject extends SyncedXmlObject {
   // syncable props: dist { position, rotation?, areaDist?, resetDist?, searchDist?, guardSDist?, guardLDist?, escapeDist? }
 
@@ -590,5 +592,22 @@ class EMGeneratorDistSyncedObject extends SyncedXmlObject {
     updateXmlPropWithStr(distCur, "guardSDist", distNew);
     updateXmlPropWithStr(distCur, "guardLDist", distNew);
     updateXmlPropWithStr(distCur, "escapeDist", distNew);
+  }
+}
+
+class CameraTargetLocationSyncedObject extends SyncedXmlObject {
+  // syncable props: position?, rotation?
+
+  CameraTargetLocationSyncedObject(XmlProp prop, { required super.parentUuid })
+    : super(prop: prop, type: SyncedObjectsType.camTargetLocation, nameHint: "dist");
+  
+  @override
+  void updateInternal(SyncMessage message) {
+    print("updating camera target location $uuid");
+    var propXmlString = message.args["propXml"] as String;
+    var propXml = XmlDocument.parse(propXmlString).rootElement;
+
+    updateXmlPropWithStr(prop, "position", propXml);
+    updateXmlPropWithStr(prop, "rotation", propXml);
   }
 }
