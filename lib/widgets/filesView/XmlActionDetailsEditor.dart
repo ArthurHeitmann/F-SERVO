@@ -17,6 +17,8 @@ class XmlActionDetailsEditor extends ChangeNotifierWidget {
 }
 
 class _XmlActionDetailsEditorState extends ChangeNotifierState<XmlActionDetailsEditor> {
+  final scrollController = ScrollController();
+
   @override
   Widget build(BuildContext context) {
     XmlActionProp? action = selectable.get<XmlActionProp>(areasManager.activeArea);
@@ -28,7 +30,7 @@ class _XmlActionDetailsEditorState extends ChangeNotifierState<XmlActionDetailsE
         Expanded(
           child: SmoothSingleChildScrollView(
             stepSize: 60,
-            controller: ScrollController(),
+            controller: scrollController,
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: action != null

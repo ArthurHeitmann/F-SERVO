@@ -34,6 +34,8 @@ class FileMetaEditor extends ChangeNotifierWidget {
 }
 
 class _FileMetaEditorState extends ChangeNotifierState<FileMetaEditor> {
+  final scrollController = ScrollController();
+
   _EditorType get editorType {
     var file = openHierarchyManager.selectedEntry;
     if (file == null)
@@ -68,7 +70,7 @@ class _FileMetaEditorState extends ChangeNotifierState<FileMetaEditor> {
           key: Key(openHierarchyManager.selectedEntry?.name.value ?? "noGroup"),
           child: SmoothSingleChildScrollView(
             stepSize: 60,
-            controller: ScrollController(),
+            controller: scrollController,
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: entry != null ? getEditor()(entry) : makeFallback(null),
