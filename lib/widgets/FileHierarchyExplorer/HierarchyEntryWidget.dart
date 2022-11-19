@@ -37,6 +37,8 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
       return Icon(Icons.workspaces, color: iconColor, size: 15);
     else if (widget.entry is TmdHierarchyEntry || widget.entry is SmdHierarchyEntry || widget.entry is McdHierarchyEntry)
       return Icon(Icons.subtitles, color: iconColor, size: 15);
+    else if (widget.entry is RubyScriptGroupHierarchyEntry)
+      return null;
     else
       return Icon(Icons.description, color: iconColor, size: 15);
   }
@@ -204,6 +206,12 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
               onPressed: () => openHierarchyManager.clear(),
             ),
           ],
+          if (widget.entry is FileHierarchyEntry)
+            ContextMenuButtonConfig(
+              "Show in Explorer",
+              icon: const Icon(Icons.open_in_new, size: 15,),
+              onPressed: () => revealFileInExplorer((widget.entry as FileHierarchyEntry).path),
+            ),
           if (widget.entry.isNotEmpty)
             ContextMenuButtonConfig(
               "Collapse all",

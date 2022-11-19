@@ -427,6 +427,27 @@ class XmlScriptHierarchyEntry extends FileHierarchyEntry {
   }
 }
 
+class RubyScriptGroupHierarchyEntry extends HierarchyEntry {
+  RubyScriptGroupHierarchyEntry() : super(StringProp("Ruby Scripts"), false, true, false);
+  
+  @override
+  Undoable takeSnapshot() {
+    var snapshot = RubyScriptGroupHierarchyEntry();
+    snapshot.overrideUuid(uuid);
+    snapshot._isSelected = _isSelected;
+    snapshot._isCollapsed = _isCollapsed;
+    snapshot.replaceWith(map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
+    return snapshot;
+  }
+  
+  @override
+  void restoreWith(Undoable snapshot) {
+    var entry = snapshot as RubyScriptGroupHierarchyEntry;
+    _isCollapsed = entry._isCollapsed;
+    updateOrReplaceWith(entry.toList(), (obj) => obj.takeSnapshot() as HierarchyEntry);
+  }
+}
+
 class RubyScriptHierarchyEntry extends GenericFileHierarchyEntry {
   RubyScriptHierarchyEntry(StringProp name, String path)
     : super(name, path, false, true);
@@ -603,6 +624,7 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
     // process DAT files
     List<Future<void>> futures = [];
     datFilePaths ??= await getDatFileList(datExtractDir);
+    RubyScriptGroupHierarchyEntry? rubyScriptGroup;
     const supportedFileEndings = { ".pak", "_scp.bin", ".tmd", ".smd", ".mcd", ".ftb" };
     for (var file in datFilePaths) {
       if (supportedFileEndings.every((ending) => !file.endsWith(ending)))
@@ -612,10 +634,24 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
         datEntry.add(existingEntries[existingEntryI]);
         continue;
       }
-      futures.add(openFile(file, parent: datEntry));
+      if (file.endsWith("_scp.bin")) {
+        if (rubyScriptGroup == null) {
+          rubyScriptGroup = RubyScriptGroupHierarchyEntry();
+          datEntry.add(rubyScriptGroup);
+        }
+        futures.add(openBinMrbScript(file, parent: rubyScriptGroup));
+      }
+      else
+        futures.add(openFile(file, parent: datEntry));
     }
 
     await Future.wait(futures);
+
+    if (rubyScriptGroup != null) {
+      rubyScriptGroup.name.value += " (${rubyScriptGroup.length})";
+      if (rubyScriptGroup.length > 8)
+        rubyScriptGroup.isCollapsed = true;
+    }
 
     return datEntry;
   }
