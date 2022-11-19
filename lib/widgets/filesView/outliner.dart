@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../../stateManagement/Property.dart';
 import '../../widgets/theme/customTheme.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/openFileTypes.dart';
@@ -9,6 +10,9 @@ import '../../stateManagement/xmlProps/xmlActionProp.dart';
 import '../../stateManagement/xmlProps/xmlProp.dart';
 import '../../utils/utils.dart';
 import '../misc/SmoothScrollBuilder.dart';
+import '../propEditors/simpleProps/UnderlinePropTextField.dart';
+import '../propEditors/simpleProps/propEditorFactory.dart';
+import '../propEditors/simpleProps/propTextField.dart';
 import '../propEditors/xmlActions/XmlActionEditor.dart';
 import 'FileType.dart';
 
@@ -20,6 +24,20 @@ class Outliner extends ChangeNotifierWidget {
 }
 
 class _OutlinerState extends ChangeNotifierState<Outliner> {
+  final StringProp search = StringProp("");
+
+  @override
+  void initState() {
+    super.initState();
+    search.changesUndoable = false;
+  }
+
+  @override
+  void dispose() {
+    search.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     // several listeners are needed to get the current and loaded file
@@ -37,7 +55,7 @@ class _OutlinerState extends ChangeNotifierState<Outliner> {
               child: areasManager.activeArea?.currentFile?.type == FileType.xml
                 ? ChangeNotifierBuilder(
                   key: Key(areasManager.activeArea!.currentFile!.uuid),
-                  notifier: areasManager.activeArea!.currentFile!,
+                  notifiers: [areasManager.activeArea!.currentFile!, search],
                   builder: (context) {
                     XmlProp? xmlProp = 
                     areasManager.activeArea?.currentFile?.type == FileType.xml
@@ -59,8 +77,8 @@ class _OutlinerState extends ChangeNotifierState<Outliner> {
   
   Widget makeTopRow() {
     return Row(
-      children: const [
-        Expanded(
+      children: [
+        const Expanded(
           child: Padding(
             padding: EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
             child: Text("OUTLINER", 
@@ -72,6 +90,12 @@ class _OutlinerState extends ChangeNotifierState<Outliner> {
             ),
           ),
         ),
+        makePropEditor<UnderlinePropTextField>(
+          search, const PropTFOptions(
+            constraints: BoxConstraints(minWidth: 125),
+            hintText: "Search...",
+          )
+        ),
       ],
     );
   }
@@ -82,6 +106,7 @@ class _OutlinerState extends ChangeNotifierState<Outliner> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: xmlProp
         .whereType<XmlActionProp>()
+        .where((e) => e.name.toString().toLowerCase().contains(search.value.toLowerCase()))
         .map((e) => _OutlinerEntry(key: Key(e.uuid), action: e))
         .toList(),
     );
