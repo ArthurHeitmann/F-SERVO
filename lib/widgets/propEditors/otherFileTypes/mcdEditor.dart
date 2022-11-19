@@ -7,6 +7,7 @@ import '../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/openFileTypes.dart';
 import '../../../stateManagement/otherFileTypes/McdData.dart';
+import '../simpleProps/boolPropIcon.dart';
 import 'FontsManager.dart';
 import 'McdFontDebugger.dart';
 import '../../../utils/utils.dart';
@@ -128,6 +129,7 @@ class _McdEditorBodyState extends ChangeNotifierState<_McdEditorBody> {
   final scrollController = ScrollController();
   List<Tuple2<int, McdEvent>> events = [];
   StringProp search = StringProp("");
+  BoolProp isRegex = BoolProp(false);
 
   @override
   void initState() {
@@ -136,7 +138,12 @@ class _McdEditorBodyState extends ChangeNotifierState<_McdEditorBody> {
   }
 
   void updateEvents() {
-    var searchLower = search.value.toLowerCase();
+    RegExp searchMatcher;
+    try {
+      searchMatcher = isRegex.value ? RegExp(search.value, caseSensitive: false) : RegExp(RegExp.escape(search.value), caseSensitive: false);
+    } catch (e) {
+      return;
+    }
     var allEvents = List.generate(
       widget.mcd.events.length,
       (index) => Tuple2(index, widget.mcd.events[index])
@@ -144,8 +151,8 @@ class _McdEditorBodyState extends ChangeNotifierState<_McdEditorBody> {
 
     events = allEvents.where((e) {
       var event = e.item2;
-      return event.name.value.toLowerCase().contains(searchLower) ||
-        event.paragraphs.any((p) => p.lines.any((l) => l.text.value.toLowerCase().contains(searchLower)));
+      return searchMatcher.hasMatch(event.name.value) ||
+        event.paragraphs.any((p) => p.lines.any((l) => searchMatcher.hasMatch(l.text.value)));
     }).toList();
   }
 
@@ -223,6 +230,11 @@ class _McdEditorBodyState extends ChangeNotifierState<_McdEditorBody> {
               ),
             ),
           ),
+          BoolPropIconButton(
+            prop: isRegex,
+            icon: Icons.auto_awesome,
+            tooltip: "Regex"
+          ),
           const SizedBox(width: 8),
         ],
       ),
@@ -264,6 +276,15 @@ class _McdEventEditorState extends ChangeNotifierState<_McdEventEditor> {
                 const SizedBox(width: 10,),
                 const Text("ID"),
                 makePropEditor(widget.event.eventId),
+                IconButton(
+                  onPressed: () {
+                    var mcd = widget.file.mcdData!;
+                    mcd.removeEvent(mcd.events.indexOf(widget.event));
+                  },
+                  iconSize: 18,
+                  splashRadius: 18,
+                  icon: const Icon(Icons.delete),
+                ),
               ]
             ),
             const SizedBox(height: 5,),

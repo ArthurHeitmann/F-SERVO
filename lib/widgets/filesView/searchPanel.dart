@@ -485,7 +485,11 @@ class _SearchGroupResultState extends State<_SearchGroupResult> {
     List<String> fillStrings;
     RegExp regex;
     if (widget.isRegex) {
-      regex = RegExp(widget.query, caseSensitive: widget.isCaseSensitive);
+      try {
+        regex = RegExp(widget.query, caseSensitive: widget.isCaseSensitive);
+      } catch (e) {
+        regex = RegExp(RegExp.escape(widget.query), caseSensitive: widget.isCaseSensitive);
+      }
       textSpans = text.split(regex)
         .map((e) => TextSpan(
           text: e.replaceAll("\t", "  "),
@@ -496,7 +500,11 @@ class _SearchGroupResultState extends State<_SearchGroupResult> {
         .toList();
     }
     else {
-      regex = RegExp(RegExp.escape(widget.query), caseSensitive: widget.isCaseSensitive);
+      try {
+        regex = RegExp(RegExp.escape(widget.query), caseSensitive: widget.isCaseSensitive);
+      } catch (e) {
+        regex = RegExp(widget.query, caseSensitive: widget.isCaseSensitive);
+      }
       textSpans = text.split(regex)
         .map((e) => TextSpan(
           text: e.replaceAll("\t", "  "),

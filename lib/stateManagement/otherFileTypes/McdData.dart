@@ -447,6 +447,7 @@ class McdData extends _McdFilePart {
     String? wtaPath = await searchForTexFile(datDir, mcdName, ".wta");
 
     var mcd = await McdFile.fromFile(mcdPath);
+    mcd.events.sort((a, b) => a.msgId - b.msgId);
 
     var usedFonts = await Future.wait(
       mcd.fonts.map((f) => McdLocalFont.fromMcdFile(mcd, f.id))
