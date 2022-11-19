@@ -20,7 +20,7 @@ class HierarchyEntryWidget extends ChangeNotifierWidget {
   final int depth;
 
   HierarchyEntryWidget(this.entry, {this.depth = 0})
-    : super(key: Key(entry.uuid), notifiers: [entry, shouldAutoTranslate]);
+    : super(key: Key(entry.uuid), notifiers: [entry, shouldAutoTranslate, openHierarchySearch]);
 
   @override
   State<HierarchyEntryWidget> createState() => _HierarchyEntryState();
@@ -99,8 +99,10 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
           ),
         ),
         if (widget.entry.isCollapsible && !widget.entry.isCollapsed)
-          for (var child in widget.entry)
-            HierarchyEntryWidget(child, depth: widget.depth + 1,)
+          ...widget.entry
+            .where((element) => element.isVisibleWithSearch)
+            .map((e) => HierarchyEntryWidget(e, depth: widget.depth + 1))
+            .toList()
       ]
 	  );
   }

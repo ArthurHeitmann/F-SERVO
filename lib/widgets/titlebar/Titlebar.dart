@@ -84,17 +84,44 @@ class TitleBarState extends ChangeNotifierState<TitleBar> with WindowListener {
               icon: const Icon(Icons.redo, size: 17),
               onPressed: undoHistoryManager.canRedo ? undoHistoryManager.redo : null,
             ),
-            IconButton(
-              padding: EdgeInsets.zero,
-              splashRadius: 14,
-              icon: const Icon(Icons.save, size: 15),
-              onPressed: () => areasManager.saveAll(),
+            Tooltip(
+              message: "Auto translate Jap to Eng",
+              waitDuration: const Duration(milliseconds: 500),
+              child: ChangeNotifierBuilder(
+                notifier: shouldAutoTranslate,
+                builder: (context) => Opacity(
+                  opacity: shouldAutoTranslate.value ? 1.0 : 0.25,
+                  child: IconButton(
+                    padding: const EdgeInsets.all(5),
+                    constraints: const BoxConstraints(),
+                    iconSize: 20,
+                    splashRadius: 20,
+                    icon: const Icon(Icons.translate, size: 15,),
+                    isSelected: shouldAutoTranslate.value,
+                    onPressed: () => shouldAutoTranslate.value ^= true,
+                  ),
+                ),
+              ),
             ),
-            IconButton(
-              padding: EdgeInsets.zero,
-              splashRadius: 14,
-              icon: const Icon(Icons.settings, size: 15),
-              onPressed: () => areasManager.openPreferences(),
+            Tooltip(
+              message: "Save all changed files",
+              waitDuration: const Duration(milliseconds: 500),
+              child: IconButton(
+                padding: EdgeInsets.zero,
+                splashRadius: 14,
+                icon: const Icon(Icons.save, size: 15),
+                onPressed: () => areasManager.saveAll(),
+              ),
+            ),
+            Tooltip(
+              message: "Settings",
+              waitDuration: const Duration(milliseconds: 500),
+              child: IconButton(
+                padding: EdgeInsets.zero,
+                splashRadius: 14,
+                icon: const Icon(Icons.settings, size: 15),
+                onPressed: () => areasManager.openPreferences(),
+              ),
             ),
             Expanded(
               child: GestureDetector(

@@ -32,6 +32,7 @@ abstract class HierarchyEntry extends NestedNotifier<HierarchyEntry> with Undoab
   final bool isCollapsible;
   bool _isCollapsed = false;
   final bool isOpenable;
+  bool isVisibleWithSearch = true;
 
   HierarchyEntry(this.name, this.isSelectable, this.isCollapsible, this.isOpenable)
     : super([]);
@@ -41,7 +42,6 @@ abstract class HierarchyEntry extends NestedNotifier<HierarchyEntry> with Undoab
     name.dispose();
     super.dispose();
   }
-
 
   set isSelected(bool value) {
     if (value == _isSelected) return;
@@ -67,6 +67,44 @@ abstract class HierarchyEntry extends NestedNotifier<HierarchyEntry> with Undoab
     for (var child in this) {
       child.setCollapsedRecursive(value, true);
     }
+  }
+
+  // 3 methods for checking if is visible with search
+  // 3 steps:
+  //   1. set isVisibleWithSearch to false for all entries
+  //   2. for each entry, check and store if it is visible with search
+  //   3. propagate visibility to parents and children (if an entry is visible, all its parents and children are visible)
+  void setIsVisibleWithSearchRecursive(bool value) {
+    isVisibleWithSearch = value;
+    for (var child in this) {
+      child.setIsVisibleWithSearchRecursive(value);
+    }
+  }
+  void computeIsVisibleWithSearchFilter() {
+    var search = openHierarchySearch.value.toLowerCase();
+    if (search.isEmpty)
+      isVisibleWithSearch = true;
+    else if (name.toString().toLowerCase().contains(search))
+      isVisibleWithSearch = true;
+    else
+      isVisibleWithSearch = false;
+    for (var child in this) {
+      child.computeIsVisibleWithSearchFilter();
+    }
+  }
+  void propagateVisibility() {
+    if (!isVisibleWithSearch) {
+      for (var child in this)
+        child.propagateVisibility();
+      return;
+    }
+    
+    var parent = openHierarchyManager.parentOf(this);
+    while (parent is HierarchyEntry) {
+      parent.isVisibleWithSearch = true;
+      parent = openHierarchyManager.parentOf(parent);
+    }
+    setIsVisibleWithSearchRecursive(true);
   }
 }
 
@@ -822,3 +860,11 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
 }
 
 final openHierarchyManager = OpenHierarchyManager();
+final StringProp openHierarchySearch = StringProp("")
+  ..addListener(() {
+    for (var entry in openHierarchyManager) {
+      entry.setIsVisibleWithSearchRecursive(false);
+      entry.computeIsVisibleWithSearchFilter();
+      entry.propagateVisibility();
+    }
+  });

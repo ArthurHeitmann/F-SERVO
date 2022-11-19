@@ -8,12 +8,14 @@ import '../../utils/utils.dart';
 import '../../widgets/theme/customTheme.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/FileHierarchy.dart';
-import '../../stateManagement/miscValues.dart';
 import '../misc/SmoothScrollBuilder.dart';
+import '../propEditors/simpleProps/UnderlinePropTextField.dart';
+import '../propEditors/simpleProps/propEditorFactory.dart';
+import '../propEditors/simpleProps/propTextField.dart';
 import 'HierarchyEntryWidget.dart';
 
 class FileExplorer extends ChangeNotifierWidget {
-  FileExplorer({super.key}) : super(notifier: openHierarchyManager);
+  FileExplorer({super.key}) : super(notifiers: [openHierarchyManager, openHierarchySearch]);
 
   @override
   State<FileExplorer> createState() => _FileExplorerState();
@@ -21,6 +23,13 @@ class FileExplorer extends ChangeNotifierWidget {
 
 class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
   bool isDroppingFile = false;
+  bool expandSearch = false;
+
+  @override
+  void initState() {
+    openHierarchySearch.changesUndoable = false;
+    super.initState();
+  }
 
   void openFile(DropDoneDetails details) async {
     List<Future> futures = [];
@@ -69,6 +78,7 @@ class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
                   stepSize: 60,
                   child: Column(
                     children: openHierarchyManager
+                      .where((element) => element.isVisibleWithSearch)
                       .map((element) => HierarchyEntryWidget(element))
                       .toList(),
                   ),
@@ -90,17 +100,39 @@ class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
   Widget makeTopRow() {
     return Row(
       children: [
-        const Expanded(
-          child: Padding(
-            padding: EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
-            child: Text("FILE EXPLORER", 
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w300
+        if (!expandSearch)
+          const Expanded(
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+              child: Text("FILE EXPLORER", 
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w300
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
-              overflow: TextOverflow.ellipsis,
             ),
           ),
+        if (expandSearch) ...[
+          const SizedBox(width: 8),
+          Expanded(
+            child: makePropEditor<UnderlinePropTextField>(
+              openHierarchySearch, const PropTFOptions(useIntrinsicWidth: false, hintText: "Search..."),
+            )
+          ),
+          const SizedBox(width: 8),
+        ],
+        IconButton(
+          icon: const Icon(Icons.search),
+          padding: const EdgeInsets.all(5),
+          constraints: const BoxConstraints(),
+          iconSize: 16,
+          splashRadius: 20,
+          onPressed: () => setState(() {
+            expandSearch = !expandSearch;
+            if (!expandSearch)
+              openHierarchySearch.value = "";
+          }),
         ),
         Row(
           children: [
@@ -114,25 +146,6 @@ class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
                 splashRadius: 20,
                 icon: const Icon(Icons.folder_open, size: 15,),
                 onPressed: openFilePicker,
-              ),
-            ),
-            Tooltip(
-              message: "Auto translate Jap to Eng",
-              waitDuration: const Duration(milliseconds: 500),
-              child: ChangeNotifierBuilder(
-                notifier: shouldAutoTranslate,
-                builder: (context) => Opacity(
-                  opacity: shouldAutoTranslate.value ? 1.0 : 0.25,
-                  child: IconButton(
-                    padding: const EdgeInsets.all(5),
-                    constraints: const BoxConstraints(),
-                    iconSize: 20,
-                    splashRadius: 20,
-                    icon: const Icon(Icons.translate, size: 15,),
-                    isSelected: shouldAutoTranslate.value,
-                    onPressed: () => shouldAutoTranslate.value ^= true,
-                  ),
-                ),
               ),
             ),
             Tooltip(
