@@ -208,6 +208,23 @@ class XmlPresets {
           file: cxt.file,
           parentTags: cxt.parentTags,
         )),
+        SelectionPopupConfig(name: "With PUID", getValue: () => XmlProp.fromXml(
+          makeXmlElement(
+            name: "value",
+            children: [
+              makeXmlElement(name: "name", text: "puid"),
+              makeXmlElement(name: "code", text: "0x${crc32("app::RoutePuid").toRadixString(16)}"),
+              makeXmlElement(name: "body", children: [
+                makeXmlElement(name: "id", children: [
+                  makeXmlElement(name: "code", text: "0x0"),
+                  makeXmlElement(name: "id", text: "0x0"),
+                ]),
+              ]),
+            ]
+          ),
+          file: cxt.file,
+          parentTags: cxt.parentTags,
+        )),
         SelectionPopupConfig(name: "ItemTable", getValue: () => XmlProp.fromXml(
           makeXmlElement(
             name: "value",

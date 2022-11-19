@@ -521,18 +521,16 @@ class BezierSyncedObject extends SyncedXmlObject {
   void updateXmlPropChildren(XmlProp root, XmlElement newRoot, String childTag) {
     var children = root
       .getAll("value")
-      .map((e) => e.get(childTag)!)
       .toList();
     var newChildren = newRoot
       .findElements("value")
-      .map((e) => e.getElement(childTag)!)
       .toList();
     var newChildrenCount = newChildren.length;
     var childrenCount = children.length;
     var minCount = min(childrenCount, newChildrenCount);
     for (var i = 0; i < minCount; i++) {
-      var childProp = children[i];
-      var childXml = newChildren[i];
+      var childProp = children[i].get(childTag)!;
+      var childXml = newChildren[i].getElement(childTag)!;
       childProp.value.updateWith(childXml.text);
     }
     if (childrenCount > newChildrenCount) {

@@ -306,11 +306,37 @@ class XmlActionPresets {
     XmlActionPresets.action.editor,
     (cxt) => XmlProp.fromXml(
       _makeAction("ScriptAction", [
-        makeXmlElement(name: "script", children: [
-          makeXmlElement(name: "id", text: "0x0"),
+        makeXmlElement(name: "curve", children: [
         ]),
-        makeXmlElement(name: "variables", children: [
-          makeXmlElement(name: "size", text: "0"),
+      ]),
+      file: cxt.file,
+      parentTags: cxt.parentTags,
+    ),
+  );
+  static XmlRawPreset bezierCurve = XmlRawPreset(
+    XmlActionPresets.action.editor,
+    (cxt) => XmlProp.fromXml(
+      _makeAction("BezierCurveAction", [
+        makeXmlElement(name: "curve", children: [
+          makeXmlElement(name: "attribute", text: "0x0"),
+          makeXmlElement(name: "controls", children: [
+            makeXmlElement(name: "size", text: "2"),
+            makeXmlElement(name: "value", children: [
+              makeXmlElement(name: "cp", text: "-3 0 0 -3 0 0"),
+            ]),
+            makeXmlElement(name: "value", children: [
+              makeXmlElement(name: "cp", text: "5 0 0 5 0 0"),
+            ]),
+          ]),
+          makeXmlElement(name: "nodes", children: [
+            makeXmlElement(name: "size", text: "2"),
+            makeXmlElement(name: "value", children: [
+              makeXmlElement(name: "point", text: "-4 0 0"),
+            ]),
+            makeXmlElement(name: "value", children: [
+              makeXmlElement(name: "point", text: "4 0 0"),
+            ]),
+          ]),
         ]),
       ]),
       file: cxt.file,
@@ -331,4 +357,5 @@ final _actionPreset = {
   "AreaAction": XmlActionPresets.area,
   "DelayAction": XmlActionPresets.delay,
   "ScriptAction": XmlActionPresets.script,
+  "BezierCurveAction": XmlActionPresets.bezierCurve,
 };
