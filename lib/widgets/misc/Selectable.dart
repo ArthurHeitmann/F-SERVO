@@ -24,7 +24,11 @@ class _Selectable extends ChangeNotifier {
     _selectedData[area]![T]?.state.onDispose = null;
 
     _selectedData[area]![T] = _SelectedData(data, state);
-    state.onDispose = () => _selectedData.remove(T);
+    state.onDispose = () async {
+      _selectedData[area]!.remove(T);
+      await waitForNextFrame();
+      notifyListeners();
+    };
     state.select();
 
     notifyListeners();
