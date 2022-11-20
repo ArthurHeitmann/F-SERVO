@@ -643,8 +643,8 @@ class McdData extends _McdFilePart {
 
     // paragraphs, lines, letters
     for (int msgI = 0; msgI < exportMessages.length; msgI++) {
-      for (int parI = 0; parI < events[parI].paragraphs.length; parI++) {
-        var paragraph = events[parI].paragraphs[parI];
+      for (int parI = 0; parI < events[msgI].paragraphs.length; parI++) {
+        var paragraph = events[msgI].paragraphs[parI];
         List<McdFileLine> paragraphLines = [];
         var font = exportFontMap[paragraph.fontId.value.toInt()]!;
         for (var line in paragraph.lines) {
@@ -667,7 +667,7 @@ class McdData extends _McdFilePart {
           paragraphLines
         );
         exportParagraphs.add(par);
-        exportMessages[parI].paragraphs.add(par);
+        exportMessages[msgI].paragraphs.add(par);
       }
     }
 
