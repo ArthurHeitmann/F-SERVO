@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../../../background/IdLookup.dart';
 import '../../../background/IdsIndexer.dart';
+import '../../../stateManagement/events/jumpToEvents.dart';
 import '../../../widgets/theme/customTheme.dart';
 import '../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
@@ -14,7 +15,6 @@ import '../../../utils/utils.dart';
 import '../../misc/nestedContextMenu.dart';
 import '../simpleProps/UnderlinePropTextField.dart';
 import '../simpleProps/propEditorFactory.dart';
-import '../xmlActions/XmlActionEditor.dart';
 
 class PuidReferenceEditor extends ChangeNotifierWidget {
   final bool showDetails;
@@ -183,13 +183,17 @@ class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor>
       
       await waitForNextFrame();
 
-      var actionContext = getActionKey(actionId)?.currentContext;
-      if (actionContext == null || !mounted) {
-        showToast("Couldn't find Action");
-        return;
-      }
-
-      scrollIntoView(actionContext, duration: const Duration(milliseconds: 400), viewOffset: 45);
+      jumpToStream.add(JumpToIdEvent(
+        openFile,
+        result.id,
+        actionId,
+      ));
+    }
+    else {
+      jumpToStream.add(JumpToIdEvent(
+        openFile,
+        result.id,
+      ));
     }
   }
 

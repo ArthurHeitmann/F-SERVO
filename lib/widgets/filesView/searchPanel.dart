@@ -474,6 +474,10 @@ class _SearchGroupResultState extends State<_SearchGroupResult> {
             await file.load();
             jumpToStream.add(JumpToLineEvent(file, result.lineNum));
           }
+          else if (result is SearchResultId) {
+            await file.load();
+            jumpToStream.add(JumpToIdEvent(file, result.idData.id));
+          }
         },
         child: Padding(
           padding: const EdgeInsets.only(left: 40.0),
@@ -538,17 +542,22 @@ class _SearchGroupResultState extends State<_SearchGroupResult> {
     return Row(
       children: [
         Text(
-          result.lineNum.toString(),
+          result.lineNum.toString().padLeft(4),
           style: TextStyle(
             fontSize: 11,
             color: getTheme(context).textColor!.withOpacity(0.5),
+            fontFamily: "FiraCode",
           ),
         ),
         Expanded(
           child: RichText(
             text: TextSpan(
               children: textSpans,
+              style: const TextStyle(
+                fontFamily: "FiraCode",
+              ),
             ),
+            textScaleFactor: 0.9,
             overflow: TextOverflow.ellipsis,
           ),
         ),

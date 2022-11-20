@@ -8,27 +8,13 @@ import '../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../stateManagement/openFilesManager.dart';
 import '../../../stateManagement/xmlProps/xmlActionProp.dart';
 import '../../../utils/utils.dart';
+import '../../filesView/xmlJumpToLineEventWrapper.dart';
 import '../../misc/FlexReorderable.dart';
 import '../../misc/Selectable.dart';
 import '../../misc/nestedContextMenu.dart';
 import '../simpleProps/DoubleClickablePropTextField.dart';
 import '../simpleProps/XmlPropEditorFactory.dart';
 import '../simpleProps/propTextField.dart';
-
-final Map<int, GlobalKey<XmlActionEditorState>> _actionKeys = {};
-
-GlobalKey<XmlActionEditorState>? getActionKey(int id) {
-  return _actionKeys[id];
-}
-GlobalKey<XmlActionEditorState> _getOrMakeKey(int id) {
-  if (_actionKeys.containsKey(id))
-    return _actionKeys[id]!;
-  else {
-    var key = GlobalKey<XmlActionEditorState>(debugLabel: "0x${id.toRadixString(16)}");
-    _actionKeys[id] = key;
-    return key;
-  }
-}
 
 final Set<String> ignoreTagNames = {
   "code",
@@ -50,7 +36,7 @@ class XmlActionEditor extends ChangeNotifierWidget {
   final XmlActionProp action;
 
   XmlActionEditor({ Key? key, required this.action, required this.showDetails })
-    : super(key: key ?? _getOrMakeKey(action.id.value), notifiers: [action, action.attribute]);
+    : super(key: key ?? Key(action.uuid), notifiers: [action, action.attribute]);
 
   @override
   State<XmlActionEditor> createState() => XmlActionEditorState();
@@ -59,26 +45,29 @@ class XmlActionEditor extends ChangeNotifierWidget {
 class XmlActionEditorState<T extends XmlActionEditor> extends ChangeNotifierState<T> {
   @override
   Widget build(BuildContext context) {
-    return SelectableWidget<XmlActionProp>(
-      area: areasManager.getAreaOfFile(widget.action.file!),
-      data: widget.action,
-      color: getActionPrimaryColor(context).withOpacity(0.5),
-      child: NestedContextMenu(
-        buttons: [
-          ContextMenuButtonConfig(
-            "Copy Action PUID ref",
-            icon: const Icon(Icons.content_copy, size: 14,),
-            onPressed: () => copyPuidRef("hap::Action", widget.action.id.value)
-          ),
-        ],
-        child: SizedBox(
-          width: 450,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              makeActionHeader(context),
-              makeActionBody(),
-            ],
+    return XmlWidgetWithId(
+      id: widget.action.id,
+      child: SelectableWidget<XmlActionProp>(
+        area: areasManager.getAreaOfFile(widget.action.file!),
+        data: widget.action,
+        color: getActionPrimaryColor(context).withOpacity(0.5),
+        child: NestedContextMenu(
+          buttons: [
+            ContextMenuButtonConfig(
+              "Copy Action PUID ref",
+              icon: const Icon(Icons.content_copy, size: 14,),
+              onPressed: () => copyPuidRef("hap::Action", widget.action.id.value)
+            ),
+          ],
+          child: SizedBox(
+            width: 450,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                makeActionHeader(context),
+                makeActionBody(),
+              ],
+            ),
           ),
         ),
       ),

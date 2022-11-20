@@ -2,18 +2,17 @@
 import 'package:flutter/material.dart';
 
 import '../../stateManagement/Property.dart';
+import '../../stateManagement/events/jumpToEvents.dart';
 import '../../widgets/theme/customTheme.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/openFileTypes.dart';
 import '../../stateManagement/openFilesManager.dart';
 import '../../stateManagement/xmlProps/xmlActionProp.dart';
 import '../../stateManagement/xmlProps/xmlProp.dart';
-import '../../utils/utils.dart';
 import '../misc/SmoothScrollBuilder.dart';
 import '../propEditors/simpleProps/UnderlinePropTextField.dart';
 import '../propEditors/simpleProps/propEditorFactory.dart';
 import '../propEditors/simpleProps/propTextField.dart';
-import '../propEditors/xmlActions/XmlActionEditor.dart';
 import 'FileType.dart';
 
 class Outliner extends ChangeNotifierWidget {
@@ -131,9 +130,7 @@ class __OutlinerEntryState extends ChangeNotifierState<_OutlinerEntry> {
       color: Colors.transparent,
       child: InkWell(
         onTap: () {
-          var actionContext = getActionKey(widget.action.id.value)?.currentContext;
-          if (actionContext != null)
-            scrollIntoView(actionContext, duration: const Duration(milliseconds: 400), viewOffset: 45);
+          jumpToStream.add(JumpToIdEvent(widget.action.file!, widget.action.id.value));
         },
         splashColor: textColor.withOpacity(0.2),
         hoverColor: textColor.withOpacity(0.1),
