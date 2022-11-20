@@ -12,7 +12,7 @@ import '../../utils/utils.dart';
 import '../Property.dart';
 import '../hasUuid.dart';
 import '../nestedNotifier.dart';
-import '../statusInfo.dart';
+import '../events/statusInfo.dart';
 import '../xmlProps/xmlProp.dart';
 import 'syncServer.dart';
 

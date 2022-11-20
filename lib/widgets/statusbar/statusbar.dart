@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../../widgets/theme/customTheme.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';
-import '../../stateManagement/statusInfo.dart';
+import '../../stateManagement/events/statusInfo.dart';
 
 class Statusbar extends StatelessWidget {
   const Statusbar({super.key});

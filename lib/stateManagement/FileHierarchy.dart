@@ -18,7 +18,7 @@ import 'nestedNotifier.dart';
 import '../fileTypeUtils/pak/pakExtractor.dart';
 import 'openFileTypes.dart';
 import 'openFilesManager.dart';
-import 'statusInfo.dart';
+import 'events/statusInfo.dart';
 import 'undoable.dart';
 import 'xmlProps/xmlProp.dart';
 

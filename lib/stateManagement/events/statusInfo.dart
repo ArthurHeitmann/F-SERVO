@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
 
-import 'nestedNotifier.dart';
+import '../nestedNotifier.dart';
 
 class IsLoadingStatus extends ChangeNotifier {
   int _loadingActivities = 0;

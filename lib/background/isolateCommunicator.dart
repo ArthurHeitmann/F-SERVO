@@ -2,7 +2,7 @@
 import 'dart:async';
 import 'dart:isolate';
 
-import '../stateManagement/statusInfo.dart';
+import '../stateManagement/events/statusInfo.dart';
 import '../utils/utils.dart';
 import 'IdsIndexer.dart';
 import 'Initializable.dart';

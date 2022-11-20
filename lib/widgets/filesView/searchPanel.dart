@@ -11,6 +11,7 @@ import '../../background/searchService.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/FileHierarchy.dart';
 import '../../stateManagement/Property.dart';
+import '../../stateManagement/events/jumpToEvents.dart';
 import '../../stateManagement/nestedNotifier.dart';
 import '../../stateManagement/openFilesManager.dart';
 import '../../utils/utils.dart';
@@ -467,7 +468,13 @@ class _SearchGroupResultState extends State<_SearchGroupResult> {
     return ConstrainedBox(
       constraints: const BoxConstraints(minHeight: 25),
       child: InkWell(
-        onTap: () => areasManager.openFile(result.filePath),
+        onTap: () async {
+          var file = areasManager.openFile(result.filePath);
+          if (result is SearchResultText) {
+            await file.load();
+            jumpToStream.add(JumpToLineEvent(file, result.lineNum));
+          }
+        },
         child: Padding(
           padding: const EdgeInsets.only(left: 40.0),
           child: Align(

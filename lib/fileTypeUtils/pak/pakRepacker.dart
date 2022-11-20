@@ -5,7 +5,7 @@ import 'package:path/path.dart' as path;
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 
-import '../../stateManagement/statusInfo.dart';
+import '../../stateManagement/events/statusInfo.dart';
 import '../utils/ByteDataWrapper.dart';
 
 const ZLibEncoder _zLibEncoder = ZLibEncoder();

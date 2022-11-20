@@ -3,7 +3,7 @@ import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
-import '../../stateManagement/statusInfo.dart';
+import '../../stateManagement/events/statusInfo.dart';
 import '../../utils/utils.dart';
 import '../../widgets/theme/customTheme.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';

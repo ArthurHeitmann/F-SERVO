@@ -10,7 +10,7 @@ import 'package:window_manager/window_manager.dart';
 
 import '../../stateManagement/FileHierarchy.dart';
 import '../../stateManagement/openFileTypes.dart';
-import '../../stateManagement/statusInfo.dart';
+import '../../stateManagement/events/statusInfo.dart';
 import 'FileTabEntry.dart';
 import 'FileType.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';

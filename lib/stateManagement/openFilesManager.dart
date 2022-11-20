@@ -9,7 +9,7 @@ import 'miscValues.dart';
 import 'nestedNotifier.dart';
 import 'openFileTypes.dart';
 import 'preferencesData.dart';
-import 'statusInfo.dart';
+import 'events/statusInfo.dart';
 import 'undoable.dart';
 
 class FilesAreaManager extends NestedNotifier<OpenFileData> implements Undoable {

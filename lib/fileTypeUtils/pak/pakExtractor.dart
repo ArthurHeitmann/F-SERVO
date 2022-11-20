@@ -4,7 +4,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:path/path.dart' as path;
 
-import '../../stateManagement/statusInfo.dart';
+import '../../stateManagement/events/statusInfo.dart';
 import '../dat/datExtractor.dart';
 import '../yax/yaxToXml.dart';
 import '../utils/ByteDataWrapper.dart';

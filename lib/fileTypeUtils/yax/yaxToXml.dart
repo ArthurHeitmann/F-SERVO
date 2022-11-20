@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:path/path.dart' as path;
 import 'package:xml/xml.dart';
 
-import '../../stateManagement/statusInfo.dart';
+import '../../stateManagement/events/statusInfo.dart';
 import '../../utils/utils.dart';
 import 'hashToStringMap.dart';
 import 'japToEng.dart';

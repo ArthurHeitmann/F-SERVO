@@ -1,4 +1,6 @@
 
+import 'dart:async';
+
 import 'package:code_text_field/code_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_highlight/themes/atom-one-dark.dart';
@@ -16,6 +18,7 @@ import 'package:path/path.dart';
 
 import '../../main.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';
+import '../../stateManagement/events/jumpToEvents.dart';
 import '../../stateManagement/openFileTypes.dart';
 import '../../stateManagement/undoable.dart';
 import '../../utils/utils.dart';
@@ -51,8 +54,11 @@ Map<String, TextStyle> get _customTheme {
 
 class _TextFileEditorState extends ChangeNotifierState<TextFileEditor> {
   CodeController? controller;
-  bool usesTabs = false;
   final scrollController = ScrollController();
+  final focus = FocusNode();
+  StreamSubscription<JumpToEvent>? goToLineSubscription;
+  Future<void>? fileLoaded;
+  bool usesTabs = false;
   bool isOwnUpdate = false;
   bool isExternalUpdate = false;
 
@@ -81,8 +87,14 @@ class _TextFileEditorState extends ChangeNotifierState<TextFileEditor> {
   @override
   void initState() {
     super.initState();
+
+    goToLineSubscription = jumpToEvents.listen(onGoToLineEvent);
+
+    var loadedCompleter = Completer<void>();
+    fileLoaded = loadedCompleter.future;
     widget.fileContent.load()
       .then((_) {
+        loadedCompleter.complete();
         usesTabs = RegExp("^\t+", multiLine: true).hasMatch(widget.fileContent.text);
         widget.fileContent.addListener(onFileContentChange);
         controller = CodeController(
@@ -110,7 +122,56 @@ class _TextFileEditorState extends ChangeNotifierState<TextFileEditor> {
   @override
   void dispose() {
     widget.fileContent.removeListener(onFileContentChange);
+    goToLineSubscription?.cancel();
     super.dispose();
+  }
+
+  Future<void> onGoToLineEvent(JumpToEvent event) async {
+    if (event.file != widget.fileContent)
+      return;
+    if (event is! JumpToLineEvent)
+      return;
+    if (controller == null)
+      return;
+    await waitForNextFrame();
+    var text = controller!.text;
+    int charStartPos = 0;
+    int charEndPos = text.indexOf("\n");
+    String currentLine = text.substring(charStartPos, charEndPos);
+    int currentLineNum = 1;
+    while (currentLineNum < event.line) {
+      charStartPos = charEndPos + 1;
+      if (charStartPos >= text.length)
+        return;
+      charEndPos = text.indexOf("\n", charStartPos);
+      currentLine = text.substring(charStartPos, charEndPos);
+      currentLineNum++;
+    }
+    var selection = TextSelection(
+      // offset: charStartPos,
+      baseOffset: charStartPos,
+      extentOffset: charStartPos + currentLine.length,
+    );
+
+    var globalContext = getGlobalContext();
+    
+    // select the line
+    FocusScope.of(globalContext).requestFocus(focus);
+    setState(() {});
+    controller!.value = controller!.value.copyWith(
+      selection: selection,
+    );
+
+    // scroll to the line
+    var scrollableTotalHeight = scrollController.position.maxScrollExtent;
+    var totalLines = text.split("\n").length;
+    var lineHeight = scrollableTotalHeight / totalLines;
+    var scrollOffset = lineHeight * (event.line - 1);
+    scrollController.animateTo(
+      scrollOffset,
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeInOut,
+    );
   }
 
   @override
@@ -124,6 +185,14 @@ class _TextFileEditorState extends ChangeNotifierState<TextFileEditor> {
               controller: scrollController,
               child: CodeField(
                 controller: controller!,
+                focusNode: focus,
+                lineNumberBuilder: (line, style) => TextSpan(
+                  text: line.toString(),
+                  style: style?.copyWith(
+                    fontSize: 12,
+                    overflow: TextOverflow.clip,
+                  ),
+                ),
               ),
             ),
           )

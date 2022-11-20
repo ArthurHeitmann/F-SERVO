@@ -1,6 +1,6 @@
 
 import 'dart:io';
-import 'statusInfo.dart';
+import 'events/statusInfo.dart';
 import 'package:path/path.dart';
 
 import '../fileTypeUtils/dat/datRepacker.dart';
