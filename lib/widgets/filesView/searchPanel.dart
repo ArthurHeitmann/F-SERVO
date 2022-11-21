@@ -48,6 +48,7 @@ class _SearchPanelState extends State<SearchPanel> {
   final Mutex cancelMutex = Mutex();
   final scrollController = ScrollController();
   late final void Function() updateSearchStream;
+  Set<String> prevOpenFileUuids = {};
   // common options
   final StringProp extensions = StringProp("");
   final StringProp path = StringProp("");
@@ -63,7 +64,8 @@ class _SearchPanelState extends State<SearchPanel> {
   @override
   void initState() {
     updateSearchStream = debounce(_updateSearchStream, 750);
-
+    openHierarchyManager.addListener(_onHierarchyChange);
+    prevOpenFileUuids = openHierarchyManager.map((e) => e.uuid).toSet();
     extensions.addListener(updateSearchStream);
     path.addListener(updateSearchStream);
     query.addListener(updateSearchStream);
@@ -83,6 +85,7 @@ class _SearchPanelState extends State<SearchPanel> {
 
   @override
   void dispose() {
+    openHierarchyManager.removeListener(_onHierarchyChange);
     extensions.dispose();
     path.dispose();
     query.dispose();
@@ -375,6 +378,22 @@ class _SearchPanelState extends State<SearchPanel> {
         },
       ),
     );
+  }
+
+  void _onHierarchyChange() {
+    // auto fill search path with opened file
+    if (path.value.isNotEmpty || query.value.isNotEmpty && extensions.value.isNotEmpty)
+      return;
+    var curOpenFileUuids = openHierarchyManager.map((e) => e.uuid).toSet();
+    var newlyAddedUuids = curOpenFileUuids.difference(prevOpenFileUuids);
+    for (var newUuid in newlyAddedUuids) {
+      var entry = openHierarchyManager.firstWhere((e) => e.uuid == newUuid);
+      if (entry is! ExtractableHierarchyEntry)
+        continue;
+      path.value = entry.extractedPath;
+      break;
+    }
+    prevOpenFileUuids = curOpenFileUuids;
   }
 }
 
