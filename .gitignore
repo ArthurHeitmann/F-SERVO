@@ -49,3 +49,4 @@ app.*.map.json
 .vscode
 assets/bins
 assets/mcdFonts
+assets/entityThumbnails

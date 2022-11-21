@@ -15,6 +15,7 @@ import '../../../utils/utils.dart';
 import '../../misc/nestedContextMenu.dart';
 import '../simpleProps/UnderlinePropTextField.dart';
 import '../simpleProps/propEditorFactory.dart';
+import 'objIdEditor.dart';
 
 class PuidReferenceEditor extends ChangeNotifierWidget {
   final bool showDetails;
@@ -30,6 +31,7 @@ class PuidReferenceEditor extends ChangeNotifierWidget {
 class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor> {
   bool showLookup = true;
   Future<List<IndexedIdData>>? lookupFuture;
+  StringProp objIdProp = StringProp("");
 
   @override
   void initState() {
@@ -41,6 +43,16 @@ class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor>
     updateLookup();
 
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    var id = widget.prop.get("id") ?? widget.prop.get("value")!;
+    var idProp = id.value as HexProp;
+    idProp.removeListener(updateLookup);
+    objIdProp.dispose();
+
+    super.dispose();
   }
 
   void updateLookup() async {
@@ -79,6 +91,8 @@ class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor>
                   if (lookup == null || lookup.isEmpty)
                     lookup = [IndexedIdData(idProp.value, codeProp.isHashed ? codeProp.strVal! : codeProp.toString(), "", "", "")];
                   var puidRef = lookup.first;
+                  if (puidRef is IndexedEntityIdData)
+                    objIdProp.value = puidRef.objId;
                   return Expanded(
                     child: Column(
                       children: [
@@ -97,6 +111,7 @@ class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor>
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
+                              ObjIdIcon(key: Key(puidRef.objId), objId: objIdProp, size: 28,),
                               Text(puidRef.objId),
                               if (puidRef.name != null)
                                 Flexible(child: Text(" (${puidRef.name})", overflow: TextOverflow.ellipsis,)),

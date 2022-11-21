@@ -74,6 +74,7 @@ flutter:
     - assets/mcdFonts/35/
     - assets/mcdFonts/36/
     - assets/mcdFonts/37/
+    - assets/entityThumbnails/
 
   fonts:
     - family: FiraCode
