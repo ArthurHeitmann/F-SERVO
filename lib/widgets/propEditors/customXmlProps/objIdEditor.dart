@@ -116,6 +116,10 @@ class _ObjIdIconState extends ChangeNotifierState<ObjIdIcon> {
             _expand();
         });
       },
+      onExit: (_) {
+        if (expandTimer != null)
+          expandTimer!.cancel();
+      },
       child: Container(
         width: widget.size,
         height: widget.size,

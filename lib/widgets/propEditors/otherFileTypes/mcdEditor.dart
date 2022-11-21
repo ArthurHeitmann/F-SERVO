@@ -402,6 +402,7 @@ class _McdEventInsertionMarkerState extends State<_McdEventInsertionMarker> {
               var newIndex = widget.index;
               widget.events.move(curIndex, newIndex);
             } else if (_McdEditorBody.movingEvent.value!.src != widget.events) {
+              _McdEditorBody.movingEvent.value!.event.file = widget.events[widget.index].file;
               widget.events.insert(widget.index, _McdEditorBody.movingEvent.value!.event);
               _McdEditorBody.movingEvent.value!.src.remove(_McdEditorBody.movingEvent.value!.event);
             }
