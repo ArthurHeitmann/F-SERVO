@@ -394,6 +394,7 @@ class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
       await processChangedFiles();
     } finally {
       isLoadingStatus.popIsLoading();
+      undoHistoryManager.onUndoableEvent();
     }
   }
 

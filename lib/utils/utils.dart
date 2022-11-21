@@ -185,10 +185,11 @@ Future<void> waitForNextFrame() {
   return completer.future;
 }
 
-void showToast(String msg) {
+void showToast(String msg, [Duration duration = const Duration(seconds: 4)]) {
   FToast toast = FToast();
   toast.init(getGlobalContext());
   toast.showToast(
+    toastDuration: duration,
     child: Container(
       decoration: BoxDecoration(
         color: Colors.grey.shade700,
@@ -544,4 +545,16 @@ bool isSubtype<S, T>() => <S>[] is List<T>;
 
 bool isAreaProp(XmlProp prop) {
   return prop.tagName.toLowerCase().contains("area") && prop.get("size") != null;
+}
+
+List<T> spaceListWith<T>(List<T> list, T Function() generator, [bool outer = false]) {
+  var newList = <T>[];
+  for (var i = 0; i < list.length; i++) {
+    if (i != 0 || outer)
+      newList.add(generator());
+    newList.add(list[i]);
+  }
+  if (outer)
+    newList.add(generator());
+  return newList;
 }

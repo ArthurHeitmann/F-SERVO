@@ -13,7 +13,7 @@ import '../../utils/xmlLineParser.dart';
 class _XmlJumpToLineEventIW extends InheritedWidget {
   final Stream<JumpToIdEvent> jumpToIdEvents;
 
-  const _XmlJumpToLineEventIW({ super.key, required super.child, required this.jumpToIdEvents });
+  const _XmlJumpToLineEventIW({ required super.child, required this.jumpToIdEvents });
 
   @override
   bool updateShouldNotify(covariant InheritedWidget oldWidget) {
