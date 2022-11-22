@@ -61,12 +61,18 @@ class XmlRawPreset {
     return xml;
   }
 
-  static XmlElement defaultDuplicateWithRandIdRecAsXml(XmlProp prop) {
-    var xml = prop.toXml();
-    var idEl = xml.findAllElements("id").where((e) => e.text.startsWith("0x"));
-    for (var el in idEl)
-      el.innerText = "0x${randomId().toRadixString(16)}";
-    return xml;
+  static void updateLayoutsIdsInDuplicateXml(XmlElement layouts) {
+    for (var child in layouts.childElements) {
+      var idEl = child.getElement("id");
+      if (idEl != null && idEl.text.startsWith("0x"))
+        idEl.innerText = "0x${randomId().toRadixString(16)}";
+      var subLayouts = child.getElement("layouts")!;
+      for (var value in subLayouts.findElements("value")) {
+        var idEl = value.getElement("id");
+        if (idEl != null && idEl.text.startsWith("0x"))
+          idEl.innerText = "0x${randomId().toRadixString(16)}";
+      }
+    }
   }
 }
 
@@ -171,7 +177,11 @@ class XmlPresets {
     "Layouts",
     <T extends PropTextField>(prop, showDetails) => LayoutsEditor(prop: prop, showDetails: showDetails),
     (cxt) => null,
-    // TODO: duplicate
+    (prop) {
+      var xml = XmlRawPreset.defaultDuplicateWithRandIdAsXml(prop);
+      XmlRawPreset.updateLayoutsIdsInDuplicateXml(xml);
+      return xml;
+    },
   );
   static XmlRawPreset params = XmlRawPreset(
     "Param",

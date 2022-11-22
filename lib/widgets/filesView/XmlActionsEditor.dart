@@ -1,8 +1,6 @@
 
-import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 
-import '../../stateManagement/Property.dart';
 import '../../stateManagement/sync/syncListImplementations.dart';
 import '../../stateManagement/xmlProps/xmlProp.dart';
 import '../../stateManagement/xmlProps/xmlActionProp.dart';
@@ -59,17 +57,7 @@ class _XmlActionsEditorState extends XmlArrayEditorState<XmlActionsEditor> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       NestedContextMenu(
-                        buttons: [
-                          ContextMenuButtonConfig(
-                            "Delete Action",
-                            icon: const Icon(Icons.delete, size: 14),
-                            onPressed: () {
-                              (widget.root.get("size")!.value as NumberProp).value -= 1;
-                              widget.root.remove(action);
-                              action.dispose();
-                            }
-                          ),
-                        ],
+                        buttons: getContextMenuButtons(actions.indexOf(action)),
                         child: actionEditor
                       ),
                       ActionAddButton(parent: widget.root, index: actions.indexOf(action) + 1),

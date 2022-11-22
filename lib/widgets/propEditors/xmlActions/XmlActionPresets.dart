@@ -63,6 +63,14 @@ XmlElement _makeArea() {
   );
 }
 
+
+XmlElement _updateIdsInDuplicatedEntityAction(XmlProp prop) {
+  var xml = XmlRawPreset.defaultDuplicateWithRandIdAsXml(prop);
+  var layouts = xml.getElement("layouts")!;
+  XmlRawPreset.updateLayoutsIdsInDuplicateXml(layouts);
+  return xml;
+}
+
 class XmlActionPresets {
   static XmlRawPreset action = XmlRawPreset(
     "Action",
@@ -78,6 +86,14 @@ class XmlActionPresets {
       )
       .toList()
     ),
+    (prop) {
+      if (prop is! XmlActionProp)
+        return XmlRawPreset.defaultDuplicateWithRandIdAsXml(prop);
+      var actionType = prop.code.strVal ?? "";
+      if (!_actionPreset.containsKey(actionType))
+        return XmlRawPreset.defaultDuplicateWithRandIdAsXml(prop);
+      return _actionPreset[actionType]!.duplicateAsXml(prop);
+    },
   );
 
   static XmlRawPreset sendCommand = XmlRawPreset(
@@ -93,6 +109,7 @@ class XmlActionPresets {
       file: cxt.file,
       parentTags: cxt.parentTags,
     ),
+    XmlRawPreset.defaultDuplicateWithRandIdAsXml,
   );
   static XmlRawPreset sendCommands = XmlRawPreset(
     "Action",
@@ -116,6 +133,7 @@ class XmlActionPresets {
       file: cxt.file,
       parentTags: cxt.parentTags,
     ),
+    XmlRawPreset.defaultDuplicateWithRandIdAsXml,
   );
   static XmlRawPreset conditionBlock = XmlRawPreset(
     "Action",
@@ -137,6 +155,7 @@ class XmlActionPresets {
       file: cxt.file,
       parentTags: cxt.parentTags,
     ),
+    XmlRawPreset.defaultDuplicateWithRandIdAsXml,
   );
   static XmlRawPreset entityLayout = XmlRawPreset(
     "Action",
@@ -153,6 +172,7 @@ class XmlActionPresets {
       file: cxt.file,
       parentTags: cxt.parentTags,
     ),
+    _updateIdsInDuplicatedEntityAction,
   );
   static XmlRawPreset entityLayoutArea = XmlRawPreset(
     "Action",
@@ -177,6 +197,7 @@ class XmlActionPresets {
       file: cxt.file,
       parentTags: cxt.parentTags,
     ),
+    _updateIdsInDuplicatedEntityAction,
   );
   static XmlRawPreset enemySet = XmlRawPreset(
     "Action",
@@ -201,6 +222,7 @@ class XmlActionPresets {
       file: cxt.file,
       parentTags: cxt.parentTags,
     ),
+    _updateIdsInDuplicatedEntityAction,
   );
   static XmlRawPreset enemySetArea = XmlRawPreset(
     "Action",
@@ -247,6 +269,7 @@ class XmlActionPresets {
       file: cxt.file,
       parentTags: cxt.parentTags,
     ),
+    _updateIdsInDuplicatedEntityAction,
   );
   static XmlRawPreset conditionCommands = XmlRawPreset(
     "Action",
@@ -287,6 +310,7 @@ class XmlActionPresets {
       file: cxt.file,
       parentTags: cxt.parentTags,
     ),
+    XmlRawPreset.defaultDuplicateWithRandIdAsXml,
   );
   static XmlRawPreset area = XmlRawPreset(
     "Action",
@@ -301,6 +325,7 @@ class XmlActionPresets {
       file: cxt.file,
       parentTags: cxt.parentTags,
     ),
+    XmlRawPreset.defaultDuplicateWithRandIdAsXml,
   );
   static XmlRawPreset delay = XmlRawPreset(
     "Action",
@@ -312,6 +337,7 @@ class XmlActionPresets {
       file: cxt.file,
       parentTags: cxt.parentTags,
     ),
+    XmlRawPreset.defaultDuplicateWithRandIdAsXml,
   );
   static XmlRawPreset script = XmlRawPreset(
     "Action",
@@ -324,6 +350,15 @@ class XmlActionPresets {
       file: cxt.file,
       parentTags: cxt.parentTags,
     ),
+    ((prop) {
+      var xml = prop.toXml();
+      var vars = xml.getElement("variables")!;
+      for (var value in vars.findElements("value")) {
+        var idEl = value.getElement("id")!;
+        idEl.innerText = "0x${randomId().toRadixString(16)}";
+      }
+      return xml;
+    })
   );
   static XmlRawPreset bezierCurve = XmlRawPreset(
     "Action",
@@ -355,6 +390,7 @@ class XmlActionPresets {
       file: cxt.file,
       parentTags: cxt.parentTags,
     ),
+    XmlRawPreset.defaultDuplicateWithRandIdAsXml,
   );
 }
 

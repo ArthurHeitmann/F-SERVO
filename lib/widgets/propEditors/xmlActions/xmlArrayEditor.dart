@@ -72,33 +72,37 @@ class XmlArrayEditorState<T extends XmlArrayEditor> extends ChangeNotifierState<
     removed.dispose();
   }
 
+  List<ContextMenuButtonConfig> getContextMenuButtons(int index) {
+    return [
+      ContextMenuButtonConfig(
+        "Duplicate ${widget.childrenPreset.name}",
+        icon: const Icon(Icons.copy, size: 14,),
+        onPressed: () {
+          var offset = firstChildOffset;
+          var ownIndex = offset + index;
+          widget.parent.insert(
+            ownIndex + 1,
+            XmlProp.fromXml(
+              widget.childrenPreset.duplicateAsXml(widget.parent[ownIndex]),
+              parentTags: widget.parent.nextParents(),
+              file: widget.parent.file,
+            )
+          );
+        },
+      ),
+      ContextMenuButtonConfig(
+        "Delete ${widget.childrenPreset.name}",
+        icon: const Icon(Icons.delete, size: 14,),
+        onPressed: () => deleteChild(index),
+      ),
+    ];
+  }
+
   Widget childWrapper({ required Key key, required Widget child, required int index }) {
     return NestedContextMenu(
       key: key,
       clearParent: true,
-      buttons: [
-        ContextMenuButtonConfig(
-          "Duplicate ${widget.childrenPreset.name}",
-          icon: const Icon(Icons.copy, size: 14,),
-          onPressed: () {
-            var offset = firstChildOffset;
-            var ownIndex = offset + index;
-            widget.parent.insert(
-              ownIndex + 1,
-              XmlProp.fromXml(
-                widget.childrenPreset.duplicateAsXml(widget.parent[ownIndex]),
-                parentTags: widget.parent.nextParents(),
-                file: widget.parent.file,
-              )
-            );
-          },
-        ),
-        ContextMenuButtonConfig(
-          "Delete ${widget.childrenPreset.name}",
-          icon: const Icon(Icons.delete, size: 14,),
-          onPressed: () => deleteChild(index),
-        ),
-      ],
+      buttons: getContextMenuButtons(index),
       child: Stack(
         children: [
           child,
