@@ -65,6 +65,7 @@ XmlElement _makeArea() {
 
 class XmlActionPresets {
   static XmlRawPreset action = XmlRawPreset(
+    "Action",
     <T extends PropTextField>(prop, showDetails) => makeXmlActionEditor(
       action: prop as XmlActionProp,
       showDetails: showDetails,
@@ -80,6 +81,7 @@ class XmlActionPresets {
   );
 
   static XmlRawPreset sendCommand = XmlRawPreset(
+    "Action",
     XmlActionPresets.action.editor,
     (cxt) => XmlProp.fromXml(
       _makeAction("SendCommand", [
@@ -93,6 +95,7 @@ class XmlActionPresets {
     ),
   );
   static XmlRawPreset sendCommands = XmlRawPreset(
+    "Action",
     XmlActionPresets.action.editor,
     (cxt) => XmlProp.fromXml(
       _makeAction("SendCommands", [
@@ -115,6 +118,7 @@ class XmlActionPresets {
     ),
   );
   static XmlRawPreset conditionBlock = XmlRawPreset(
+    "Action",
     XmlActionPresets.action.editor,
     (cxt) => XmlProp.fromXml(
       _makeAction("ConditionBlock", [
@@ -135,6 +139,7 @@ class XmlActionPresets {
     ),
   );
   static XmlRawPreset entityLayout = XmlRawPreset(
+    "Action",
     XmlActionPresets.action.editor,
     (cxt) => XmlProp.fromXml(
       _makeAction("EntityLayoutAction", [
@@ -150,6 +155,7 @@ class XmlActionPresets {
     ),
   );
   static XmlRawPreset entityLayoutArea = XmlRawPreset(
+    "Action",
     XmlActionPresets.action.editor,
     (cxt) => XmlProp.fromXml(
       _makeAction("EntityLayoutArea", [
@@ -173,6 +179,7 @@ class XmlActionPresets {
     ),
   );
   static XmlRawPreset enemySet = XmlRawPreset(
+    "Action",
     XmlActionPresets.action.editor,
     (cxt) => XmlProp.fromXml(
       _makeAction("EnemySetAction", [
@@ -196,6 +203,7 @@ class XmlActionPresets {
     ),
   );
   static XmlRawPreset enemySetArea = XmlRawPreset(
+    "Action",
     XmlActionPresets.action.editor,
     (cxt) => XmlProp.fromXml(
       _makeAction("EnemySetArea", [
@@ -241,6 +249,7 @@ class XmlActionPresets {
     ),
   );
   static XmlRawPreset conditionCommands = XmlRawPreset(
+    "Action",
     XmlActionPresets.action.editor,
     (cxt) => XmlProp.fromXml(
       _makeAction("ConditionCommands", [
@@ -280,6 +289,7 @@ class XmlActionPresets {
     ),
   );
   static XmlRawPreset area = XmlRawPreset(
+    "Action",
     XmlActionPresets.action.editor,
     (cxt) => XmlProp.fromXml(
       _makeAction("AreaAction", [
@@ -293,6 +303,7 @@ class XmlActionPresets {
     ),
   );
   static XmlRawPreset delay = XmlRawPreset(
+    "Action",
     XmlActionPresets.action.editor,
     (cxt) => XmlProp.fromXml(
       _makeAction("DelayAction", [
@@ -303,6 +314,7 @@ class XmlActionPresets {
     ),
   );
   static XmlRawPreset script = XmlRawPreset(
+    "Action",
     XmlActionPresets.action.editor,
     (cxt) => XmlProp.fromXml(
       _makeAction("ScriptAction", [
@@ -314,6 +326,7 @@ class XmlActionPresets {
     ),
   );
   static XmlRawPreset bezierCurve = XmlRawPreset(
+    "Action",
     XmlActionPresets.action.editor,
     (cxt) => XmlProp.fromXml(
       _makeAction("BezierCurveAction", [

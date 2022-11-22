@@ -77,11 +77,27 @@ class XmlArrayEditorState<T extends XmlArrayEditor> extends ChangeNotifierState<
       key: key,
       clearParent: true,
       buttons: [
-          ContextMenuButtonConfig(
-            "Delete child",
-            icon: const Icon(Icons.delete, size: 14,),
-            onPressed: () => deleteChild(index),
-          ),
+        ContextMenuButtonConfig(
+          "Duplicate ${widget.childrenPreset.name}",
+          icon: const Icon(Icons.copy, size: 14,),
+          onPressed: () {
+            var offset = firstChildOffset;
+            var ownIndex = offset + index;
+            widget.parent.insert(
+              ownIndex + 1,
+              XmlProp.fromXml(
+                widget.childrenPreset.duplicateAsXml(widget.parent[ownIndex]),
+                parentTags: widget.parent.nextParents(),
+                file: widget.parent.file,
+              )
+            );
+          },
+        ),
+        ContextMenuButtonConfig(
+          "Delete ${widget.childrenPreset.name}",
+          icon: const Icon(Icons.delete, size: 14,),
+          onPressed: () => deleteChild(index),
+        ),
       ],
       child: Stack(
         children: [

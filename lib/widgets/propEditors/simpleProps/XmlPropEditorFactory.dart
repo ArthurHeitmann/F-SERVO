@@ -3,6 +3,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:xml/xml.dart';
 
 import '../../../main.dart';
 import '../../../stateManagement/Property.dart';
@@ -35,28 +36,51 @@ class XmlPresetContext {
 }
 
 class XmlRawPreset {
+  final String name;
   final Widget Function<T extends PropTextField>(XmlProp prop, bool showDetails) editor;
   final FutureOr<XmlProp?> Function(XmlPresetContext cxt) propFactory;
+  final XmlElement Function(XmlProp prop) duplicateAsXml;
 
-  const XmlRawPreset(this.editor, this.propFactory);
+  const XmlRawPreset(this.name, this.editor, this.propFactory, [this.duplicateAsXml = XmlRawPreset.defaultDuplicateAsXml]);
 
   XmlPreset withCxt(XmlPresetContext context) =>
-    XmlPreset(editor, propFactory, context);
+    XmlPreset(name, editor, propFactory, context);
 
   XmlPreset withCxtV(XmlProp parent) =>
-    XmlPreset(editor, propFactory, XmlPresetContext(parent: parent));
+    XmlPreset(name, editor, propFactory, XmlPresetContext(parent: parent));
+
+  static XmlElement defaultDuplicateAsXml(XmlProp prop) {
+    return prop.toXml();
+  }
+
+  static XmlElement defaultDuplicateWithRandIdAsXml(XmlProp prop) {
+    var xml = prop.toXml();
+    var idEl = xml.getElement("id");
+    if (idEl != null && idEl.text.startsWith("0x"))
+      idEl.innerText = "0x${randomId().toRadixString(16)}";
+    return xml;
+  }
+
+  static XmlElement defaultDuplicateWithRandIdRecAsXml(XmlProp prop) {
+    var xml = prop.toXml();
+    var idEl = xml.findAllElements("id").where((e) => e.text.startsWith("0x"));
+    for (var el in idEl)
+      el.innerText = "0x${randomId().toRadixString(16)}";
+    return xml;
+  }
 }
 
 class XmlPreset extends XmlRawPreset {
   final XmlPresetContext? _context;
 
-  const XmlPreset(super.editor, super.propFactory, this._context);
+  const XmlPreset(super.name, super.editor, super.propFactory, this._context);
 
   FutureOr<XmlProp?> prop() => _context != null ? propFactory(_context!) : null;  
 }
 
 class XmlPresets {
   static XmlRawPreset area = XmlRawPreset(
+    "Area",
     <T extends PropTextField>(prop, showDetails) => AreaEditor(prop: prop, showDetails: showDetails),
     (cxt) {
       return showSelectionPopup(getGlobalContext(), [
@@ -106,6 +130,7 @@ class XmlPresets {
     },
   );
   static XmlRawPreset entity = XmlRawPreset(
+    "Entity",
     <T extends PropTextField>(prop, showDetails) => EntityEditor(prop: prop, showDetails: showDetails),
     (cxt) {
       if (cxt.parentName == "layouts") {
@@ -140,12 +165,16 @@ class XmlPresets {
       }
       throw Exception("Unsupported entity");
     },
+    XmlRawPreset.defaultDuplicateWithRandIdAsXml,
   );
   static XmlRawPreset layouts = XmlRawPreset(
+    "Layouts",
     <T extends PropTextField>(prop, showDetails) => LayoutsEditor(prop: prop, showDetails: showDetails),
     (cxt) => null,
+    // TODO: duplicate
   );
   static XmlRawPreset params = XmlRawPreset(
+    "Param",
     <T extends PropTextField>(prop, showDetails) => ParamsEditor(prop: prop, showDetails: showDetails),
     (cxt) => showSelectionPopup(getGlobalContext(), [
         SelectionPopupConfig(name: "Default", getValue: () => XmlProp.fromXml(
@@ -251,6 +280,7 @@ class XmlPresets {
         )),
     ]));
   static XmlRawPreset condition = XmlRawPreset(
+    "Condition",
     <T extends PropTextField>(prop, showDetails) => ConditionEditor(prop: prop, showDetails: showDetails),
     (cxt) => XmlProp.fromXml(
       makeXmlElement(
@@ -277,10 +307,12 @@ class XmlPresets {
     ),
   );
   static XmlRawPreset transforms = XmlRawPreset(
+    "Transforms",
     <T extends PropTextField>(prop, showDetails) => TransformsEditor(parent: prop),
     (cxt) => null,
   );
   static XmlRawPreset puidReference = XmlRawPreset(
+    "PUID Reference",
     <T extends PropTextField>(prop, showDetails) => PuidReferenceEditor(prop: prop, showDetails: showDetails),
     (cxt) => XmlProp.fromXml(
       makeXmlElement(name: "puid",
@@ -294,6 +326,7 @@ class XmlPresets {
     ),
   );
   static XmlRawPreset command = XmlRawPreset(
+    "Command",
     <T extends PropTextField>(prop, showDetails) => CommandEditor(prop: prop, showDetails: showDetails),
     (cxt) => XmlProp.fromXml(
       makeXmlElement(name: "value",
@@ -312,6 +345,7 @@ class XmlPresets {
     ),
   );
   static XmlRawPreset codeAndId = XmlRawPreset(
+    "Child",
     <T extends PropTextField>(prop, showDetails) => XmlPropEditor<T>(prop: prop, showDetails: showDetails),
     (cxt) => XmlProp.fromXml(
       makeXmlElement(name: "value",
@@ -325,6 +359,7 @@ class XmlPresets {
     ),
   );
   static XmlRawPreset variable = XmlRawPreset(
+    "Variable",
     <T extends PropTextField>(prop, showDetails) => ScriptVariableEditor<T>(prop: prop, showDetails: showDetails),
     (cxt) => XmlProp.fromXml(
       makeXmlElement(name: "value",
@@ -340,9 +375,11 @@ class XmlPresets {
       file: cxt.file,
       parentTags: cxt.parentTags,
     ),
+    XmlRawPreset.defaultDuplicateWithRandIdAsXml,
   );
 
   static XmlRawPreset fallback = XmlRawPreset(
+    "Child",
     <T extends PropTextField>(prop, showDetails) => XmlPropEditor<T>(prop: prop, showDetails: showDetails),
     (cxt) {
       if (cxt.parent.length < 2)

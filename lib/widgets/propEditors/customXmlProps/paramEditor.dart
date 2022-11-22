@@ -1,6 +1,10 @@
 
 import 'package:flutter/material.dart';
 
+import '../../../background/IdLookup.dart';
+import '../../../stateManagement/ChangeNotifierWidget.dart';
+import '../../../stateManagement/openFilesManager.dart';
+import '../../../utils/utils.dart';
 import '../../../widgets/theme/customTheme.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
@@ -34,7 +38,32 @@ class ParamsEditor extends StatelessWidget {
               if (prop[2].isEmpty)
                 makePropEditor(prop[2].value)
               else
-                XmlPropEditor(prop: prop[2], showDetails: false, showTagName: false,)
+                XmlPropEditor(prop: prop[2], showDetails: false, showTagName: false,),
+              ChangeNotifierBuilder(
+                notifier: prop[0].value,
+                builder: (context) {
+                  var code = prop[0].value;
+                  if (code is! StringProp || code.value != "NameTag")
+                    return const SizedBox();
+                  return IconButton(
+                    onPressed: () async {
+                      const int charNamesId = 0x75445849;
+                      var charNamesLookup = await idLookup.lookupId(charNamesId);
+                      if (charNamesLookup.isEmpty) {
+                        showToast("CharNames from corehap.dat not found! Check indexing settings.", const Duration(seconds: 6));
+                        return;
+                      }
+                      var charNamesResult = charNamesLookup[0];
+                      areasManager.openFile(charNamesResult.xmlPath);
+                    },
+                    constraints: const BoxConstraints(),
+                    padding: const EdgeInsets.only(right: 10),
+                    iconSize: 15,
+                    splashRadius: 15,
+                    icon: const Icon(Icons.edit),
+                  );
+                },
+              )
             ],
           ),
         ),
