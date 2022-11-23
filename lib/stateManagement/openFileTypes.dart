@@ -118,6 +118,7 @@ abstract class OpenFileData extends ChangeNotifier with HasUuid, Undoable {
   
   @override
   void dispose() {
+    contentNotifier.dispose();
     scrollController.dispose();
     super.dispose();
   }
@@ -196,7 +197,7 @@ class XmlFileData extends OpenFileData {
     _loadingState = LoadingState.loading;
     var text = await File(path).readAsString();
     var doc = XmlDocument.parse(text);
-    _root = XmlProp.fromXml(doc.firstElementChild!, file: this, parentTags: []);
+    _root = XmlProp.fromXml(doc.firstElementChild!, file: uuid, parentTags: []);
     _root!.addListener(notifyListeners);
     var nameProp = _root!.get("name");
     if (nameProp != null) {
@@ -405,7 +406,7 @@ class McdFileData extends OpenFileData {
     _loadingState = LoadingState.loading;
 
     mcdData?.dispose();
-    mcdData = await McdData.fromMcdFile(this, path);
+    mcdData = await McdData.fromMcdFile(uuid, path);
 
     await super.load();
   }

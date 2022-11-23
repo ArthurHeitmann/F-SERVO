@@ -6,7 +6,6 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
-import 'package:image/image.dart';
 import 'package:path/path.dart';
 import 'package:tuple/tuple.dart';
 
@@ -20,16 +19,17 @@ import '../../utils/utils.dart';
 import '../Property.dart';
 import '../hasUuid.dart';
 import '../nestedNotifier.dart';
-import '../openFileTypes.dart';
+import '../openFilesManager.dart';
 import '../preferencesData.dart';
 import '../undoable.dart';
 
 abstract class _McdFilePart with HasUuid, Undoable {
-  McdFileData? file;
+  OpenFileId? file;
 
   _McdFilePart(this.file);
 
   void onDataChanged() {
+    var file = areasManager.fromId(this.file);
     file?.contentNotifier.notifyListeners();
     file?.hasUnsavedChanges = true;
   }
@@ -106,12 +106,6 @@ class McdGlobalFont extends McdFont {
       .map((e) => MapEntry(e.code, e));
     var supportedSymbolsMap = Map<int, McdFontSymbol>.fromEntries(supportedSymbols);
     return McdGlobalFont(atlasInfoPath, atlasTexturePath, fontId, fontWidth, fontHeight, fontBelow, supportedSymbolsMap);
-  }
-
-  Future<Image> loadAtlasTexture() async {
-    var atlasTextureFile = File(atlasTexturePath);
-    var atlasTextureBytes = await atlasTextureFile.readAsBytes();
-    return decodeImage(atlasTextureBytes)!;
   }
 }
 
@@ -440,7 +434,7 @@ class McdData extends _McdFilePart {
     return null;
   }
 
-  static Future<McdData> fromMcdFile(McdFileData? file, String mcdPath) async {
+  static Future<McdData> fromMcdFile(OpenFileId? file, String mcdPath) async {
     var datDir = dirname(mcdPath);
     var mcdName = basenameWithoutExtension(mcdPath);
     String? wtpPath = await searchForTexFile(datDir, mcdName, ".wtp");
@@ -717,7 +711,8 @@ class McdData extends _McdFilePart {
     exportEvents.sort((a, b) => a.id.compareTo(b.id));
 
     var mcdFile = McdFile.fromParts(header, exportMessages, exportSymbols, exportGlyphs, exportFonts, exportEvents);
-    await mcdFile.writeToFile(file!.path);
+    var openFile = areasManager.fromId(file!)!;
+    await mcdFile.writeToFile(openFile.path);
 
     print("Saved MCD file");
   }

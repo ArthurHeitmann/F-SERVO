@@ -289,7 +289,7 @@ class HapGroupHierarchyEntry extends FileHierarchyEntry {
   
   HapGroupHierarchyEntry(StringProp name, this.prop)
     : id = (prop.get("id")!.value as HexProp).value,
-    super(name, path.dirname(prop.file?.path ?? ""), true, false);
+    super(name, path.dirname(areasManager.fromId(prop.file)?.path ?? ""), true, false);
   
   HapGroupHierarchyEntry addChild({ String name = "New Group" }) {
     var newGroupProp = XmlProp.fromXml(
@@ -301,7 +301,8 @@ class HapGroupHierarchyEntry extends FileHierarchyEntry {
       file: prop.file,
       parentTags: prop.parentTags
     );
-    var xmlRoot = (prop.file! as XmlFileData).root!;
+    var file = areasManager.fromId(prop.file)! as XmlFileData;
+    var xmlRoot = file.root!;
     var insertIndex = xmlRoot.length;
     var childGroups = xmlRoot.where((group) => group.tagName == "group" && (group.get("parent")?.value as HexProp).value == id);
     if (childGroups.isNotEmpty) {
@@ -329,7 +330,8 @@ class HapGroupHierarchyEntry extends FileHierarchyEntry {
   }
 
   void removeSelf() {
-    var xmlRoot = (prop.file! as XmlFileData).root!;
+    var file = areasManager.fromId(prop.file)! as XmlFileData;
+    var xmlRoot = file.root!;
     var index = xmlRoot.indexOf(prop);
     xmlRoot.removeAt(index);
 

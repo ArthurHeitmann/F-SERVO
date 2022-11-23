@@ -9,6 +9,7 @@ import '../utils/utils.dart';
 import '../widgets/propEditors/otherFileTypes/genericTable/tableEditor.dart';
 import 'Property.dart';
 import 'hasUuid.dart';
+import 'openFilesManager.dart';
 import 'undoable.dart';
 import 'xmlProps/xmlProp.dart';
 
@@ -18,6 +19,13 @@ class KeyValProp extends ChangeNotifier {
   KeyValProp(this.key, this.val) {
     key.addListener(notifyListeners);
     val.addListener(notifyListeners);
+  }
+
+  @override
+  void dispose() {
+    key.dispose();
+    val.dispose();
+    super.dispose();
   }
 }
 
@@ -33,6 +41,12 @@ class CharNameTranslations with HasUuid {
       // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
       element.addListener(anyChangeNotifier.notifyListeners);
     }
+  }
+
+  void dispose() {
+    key.dispose();
+    for (var element in translations)
+      element.dispose();
   }
 }
 
@@ -79,10 +93,19 @@ class CharNamesXmlProp extends XmlProp with CustomTableConfig {
         return;
       }
       serialize();
+      var file = areasManager.fromId(this.file);
       file?.hasUnsavedChanges = true;
       file?.contentNotifier.notifyListeners();
       undoHistoryManager.onUndoableEvent();
     });
+  }
+
+  @override
+  void dispose() {
+    anyChangeNotifier.dispose();
+    for (var element in names)
+      element.dispose();
+    super.dispose();
   }
 
   @override

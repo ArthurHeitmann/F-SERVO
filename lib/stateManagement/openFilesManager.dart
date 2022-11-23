@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as path;
 
@@ -12,6 +14,7 @@ import 'preferencesData.dart';
 import 'events/statusInfo.dart';
 import 'undoable.dart';
 
+typedef OpenFileId = String;
 class FilesAreaManager extends NestedNotifier<OpenFileData> implements Undoable {
   OpenFileData? _currentFile;
 
@@ -59,8 +62,10 @@ class FilesAreaManager extends NestedNotifier<OpenFileData> implements Undoable 
     }
     if (file.keepOpenAsHidden && !releaseHidden)
       areasManager.hiddenArea.add(file);
-    else if (releaseHidden)
+    else if (releaseHidden) {
       areasManager.hiddenArea.remove(file);
+      // TODO remove from areasManager
+    }
 
     if (currentFile == file)
       switchToClosestFile();
@@ -213,6 +218,7 @@ class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
   final FilesAreaManager hiddenArea;
   final ChangeNotifier subEvents = ChangeNotifier();
   final ChangeNotifier onSaveAll = ChangeNotifier();
+  final Map<OpenFileId, OpenFileData> _filesMap = HashMap<OpenFileId, OpenFileData>();
 
   OpenFilesAreasManager([FilesAreaManager? hiddenArea])
     : hiddenArea = hiddenArea ?? FilesAreaManager(),
@@ -248,14 +254,31 @@ class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
     return null;
   }
 
-  FilesAreaManager? getAreaOfFile(OpenFileData searchFile, [bool includeHidden = true]) {
+  OpenFileData? fromId(OpenFileId? id) {
+    return _filesMap[id];
+  }
+  FilesAreaManager? getAreaOfFileId(OpenFileId searchFile, [bool includeHidden = true]) {
     for (var area in this) {
-      if (area.contains(searchFile))
-        return area;
+      for (var file in area) {
+        if (file.uuid == searchFile)
+          return area;
+      }
     }
-    if (includeHidden && hiddenArea.contains(searchFile))
-      return hiddenArea;
+    if (includeHidden) {
+      for (var file in hiddenArea) {
+        if (file.uuid == searchFile)
+          return hiddenArea;
+      }
+    }
     return null;
+  }
+
+  FilesAreaManager? getAreaOfFile(OpenFileData searchFile, [bool includeHidden = true]) {
+    return getAreaOfFileId(searchFile.uuid, includeHidden);
+  }
+
+  bool isFileIdOpen(OpenFileId id) {
+    return _filesMap.containsKey(id);
   }
 
   FilesAreaManager? get activeArea => _activeArea;
@@ -295,6 +318,7 @@ class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
     OpenFileData file = OpenFileData.from(path.basename(filePath), filePath, secondaryName: secondaryName);
     toArea.add(file);
     toArea.currentFile = file;
+    _filesMap[file.uuid] = file;
 
     undoHistoryManager.onUndoableEvent();
 
@@ -308,6 +332,7 @@ class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
     OpenFileData file = OpenFileData.from(path.basename(filePath), filePath, secondaryName: secondaryName);
     file.keepOpenAsHidden = true;
     hiddenArea.add(file);
+    _filesMap[file.uuid] = file;
     return file;
   }
 
@@ -315,14 +340,17 @@ class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
     var file = hiddenArea.where((file) => file.path == filePath);
     if (file.isNotEmpty) {
       hiddenArea.remove(file.first);
+      _filesMap.remove(file.first.uuid);
     }
   }
 
   void releaseFile(String filePath) {
     for (var area in [...this, hiddenArea]) {
-      var file = area.where((file) => file.path == filePath);
-      if (file.isNotEmpty) {
-        area.closeFile(file.first, releaseHidden: true);
+      var files = area.where((file) => file.path == filePath);
+      if (files.isNotEmpty) {
+        var file = files.first;
+        area.closeFile(file, releaseHidden: true);
+        _filesMap.remove(file.uuid);
         break;
       }
     }
@@ -344,6 +372,7 @@ class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
       await prefs.prefsFuture;
       activeArea!.add(prefs);
       activeArea!.currentFile = prefs;
+      _filesMap[prefs.uuid] = prefs;
     }
   }
 
@@ -416,6 +445,13 @@ class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
       activeArea = where((area) => area.uuid == entry._activeArea!.uuid).first;
     else
       activeArea = null;
+    // regenerate files map
+    _filesMap.clear();
+    for (var area in this) {
+      for (var file in area) {
+        _filesMap[file.uuid] = file;
+      }
+    }
   }
 }
 

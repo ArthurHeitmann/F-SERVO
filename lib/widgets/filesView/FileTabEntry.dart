@@ -10,10 +10,12 @@ import '../../stateManagement/openFilesManager.dart';
 
 
 class FileTabEntry extends ChangeNotifierWidget {
-  final OpenFileData file;
+  final OpenFileId file;
   final FilesAreaManager area;
   
-  FileTabEntry({Key? key, required this.file, required this.area}) : super(key: key, notifier: file);
+  FileTabEntry({Key? key, required OpenFileData file, required this.area})
+    : file = file.uuid,
+    super(key: key, notifier: file);
 
   @override
   State<FileTabEntry> createState() => _FileTabEntryState();
@@ -24,6 +26,7 @@ class _FileTabEntryState extends ChangeNotifierState<FileTabEntry> {
 
   @override
   Widget build(BuildContext context) {
+    var file = areasManager.fromId(widget.file)!;
     return logicWrapper(
       SizedBox(
         width: 150,
@@ -51,7 +54,7 @@ class _FileTabEntryState extends ChangeNotifierState<FileTabEntry> {
               ],
             ),
             child: Material(
-              color: widget.file == widget.area.currentFile ? getTheme(context).tabSelectedColor : getTheme(context).tabColor,
+              color: widget.file == widget.area.currentFile?.uuid ? getTheme(context).tabSelectedColor : getTheme(context).tabColor,
               borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(10), bottomRight: Radius.circular(10)),
               child: Padding(
                 padding: const EdgeInsets.only(left: 10, right: 5),
@@ -60,10 +63,10 @@ class _FileTabEntryState extends ChangeNotifierState<FileTabEntry> {
                   children: [
                     Expanded(child: 
                       Tooltip(
-                        message: "${widget.file.displayName}\n${widget.file.path}",
+                        message: "${file.displayName}\n${file.path}",
                         waitDuration: const Duration(milliseconds: 500),
                         child: Text(
-                          widget.file.displayName,
+                          file.displayName,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -74,10 +77,10 @@ class _FileTabEntryState extends ChangeNotifierState<FileTabEntry> {
                       child: IconButton(
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
-                        icon: widget.file.hasUnsavedChanges && !isHoveringCloseButton
+                        icon: file.hasUnsavedChanges && !isHoveringCloseButton
                                 ? const Icon(Icons.circle, size: 11,)
                                 : const Icon(Icons.close),
-                        onPressed: () => widget.area.closeFile(widget.file),
+                        onPressed: () => widget.area.closeFile(file),
                         iconSize: 15,
                         splashRadius: 15,
                         color: getTheme(context).tabIconColor,
@@ -102,23 +105,24 @@ class _FileTabEntryState extends ChangeNotifierState<FileTabEntry> {
             "Save",
             icon: const Icon(Icons.save, size: 14),
             onPressed: () async {
-              await widget.file.save();
+              var file = areasManager.fromId(widget.file)!;
+              await file.save();
               await processChangedFiles();
             },
           ),
           ContextMenuButtonConfig(
             "Show in Explorer",
             icon: const Icon(Icons.folder_open, size: 14),
-            onPressed: () => revealFileInExplorer(widget.file.path),
+            onPressed: () => revealFileInExplorer(areasManager.fromId(widget.file)!.path),
           ),
           ContextMenuButtonConfig(
             "Close",
             icon: const Icon(Icons.close, size: 14),
-            onPressed: () => widget.area.closeFile(widget.file),
+            onPressed: () => widget.area.closeFile(areasManager.fromId(widget.file)!),
           ),
           ContextMenuButtonConfig(
             "Close others",
-            onPressed: () => widget.area.closeOthers(widget.file),
+            onPressed: () => widget.area.closeOthers(areasManager.fromId(widget.file)!),
           ),
           ContextMenuButtonConfig(
             "Close all",
@@ -127,30 +131,30 @@ class _FileTabEntryState extends ChangeNotifierState<FileTabEntry> {
           ContextMenuButtonConfig(
             "Close to the left",
             icon: const Icon(Icons.chevron_left, size: 14),
-            onPressed: () => widget.area.closeToTheLeft(widget.file),
+            onPressed: () => widget.area.closeToTheLeft(areasManager.fromId(widget.file)!),
           ),
           ContextMenuButtonConfig(
             "Close to the right",
             icon: const Icon(Icons.chevron_right, size: 14),
-            onPressed: () => widget.area.closeToTheRight(widget.file),
+            onPressed: () => widget.area.closeToTheRight(areasManager.fromId(widget.file)!),
           ),
           ContextMenuButtonConfig(
             "Move to left view",
             icon: const Icon(Icons.arrow_back, size: 14),
-            onPressed: () => widget.area.moveToLeftView(widget.file),
+            onPressed: () => widget.area.moveToLeftView(areasManager.fromId(widget.file)!),
           ),
           ContextMenuButtonConfig(
             "Move to right view",
             icon: const Icon(Icons.arrow_forward, size: 14),
-            onPressed: () => widget.area.moveToRightView(widget.file),
+            onPressed: () => widget.area.moveToRightView(areasManager.fromId(widget.file)!),
           ),
         ],
       ),
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
         child: GestureDetector(
-          onTap: () => widget.area.currentFile = widget.file,
-          onTertiaryTapUp: (_) => widget.area.closeFile(widget.file),
+          onTap: () => widget.area.currentFile = areasManager.fromId(widget.file)!,
+          onTertiaryTapUp: (_) => widget.area.closeFile(areasManager.fromId(widget.file)!),
           child: child,
         ),
       ),

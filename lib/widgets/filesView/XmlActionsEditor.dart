@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../../stateManagement/openFilesManager.dart';
 import '../../stateManagement/sync/syncListImplementations.dart';
 import '../../stateManagement/xmlProps/xmlProp.dart';
 import '../../stateManagement/xmlProps/xmlActionProp.dart';
@@ -87,7 +88,7 @@ class _XmlActionsEditorState extends XmlArrayEditorState<XmlActionsEditor> {
         makeSyncedObject: () => SyncedXmlFile(
           list: widget.root,
           parentUuid: "",
-          nameHint: widget.root.file?.displayName
+          nameHint: areasManager.fromId(widget.root.file)?.displayName
         ),
       ),
     );

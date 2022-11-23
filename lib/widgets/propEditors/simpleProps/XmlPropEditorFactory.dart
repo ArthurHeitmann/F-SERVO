@@ -7,7 +7,7 @@ import 'package:xml/xml.dart';
 
 import '../../../main.dart';
 import '../../../stateManagement/Property.dart';
-import '../../../stateManagement/openFileTypes.dart';
+import '../../../stateManagement/openFilesManager.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
 import '../../../utils/utils.dart';
 import '../../misc/CustomIcons.dart';
@@ -30,7 +30,7 @@ class XmlPresetContext {
 
   XmlPresetContext({required this.parent});
 
-  OpenFileData? get file => parent.file;
+  OpenFileId? get file => parent.file;
   List<String> get parentTags => parent.nextParents();
   String? get parentName => parent.tagName;
 }

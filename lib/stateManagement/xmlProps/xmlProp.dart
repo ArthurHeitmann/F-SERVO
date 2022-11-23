@@ -8,7 +8,7 @@ import '../../utils/utils.dart';
 import '../Property.dart';
 import '../charNamesXmlWrapper.dart';
 import '../nestedNotifier.dart';
-import '../openFileTypes.dart';
+import '../openFilesManager.dart';
 import '../undoable.dart';
 import 'xmlActionProp.dart';
 
@@ -16,7 +16,7 @@ class XmlProp extends NestedNotifier<XmlProp> {
   final int tagId;
   final String tagName;
   final Prop value;
-  final OpenFileData? file;
+  final OpenFileId? file;
   final List<String> parentTags;
 
   XmlProp({ required this.file, required this.tagId, String? tagName, Prop? value, String? strValue, List<XmlProp>? children, required this.parentTags }) :
@@ -39,7 +39,7 @@ class XmlProp extends NestedNotifier<XmlProp> {
     value.addListener(_onValueChange);
   }
   
-  factory XmlProp.fromXml(XmlElement root, { OpenFileData? file, required List<String> parentTags })
+  factory XmlProp.fromXml(XmlElement root, { OpenFileId? file, required List<String> parentTags })
   {
     var prop = XmlProp._fromXml(root, file: file, parentTags: parentTags);
     if (root.localName == "action")
@@ -118,8 +118,11 @@ class XmlProp extends NestedNotifier<XmlProp> {
   }
   
   void _onValueChange() {
-    file?.hasUnsavedChanges = true;
-    file?.contentNotifier.notifyListeners();
+    if (file != null) {
+      var file = areasManager.fromId(this.file);
+      file?.hasUnsavedChanges = true;
+      file?.contentNotifier.notifyListeners();
+    }
     undoHistoryManager.onUndoableEvent();
     notifyListeners();
   }

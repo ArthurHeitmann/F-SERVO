@@ -7,7 +7,6 @@ import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
 import '../../../utils/utils.dart';
 import '../../misc/CustomIcons.dart';
-import '../../misc/nestedContextMenu.dart';
 import '../../misc/selectionPopup.dart';
 import '../simpleProps/XmlPropEditorFactory.dart';
 import '../simpleProps/propEditorFactory.dart';

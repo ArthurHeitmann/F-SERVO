@@ -48,7 +48,7 @@ class XmlActionEditorState<T extends XmlActionEditor> extends ChangeNotifierStat
     return XmlWidgetWithId(
       id: widget.action.id,
       child: SelectableWidget<XmlActionProp>(
-        area: areasManager.getAreaOfFile(widget.action.file!),
+        area: areasManager.getAreaOfFileId(widget.action.file!),
         data: widget.action,
         color: getActionPrimaryColor(context).withOpacity(0.5),
         child: NestedContextMenu(

@@ -3,7 +3,7 @@ description: A new Flutter project.
 
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 1.0.0+1
+version: 0.2.1+1
 
 environment:
   sdk: ">=2.17.6 <3.0.0"
@@ -17,7 +17,6 @@ dependencies:
   cross_file: ^0.3.3+1
   desktop_drop: ^0.3.3
   euc: ^1.0.6+8
-  ezanimation: ^0.6.0
   file_picker: ^5.2.0
   flutter:
     sdk: flutter

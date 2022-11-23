@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../../stateManagement/Property.dart';
 import '../../stateManagement/events/jumpToEvents.dart';
-import '../../stateManagement/openFileTypes.dart';
+import '../../stateManagement/openFilesManager.dart';
 import '../../utils/utils.dart';
 import '../../utils/xmlLineParser.dart';
 
@@ -27,7 +27,7 @@ class _XmlJumpToLineEventIW extends InheritedWidget {
 
 class XmlJumpToLineEventWrapper extends StatefulWidget {
   final Widget child;
-  final OpenFileData file;
+  final OpenFileId file;
 
   const XmlJumpToLineEventWrapper({super.key, required this.file, required this.child});
 
@@ -52,7 +52,7 @@ class _XmlJumpToLineEventWrapperState extends State<XmlJumpToLineEventWrapper> {
   }
 
   void onJumpToEvent(JumpToEvent event) async {
-    if (event.file != widget.file)
+    if (event.file.uuid != widget.file)
       return;
     if (event is JumpToLineEvent)
       onJumpToLineEvent(event);
@@ -61,7 +61,8 @@ class _XmlJumpToLineEventWrapperState extends State<XmlJumpToLineEventWrapper> {
   }
     
   void onJumpToLineEvent(JumpToLineEvent event) async {
-    var fileXml = await File(widget.file.path).readAsString();
+    var file = areasManager.fromId(widget.file)!;
+    var fileXml = await File(file.path).readAsString();
     var xml = parseXmlWL(fileXml);
     var element = xml.getByLine(event.line);
     if (element == null)
@@ -96,7 +97,7 @@ class _XmlJumpToLineEventWrapperState extends State<XmlJumpToLineEventWrapper> {
     // }
 
     if (id != null) {
-      jumpToIdEvents.add(JumpToIdEvent(widget.file, id, actionId));
+      jumpToIdEvents.add(JumpToIdEvent(file, id, actionId));
     }
   }
 

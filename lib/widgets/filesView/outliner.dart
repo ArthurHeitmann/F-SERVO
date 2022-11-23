@@ -130,7 +130,8 @@ class __OutlinerEntryState extends ChangeNotifierState<_OutlinerEntry> {
       color: Colors.transparent,
       child: InkWell(
         onTap: () {
-          jumpToStream.add(JumpToIdEvent(widget.action.file!, widget.action.id.value));
+          var file = areasManager.fromId(widget.action.file!);
+          jumpToStream.add(JumpToIdEvent(file!, widget.action.id.value));
         },
         splashColor: textColor.withOpacity(0.2),
         hoverColor: textColor.withOpacity(0.1),

@@ -23,7 +23,7 @@ class IdLookup with Initializable {
   final IsolateCommunicator _coldStorage = IsolateCommunicator();
   /// (1. level) ids of currently changed files
   final List<IdsIndexer> _changedFiles = [];
-  final List<OpenFileData> _openFiles = [];
+  final List<OpenFileId> _openFiles = [];
   final List<HierarchyEntry> _openHierarchyFiles = [];
   final List<void Function()> _filesChangesListeners = [];
 
@@ -98,7 +98,7 @@ class IdLookup with Initializable {
       for (var file in area) {
         if (!file.path.endsWith(".xml"))
           continue;
-        if (_openFiles.contains(file))
+        if (_openFiles.contains(file.uuid))
           continue;
         var debouncedListener = debounce(() => _onFileChanged(file), 1000);
         listener() {
@@ -106,16 +106,15 @@ class IdLookup with Initializable {
             return;
           debouncedListener();
         }
-        _openFiles.add(file);
+        _openFiles.add(file.uuid);
         _filesChangesListeners.add(listener);
         file.contentNotifier.addListener(listener);
       }
     }
     // search for removed files
     for (var i = _openFiles.length - 1; i >= 0; i--) {
-      if (areasManager.getAreaOfFile(_openFiles[i]) != null)
+      if (areasManager.isFileIdOpen(_openFiles[i]))
         continue;
-      _openFiles[i].contentNotifier.removeListener(_filesChangesListeners[i]);
       _openFiles.removeAt(i);
       _filesChangesListeners.removeAt(i);
     }
