@@ -147,6 +147,7 @@ class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor>
         ContextMenuButtonConfig("Paste PUID ref", icon: const Icon(Icons.content_paste, size: 14), onPressed: pasteRef),
         ContextMenuButtonConfig("Go to Reference", icon: const Icon(Icons.east, size: 14), shortcutLabel: "(ctrl + click)", onPressed: goToReference),
         ContextMenuButtonConfig("Toggle Editing", icon: const Icon(Icons.edit, size: 14), shortcutLabel: "(double click)", onPressed: () => setState(() => showLookup = !showLookup)),
+        null,
       ],
       child: MouseRegion(
         cursor: SystemMouseCursors.click,

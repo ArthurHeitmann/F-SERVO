@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import '../../utils/utils.dart';
 
 class _NestedContextMenuIW extends InheritedWidget {
-  final List<ContextMenuButtonConfig> contextChildren;
+  final List<ContextMenuButtonConfig?> contextChildren;
   final BuildContext parentContext;
   final bool clearParent;
 
@@ -20,7 +20,7 @@ class _NestedContextMenuIW extends InheritedWidget {
     return true;
   }
 
-  List<ContextMenuButtonConfig> getAllWidgets() {
+  List<ContextMenuButtonConfig?> getAllWidgets() {
     return [
       ...contextChildren,
       ...(!clearParent ? _NestedContextMenuIW.of(parentContext)?.getAllWidgets() ?? [] : [])
@@ -30,7 +30,7 @@ class _NestedContextMenuIW extends InheritedWidget {
 
 class NestedContextMenu extends StatelessWidget {
   final Widget child;
-  final List<ContextMenuButtonConfig> buttons;
+  final List<ContextMenuButtonConfig?> buttons;
   final bool clearParent;
 
   const NestedContextMenu({super.key, required this.buttons, required this.child, this.clearParent = false});
@@ -44,10 +44,23 @@ class NestedContextMenu extends StatelessWidget {
       clearParent: clearParent,
       child: Builder(
         builder: (context) {
+          var buttons = _NestedContextMenuIW.of(context)!.getAllWidgets();
+          // remove leading & trailing nulls
+          while (buttons.isNotEmpty && buttons.first == null)
+            buttons.removeAt(0);
+          while (buttons.isNotEmpty && buttons.last == null)
+            buttons.removeLast();
+          // remove neighboring nulls
+          for (int i = 0; i < buttons.length - 1; i++) {
+            if (buttons[i] == null && buttons[i + 1] == null) {
+              buttons.removeAt(i);
+              i--;
+            }
+          }
           return ContextMenuRegion(
             enableLongPress: isMobile,
             contextMenu: GenericContextMenu(
-              buttonConfigs: _NestedContextMenuIW.of(context)!.getAllWidgets(),
+              buttonConfigs: buttons,
             ),
             child: child,
           );

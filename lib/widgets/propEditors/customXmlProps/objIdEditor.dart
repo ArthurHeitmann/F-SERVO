@@ -177,7 +177,7 @@ class _ExpandedImage extends StatefulWidget {
   final String assetPath;
   final VoidCallback onDismiss;
 
-  const _ExpandedImage({ super.key, required this.smallSize, required this.future, required this.assetPath, required this.onDismiss });
+  const _ExpandedImage({ required this.smallSize, required this.future, required this.assetPath, required this.onDismiss });
 
   @override
   State<_ExpandedImage> createState() => __ExpandedImageState();

@@ -207,14 +207,22 @@ void showToast(String msg, [Duration duration = const Duration(seconds: 4)]) {
   );
 }
 
+Future<void> copyToClipboard(String text) async {
+  await Clipboard.setData(ClipboardData(text: text));
+}
+
+Future<String?> getClipboardText() async {
+  return (await Clipboard.getData(Clipboard.kTextPlain))?.text;
+}
+
 Future<void> copyPuidRef(String code, int id) {
   var hash = crc32(code);
-  return Clipboard.setData(ClipboardData(text: 
+  return copyToClipboard(
     "<puid>\n"
       "<code str=\"$code\">0x${hash.toRadixString(16)}</code>\n"
       "<id>0x${id.toRadixString(16)}</id>\n"
     "</puid>"
-    ));
+  );
 }
 
 class PuidRefData {
@@ -226,7 +234,7 @@ class PuidRefData {
 }
 
 Future<PuidRefData?> getClipboardPuidRefData() async {
-  var text = (await Clipboard.getData(Clipboard.kTextPlain))?.text;
+  var text = await getClipboardText();
   if (text == null)
     return null;
   try {

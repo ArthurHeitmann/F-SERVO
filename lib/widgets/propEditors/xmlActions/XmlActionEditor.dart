@@ -53,6 +53,7 @@ class XmlActionEditorState<T extends XmlActionEditor> extends ChangeNotifierStat
         color: getActionPrimaryColor(context).withOpacity(0.5),
         child: NestedContextMenu(
           buttons: [
+            null,
             ContextMenuButtonConfig(
               "Copy Action PUID ref",
               icon: const Icon(Icons.content_copy, size: 14,),

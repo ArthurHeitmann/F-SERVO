@@ -41,86 +41,77 @@ class _AreaEditorState extends ChangeNotifierState<AreaEditor> {
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3.0),
-      child: NestedContextMenu(
-        buttons: const [
-          // ContextMenuButtonConfig(
-          //   "Sync to Blender",
-          //   icon: const Icon(Icons.sync, size: 14,),
-          //   onPressed: () => startSyncingObject(AreaSyncedObject(widget.prop))
-          // ),
-        ],
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              width: 37,
-              height: 37,
-              child: OutlinedButton(
-                onPressed: () async {
-                  var selection = await showSelectionPopup<int>(context, [
-                    if (type != _typeBoxArea)
-                      SelectionPopupConfig(icon: CustomIcons.cube, name: "Box", getValue: () => _typeBoxArea),
-                    if (type != _typeCylinderArea)
-                      SelectionPopupConfig(icon: CustomIcons.cylinder, name: "Cylinder", getValue: () => _typeCylinderArea),
-                    if (type != _typeSphereArea)
-                      SelectionPopupConfig(icon: CustomIcons.sphere, name: "Sphere", getValue: () => _typeSphereArea),
-                  ]);
-                  if (selection == null)
-                    return;
-                  convertTo(selection);
-                },
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: getTheme(context).textColor,
-                  padding: EdgeInsets.zero,
-                  side: BorderSide(
-                    color: getTheme(context).textColor!.withOpacity(0.5),
-                    width: 0.5,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 37,
+            height: 37,
+            child: OutlinedButton(
+              onPressed: () async {
+                var selection = await showSelectionPopup<int>(context, [
+                  if (type != _typeBoxArea)
+                    SelectionPopupConfig(icon: CustomIcons.cube, name: "Box", getValue: () => _typeBoxArea),
+                  if (type != _typeCylinderArea)
+                    SelectionPopupConfig(icon: CustomIcons.cylinder, name: "Cylinder", getValue: () => _typeCylinderArea),
+                  if (type != _typeSphereArea)
+                    SelectionPopupConfig(icon: CustomIcons.sphere, name: "Sphere", getValue: () => _typeSphereArea),
+                ]);
+                if (selection == null)
+                  return;
+                convertTo(selection);
+              },
+              style: OutlinedButton.styleFrom(
+                foregroundColor: getTheme(context).textColor,
+                padding: EdgeInsets.zero,
+                side: BorderSide(
+                  color: getTheme(context).textColor!.withOpacity(0.5),
+                  width: 0.5,
+                ),
+              ),
+              child: Icon(_areaIcons[type]!, size: 35),
+            ),
+          ),
+          const SizedBox(width: 5),
+          Container(width: 4, color: getTheme(context).editorBackgroundColor,),
+          Flexible(
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border(left: BorderSide(
+                  color: getTheme(context).formElementBgColor!,
+                  width: 3,
+                )),
+              ),
+              padding: const EdgeInsets.only(left: 10),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (parent != null)
+                    makeXmlPropEditor(parent, widget.showDetails),
+                  TransformsEditor(
+                    parent: widget.prop,
+                    canBeRotated: type != _typeSphereArea,
+                    canBeScaled: type != _typeSphereArea,
+                    itemsCanBeRemoved: false,
                   ),
-                ),
-                child: Icon(_areaIcons[type]!, size: 35),
-              ),
-            ),
-            const SizedBox(width: 5),
-            Container(width: 4, color: getTheme(context).editorBackgroundColor,),
-            Flexible(
-              child: Container(
-                decoration: BoxDecoration(
-                  border: Border(left: BorderSide(
-                    color: getTheme(context).formElementBgColor!,
-                    width: 3,
-                  )),
-                ),
-                padding: const EdgeInsets.only(left: 10),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (parent != null)
-                      makeXmlPropEditor(parent, widget.showDetails),
-                    TransformsEditor(
-                      parent: widget.prop,
-                      canBeRotated: type != _typeSphereArea,
-                      canBeScaled: type != _typeSphereArea,
-                      itemsCanBeRemoved: false,
+                  if (radius != null)
+                    Row(
+                      children: [
+                        const Icon(CustomIcons.radius, size: 18),
+                        const SizedBox(width: 10),
+                        makePropEditor(radius.value),
+                      ],
                     ),
-                    if (radius != null)
-                      Row(
-                        children: [
-                          const Icon(CustomIcons.radius, size: 18),
-                          const SizedBox(width: 10),
-                          makePropEditor(radius.value),
-                        ],
-                      ),
-                    if (widget.showDetails)
-                      ...makeXmlMultiPropEditor(widget.prop, widget.showDetails, 
-                        (prop) => !{ "position", "rotation", "scale", "parent", "radius" }.contains(prop.tagName))
-                  ],
-                ),
+                  if (widget.showDetails)
+                    ...makeXmlMultiPropEditor(widget.prop, widget.showDetails, 
+                      (prop) => !{ "position", "rotation", "scale", "parent", "radius" }.contains(prop.tagName))
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

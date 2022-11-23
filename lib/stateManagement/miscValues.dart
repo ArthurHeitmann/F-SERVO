@@ -1,4 +1,6 @@
 
+import 'dart:collection';
+
 import 'package:flutter/material.dart';
 
 
@@ -16,8 +18,9 @@ final windowTitle = _WindowTitleVN();
 /// ugly fix
 bool disableFileChanges = false;
 
+/// Optimized for A LOT of adding and removing of listeners
 class AutoTranslateValueNotifier extends Listenable {
-  final List<VoidCallback> _listeners = [];
+  final Set<VoidCallback> _listeners = HashSet<VoidCallback>();
   bool _value = false;
 
   AutoTranslateValueNotifier(this._value);
@@ -41,6 +44,8 @@ class AutoTranslateValueNotifier extends Listenable {
   
   @override
   void addListener(VoidCallback listener) {
+    if (_listeners.contains(listener))  // TODO remove after some time
+      throw Exception("Listener already added");
     _listeners.add(listener);
   }
   

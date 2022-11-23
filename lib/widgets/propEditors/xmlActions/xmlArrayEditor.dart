@@ -1,6 +1,7 @@
 
 import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
+import 'package:xml/xml.dart';
 
 import '../../../widgets/theme/customTheme.dart';
 import '../../../stateManagement/ChangeNotifierWidget.dart';
@@ -72,11 +73,12 @@ class XmlArrayEditorState<T extends XmlArrayEditor> extends ChangeNotifierState<
     removed.dispose();
   }
 
-  List<ContextMenuButtonConfig> getContextMenuButtons(int index) {
+  List<ContextMenuButtonConfig?> getContextMenuButtons(int index) {
     return [
+      null,
       ContextMenuButtonConfig(
         "Duplicate ${widget.childrenPreset.name}",
-        icon: const Icon(Icons.copy, size: 14,),
+        icon: const Icon(Icons.copy_all, size: 14,),
         onPressed: () {
           var offset = firstChildOffset;
           var ownIndex = offset + index;
@@ -88,6 +90,52 @@ class XmlArrayEditorState<T extends XmlArrayEditor> extends ChangeNotifierState<
               file: widget.parent.file,
             )
           );
+        },
+      ),
+      ContextMenuButtonConfig(
+        "Copy ${widget.childrenPreset.name} XML",
+        icon: const Icon(Icons.copy, size: 14,),
+        onPressed: () {
+          var offset = firstChildOffset;
+          var ownIndex = offset + index;
+          var prop = widget.parent[ownIndex];
+          var xml = widget.childrenPreset.duplicateAsXml(prop);
+          copyToClipboard(xml.toXmlString(pretty: true, indent: "\t", level: prop.parentTags.length));
+        },
+      ),
+      ContextMenuButtonConfig(
+        "Cut ${widget.childrenPreset.name} XML",
+        icon: const Icon(Icons.cut, size: 14,),
+        onPressed: () {
+          var offset = firstChildOffset;
+          var ownIndex = offset + index;
+          var xml = widget.parent[ownIndex].toXml();
+          copyToClipboard(xml.toXmlString(pretty: true));
+          deleteChild(index);
+        },
+      ),
+      ContextMenuButtonConfig(
+        "Paste ${widget.childrenPreset.name} XML here",
+        icon: const Icon(Icons.paste, size: 14,),
+        onPressed: () async {
+          var offset = firstChildOffset;
+          var ownIndex = offset + index;
+          var xmlStr = await getClipboardText();
+          if (xmlStr == null) {
+            showToast("Clipboard is empty");
+            return;
+          }
+          try {
+            var xml = XmlDocument.parse(xmlStr);
+            var prop = XmlProp.fromXml(
+              xml.rootElement,
+              parentTags: widget.parent.nextParents(),
+              file: widget.parent.file,
+            );
+            widget.parent.insert(ownIndex + 1, prop);
+          } catch (e) {
+            showToast("Couldn't parse XML");
+          }
         },
       ),
       ContextMenuButtonConfig(
@@ -135,17 +183,43 @@ class XmlArrayEditorState<T extends XmlArrayEditor> extends ChangeNotifierState<
         )
       );
     }
-    return ColumnReorderable(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      onReorder: (oldIndex, newIndex) => widget.parent.move(oldIndex + firstChildOffset, newIndex + firstChildOffset),
-      footer: SmallButton(
-        onPressed: addChild,
-        constraints: BoxConstraints.tight(const Size(30, 30)),
-        child: const Icon(Icons.add)
-      ),
-      children: [
-        ...children,
+    return NestedContextMenu(
+      buttons: [
+        ContextMenuButtonConfig(
+          "Paste ${widget.childrenPreset.name} XML here",
+          icon: const Icon(Icons.paste, size: 14,),
+          onPressed: () async {
+            var xmlStr = await getClipboardText();
+            if (xmlStr == null) {
+              showToast("Clipboard is empty");
+              return;
+            }
+            try {
+              var xml = XmlDocument.parse(xmlStr);
+              var prop = XmlProp.fromXml(
+                xml.rootElement,
+                parentTags: widget.parent.nextParents(),
+                file: widget.parent.file,
+              );
+              widget.parent.add(prop);
+            } catch (e) {
+              showToast("Couldn't parse XML");
+            }
+          },
+        ),
       ],
+      child: ColumnReorderable(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        onReorder: (oldIndex, newIndex) => widget.parent.move(oldIndex + firstChildOffset, newIndex + firstChildOffset),
+        footer: SmallButton(
+          onPressed: addChild,
+          constraints: BoxConstraints.tight(const Size(30, 30)),
+          child: const Icon(Icons.add)
+        ),
+        children: [
+          ...children,
+        ],
+      ),
     );
   }
 }

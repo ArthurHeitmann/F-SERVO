@@ -74,17 +74,14 @@ class _EntityEditorState extends ChangeNotifierState<EntityEditor> {
   Widget contextMenuSetup({ required Widget child, required bool isLayoutEntity }) {
     return NestedContextMenu(
       buttons: [
-        if (isLayoutEntity)
+        if (isLayoutEntity) ...[
           ContextMenuButtonConfig(
             "Copy Entity PUID ref",
             icon: const Icon(Icons.content_copy, size: 14,),
             onPressed: () => copyPuidRef("app::EntityLayout", (widget.prop.get("id")!.value as HexProp).value)
           ),
-        // ContextMenuButtonConfig(
-        //   "Sync to Blender",
-        //   icon: const Icon(Icons.sync, size: 14,),
-        //   onPressed: () => startSyncingObject(EntitySyncedObject(widget.prop))
-        // ),
+          null,
+        ],
         optionalPropButtonConfig(
           widget.prop,
           "param",
