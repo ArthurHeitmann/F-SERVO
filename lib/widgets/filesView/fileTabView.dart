@@ -179,10 +179,15 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
             child: ReorderableListView(
               scrollController: tabBarScrollController,
               scrollDirection: Axis.horizontal,
-              onReorder: (int oldIndex, int newIndex) => widget.viewArea.move(oldIndex, newIndex),
+              onReorder: (int oldIndex, int newIndex) {
+                if (oldIndex < 0 || oldIndex >= widget.viewArea.length || newIndex < 0 || newIndex >= widget.viewArea.length) {
+                  print("Invalid reorder: $oldIndex -> $newIndex (length: ${widget.viewArea.length})");
+                  return;
+                }
+                widget.viewArea.move(oldIndex, newIndex);
+              },
               buildDefaultDragHandles: false,
               physics: const NeverScrollableScrollPhysics(),
-              
               children: widget.viewArea
                 .map((file) => ReorderableDragStartListener(
                   key: Key(file.uuid),

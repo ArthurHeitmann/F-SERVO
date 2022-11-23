@@ -44,6 +44,10 @@ class _XmlActionsEditorState extends XmlArrayEditorState<XmlActionsEditor> {
               child: ColumnReorderable(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 onReorder: (int oldIndex, int newIndex) {
+                if (oldIndex < 0 || oldIndex >= widget.parent.length || newIndex < 0 || newIndex >= widget.parent.length) {
+                  print("Invalid reorder: $oldIndex -> $newIndex (length: ${widget.parent.length})");
+                  return;
+                }
                   widget.root.move(oldIndex + firstChildOffset, newIndex + firstChildOffset);
                 },
                 header: ActionAddButton(parent: widget.root, index: 0),

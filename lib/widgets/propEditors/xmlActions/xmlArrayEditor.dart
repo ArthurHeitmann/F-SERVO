@@ -210,7 +210,13 @@ class XmlArrayEditorState<T extends XmlArrayEditor> extends ChangeNotifierState<
       ],
       child: ColumnReorderable(
         crossAxisAlignment: CrossAxisAlignment.start,
-        onReorder: (oldIndex, newIndex) => widget.parent.move(oldIndex + firstChildOffset, newIndex + firstChildOffset),
+        onReorder: (oldIndex, newIndex) {
+          if (oldIndex < 0 || oldIndex >= widget.parent.length || newIndex < 0 || newIndex >= widget.parent.length) {
+            print("Invalid reorder: $oldIndex -> $newIndex (length: ${widget.parent.length})");
+            return;
+          }
+          widget.parent.move(oldIndex + firstChildOffset, newIndex + firstChildOffset);
+        },
         footer: SmallButton(
           onPressed: addChild,
           constraints: BoxConstraints.tight(const Size(30, 30)),

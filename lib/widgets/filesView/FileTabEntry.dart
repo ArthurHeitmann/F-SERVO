@@ -60,7 +60,7 @@ class _FileTabEntryState extends ChangeNotifierState<FileTabEntry> {
                   children: [
                     Expanded(child: 
                       Tooltip(
-                        message: widget.file.displayName,
+                        message: "${widget.file.displayName}\n${widget.file.path}",
                         waitDuration: const Duration(milliseconds: 500),
                         child: Text(
                           widget.file.displayName,
@@ -100,13 +100,20 @@ class _FileTabEntryState extends ChangeNotifierState<FileTabEntry> {
         buttonConfigs: [
           ContextMenuButtonConfig(
             "Save",
+            icon: const Icon(Icons.save, size: 14),
             onPressed: () async {
               await widget.file.save();
               await processChangedFiles();
             },
           ),
           ContextMenuButtonConfig(
+            "Show in Explorer",
+            icon: const Icon(Icons.folder_open, size: 14),
+            onPressed: () => revealFileInExplorer(widget.file.path),
+          ),
+          ContextMenuButtonConfig(
             "Close",
+            icon: const Icon(Icons.close, size: 14),
             onPressed: () => widget.area.closeFile(widget.file),
           ),
           ContextMenuButtonConfig(
@@ -119,18 +126,22 @@ class _FileTabEntryState extends ChangeNotifierState<FileTabEntry> {
           ),
           ContextMenuButtonConfig(
             "Close to the left",
+            icon: const Icon(Icons.chevron_left, size: 14),
             onPressed: () => widget.area.closeToTheLeft(widget.file),
           ),
           ContextMenuButtonConfig(
             "Close to the right",
+            icon: const Icon(Icons.chevron_right, size: 14),
             onPressed: () => widget.area.closeToTheRight(widget.file),
           ),
           ContextMenuButtonConfig(
             "Move to left view",
+            icon: const Icon(Icons.arrow_back, size: 14),
             onPressed: () => widget.area.moveToLeftView(widget.file),
           ),
           ContextMenuButtonConfig(
             "Move to right view",
+            icon: const Icon(Icons.arrow_forward, size: 14),
             onPressed: () => widget.area.moveToRightView(widget.file),
           ),
         ],

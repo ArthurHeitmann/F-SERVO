@@ -101,7 +101,10 @@ abstract class NestedNotifier<T> extends ChangeNotifier with IterableMixin<T>, H
   }
 
   void move(int from, int to) {
-    if (from == to) return;
+    if (from == to)
+      return;
+    if (from < 0 || from >= _children.length || to < 0 || to >= _children.length)
+      throw RangeError('from: $from, to: $to, length: ${_children.length}');
     var child = _children.removeAt(from);
     _children.insert(to, child);
     notifyListeners();
