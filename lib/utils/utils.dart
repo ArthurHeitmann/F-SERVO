@@ -156,6 +156,22 @@ bool isCtrlPressed() {
   );
 }
 
+bool isAltPressed() {
+  return (
+    RawKeyboard.instance.keysPressed.contains(LogicalKeyboardKey.alt) ||
+    RawKeyboard.instance.keysPressed.contains(LogicalKeyboardKey.altLeft) ||
+    RawKeyboard.instance.keysPressed.contains(LogicalKeyboardKey.altRight)
+  );
+}
+
+bool isMetaPressed() {
+  return (
+    RawKeyboard.instance.keysPressed.contains(LogicalKeyboardKey.meta) ||
+    RawKeyboard.instance.keysPressed.contains(LogicalKeyboardKey.metaLeft) ||
+    RawKeyboard.instance.keysPressed.contains(LogicalKeyboardKey.metaRight)
+  );
+}
+
 Future<List<String>> getDatFiles(String extractedDir) async {
   var pakInfo = path.join(extractedDir, "dat_info.json");
   if (await File(pakInfo).exists()) {
