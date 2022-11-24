@@ -1,5 +1,4 @@
 
-import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 import 'package:tuple/tuple.dart';
 
@@ -14,7 +13,6 @@ import 'FontsManager.dart';
 import 'McdFontDebugger.dart';
 import '../../misc/RowSeparated.dart';
 import '../../misc/SmoothScrollBuilder.dart';
-import '../../misc/nestedContextMenu.dart';
 import '../../theme/customTheme.dart';
 import '../simpleProps/UnderlinePropTextField.dart';
 import '../simpleProps/propEditorFactory.dart';
@@ -189,31 +187,12 @@ class _McdEditorBodyState extends ChangeNotifierState<_McdEditorBody> {
                     physics: physics,
                     itemCount: events.length,
                     itemBuilder: (context, i) {
-                      return NestedContextMenu(
-                        key: Key(events[i].item2.uuid),
-                        buttons: [
-                          if (_McdEditorBody.movingEvent.value == null) ...[
-                            ContextMenuButtonConfig(
-                              "Move",
-                              onPressed: () => _McdEditorBody.movingEvent.value = _MovingEvent(
-                                widget.mcd.events,
-                                events[i].item2,
-                                events[i].item1,
-                              ),
-                            ),
-                          ],
-                          if (_McdEditorBody.movingEvent.value != null)
-                            ContextMenuButtonConfig(
-                              "Cancel",
-                              onPressed: () => _McdEditorBody.movingEvent.value = null,
-                            ),
-                        ],
-                        child: _McdEventEditor(
-                          file: widget.file,
-                          event: events[i].item2,
-                          altColor: i % 2 == 1,
-                          index: events[i].item1,
-                        ),
+                      return _McdEventEditor(
+                        file: widget.file,
+                        event: events[i].item2,
+                        events: widget.mcd.events,
+                        altColor: i % 2 == 1,
+                        index: events[i].item1,
                       );
                     }
                   );
@@ -281,10 +260,11 @@ class _McdEditorBodyState extends ChangeNotifierState<_McdEditorBody> {
 class _McdEventEditor extends ChangeNotifierWidget {
   final McdFileData file;
   final McdEvent event;
+  final NestedNotifier<McdEvent> events;
   final bool altColor;
   final int index;
 
-  _McdEventEditor({ required this.file, required this.event, required this.altColor, required this.index })
+  _McdEventEditor({ required this.file, required this.event, required this.events, required this.altColor, required this.index })
     : super(notifiers: [event.paragraphs, event.name]);
 
   @override
@@ -313,14 +293,29 @@ class _McdEventEditorState extends ChangeNotifierState<_McdEventEditor> {
                         constraints: BoxConstraints.tightFor(height: 35),
                       )
                     )),
-                    const SizedBox(width: 10,),
+                    IconButton(
+                      onPressed: () {
+                        if (_McdEditorBody.movingEvent.value?.event != widget.event) {
+                          _McdEditorBody.movingEvent.value = _MovingEvent(
+                            widget.events,
+                            widget.event,
+                            widget.index,
+                          );
+                        } else {
+                          _McdEditorBody.movingEvent.value = null;
+                        }
+                      },
+                      iconSize: 20,
+                      splashRadius: 20,
+                      icon: const Icon(Icons.swap_vert),
+                    ),
                     IconButton(
                       onPressed: () {
                         var mcd = widget.file.mcdData!;
                         mcd.removeEvent(mcd.events.indexOf(widget.event));
                       },
-                      iconSize: 18,
-                      splashRadius: 18,
+                      iconSize: 20,
+                      splashRadius: 20,
                       icon: const Icon(Icons.delete),
                     ),
                   ]
@@ -330,7 +325,6 @@ class _McdEventEditorState extends ChangeNotifierState<_McdEventEditor> {
                   Padding(
                     padding: const EdgeInsets.only(left: 10),
                     child: _McdParagraphEditor(
-                      file: widget.file,
                       paragraph: widget.event.paragraphs[i],
                       event: widget.event,
                     ),
@@ -388,13 +382,22 @@ class _McdEventInsertionMarkerState extends State<_McdEventInsertionMarker> {
 
   @override
   Widget build(BuildContext context) {
-    if (_McdEditorBody.movingEvent.value!.event != widget.events[widget.index]) {
-      return MouseRegion(
-        onEnter: (_) => setState(() => isHovering = true),
-        onExit: (_) => setState(() => isHovering = false),
-        cursor: SystemMouseCursors.click,
-        child: GestureDetector(
-          onTap: () {
+    bool isEventTarget = _McdEditorBody.movingEvent.value!.event != widget.events[widget.index];
+    return MouseRegion(
+      onEnter: (_) => setState(() => isHovering = true),
+      onExit: (_) => setState(() => isHovering = false),
+      cursor: SystemMouseCursors.click,
+      child: AnimatedScale(
+        duration: const Duration(milliseconds: 200),
+        scale: isHovering && isEventTarget ? 1.2 : 1,
+        child: IconButton(
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(),
+          onPressed: () {
+            if (!isEventTarget) {
+              _McdEditorBody.movingEvent.value = null;
+              return;
+            }
             var curIndex = _McdEditorBody.movingEvent.value!.index;
             if (curIndex != widget.index && _McdEditorBody.movingEvent.value!.src == widget.events) {
               var newIndex = widget.index;
@@ -406,67 +409,42 @@ class _McdEventInsertionMarkerState extends State<_McdEventInsertionMarker> {
             }
             _McdEditorBody.movingEvent.value = null;
           },
-          child: AnimatedScale(
-            duration: const Duration(milliseconds: 200),
-            scale: isHovering ? 1.2 : 1,
-            child: const Icon(
-              Icons.start,
-              size: 120,
-              shadows: [
-                Shadow(
-                  blurRadius: 10,
-                  color: Colors.black,
-                ),
-                Shadow(
-                  blurRadius: 20,
-                  color: Colors.black,
-                ),
-                Shadow(
-                  blurRadius: 40,
-                  color: Colors.black,
-                ),
-                Shadow(
-                  blurRadius: 80,
-                  color: Colors.black,
-                ),
-              ],
-            ),
+          iconSize: 100,
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
+          hoverColor: Colors.transparent,
+          icon: Icon(
+            isEventTarget ? Icons.start_rounded : Icons.expand_less_rounded,
+            shadows: const [
+              Shadow(
+                blurRadius: 10,
+                color: Colors.black,
+              ),
+              Shadow(
+                blurRadius: 20,
+                color: Colors.black,
+              ),
+              Shadow(
+                blurRadius: 40,
+                color: Colors.black,
+              ),
+              Shadow(
+                blurRadius: 80,
+                color: Colors.black,
+              ),
+            ],
           ),
         ),
-      );
-    }
-    
-    return const Icon(
-      Icons.expand_less,
-      size: 140,
-      shadows: [
-        Shadow(
-          blurRadius: 10,
-          color: Colors.black,
-        ),
-        Shadow(
-          blurRadius: 20,
-          color: Colors.black,
-        ),
-        Shadow(
-          blurRadius: 40,
-          color: Colors.black,
-        ),
-        Shadow(
-          blurRadius: 80,
-          color: Colors.black,
-        ),
-      ],
+      ),
     );
   }
 }
 
 class _McdParagraphEditor extends ChangeNotifierWidget {
-  final McdFileData file;
   final McdParagraph paragraph;
   final McdEvent event;
 
-  _McdParagraphEditor({ required this.file, required this.paragraph, required this.event }) : super(notifier: paragraph.lines);
+  _McdParagraphEditor({ required this.paragraph, required this.event }) : super(notifier: paragraph.lines);
 
   @override
   State<_McdParagraphEditor> createState() => __McdParagraphEditorState();
