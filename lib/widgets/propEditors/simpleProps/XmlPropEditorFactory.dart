@@ -17,6 +17,7 @@ import '../customXmlProps/commandEditor.dart';
 import '../customXmlProps/conditionEditor.dart';
 import '../customXmlProps/entityEditor.dart';
 import '../customXmlProps/layoutsEditor.dart';
+import '../customXmlProps/minMaxPropEditor.dart';
 import '../customXmlProps/paramEditor.dart';
 import '../customXmlProps/puidReferenceEditor.dart';
 import '../customXmlProps/scriptVariableEditor.dart';
@@ -296,14 +297,12 @@ class XmlPresets {
       makeXmlElement(
         name: "value",
         children: [
-          makeXmlElement(name: "puid",
-            children: [
+          makeXmlElement(name: "puid", children: [
               makeXmlElement(name: "code", text: "0x0"),
               makeXmlElement(name: "id", text: "0x0"),
             ],
           ),
-          makeXmlElement(name: "condition",
-            children: [
+          makeXmlElement(name: "condition", children: [
               makeXmlElement(name: "state", children: [
                 makeXmlElement(name: "label", text: "conditionLabel"),
               ]),
@@ -325,8 +324,7 @@ class XmlPresets {
     "PUID Reference",
     <T extends PropTextField>(prop, showDetails) => PuidReferenceEditor(prop: prop, showDetails: showDetails),
     (cxt) => XmlProp.fromXml(
-      makeXmlElement(name: "puid",
-        children: [
+      makeXmlElement(name: "puid", children: [
           makeXmlElement(name: "code", text: "0x0"),
           makeXmlElement(name: "id", text: "0x0"),
         ],
@@ -358,8 +356,7 @@ class XmlPresets {
     "Child",
     <T extends PropTextField>(prop, showDetails) => XmlPropEditor<T>(prop: prop, showDetails: showDetails),
     (cxt) => XmlProp.fromXml(
-      makeXmlElement(name: "value",
-        children: [
+      makeXmlElement(name: "value", children: [
           makeXmlElement(name: "code", text: "0x0"),
           makeXmlElement(name: "id", text: "0x0"),
         ],
@@ -368,12 +365,16 @@ class XmlPresets {
       parentTags: cxt.parentTags,
     ),
   );
+  static XmlRawPreset minMax = XmlRawPreset(
+    "Child",
+    <T extends PropTextField>(prop, showDetails) => MinMaxPropEditor<T>(prop: prop),
+    (cxt) => throw UnimplementedError(),
+  );
   static XmlRawPreset variable = XmlRawPreset(
     "Variable",
     <T extends PropTextField>(prop, showDetails) => ScriptVariableEditor<T>(prop: prop, showDetails: showDetails),
     (cxt) => XmlProp.fromXml(
-      makeXmlElement(name: "value",
-        children: [
+      makeXmlElement(name: "value", children: [
           makeXmlElement(name: "id", text: "0x${randomId().toRadixString(16)}"),
           makeXmlElement(name: "name", text: "myVariable"),
           makeXmlElement(name: "value", children: [
@@ -429,12 +430,19 @@ XmlRawPreset getXmlPropPreset(XmlProp prop) {
     return XmlPresets.condition;
   }
   // command
-  if (prop.get("puid") != null && prop.get("command") != null) {
+  if (prop.get("puid") != null && prop.get("command") != null && prop.get("id") == null) {
     return XmlPresets.command;
   }
   // variable
   if (prop.length == 3 && prop[0].tagName == "id" && prop[1].tagName == "name" && prop[2].tagName == "value") {
     return XmlPresets.variable;
+  }
+  // min max
+  if (
+    prop.length == 2 && prop.get("min") != null && prop.get("max") != null ||
+    prop.length == 1 && { "min", "max" }.contains(prop[0].tagName)  
+  ) {
+    return XmlPresets.minMax;
   }
   // fallback
   return XmlPresets.fallback;
