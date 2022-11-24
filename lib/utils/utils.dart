@@ -300,7 +300,10 @@ ContextMenuButtonConfig optionalValPropButtonConfig(XmlProp parent, String tagNa
     return ContextMenuButtonConfig(
       "Remove $tagName prop",
       icon: const Icon(Icons.remove, size: 14,),
-      onPressed: () => parent.remove(parent.get(tagName)!)
+      onPressed: () => parent.remove(
+        parent.get(tagName)!
+          ..dispose()
+      )
     );
 }
 
@@ -321,7 +324,10 @@ ContextMenuButtonConfig optionalPropButtonConfig(XmlProp parent, String tagName,
     return ContextMenuButtonConfig(
       "Remove $tagName prop",
       icon: const Icon(Icons.remove, size: 14,),
-      onPressed: () => parent.remove(parent.get(tagName)!)
+      onPressed: () => parent.remove(
+        parent.get(tagName)!
+          ..dispose()
+      )
     );
 }
 

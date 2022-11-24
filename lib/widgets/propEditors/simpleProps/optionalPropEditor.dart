@@ -46,7 +46,10 @@ class _OptionalPropEditorState<T extends PropTextField> extends State<OptionalPr
             duration: const Duration(milliseconds: 100),
             opacity: isHovered ? 1 : 0,
             child: SmallButton(
-              onPressed: () => widget.parent.remove(widget.prop!),
+              onPressed: () => widget.parent.remove(
+                widget.prop!
+                  ..dispose()
+              ),
               constraints: BoxConstraints.tight(const Size(25, 25)),
               child: const Icon(Icons.remove, size: 17,),
             ),

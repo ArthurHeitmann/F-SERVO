@@ -215,6 +215,7 @@ abstract class NestedNotifier<T> extends ChangeNotifier with IterableMixin<T>, H
     }
     super.dispose();
     onDisposed.notifyListeners();
+    onDisposed.dispose();
   }
 }
 

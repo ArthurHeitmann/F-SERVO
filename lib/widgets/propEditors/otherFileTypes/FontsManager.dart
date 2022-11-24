@@ -169,7 +169,7 @@ class __McdFontsManagerState extends ChangeNotifierState<FontsManager> {
                       const PropTFOptions(hintText: "Y Offset", constraints: BoxConstraints.tightFor(height: 30)),
                     ),
                     SmallButton(
-                      onPressed: () => McdData.fontOverrides.removeAt(i),
+                      onPressed: () => McdData.fontOverrides.removeAt(i).dispose(),
                       constraints: BoxConstraints.tight(const Size(30, 30)),
                       child: const Icon(Icons.remove, size: 18),
                     ),

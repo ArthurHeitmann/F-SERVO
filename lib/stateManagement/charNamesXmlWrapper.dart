@@ -190,7 +190,8 @@ class CharNamesXmlProp extends XmlProp with CustomTableConfig {
       // remove old translations
       else if (names[i].translations.length > newNames[i].translations.length) {
         for (int j = names[i].translations.length - 1; j >= newNames[i].translations.length; j--) {
-          names[i].translations.removeAt(j);
+          names[i].translations.removeAt(j)
+            .dispose();
         }
       }
     }
@@ -203,7 +204,8 @@ class CharNamesXmlProp extends XmlProp with CustomTableConfig {
     // remove old names
     else if (names.length > newNames.length) {
       for (int i = names.length - 1; i >= newNames.length; i--) {
-        names.removeAt(i);
+        names.removeAt(i)
+          .dispose();
       }
     }
     rowCount.value = names.length;
@@ -296,7 +298,8 @@ class CharNamesXmlProp extends XmlProp with CustomTableConfig {
 
   @override
   void onRowRemove(int index) {
-    names.removeAt(index);
+    names.removeAt(index)
+      .dispose();
     rowCount.value--;
     serialize();
   }

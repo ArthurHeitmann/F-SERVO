@@ -27,6 +27,11 @@ class _UndoSnapshot {
     areasManager.restoreWith(fileAreasSnapshot);
     openHierarchyManager.restoreWith(openHierarchySnapshot);
   }
+
+  void dispose() {
+    (fileAreasSnapshot as OpenFilesAreasManager).dispose();
+    (openHierarchySnapshot as OpenHierarchyManager).dispose();
+  }
 }
 
 class UndoHistoryManager with ChangeNotifier {
@@ -49,7 +54,10 @@ class UndoHistoryManager with ChangeNotifier {
   void _pushSnapshot() {
     if (_isRestoring) return;
     if (_undoStack.length - 1 > _undoIndex) {
-      _undoStack.removeRange(_undoIndex + 1, _undoStack.length);
+      for (int i = _undoStack.length - 1; i > _undoIndex; i--) {
+        _undoStack.removeAt(i)
+          .dispose();
+      }
     }
     int t1 = DateTime.now().millisecondsSinceEpoch;
     _undoStack.add(_UndoSnapshot.take());
