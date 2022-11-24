@@ -17,6 +17,7 @@ import '../../fileTypeUtils/wta/wtaReader.dart';
 import '../../utils/assetDirFinder.dart';
 import '../../utils/utils.dart';
 import '../Property.dart';
+import '../events/statusInfo.dart';
 import '../hasUuid.dart';
 import '../nestedNotifier.dart';
 import '../openFilesManager.dart';
@@ -317,25 +318,21 @@ class McdParagraph extends _McdFilePart {
 }
 
 class McdEvent extends _McdFilePart {
-  HexProp eventId;
   StringProp name;
   ValueNestedNotifier<McdParagraph> paragraphs;
 
-  McdEvent(super.file, this.eventId, this.name, this.paragraphs) {
-    eventId.addListener(onDataChanged);
+  McdEvent(super.file, this.name, this.paragraphs) {
     name.addListener(onDataChanged);
     paragraphs.addListener(onDataChanged);
   }
 
   McdEvent.fromMcd(super.file, McdFileEvent event, List<McdLocalFont> fonts) : 
-    eventId = HexProp(event.id),
     name = StringProp(event.name),
     paragraphs = ValueNestedNotifier(
       event.message.paragraphs
         .map((p) => McdParagraph.fromMcd(file, p, fonts))
         .toList()
     ) {
-    eventId.addListener(onDataChanged);
     name.addListener(onDataChanged);
     paragraphs.addListener(onDataChanged);
   }
@@ -357,7 +354,6 @@ class McdEvent extends _McdFilePart {
 
   @override
   void dispose() {
-    eventId.dispose();
     name.dispose();
     for (var paragraph in paragraphs)
       paragraph.dispose();
@@ -372,11 +368,14 @@ class McdEvent extends _McdFilePart {
     return symbols;
   }
 
+  int calcNameHash() {
+    return crc32(name.value.toLowerCase()) & 0x7FFFFFFF;
+  }
+
   @override
   Undoable takeSnapshot() {
     var snapshot =  McdEvent(
       file,
-      eventId.takeSnapshot() as HexProp,
       name.takeSnapshot() as StringProp,
       paragraphs.takeSnapshot() as ValueNestedNotifier<McdParagraph>
     );
@@ -387,7 +386,6 @@ class McdEvent extends _McdFilePart {
   @override
   void restoreWith(Undoable snapshot) {
     var event = snapshot as McdEvent;
-    eventId.restoreWith(event.eventId);
     name.restoreWith(event.name);
     paragraphs.restoreWith(event.paragraphs);
   }
@@ -493,7 +491,6 @@ class McdData extends _McdFilePart {
   void addEvent() {
     events.add(McdEvent(
       file,
-      HexProp(events.isNotEmpty ? events.last.eventId.value + 1 : randomId()),
       StringProp("NEW_EVENT_NAME"),
       ValueNestedNotifier([])
     ));
@@ -622,13 +619,13 @@ class McdData extends _McdFilePart {
       var event = events[i];
       var eventMsg = McdFileMessage(
         -1, event.paragraphs.length,
-        firstMsgSeqNum + i, event.eventId.value,
+        firstMsgSeqNum + i, event.calcNameHash(),
         [],
       );
       exportMessages.add(eventMsg);
 
       var exportEvent = McdFileEvent(
-        event.eventId.value, i,
+        event.calcNameHash(), i,
         event.name.value,
         eventMsg
       );
@@ -715,6 +712,7 @@ class McdData extends _McdFilePart {
     await mcdFile.writeToFile(openFile.path);
 
     print("Saved MCD file");
+    messageLog.add("Saved MCD file ${basename(openFile.path)}");
   }
 
   Future<void> updateFontsTexture() async {

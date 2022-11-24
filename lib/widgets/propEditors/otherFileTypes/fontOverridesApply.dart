@@ -11,7 +11,7 @@ class FontOverridesApplyButton extends StatelessWidget {
 
   Future<void> applyAllFontOverrides() async {
     isLoadingStatus.pushIsLoading();
-    messageLog.add("Applying font overrides...");
+    messageLog.add("Saving MCD...");
     try {
       var savableFiles = areasManager
         .expand((area) => area)

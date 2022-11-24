@@ -80,7 +80,7 @@ class _McdFontDebuggerState extends ChangeNotifierState<McdFontDebugger> {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (image == null) {
+        if (image == null || imageSize == null) {
           return const SizedBox(
             height: 2,
             child: LinearProgressIndicator(backgroundColor: Colors.transparent,)

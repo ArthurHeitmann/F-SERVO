@@ -314,8 +314,6 @@ class _McdEventEditorState extends ChangeNotifierState<_McdEventEditor> {
                       )
                     )),
                     const SizedBox(width: 10,),
-                    const Text("ID"),
-                    makePropEditor(widget.event.eventId),
                     IconButton(
                       onPressed: () {
                         var mcd = widget.file.mcdData!;
