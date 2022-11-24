@@ -109,8 +109,9 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
   }
 
   Widget setupShortcuts({ required Widget child }) {
-    return GestureDetector(
-      onTapDown: (_) => areasManager.activeArea = widget.viewArea,
+    return Listener(
+      // onTapDown: (_) => areasManager.activeArea = widget.viewArea,
+      onPointerDown: (_) => areasManager.activeArea = widget.viewArea,
       child: child,
     );
   }

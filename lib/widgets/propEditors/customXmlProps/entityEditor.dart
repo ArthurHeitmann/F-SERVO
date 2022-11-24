@@ -8,6 +8,7 @@ import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
 import '../../../utils/utils.dart';
 import '../../filesView/xmlJumpToLineEventWrapper.dart';
+import '../../misc/Selectable.dart';
 import '../../misc/nestedContextMenu.dart';
 import '../simpleProps/UnderlinePropTextField.dart';
 import '../simpleProps/XmlPropEditorFactory.dart';
@@ -33,27 +34,29 @@ class _EntityEditorState extends ChangeNotifierState<EntityEditor> {
     return optionalIdAnchor(
       child: Padding(
         padding: const EdgeInsets.all(4.0),
-        child: contextMenuSetup(
-          isLayoutEntity: isLayoutEntity,
-          child: Container(
-            decoration: BoxDecoration(
-              color: getTheme(context).formElementBgColor,
-              borderRadius: BorderRadius.circular(5),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (widget.showDetails && isLayoutEntity)
-                  makeXmlPropEditor<UnderlinePropTextField>(widget.prop.get("id")!, true),
-                ObjIdEditor(objId: widget.prop.get("objId")!),
-                if (paramProp != null && !widget.showDetails)
-                  XmlArrayEditor(paramProp, XmlPresets.params, paramProp[0], "value", widget.showDetails),
-                if (widget.showDetails && widget.prop.get("location") != null)
-                  TransformsEditor<UnderlinePropTextField>(parent: widget.prop),
-                if (widget.showDetails)
-                  ...makeXmlMultiPropEditor<UnderlinePropTextField>(widget.prop, true, (prop) => !_detailsIgnoreList.contains(prop.tagName)),
-              ],
+        child: optionalSelectable(
+          child: contextMenuSetup(
+            isLayoutEntity: isLayoutEntity,
+            child: Container(
+              decoration: BoxDecoration(
+                color: getTheme(context).formElementBgColor,
+                borderRadius: BorderRadius.circular(5),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (widget.showDetails && isLayoutEntity)
+                    makeXmlPropEditor<UnderlinePropTextField>(widget.prop.get("id")!, true),
+                  ObjIdEditor(objId: widget.prop.get("objId")!),
+                  if (paramProp != null && !widget.showDetails)
+                    XmlArrayEditor(paramProp, XmlPresets.params, paramProp[0], "value", widget.showDetails),
+                  if (widget.showDetails && widget.prop.get("location") != null)
+                    TransformsEditor<UnderlinePropTextField>(parent: widget.prop),
+                  if (widget.showDetails)
+                    ...makeXmlMultiPropEditor<UnderlinePropTextField>(widget.prop, true, (prop) => !_detailsIgnoreList.contains(prop.tagName)),
+                ],
+              ),
             ),
           ),
         ),
@@ -67,6 +70,16 @@ class _EntityEditorState extends ChangeNotifierState<EntityEditor> {
       return child;
     return XmlWidgetWithId(
       id: idProp.value as HexProp,
+      child: child,
+    );
+  }
+
+  Widget optionalSelectable({ required Widget child }) {
+    if (widget.showDetails)
+      return child;
+    return SelectableWidget(
+      prop: widget.prop,
+      borderRadius: BorderRadius.circular(5),
       child: child,
     );
   }

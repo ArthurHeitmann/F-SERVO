@@ -7,6 +7,7 @@ import '../../stateManagement/xmlProps/xmlProp.dart';
 import '../../stateManagement/xmlProps/xmlActionProp.dart';
 import '../../utils/utils.dart';
 import '../misc/FlexReorderable.dart';
+import '../misc/Selectable.dart';
 import '../misc/SmoothScrollBuilder.dart';
 import '../misc/nestedContextMenu.dart';
 import '../misc/syncButton.dart';
@@ -38,43 +39,63 @@ class _XmlActionsEditorState extends XmlArrayEditorState<XmlActionsEditor> {
       children: [
         SmoothSingleChildScrollView(
           controller: scrollController,
-          child: XmlJumpToLineEventWrapper(
-            file: widget.root.file!,
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: ColumnReorderable(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                onReorder: (int oldIndex, int newIndex) {
-                if (oldIndex < 0 || oldIndex >= widget.parent.length || newIndex < 0 || newIndex >= widget.parent.length) {
-                  print("Invalid reorder: $oldIndex -> $newIndex (length: ${widget.parent.length})");
-                  return;
-                }
-                  widget.root.move(oldIndex + firstChildOffset, newIndex + firstChildOffset);
-                },
-                header: ActionAddButton(parent: widget.root, index: 0),
-                children: actions.map((action) {
-                  var actionEditor = makeXmlActionEditor(
-                    action: action as XmlActionProp,
-                    showDetails: false,
-                  );
-                  return Column(
-                    key: makeReferenceKey(actionEditor.key!),
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      NestedContextMenu(
-                        buttons: getContextMenuButtons(actions.indexOf(action)),
-                        child: actionEditor
-                      ),
-                      ActionAddButton(parent: widget.root, index: actions.indexOf(action) + 1),
-                    ],
-                  );
-                })
-                .toList(),
+          child: _backgroundDeselectArea(
+            child: XmlJumpToLineEventWrapper(
+              file: widget.root.file!,
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: ColumnReorderable(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  onReorder: (int oldIndex, int newIndex) {
+                  if (oldIndex < 0 || oldIndex >= widget.parent.length || newIndex < 0 || newIndex >= widget.parent.length) {
+                    print("Invalid reorder: $oldIndex -> $newIndex (length: ${widget.parent.length})");
+                    return;
+                  }
+                    widget.root.move(oldIndex + firstChildOffset, newIndex + firstChildOffset);
+                  },
+                  header: ActionAddButton(parent: widget.root, index: 0),
+                  children: actions.map((action) {
+                    var actionEditor = makeXmlActionEditor(
+                      action: action as XmlActionProp,
+                      showDetails: false,
+                    );
+                    return Column(
+                      key: makeReferenceKey(actionEditor.key!),
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        NestedContextMenu(
+                          buttons: getContextMenuButtons(actions.indexOf(action)),
+                          child: actionEditor
+                        ),
+                        ActionAddButton(parent: widget.root, index: actions.indexOf(action) + 1),
+                      ],
+                    );
+                  })
+                  .toList(),
+                ),
               ),
             ),
           ),
         ),
         _makeSyncButton(),
+      ],
+    );
+  }
+
+  Widget _backgroundDeselectArea({ required Widget child }) {
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: GestureDetector(
+            onTap: () {
+              var file = widget.root.file;
+              if (file != null)
+                selectable.deselectFile(file);
+            },
+            behavior: HitTestBehavior.translucent,
+          ),
+        ),
+        child,
       ],
     );
   }

@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 
 import '../../../widgets/theme/customTheme.dart';
 import '../../../stateManagement/ChangeNotifierWidget.dart';
-import '../../../stateManagement/openFilesManager.dart';
 import '../../../stateManagement/xmlProps/xmlActionProp.dart';
 import '../../../utils/utils.dart';
 import '../../filesView/xmlJumpToLineEventWrapper.dart';
@@ -47,9 +46,8 @@ class XmlActionEditorState<T extends XmlActionEditor> extends ChangeNotifierStat
   Widget build(BuildContext context) {
     return XmlWidgetWithId(
       id: widget.action.id,
-      child: SelectableWidget<XmlActionProp>(
-        area: areasManager.getAreaOfFileId(widget.action.file!),
-        data: widget.action,
+      child: SelectableWidget(
+        prop: widget.action,
         color: getActionPrimaryColor(context).withOpacity(0.5),
         child: NestedContextMenu(
           buttons: [

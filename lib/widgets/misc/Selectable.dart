@@ -1,99 +1,117 @@
 
 import 'package:flutter/material.dart';
 
+import '../../stateManagement/ChangeNotifierWidget.dart';
+import '../../stateManagement/openFilesManager.dart';
+import '../../stateManagement/xmlProps/xmlProp.dart';
 import '../../widgets/theme/customTheme.dart';
 import '../../utils/utils.dart';
 
-class _SelectedData<T> {
-  final T? data;
-  final _SelectableWidgetState state;
+/*
+Per file[uuid] one or zero selected (has uuid + XmlProp)
+*/
 
-  _SelectedData(this.data, this.state);
+class _SelectedData {
+  final String uuid;
+  final XmlProp prop;
+  final void Function() onDispose;
+
+  _SelectedData(this.uuid, this.prop, this.onDispose) {
+    prop.onDisposed.addListener(onDispose);
+  }
+
+  void dispose() {
+    prop.onDisposed.removeListener(onDispose);
+  }
 }
 
-class _Selectable extends ChangeNotifier {
-  final Map<dynamic, Map<Type, _SelectedData>> _selectedData = {};
+class _Selectable {
+  final Map<OpenFileId, _SelectedData?> _selectedData = {};
+  final active = ValueNotifier<_SelectedData?>(null);
 
-  void select<T>(dynamic area, T? data, _SelectableWidgetState state) {
-    if (!_selectedData.containsKey(area))
-      _selectedData[area] = {};
-    else if (_selectedData[area]![T]?.state == state)
-      return;
-
-    _selectedData[area]![T]?.state.deselect();
-    _selectedData[area]![T]?.state.onDispose = null;
-
-    _selectedData[area]![T] = _SelectedData(data, state);
-    state.onDispose = () async {
-      _selectedData[area]!.remove(T);
-      await waitForNextFrame();
-      notifyListeners();
-    };
-    state.select();
-
-    notifyListeners();
+  _Selectable() {
+    areasManager.subEvents.addListener(_onAreaChanges);
   }
 
-  void deselect<T>(dynamic area) {
-    if (!_selectedData.containsKey(area) || !_selectedData[area]!.containsKey(T))
-      return;
-
-    _selectedData[area]![T]?.state.deselect();
-    _selectedData[area]![T]?.state.onDispose = null;
-    _selectedData[area]!.remove(T);
-
-    notifyListeners();
-  }
-
-  void deselectAll(dynamic area) {
-    _selectedData[area]?.forEach((key, value) {
-      value.state.deselect();
-      value.state.onDispose = null;
+  void select(OpenFileId id, XmlProp prop) {
+    _selectedData[id]?.dispose();
+    _selectedData[id] = _SelectedData(prop.uuid, prop, () {
+      if (_selectedData[id]?.uuid == prop.uuid)
+        _selectedData[id] = null;
+      if (active.value?.uuid == prop.uuid)
+        active.value = null;
     });
-    _selectedData.remove(area);
-
-    notifyListeners();
+    if (id == areasManager.activeArea?.currentFile?.uuid)
+      active.value = _selectedData[id];
+    active.value = _selectedData[id];
   }
 
-  T? get<T>(dynamic area) {
-    return _selectedData[area]?[T]?.data;
+  void deselect(String uuid) {
+    if (active.value?.uuid == uuid)
+      active.value = null;
+    var ids = _selectedData.keys.where((id) => _selectedData[id]?.uuid == uuid);
+    var id = ids.isNotEmpty ? ids.first : null;
+    if (id == null)
+      return;
+    if (_selectedData[id]?.uuid != uuid)
+      return;
+    _selectedData[id]?.dispose();
+    _selectedData[id] = null;
+    if (id == areasManager.activeArea?.currentFile?.uuid)
+      active.value = null;
+  }
+
+  void deselectFile(OpenFileId id) {
+    if (_selectedData[id]?.uuid == active.value?.uuid)
+      active.value = null;
+    _selectedData[id]?.dispose();
+    _selectedData[id] = null;
+  }
+
+  bool isSelected(String uuid) => _selectedData.values.any((e) => e?.uuid == uuid);
+
+  void _onAreaChanges() {
+    var id = areasManager.activeArea?.currentFile?.uuid;
+    if (id == null)
+      active.value = null;
+    else
+      active.value = _selectedData[id];
   }
 }
 
 final  selectable = _Selectable();
 
-class SelectableWidget<T> extends StatefulWidget {
-  final dynamic area;
-  final T? data;
+class SelectableWidget extends ChangeNotifierWidget {
   final Color? color;
+  final BorderRadius? borderRadius;
+  final OpenFileId id;
+  final XmlProp prop;
   final Widget child;
 
-  const SelectableWidget({super.key, this.area, this.data, this.color, required this.child});
+  SelectableWidget({
+    super.key,
+    this.color,
+    this.borderRadius,
+    required this.prop,
+    required this.child
+  }) : id = prop.file!,
+       super(notifier: selectable.active);
 
   @override
-  State<SelectableWidget> createState() => _SelectableWidgetState<T>();
+  State<SelectableWidget> createState() => _SelectableWidgetState();
 }
 
-class _SelectableWidgetState<T> extends State<SelectableWidget> {
-  bool isSelected = false;
-  VoidCallback? onDispose;
-
-  @override
-  void dispose() {
-    onDispose?.call();
-    super.dispose();
-  }  
-
+class _SelectableWidgetState<T> extends ChangeNotifierState<SelectableWidget> {
   void select() {
     if (!mounted)
       return;
-    setState(() => isSelected = true);
+    selectable.select(widget.id, widget.prop);
   }
 
   void deselect() {
     if (!mounted)
       return;
-    setState(() => isSelected = false);
+    selectable.deselect(widget.prop.uuid);
   }
   
   @override
@@ -110,20 +128,20 @@ class _SelectableWidgetState<T> extends State<SelectableWidget> {
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 125),
               decoration: BoxDecoration(
-                border: isSelected
+                border: selectable.isSelected(widget.prop.uuid)
                   ? Border.all(color: widget.color ?? getTheme(context).selectedColor!, width: 2)
                   : Border.all(color: Colors.transparent, width: 2),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: widget.borderRadius ?? BorderRadius.circular(14),
               ),
             ),
           ),
         ),
         GestureDetector(
             onTap: () {
-              if ((isCtrlPressed() || isShiftPressed()) && isSelected)
-                selectable.deselect<T>(widget.area);
+              if ((isCtrlPressed() || isShiftPressed()) && selectable.isSelected(widget.prop.uuid))
+                selectable.deselect(widget.prop.uuid);
               else
-                selectable.select<T>(widget.area, widget.data, this);
+                selectable.select(widget.id, widget.prop);
             },
             child: widget.child,
           ),

@@ -3,25 +3,24 @@
 import 'package:flutter/material.dart';
 
 import '../../stateManagement/ChangeNotifierWidget.dart';
-import '../../stateManagement/openFilesManager.dart';
-import '../../stateManagement/xmlProps/xmlActionProp.dart';
+import '../../stateManagement/xmlProps/xmlProp.dart';
 import '../misc/Selectable.dart';
 import '../misc/SmoothScrollBuilder.dart';
-import '../propEditors/xmlActions/XmlActionDetails.dart';
+import '../propEditors/xmlActions/XmlPropDetails.dart';
 
-class XmlActionDetailsEditor extends ChangeNotifierWidget {
-  XmlActionDetailsEditor({super.key}) : super(notifier: selectable);
+class XmlPropDetailsEditor extends ChangeNotifierWidget {
+  XmlPropDetailsEditor({super.key}) : super(notifier: selectable.active);
 
   @override
-  State<XmlActionDetailsEditor> createState() => _XmlActionDetailsEditorState();
+  State<XmlPropDetailsEditor> createState() => _XmlPropDetailsEditorState();
 }
 
-class _XmlActionDetailsEditorState extends ChangeNotifierState<XmlActionDetailsEditor> {
+class _XmlPropDetailsEditorState extends ChangeNotifierState<XmlPropDetailsEditor> {
   final scrollController = ScrollController();
 
   @override
   Widget build(BuildContext context) {
-    XmlActionProp? action = selectable.get<XmlActionProp>(areasManager.activeArea);
+    XmlProp? prop = selectable.active.value?.prop;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -33,8 +32,8 @@ class _XmlActionDetailsEditorState extends ChangeNotifierState<XmlActionDetailsE
             controller: scrollController,
             child: Padding(
               padding: const EdgeInsets.all(8.0),
-              child: action != null
-                ? XmlActionDetails(key: ValueKey(action), action: action)
+              child: prop != null
+                ? XmlPropDetails(key: ValueKey(prop), prop: prop)
                 : Container(),
             ),
           ),
@@ -49,7 +48,7 @@ class _XmlActionDetailsEditorState extends ChangeNotifierState<XmlActionDetailsE
         Expanded(
           child: Padding(
             padding: EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
-            child: Text("ACTION PROPERTIES", 
+            child: Text("PROPERTIES", 
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w300
