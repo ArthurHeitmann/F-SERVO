@@ -56,4 +56,42 @@ class IndexingGroup {
     }
     return [];
   }
+
+  Future<IndexedCharNameData?> lookupCharName(String charNameKey) async {
+    await _ensureAllInitialized();
+    for (var indexer in _indexers) {
+      var data = indexer.indexedCharNames[charNameKey];
+      if (data != null)
+        return data;
+    }
+    return null;
+  }
+
+  Future<List<IndexedCharNameData>> getAllCharNames() async {
+    await _ensureAllInitialized();
+    List<IndexedCharNameData> charNames = [];
+    for (var indexer in _indexers) {
+      charNames.addAll(indexer.indexedCharNames.values);
+    }
+    return charNames;
+  }
+
+  Future<IndexedSceneStateData?> lookupSceneState(String sceneStateKey) async {
+    await _ensureAllInitialized();
+    for (var indexer in _indexers) {
+      var data = indexer.indexedSceneStates[sceneStateKey];
+      if (data != null)
+        return data;
+    }
+    return null;
+  }
+
+  Future<List<IndexedSceneStateData>> getAllSceneStates() async {
+    await _ensureAllInitialized();
+    List<IndexedSceneStateData> sceneStates = [];
+    for (var indexer in _indexers) {
+      sceneStates.addAll(indexer.indexedSceneStates.values);
+    }
+    return sceneStates;
+  }
 }

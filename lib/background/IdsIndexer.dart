@@ -118,6 +118,61 @@ class IndexedEntityIdData extends IndexedIdData {
   int get hashCode => Object.hash(super.hashCode, objId, actionId, name, level);
 }
 
+class IndexedCharNameData {
+  final String key;
+  final Map<String, String> nameTranslations;
+
+  IndexedCharNameData(this.key, this.nameTranslations);
+
+  @override
+  String toString() {
+    return "IndexedCharNameData(\n"
+      "  key: $key,\n"
+      "  nameTranslations: $nameTranslations,\n"
+      ")";
+  }
+
+  @override
+  bool operator==(Object other) {
+    if (other is! IndexedCharNameData)
+      return false;
+    return key == other.key &&
+      nameTranslations == other.nameTranslations;
+  }
+
+  @override
+  int get hashCode => Object.hash(key, nameTranslations);
+}
+
+class IndexedSceneStateData {
+  final String key;
+  final String commentJap;
+  final String commentEng;
+
+  IndexedSceneStateData(this.key, this.commentJap, this.commentEng);
+
+  @override
+  String toString() {
+    return "IndexedSceneStateData(\n"
+      "  key: $key,\n"
+      "  commentJap: $commentJap,\n"
+      "  commentEng: $commentEng,\n"
+      ")";
+  }
+
+  @override
+  bool operator==(Object other) {
+    if (other is! IndexedSceneStateData)
+      return false;
+    return key == other.key &&
+      commentJap == other.commentJap &&
+      commentEng == other.commentEng;
+  }
+
+  @override
+  int get hashCode => Object.hash(key, commentJap, commentEng);
+}
+
 enum InitStatus {
   notInitialized,
   initializing,
@@ -128,6 +183,8 @@ class IdsIndexer {
   String? _path;
   bool _stop = false;
   final Map<int, List<IndexedIdData>> indexedIds = {};
+  final Map<String, IndexedCharNameData> indexedCharNames = {};
+  final Map<String, IndexedSceneStateData> indexedSceneStates = {};
   void Function(bool)? onLoadingStateChange;
 
   InitStatus _initStatus = InitStatus.notInitialized;
@@ -384,32 +441,42 @@ class IdsIndexer {
       return;
     foundXmlFiles++;
 
-    var hapIdL = root.findElements("id");
-    if (hapIdL.isNotEmpty) {
-      var hapId = int.parse(hapIdL.first.text);
+    var rootName = root.getElement("name");
+    if (rootName?.text == "SceneState" && root.getElement("node") != null) {
+      _indexSceneState(root);
+      return;
+    }
+    if (rootName?.text == "CharName" && root.getElement("text") == null) {
+      _indexCharNames(root);
+      return;
+    }
+
+    var hapIdEl = root.getElement("id");
+    if (hapIdEl != null) {
+      var hapId = int.parse(hapIdEl.text);
       _addIndexedData(hapId, IndexedIdData(hapId, "HAP", datPath, pakPath, xmlPath));
     }
 
     for (var action in root.findElements("action")) {
-      var actionCode = int.parse(action.findElements("code").first.text);
-      var actionId = int.parse(action.findElements("id").first.text);
-      var actionName = action.findElements("name").first.text;
+      var actionCode = int.parse(action.getElement("code")!.text);
+      var actionId = int.parse(action.getElement("id")!.text);
+      var actionName = action.getElement("name")!.text;
       actionName = tryToTranslate(actionName);
       _addIndexedData(actionId, IndexedActionIdData(actionId, datPath, pakPath, xmlPath, hashToStringMap[actionCode] ?? actionCode.toString(), actionName));
 
       for (var normal in action.findAllElements("normal")) {  // entities
-        var normalLayouts = normal.findElements("layouts").first;
+        var normalLayouts = normal.getElement("layouts")!;
         for (var value in normalLayouts.findElements("value")) {
           var entityId = int.parse(value.childElements.first.text);
-          var objId = value.findElements("objId").first.text;
+          var objId = value.getElement("objId")!.text;
           String? name;
           int? level;
-          var aliasL = value.findElements("alias");
-          if (aliasL.isNotEmpty)
-            name = aliasL.first.text;
-          var paramsL = value.findElements("param");
-          if (paramsL.isNotEmpty) {
-            for (var param in paramsL.first.findElements("value")) {
+          var aliasEl = value.getElement("alias");
+          if (aliasEl != null)
+            name = aliasEl.text;
+          var paramsEl = value.getElement("param");
+          if (paramsEl != null) {
+            for (var param in paramsEl.findElements("value")) {
               var paramName = param.childElements.first.text;
               var paramBody = param.childElements.elementAt(2).text;
               if (paramName == "NameTag")
@@ -432,5 +499,18 @@ class IdsIndexer {
       indexedIds[id] = idList;
     }
     idList.add(data);
+  }
+
+  void _indexSceneState(XmlElement root) {
+    for (var child in root.getElement("node")!.findElements("child")) {
+      var tag = child.getElement("tag")!.text;
+      var valueJap = child.getElement("value")!.text;
+      var valueEng = child.getElement("value")!.getAttribute("eng") ?? "";
+      indexedSceneStates[tag] = IndexedSceneStateData(tag, valueJap, valueEng);
+    }
+  }
+
+  void _indexCharNames(XmlElement root) {
+    // TODO char names index
   }
 }

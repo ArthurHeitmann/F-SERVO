@@ -17,8 +17,12 @@ enum CommandTypes {
   addIndexingPaths,
   removeIndexingPaths,
   clearIndexingPaths,
-  lookupId,
   onLoadingStateChange,
+  lookupId,
+  lookupCharName,
+  getAllCharNames,
+  lookupSceneState,
+  getAllSceneStates,
 }
 
 Map _makeMessage(CommandTypes command, Map data, { String? uuid }) {
@@ -81,6 +85,18 @@ class _IsolateCommunicatorPrivate {
       case CommandTypes.lookupId:
         lookupId(message["id"], uuid);
         break;
+      case CommandTypes.lookupCharName:
+        lookupCharName(message["charNameKey"], uuid);
+        break;
+      case CommandTypes.getAllCharNames:
+        getAllCharNames(uuid);
+        break;
+      case CommandTypes.lookupSceneState:
+        lookupSceneState(message["sceneStateKey"], uuid);
+        break;
+      case CommandTypes.getAllSceneStates:
+        getAllSceneStates(uuid);
+        break;
       default:
         print("Unhandled command: $command");
     }
@@ -118,6 +134,46 @@ class _IsolateCommunicatorPrivate {
 
   Future<void> lookupId(int id, String uuid) async {
     var data = await _indexingGroup.lookupId(id);
+    _sendMessage(
+      _sendPort,
+      CommandTypes.response,
+      { "data": data, },
+      uuid: uuid,
+    );
+  }
+
+  Future<void> lookupCharName(String charNameKey, String uuid) async {
+    var data = await _indexingGroup.lookupCharName(charNameKey);
+    _sendMessage(
+      _sendPort,
+      CommandTypes.response,
+      { "data": data, },
+      uuid: uuid,
+    );
+  }
+
+  Future<void> getAllCharNames(String uuid) async {
+    var data = await _indexingGroup.getAllCharNames();
+    _sendMessage(
+      _sendPort,
+      CommandTypes.response,
+      { "data": data, },
+      uuid: uuid,
+    );
+  }
+
+  Future<void> lookupSceneState(String sceneStateKey, String uuid) async {
+    var data = await _indexingGroup.lookupSceneState(sceneStateKey);
+    _sendMessage(
+      _sendPort,
+      CommandTypes.response,
+      { "data": data, },
+      uuid: uuid,
+    );
+  }
+
+  Future<void> getAllSceneStates(String uuid) async {
+    var data = await _indexingGroup.getAllSceneStates();
     _sendMessage(
       _sendPort,
       CommandTypes.response,
@@ -210,5 +266,49 @@ class IsolateCommunicator with Initializable {
       isLoadingStatus.pushIsLoading();
     else
       isLoadingStatus.popIsLoading();
+  }
+
+  Future<IndexedCharNameData?> lookupCharName(String charNameKey) async {
+    await awaitInitialized();
+    var response = await _sendMessageWithCompleter(
+      _sendPort!,
+      CommandTypes.lookupCharName,
+      { "charNameKey": charNameKey, },
+      _awaitingResponses,
+    );
+    return response["data"];
+  }
+
+  Future<List<IndexedCharNameData>> getAllCharNames() async {
+    await awaitInitialized();
+    var response = await _sendMessageWithCompleter(
+      _sendPort!,
+      CommandTypes.getAllCharNames,
+      {  },
+      _awaitingResponses,
+    );
+    return response["data"];
+  }
+
+  Future<IndexedSceneStateData?> lookupSceneState(String sceneStateKey) async {
+    await awaitInitialized();
+    var response = await _sendMessageWithCompleter(
+      _sendPort!,
+      CommandTypes.lookupSceneState,
+      { "sceneStateKey": sceneStateKey, },
+      _awaitingResponses,
+    );
+    return response["data"];
+  }
+
+  Future<List<IndexedSceneStateData>> getAllSceneStates() async {
+    await awaitInitialized();
+    var response = await _sendMessageWithCompleter(
+      _sendPort!,
+      CommandTypes.getAllSceneStates,
+      {  },
+      _awaitingResponses,
+    );
+    return response["data"];
   }
 }

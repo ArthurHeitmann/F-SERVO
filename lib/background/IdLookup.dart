@@ -71,6 +71,28 @@ class IdLookup with Initializable {
     return result.toSet().toList();
   }
 
+  Future<IndexedSceneStateData?> lookupSceneState(String sceneStateKey) async {
+    await awaitInitialized();
+    return await _heavyWorker.lookupSceneState(sceneStateKey);
+  }
+
+  Future<List<IndexedSceneStateData>> getAllSceneStates() async {
+    await awaitInitialized();
+    var sceneStates = await _heavyWorker.getAllSceneStates();
+    return sceneStates.toSet().toList();
+  }
+
+  Future<IndexedCharNameData?> lookupCharName(String charNameKey) async {
+    await awaitInitialized();
+    return await _heavyWorker.lookupCharName(charNameKey);
+  }
+
+  Future<List<IndexedCharNameData>> getAllCharNames() async {
+    await awaitInitialized();
+    var charNames = await _heavyWorker.getAllCharNames();
+    return charNames.toSet().toList();
+  }
+
   Future<List<IndexedIdData>> _lookupIdLevel4(int id) async {
     return _heavyWorker.lookupId(id);
   }
