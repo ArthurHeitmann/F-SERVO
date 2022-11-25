@@ -30,6 +30,8 @@ mixin Prop<T> implements Listenable, Undoable {
     else
       return StringProp(str, true);
   }
+
+  void dispose();
 }
 
 abstract class ValueProp<T> extends ValueNotifier<T> with Prop<T>, HasUuid {

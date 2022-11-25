@@ -15,6 +15,7 @@ import '../../../utils/utils.dart';
 import '../../misc/Selectable.dart';
 import '../../misc/nestedContextMenu.dart';
 import '../simpleProps/UnderlinePropTextField.dart';
+import '../simpleProps/XmlPropEditorFactory.dart';
 import '../simpleProps/propEditorFactory.dart';
 import 'objIdEditor.dart';
 
@@ -37,11 +38,16 @@ class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor>
   @override
   void initState() {
     var id = widget.prop.get("id") ?? widget.prop.get("value")!;
-    var idProp = id.value as HexProp;
-    idLookup.lookupId(idProp.value);
-    
-    idProp.addListener(updateLookup);
-    updateLookup();
+    var idProp = id.value;
+    if (idProp is HexProp) {
+      idLookup.lookupId(idProp.value);
+      
+      idProp.addListener(updateLookup);
+      updateLookup();
+    }
+    else {
+      showLookup = false;
+    }
 
     super.initState();
   }
@@ -49,7 +55,7 @@ class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor>
   @override
   void dispose() {
     var id = widget.prop.get("id") ?? widget.prop.get("value")!;
-    var idProp = id.value as HexProp;
+    var idProp = id.value;
     idProp.removeListener(updateLookup);
     objIdProp.dispose();
 
@@ -58,11 +64,16 @@ class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor>
 
   void updateLookup() async {
     var id = widget.prop.get("id") ?? widget.prop.get("value")!;
-    var idProp = id.value as HexProp;
-    lookupFuture = idLookup.lookupId(idProp.value);
-    await lookupFuture;
-    if (mounted)
-      setState(() {});
+    var idProp = id.value;
+    if (idProp is HexProp) {
+      lookupFuture = idLookup.lookupId(idProp.value);
+      await lookupFuture;
+      if (mounted)
+        setState(() {});
+    }
+    else {
+      showLookup = false;
+    }
   }
 
   @override
@@ -70,7 +81,7 @@ class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor>
     var code = widget.prop.get("code")!;
     var codeProp = code.value as HexProp;
     var id = widget.prop.get("id") ?? widget.prop.get("value")!;
-    var idProp = id.value as HexProp;
+    var idProp = id.value is HexProp ? id.value as HexProp : null;
     return Padding(
       padding: const EdgeInsets.all(4.0),
       child: interactionsWrapper(context,
@@ -85,7 +96,7 @@ class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor>
             children: [
               const Icon(Icons.link, size: 25,),
               const SizedBox(width: 4,),
-              showLookup ? FutureBuilder(
+              showLookup && idProp is HexProp ? FutureBuilder(
                 future: lookupFuture,
                 builder: (context, AsyncSnapshot<List<IndexedIdData>> snapshot) {
                   var lookup = snapshot.data;
@@ -127,12 +138,17 @@ class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor>
                   );
                 }
               )
-              : Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  makePropEditor<UnderlinePropTextField>(code.value),
-                  makePropEditor<UnderlinePropTextField>(id.value),
-                ],
+              : Flexible(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    makePropEditor<UnderlinePropTextField>(code.value),
+                    if (id.value is HexProp)
+                      makePropEditor<UnderlinePropTextField>(id.value)
+                    else
+                      makeXmlPropEditor<UnderlinePropTextField>(id, widget.showDetails),
+                  ],
+                ),
               ),
             ],
           ),
@@ -190,7 +206,11 @@ class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor>
 
   Future<void> goToReference() async {
     var id = widget.prop.get("id") ?? widget.prop.get("value")!;
-    var idProp = id.value as HexProp;
+    var idProp = id.value;
+    if (idProp is! HexProp) {
+      showToast("No reference to go to");
+      return;
+    }
     var indexedData = await idLookup.lookupId(idProp.value);
     if (indexedData.isEmpty) {
       showToast("Couldn't find Reference");
@@ -228,7 +248,11 @@ class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor>
 
   Future<void> copyRef() {
     var code = widget.prop.get("code")!.value as HexProp;
-    var id = (widget.prop.get("id") ?? widget.prop.get("value")!).value as HexProp;
+    var id = (widget.prop.get("id") ?? widget.prop.get("value")!).value;
+    if (id is! HexProp) {
+      showToast("No reference to copy");
+      return Future.value();
+    }
     return copyPuidRef(
       code.strVal!,
       id.value
@@ -242,7 +266,11 @@ class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor>
       return;
     }
     var code = widget.prop.get("code")!.value as HexProp;
-    var id = (widget.prop.get("id") ?? widget.prop.get("value")!).value as HexProp;
+    var id = (widget.prop.get("id") ?? widget.prop.get("value")!).value;
+    if (id is! HexProp) {
+      showToast("No reference to paste");
+      return;
+    }
     code.value = puidRef.codeHash;
     id.value = puidRef.id;
   }

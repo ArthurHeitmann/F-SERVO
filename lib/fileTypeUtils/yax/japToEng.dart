@@ -1006,7 +1006,6 @@ const Map<String, String> japToEng = {
   "EM登場ルート（工場内トップビュー）(2)": "EM appearance route (top view in the factory) (2)",
   "EM登場ルート（工場塔Zミトップ１）(2)": "EM appearance route (Factory Tower Z Mitop 1) (2)",
   "EM２_サイド": "EM 2 _ side",
-  "EVENT_AUTO_KILL　bool": "EVENT_AUTO_KILL　bool",
   "EVトリガーの専用敵セット": "EV trigger dedicated enemy set",
   "EV再生＋ビハインドフリーON": "EV playback + behind-free ON",
   "EV施錠": "EV lock",

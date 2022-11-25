@@ -9,6 +9,7 @@ import 'undoable.dart';
 abstract class NestedNotifier<T> extends ChangeNotifier with IterableMixin<T>, HasUuid, Undoable {
   final List<T> _children;
   late final ChangeNotifier onDisposed;
+  bool _debugDisposed = false;
 
   NestedNotifier(List<T> children)
     : _children = children,
@@ -209,6 +210,16 @@ abstract class NestedNotifier<T> extends ChangeNotifier with IterableMixin<T>, H
 
   @override
   void dispose() {
+    assert(() {
+      if (_debugDisposed) {
+        throw FlutterError(
+          "A $runtimeType was used after being disposed.\n"
+          "Once you have called dispose() on a $runtimeType, it can no longer be used."
+        );
+      }
+      _debugDisposed = true;
+      return true;
+    }());
     for (var child in _children) {
       if (child is ChangeNotifier)
         child.dispose();

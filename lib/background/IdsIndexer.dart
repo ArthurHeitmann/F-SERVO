@@ -332,7 +332,7 @@ class IdsIndexer {
     }
     
     int t2 = DateTime.now().millisecondsSinceEpoch;
-    print("Found $foundXmlFiles xml files with ${indexedIds.length} IDs in ${t2 - t1}ms");
+    print("Found $foundXmlFiles xml files with ${indexedIds.length} IDs, ${indexedSceneStates.length} scene states and ${indexedCharNames.length} char names in ${(t2 - t1)~/1000}s");
   }
 
   Future<void> _indexAllIdsInDir(String dir) async {
@@ -504,8 +504,13 @@ class IdsIndexer {
   void _indexSceneState(XmlElement root) {
     for (var child in root.getElement("node")!.findElements("child")) {
       var tag = child.getElement("tag")!.text;
-      var valueJap = child.getElement("value")!.text;
-      var valueEng = child.getElement("value")!.getAttribute("eng") ?? "";
+      var value = child.getElement("value");
+      String valueJap = "";
+      String valueEng = "";
+      if (value != null) {
+        valueJap = value.text;
+        valueEng = value.getAttribute("eng") ?? "";
+      }
       indexedSceneStates[tag] = IndexedSceneStateData(tag, valueJap, valueEng);
     }
   }

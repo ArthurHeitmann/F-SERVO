@@ -67,9 +67,7 @@ class XmlProp extends NestedNotifier<XmlProp> {
 
   @override
   void dispose() {
-    value.removeListener(_onValueChange);
-    if (value is ChangeNotifier)
-      (value as ChangeNotifier).dispose();
+    value.dispose();
     super.dispose();
   }
 

@@ -1,7 +1,10 @@
 
 import 'package:flutter/material.dart';
 
+import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
+import '../../filesView/xmlJumpToLineEventWrapper.dart';
+import '../../misc/Selectable.dart';
 import '../../theme/customTheme.dart';
 import '../simpleProps/propEditorFactory.dart';
 import '../simpleProps/propTextField.dart';
@@ -16,23 +19,47 @@ class ScriptVariableEditor<T extends PropTextField> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(4.0),
-      child: Container(
-        decoration: BoxDecoration(
-          color: getTheme(context).formElementBgColor,
-          borderRadius: BorderRadius.circular(4.0),
-        ),
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          // crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            makePropEditor<TransparentPropTextField>(prop.get("name")!.value),
-            const Divider(thickness: 2,),
-            PuidReferenceEditor(prop: prop.get("value")!, showDetails: showDetails),
-          ],
+    return optionalIdAnchor(
+      child: Padding(
+        padding: const EdgeInsets.all(4.0),
+        child: optionalSelectable(
+          child: Container(
+            decoration: BoxDecoration(
+              color: getTheme(context).formElementBgColor,
+              borderRadius: BorderRadius.circular(4.0),
+            ),
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              // crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                makePropEditor<TransparentPropTextField>(prop.get("name")!.value),
+                const Divider(thickness: 2,),
+                PuidReferenceEditor(prop: prop.get("value")!, showDetails: showDetails),
+              ],
+            ),
+          ),
         ),
       ),
+    );
+  }
+
+  Widget optionalIdAnchor({ required Widget child }) {
+    var idProp = prop.get("id");
+    if (idProp == null)
+      return child;
+    return XmlWidgetWithId(
+      id: idProp.value as HexProp,
+      child: child,
+    );
+  }
+
+  Widget optionalSelectable({ required Widget child }) {
+    if (showDetails)
+      return child;
+    return SelectableWidget(
+      prop: prop,
+      borderRadius: BorderRadius.circular(4),
+      child: child,
     );
   }
 }
