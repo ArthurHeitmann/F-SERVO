@@ -488,10 +488,10 @@ class McdData extends _McdFilePart {
     }
   }
 
-  void addEvent() {
+  void addEvent([String suffix = ""]) {
     events.add(McdEvent(
       file,
-      StringProp("NEW_EVENT_NAME"),
+      StringProp("NEW_EVENT_NAME${suffix.isNotEmpty ? "_$suffix" : ""}"),
       ValueNestedNotifier([])
     ));
     undoHistoryManager.onUndoableEvent();

@@ -1,4 +1,6 @@
 
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:tuple/tuple.dart';
 
@@ -19,6 +21,8 @@ import '../simpleProps/propEditorFactory.dart';
 import '../simpleProps/propTextField.dart';
 import 'fontOverridesApply.dart';
 
+const _itemsPerPage = 400;
+
 class McdEditor extends ChangeNotifierWidget {
   final McdFileData file;
 
@@ -36,8 +40,6 @@ class _McdEditorState extends ChangeNotifierState<McdEditor> {
     widget.file.load()
       .then((value) {
         setState(() {});
-        if (widget.file.mcdData!.events.length > 512)
-          showToast("This is a pretty big file :D");
       });
     super.initState();
   }
@@ -138,16 +140,30 @@ class _McdEditorBody extends ChangeNotifierWidget {
   State<_McdEditorBody> createState() => _McdEditorBodyState();
 }
 
+typedef _EventWithIndex = Tuple2<int, McdEvent>;
 class _McdEditorBodyState extends ChangeNotifierState<_McdEditorBody> {
   final scrollController = ScrollController();
-  List<Tuple2<int, McdEvent>> events = [];
+  List<List<_EventWithIndex>> eventPages = [];
   StringProp search = StringProp("");
   BoolProp isRegex = BoolProp(false);
+  int currentPage = 0;
 
   @override
   void initState() {
-    search.addListener(() => setState(() {}));
+    search.changesUndoable = false;
+    isRegex.changesUndoable = false;
+    search.addListener(() {
+      setState(() {});
+      currentPage = 0;
+    });
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    search.dispose();
+    isRegex.dispose();
+    super.dispose();
   }
 
   void updateEvents() {
@@ -162,11 +178,16 @@ class _McdEditorBodyState extends ChangeNotifierState<_McdEditorBody> {
       (index) => Tuple2(index, widget.mcd.events[index])
     );
 
-    events = allEvents.where((e) {
+    var filteredEvents = allEvents.where((e) {
       var event = e.item2;
       return searchMatcher.hasMatch(event.name.value) ||
         event.paragraphs.any((p) => p.lines.any((l) => searchMatcher.hasMatch(l.text.value)));
-    }).toList();
+    });
+
+    eventPages = List.generate(
+      max((filteredEvents.length / _itemsPerPage).ceil(), 1),
+      (index) => filteredEvents.skip(index * _itemsPerPage).take(_itemsPerPage).toList()
+    );
   }
 
   @override
@@ -183,16 +204,17 @@ class _McdEditorBodyState extends ChangeNotifierState<_McdEditorBody> {
                 controller: scrollController,
                 builder: (context, controller, physics) {
                   return ListView.builder(
+                    key: ValueKey(currentPage),
                     controller: controller,
                     physics: physics,
-                    itemCount: events.length,
+                    itemCount: eventPages[currentPage].length,
                     itemBuilder: (context, i) {
                       return _McdEventEditor(
                         file: widget.file,
-                        event: events[i].item2,
+                        event: eventPages[currentPage][i].item2,
                         events: widget.mcd.events,
                         altColor: i % 2 == 1,
-                        index: events[i].item1,
+                        index: eventPages[currentPage][i].item1,
                       );
                     }
                   );
@@ -207,8 +229,11 @@ class _McdEditorBodyState extends ChangeNotifierState<_McdEditorBody> {
                   child: FloatingActionButton(
                     onPressed: _McdEditorBody.movingEvent.value == null
                       ? () {
-                        widget.mcd.addEvent();
-                        scrollController.jumpTo(scrollController.position.maxScrollExtent);
+                        widget.mcd.addEvent(search.value);
+                        _setPage(eventPages.length - 1);
+                        waitForNextFrame().then((_) {
+                          scrollController.jumpTo(scrollController.position.maxScrollExtent);
+                        });
                       }
                       : () => _McdEditorBody.movingEvent.value = null,
                     foregroundColor: getTheme(context).textColor,
@@ -228,32 +253,76 @@ class _McdEditorBodyState extends ChangeNotifierState<_McdEditorBody> {
   }
 
   Widget _makeHeader(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.only(top: 8, right: 8, left: 8, bottom: 8),
+    return Material(
       color: getTheme(context).tableBgColor,
-      child: RowSeparated(
-        children: [
-          Flexible(
-            child: SizedBox(
-              width: 300,
-              child: UnderlinePropTextField(
-                prop: search,
-                options: const PropTFOptions(
-                  hintText: "Search",
-                  useIntrinsicWidth: false,
+      child: Padding(
+        padding: const EdgeInsets.only(top: 8, right: 8, left: 8, bottom: 8),
+        child: Row(
+          children: [
+            Flexible(
+              flex: 2,
+              child: SizedBox(
+                width: 300,
+                child: UnderlinePropTextField(
+                  prop: search,
+                  options: const PropTFOptions(
+                    hintText: "Search",
+                    useIntrinsicWidth: false,
+                  ),
                 ),
               ),
             ),
-          ),
-          BoolPropIconButton(
-            prop: isRegex,
-            icon: Icons.auto_awesome,
-            tooltip: "Regex"
-          ),
-          const SizedBox(width: 8),
-        ],
+            BoolPropIconButton(
+              prop: isRegex,
+              icon: Icons.auto_awesome,
+              tooltip: "Regex"
+            ),
+            const SizedBox(width: 8),
+            const Flexible(fit: FlexFit.tight, flex: 3, child: Text("")),
+            if (eventPages.length > 1) ...[
+              TextButton.icon(
+                style: ButtonStyle(
+                  padding: MaterialStateProperty.all(EdgeInsets.zero),
+                ),
+                onPressed: currentPage > 0 ? () => _setPage(currentPage - 1) : null,
+                icon: const Icon(Icons.arrow_left, size: 20,),
+                label: const Text(""),
+              ),
+              for (var i = 0; i < eventPages.length; i++)
+                TextButton(
+                  style: ButtonStyle(
+                    padding: MaterialStateProperty.all(EdgeInsets.zero),
+                    foregroundColor: MaterialStateProperty.resolveWith((states) =>
+                      states.contains(MaterialState.disabled)
+                        ? Theme.of(context).colorScheme.primary
+                        : getTheme(context).textColor
+                    ),
+                  ),
+                  onPressed: currentPage != i ? () => _setPage(i) : null,
+                  child: Text("${i + 1}"),
+                ),
+              TextButton.icon(
+                style: ButtonStyle(
+                  padding: MaterialStateProperty.all(EdgeInsets.zero),
+                ),
+                onPressed: currentPage < eventPages.length - 1 ? () => _setPage(currentPage + 1) : null,
+                icon: const Icon(Icons.arrow_right, size: 20,),
+                label: const Text(""),
+              ),
+            ].map((w) => ConstrainedBox(
+              constraints: BoxConstraints.tight(const Size(30, 40)),
+              child: w,
+            )).toList(),
+          ],
+        ),
       ),
     );
+  }
+
+  void _setPage(int page) {
+    currentPage = page;
+    scrollController.jumpTo(0);
+    setState(() {});
   }
 }
 
