@@ -13,6 +13,7 @@ import 'textFieldAutocomplete.dart';
 import 'transparentPropTextField.dart';
 
 class PropTFOptions {
+  final Key? key;
   final BoxConstraints constraints;
   final bool isMultiline;
   final bool useIntrinsicWidth;
@@ -20,6 +21,7 @@ class PropTFOptions {
   final FutureOr<Iterable<AutocompleteConfig>> Function()? autocompleteOptions;
 
   const PropTFOptions({
+    this.key,
     this.constraints = const BoxConstraints(minWidth: 50),
     this.isMultiline = false,
     this.useIntrinsicWidth = true,
@@ -61,7 +63,7 @@ abstract class PropTextField<P extends Prop> extends ChangeNotifierWidget {
   }) {
     if (T == DoubleClickablePropTextField)
       return DoubleClickablePropTextField(
-        key: key,
+        key: key ?? options.key,
         prop: prop,
         left: left,
         options: options,
@@ -72,7 +74,7 @@ abstract class PropTextField<P extends Prop> extends ChangeNotifierWidget {
       );
     if (T == UnderlinePropTextField)
       return UnderlinePropTextField(
-        key: key,
+        key: key ?? options.key,
         prop: prop,
         left: left,
         options: options,
@@ -83,7 +85,7 @@ abstract class PropTextField<P extends Prop> extends ChangeNotifierWidget {
       );
     if (T == TransparentPropTextField)
       return TransparentPropTextField(
-        key: key,
+        key: key ?? options.key,
         prop: prop,
         left: left,
         options: options,
@@ -95,7 +97,7 @@ abstract class PropTextField<P extends Prop> extends ChangeNotifierWidget {
     // else if (T == PrimaryPropTextField)
     else {
       return PrimaryPropTextField(
-        key: key,
+        key: key ?? options.key,
         prop: prop,
         left: left,
         options: options,

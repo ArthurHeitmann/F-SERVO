@@ -13,19 +13,42 @@ import '../simpleProps/XmlPropEditor.dart';
 import '../simpleProps/propEditorFactory.dart';
 import '../simpleProps/propTextField.dart';
 import '../simpleProps/textFieldAutocomplete.dart';
+import '../simpleProps/transparentPropTextField.dart';
 
-class ParamsEditor extends StatelessWidget {
+class ParamsEditor extends StatefulWidget {
   final bool showDetails;
   final XmlProp prop;
 
   const ParamsEditor({super.key, required this.prop, required this.showDetails});
 
-  StringProp get nameProp => prop[0].value as StringProp;
-  HexProp get codeProp => prop[1].value as HexProp;
-  Prop get bodyProp => prop[2].value;
+  @override
+  State<ParamsEditor> createState() => _ParamsEditorState();
+}
+
+class _ParamsEditorState extends State<ParamsEditor> {
+  String prevName = "";
+
+  StringProp get nameProp => widget.prop[0].value as StringProp;
+  HexProp get codeProp => widget.prop[1].value as HexProp;
+  Prop get bodyProp => widget.prop[2].value;
+
+  @override
+  void initState() {
+    prevName = nameProp.value;
+    nameProp.addListener(_onNameChange);
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    nameProp.removeListener(_onNameChange);
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    var paramPreset = paramPresetsMap[nameProp.value];
+    var presetBody = paramPreset?.body;
     return Padding(
       padding: const EdgeInsets.all(4.0),
       child: Container(
@@ -40,13 +63,16 @@ class ParamsEditor extends StatelessWidget {
             direction: Axis.horizontal,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              makePropEditor(nameProp, nameAutocompleteOptions),
-              if (showDetails || codeProp.strVal == "type")
-                makePropEditor(codeProp, codeAutocompleteOptions),
-              if (prop[2].isEmpty)
-                makePropEditor(bodyProp)
+              makePropEditor<TransparentPropTextField>(nameProp, nameAutocompleteOptions),
+              if (widget.showDetails || codeProp.strVal == "type")
+                makePropEditor<TransparentPropTextField>(codeProp, codeAutocompleteOptions),
+              if (widget.prop[2].isEmpty)
+                makePropEditor<TransparentPropTextField>(bodyProp, PropTFOptions(
+                  key: Key(nameProp.value),
+                  autocompleteOptions: presetBody != null ? () => presetBody() : null,
+                ))
               else
-                XmlPropEditor(prop: prop[2], showDetails: false, showTagName: false,),
+                XmlPropEditor(prop: widget.prop[2], showDetails: false, showTagName: false,),
               ChangeNotifierBuilder(
                 notifier: nameProp,
                 builder: (context) {
@@ -68,6 +94,13 @@ class ParamsEditor extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _onNameChange() {
+    if (nameProp.value != prevName) {
+      prevName = nameProp.value;
+      setState(() {});
+    }
   }
 
   void _onNameTagPressed() async {
