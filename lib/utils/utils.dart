@@ -236,6 +236,7 @@ Future<void> waitForNextFrame() {
 }
 
 void showToast(String msg, [Duration duration = const Duration(seconds: 4)]) {
+  print("showToast: $msg");
   FToast toast = FToast();
   var context = getGlobalContext();
   toast.init(context);

@@ -50,3 +50,4 @@ app.*.map.json
 assets/bins
 assets/mcdFonts
 assets/entityThumbnails
+log.txt

@@ -25,4 +25,5 @@ class IsLoadingStatus extends ChangeNotifier {
 
 final isLoadingStatus = IsLoadingStatus();
 
-final messageLog = ValueNestedNotifier<String>([]);
+final ValueNestedNotifier<String> messageLog = ValueNestedNotifier<String>([])
+  ..addListener(() => print("messageLog: ${messageLog.last}"));

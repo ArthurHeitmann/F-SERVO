@@ -1,4 +1,6 @@
 
+import 'dart:async';
+
 import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -7,6 +9,7 @@ import 'package:window_manager/window_manager.dart';
 
 import 'background/IdLookup.dart';
 import 'stateManagement/ChangeNotifierWidget.dart';
+import 'utils/loggingWrapper.dart';
 import 'utils/utils.dart';
 import 'utils/assetDirFinder.dart';
 import 'widgets/theme/customTheme.dart';
@@ -18,7 +21,11 @@ import 'widgets/misc/mousePosition.dart';
 import 'widgets/statusbar/statusbar.dart';
 import 'widgets/titlebar/Titlebar.dart';
 
-void main() async {
+void main() {
+  loggingWrapper(init);
+}
+
+void init() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   if (isDesktop) {

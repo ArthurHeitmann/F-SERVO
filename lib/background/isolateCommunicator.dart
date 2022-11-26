@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:isolate';
 
 import '../stateManagement/events/statusInfo.dart';
+import '../utils/loggingWrapper.dart';
 import '../utils/utils.dart';
 import 'IdsIndexer.dart';
 import 'Initializable.dart';
@@ -66,7 +67,7 @@ class _IsolateCommunicatorPrivate {
   }
 
   static entryPoint(SendPort sendPort) {
-    _IsolateCommunicatorPrivate(sendPort);
+    loggingWrapper(() => _IsolateCommunicatorPrivate(sendPort));
   }
 
   void handleMessage(dynamic message) {
