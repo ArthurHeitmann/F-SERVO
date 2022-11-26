@@ -43,8 +43,8 @@ class TextFieldAutocomplete extends StatefulWidget {
 }
 
 class _TextFieldAutocompleteState extends State<TextFieldAutocomplete> {
+  final layerLink = LayerLink();
   Iterable<AutocompleteConfig>? options;
-  // bool isVisible = false;
   OverlayEntry? overlayEntry;
 
   @override
@@ -59,6 +59,8 @@ class _TextFieldAutocompleteState extends State<TextFieldAutocomplete> {
   @override
   void dispose() {
     widget.focusNode.removeListener(_onFocusChange);
+    if (overlayEntry != null)
+      _hideOverlay();
     super.dispose();
   }
 
@@ -79,6 +81,7 @@ class _TextFieldAutocompleteState extends State<TextFieldAutocomplete> {
     var offset = renderBox.localToGlobal(Offset.zero);
     overlayEntry = OverlayEntry(
       builder: (context) => _AutocompleteOverlay(
+        layerLink: layerLink,
         options: options!,
         textController: widget.textController,
         focusNode: widget.focusNode,
@@ -111,12 +114,16 @@ class _TextFieldAutocompleteState extends State<TextFieldAutocomplete> {
         }
         return KeyEventResult.ignored;
       },
-      child: widget.child
+      child: CompositedTransformTarget(
+        link: layerLink,
+        child: widget.child
+      )
     );
   }
 }
 
 class _AutocompleteOverlay extends StatefulWidget {
+  final LayerLink layerLink;
   final Iterable<AutocompleteConfig> options;
   final TextEditingController textController;
   final FocusNode focusNode;
@@ -127,6 +134,7 @@ class _AutocompleteOverlay extends StatefulWidget {
 
   const _AutocompleteOverlay({
     super.key,
+    required this.layerLink,
     required this.options,
     required this.textController,
     required this.focusNode,
@@ -182,7 +190,9 @@ class __AutocompleteOverlayState extends State<_AutocompleteOverlay> with ArrowN
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        _positionedScreenAdjusted(
+        CompositedTransformFollower(
+          link: widget.layerLink,
+          offset: Offset(0, widget.size.height),
           child: setupShortcuts(
             child: ConstrainedBox(
               constraints: const BoxConstraints(
@@ -219,25 +229,6 @@ class __AutocompleteOverlayState extends State<_AutocompleteOverlay> with ArrowN
           ),
         ),
       ],
-    );
-  }
-
-  Widget _positionedScreenAdjusted({required Widget child}) {
-    // if offset is in bottom quarter of screen, show above textfield
-    var screenSize = MediaQuery.of(context).size;
-    var top = widget.offset.dy + widget.size.height;
-    if (top > screenSize.height * 0.75) {
-      return Positioned(
-        bottom: screenSize.height - widget.offset.dy,
-        left: widget.offset.dx,
-        child: child,
-      );
-    }
-    // else show below
-    return Positioned(
-      top: top,
-      left: widget.offset.dx,
-      child: child,
     );
   }
   

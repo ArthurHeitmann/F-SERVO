@@ -43,7 +43,7 @@ class _XmlActionsEditorState extends XmlArrayEditorState<XmlActionsEditor> {
             child: XmlJumpToLineEventWrapper(
               file: widget.root.file!,
               child: Padding(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.only(top: 20, right: 20, bottom: 100, left: 20),
                 child: ColumnReorderable(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   onReorder: (int oldIndex, int newIndex) {

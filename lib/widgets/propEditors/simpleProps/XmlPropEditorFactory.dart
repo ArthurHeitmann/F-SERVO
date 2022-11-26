@@ -286,7 +286,11 @@ class XmlPresets {
   );
   static XmlRawPreset codeAndId = XmlRawPreset(
     "Child",
-    <T extends PropTextField>(prop, showDetails) => PuidReferenceEditor(prop: prop, showDetails: showDetails, initiallyShowLookup: false,),
+    <T extends PropTextField>(prop, showDetails) => PuidReferenceEditor(
+      prop: prop,
+      showDetails: showDetails,
+      initiallyShowLookup: (prop.get("code") as HexProp).value != 0x0,
+    ),
     (cxt) => XmlProp.fromXml(
       makeXmlElement(name: "value", children: [
           makeXmlElement(name: "code", text: "0x0"),
