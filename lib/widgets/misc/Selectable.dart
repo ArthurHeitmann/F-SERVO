@@ -116,6 +116,11 @@ class _SelectableWidgetState<T> extends ChangeNotifierState<SelectableWidget> {
   
   @override
   Widget build(BuildContext context) {
+    Color borderColor;
+    if (selectable.isSelected(widget.prop.uuid))
+      borderColor = widget.color ?? getTheme(context).selectedColor!;
+    else
+      borderColor = Colors.transparent;
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -128,9 +133,7 @@ class _SelectableWidgetState<T> extends ChangeNotifierState<SelectableWidget> {
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 125),
               decoration: BoxDecoration(
-                border: selectable.isSelected(widget.prop.uuid)
-                  ? Border.all(color: widget.color ?? getTheme(context).selectedColor!, width: 2)
-                  : Border.all(color: Colors.transparent, width: 2),
+                border: Border.all(color: borderColor, width: 2),
                 borderRadius: widget.borderRadius ?? BorderRadius.circular(14),
               ),
             ),

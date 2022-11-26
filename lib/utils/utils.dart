@@ -22,6 +22,7 @@ import '../main.dart';
 import '../stateManagement/Property.dart';
 import '../stateManagement/miscValues.dart';
 import '../stateManagement/xmlProps/xmlProp.dart';
+import '../widgets/theme/customTheme.dart';
 
 const uuidGen = Uuid();
 
@@ -236,15 +237,16 @@ Future<void> waitForNextFrame() {
 
 void showToast(String msg, [Duration duration = const Duration(seconds: 4)]) {
   FToast toast = FToast();
-  toast.init(getGlobalContext());
+  var context = getGlobalContext();
+  toast.init(context);
   toast.showToast(
     toastDuration: duration,
     child: Container(
       decoration: BoxDecoration(
-        color: Colors.grey.shade700,
+        color: getTheme(context).contextMenuBgColor,
         borderRadius: const BorderRadius.all(Radius.circular(10))
       ),
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: Text(
         msg,
         style: const TextStyle(

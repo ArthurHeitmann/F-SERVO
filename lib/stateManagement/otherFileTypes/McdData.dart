@@ -369,11 +369,7 @@ class McdEvent extends _McdFilePart {
   }
 
   int calcNameHash() {
-    var baseHash = crc32(name.value.toLowerCase());
-    var newHash = baseHash & 0x7FFFFFFF;
-    if (baseHash != newHash)
-     print("0x${baseHash.toRadixString(16)} -> 0x${newHash.toRadixString(16)} ($name)");  // TODO: remove
-    return newHash;
+    return crc32(name.value.toLowerCase()) & 0x7FFFFFFF;
   }
 
   @override
