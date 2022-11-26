@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../../../utils/labelsPresets.dart';
 import '../../../widgets/theme/customTheme.dart';
 import '../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
@@ -10,6 +11,9 @@ import '../../misc/Selectable.dart';
 import '../../misc/nestedContextMenu.dart';
 import '../simpleProps/XmlPropEditorFactory.dart';
 import '../simpleProps/propEditorFactory.dart';
+import '../simpleProps/propTextField.dart';
+import '../simpleProps/textFieldAutocomplete.dart';
+import '../simpleProps/transparentPropTextField.dart';
 import 'puidReferenceEditor.dart';
 
 class ConditionEditor extends ChangeNotifierWidget {
@@ -76,21 +80,24 @@ class _ConditionEditorState extends ChangeNotifierState<ConditionEditor> {
                       PuidReferenceEditor(prop: widget.prop.get("puid")!, showDetails: widget.showDetails),
                       Divider(color: getTheme(context).textColor!.withOpacity(0.5), thickness: 2,),
                       if (label != null)
-                        makePropEditor(label),
+                        makePropEditor<TransparentPropTextField>(label, PropTFOptions(
+                          autocompleteOptions: () => conditionLabels
+                            .map((l) => AutocompleteConfig(l))
+                        )),
                       if (value != null)
                         Padding(
                           padding: const EdgeInsets.only(left: 8.0),
-                          child: makeXmlPropEditor(value, widget.showDetails),
+                          child: makeXmlPropEditor<TransparentPropTextField>(value, widget.showDetails),
                         ),
                       if (args != null)
                         Padding(
                           padding: const EdgeInsets.only(left: 8.0),
-                          child: makeXmlPropEditor(args, widget.showDetails),
+                          child: makeXmlPropEditor<TransparentPropTextField>(args, widget.showDetails),
                         ),
                       if (type != null && widget.showDetails)
                         Padding(
                           padding: const EdgeInsets.only(left: 8.0),
-                          child: makeXmlPropEditor(type, widget.showDetails),
+                          child: makeXmlPropEditor<TransparentPropTextField>(type, widget.showDetails),
                         ),
                     ],
                   ),

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../widgets/theme/customTheme.dart';
 import '../../../stateManagement/ChangeNotifierWidget.dart';
 import 'propTextField.dart';
+import 'textFieldAutocomplete.dart';
 
 class DoubleClickablePropTextField extends PropTextField {
   DoubleClickablePropTextField({
@@ -23,7 +24,6 @@ class DoubleClickablePropTextField extends PropTextField {
 
 class _DoubleClickablePropTextFieldState extends PropTextFieldState {
   bool showInput = false;
-  final FocusNode focusNode = FocusNode();
 
   @override
   void initState() {
@@ -64,16 +64,22 @@ class _DoubleClickablePropTextFieldState extends PropTextFieldState {
                   decoration: BoxDecoration(
                     border: Border(bottom: BorderSide(color: Colors.white.withOpacity(0.5), width: 2)),
                   ),
-                  child: TextField(
-                    controller: controller,
-                    onChanged: onTextChange,
-                    style: getTheme(context).propInputTextStyle,
+                  child: TextFieldAutocomplete(
                     focusNode: focusNode,
-                    scrollController: ScrollController(keepScrollOffset: false),
-                    maxLines: widget.options.isMultiline ? null : 1,
-                    keyboardType: widget.options.isMultiline ? TextInputType.multiline : null,
-                    decoration: InputDecoration(
-                      hintText: widget.options.hintText,
+                    textController: controller,
+                    prop: widget.prop,
+                    getOptions: widget.options.autocompleteOptions,
+                    child: TextField(
+                      controller: controller,
+                      focusNode: focusNode,
+                      onChanged: onTextChange,
+                      style: getTheme(context).propInputTextStyle,
+                      scrollController: ScrollController(keepScrollOffset: false),
+                      maxLines: widget.options.isMultiline ? null : 1,
+                      keyboardType: widget.options.isMultiline ? TextInputType.multiline : null,
+                      decoration: InputDecoration(
+                        hintText: widget.options.hintText,
+                      ),
                     ),
                   ),
                 )

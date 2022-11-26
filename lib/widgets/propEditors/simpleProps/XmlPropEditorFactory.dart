@@ -9,6 +9,7 @@ import '../../../main.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/openFilesManager.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
+import '../../../utils/paramPresets.dart';
 import '../../../utils/utils.dart';
 import '../../misc/CustomIcons.dart';
 import '../../misc/selectionPopup.dart';
@@ -200,95 +201,25 @@ class XmlPresets {
           file: cxt.file,
           parentTags: cxt.parentTags,
         )),
-        SelectionPopupConfig(name: "Level (Lv)", getValue: () => XmlProp.fromXml(
+        ...paramPresets.map((p) => SelectionPopupConfig(name: p.name, getValue: () => XmlProp.fromXml(
           makeXmlElement(
             name: "value",
             children: [
-              makeXmlElement(name: "name", text: "Lv"),
-              makeXmlElement(name: "code", text: "0x${crc32("int").toRadixString(16)}"),
-              makeXmlElement(name: "body", text: "20"),
+              makeXmlElement(name: "name", text: p.name),
+              makeXmlElement(name: "code", text: "0x${crc32(p.code).toRadixString(16)}"),
+              p.defaultValue != "[PUID]"
+                ? makeXmlElement(name: "body", text: p.defaultValue)
+                : makeXmlElement(name: "body", children: [
+                    makeXmlElement(name: "id", children: [
+                      makeXmlElement(name: "code", text: "0x0"),
+                      makeXmlElement(name: "id", text: "0x0"),
+                    ]),
+                  ]),
             ]
           ),
           file: cxt.file,
           parentTags: cxt.parentTags,
-        )),
-        SelectionPopupConfig(name: "Level Route B (Lv_B)", getValue: () => XmlProp.fromXml(
-          makeXmlElement(
-            name: "value",
-            children: [
-              makeXmlElement(name: "name", text: "Lv_B"),
-              makeXmlElement(name: "code", text: "0x${crc32("int").toRadixString(16)}"),
-              makeXmlElement(name: "body", text: "30"),
-            ]
-          ),
-          file: cxt.file,
-          parentTags: cxt.parentTags,
-        )),
-        SelectionPopupConfig(name: "Level Route C (Lv_C)", getValue: () => XmlProp.fromXml(
-          makeXmlElement(
-            name: "value",
-            children: [
-              makeXmlElement(name: "name", text: "Lv_C"),
-              makeXmlElement(name: "code", text: "0x${crc32("int").toRadixString(16)}"),
-              makeXmlElement(name: "body", text: "40"),
-            ]
-          ),
-          file: cxt.file,
-          parentTags: cxt.parentTags,
-        )),
-        SelectionPopupConfig(name: "NameTag", getValue: () => XmlProp.fromXml(
-          makeXmlElement(
-            name: "value",
-            children: [
-              makeXmlElement(name: "name", text: "NameTag"),
-              makeXmlElement(name: "code", text: "0x${crc32("sys::String").toRadixString(16)}"),
-              makeXmlElement(name: "body", text: "name"),
-            ]
-          ),
-          file: cxt.file,
-          parentTags: cxt.parentTags,
-        )),
-        SelectionPopupConfig(name: "With PUID", getValue: () => XmlProp.fromXml(
-          makeXmlElement(
-            name: "value",
-            children: [
-              makeXmlElement(name: "name", text: "puid"),
-              makeXmlElement(name: "code", text: "0x${crc32("app::RoutePuid").toRadixString(16)}"),
-              makeXmlElement(name: "body", children: [
-                makeXmlElement(name: "id", children: [
-                  makeXmlElement(name: "code", text: "0x0"),
-                  makeXmlElement(name: "id", text: "0x0"),
-                ]),
-              ]),
-            ]
-          ),
-          file: cxt.file,
-          parentTags: cxt.parentTags,
-        )),
-        SelectionPopupConfig(name: "ItemTable", getValue: () => XmlProp.fromXml(
-          makeXmlElement(
-            name: "value",
-            children: [
-              makeXmlElement(name: "name", text: "ItemTable"),
-              makeXmlElement(name: "code", text: "0x${crc32("unsigned int").toRadixString(16)}"),
-              makeXmlElement(name: "body", text: "0x0"),
-            ]
-          ),
-          file: cxt.file,
-          parentTags: cxt.parentTags,
-        )),
-        SelectionPopupConfig(name: "codeName", getValue: () => XmlProp.fromXml(
-          makeXmlElement(
-            name: "value",
-            children: [
-              makeXmlElement(name: "name", text: "codeName"),
-              makeXmlElement(name: "code", text: "0x${crc32("sys::String").toRadixString(16)}"),
-              makeXmlElement(name: "body", text: "ft_XX"),
-            ]
-          ),
-          file: cxt.file,
-          parentTags: cxt.parentTags,
-        )),
+        ))),
     ]));
   static XmlRawPreset condition = XmlRawPreset(
     "Condition",

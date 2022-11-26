@@ -39,3 +39,12 @@ const paramPresets = [
   ParamPreset("frame", "int", "5"),
   ParamPreset("radius", "float", "10"),
 ];
+
+const paramCodes = [
+  "sys::String",
+  "int",
+  "float",
+  "bool",
+  "unsigned int",
+  "app::RoutePuid",
+];

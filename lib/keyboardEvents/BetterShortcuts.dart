@@ -9,8 +9,9 @@ import '../utils/utils.dart';
 class KeyCombo {
   final LogicalKeyboardKey key;
   final Set<ModifierKey> modifiers;
+  final bool allowRepeat;
 
-  const KeyCombo(this.key, this.modifiers);
+  const KeyCombo(this.key, [this.modifiers = const <ModifierKey>{}, this.allowRepeat = false]);
 
   @override
   String toString() {
@@ -46,7 +47,7 @@ class _BetterShortcutsState extends State<BetterShortcuts> {
   }
 
   bool onKey(KeyEvent event) {
-    if (event is! KeyDownEvent)
+    if (event is! KeyDownEvent && event is! KeyRepeatEvent)
       return false;
 
     var pressedModifiers = {
@@ -58,10 +59,10 @@ class _BetterShortcutsState extends State<BetterShortcuts> {
         ModifierKey.altModifier,
       if (isMetaPressed())
         ModifierKey.metaModifier,
-        
     };
+
     for (var shortcut in widget.shortcuts.entries) {
-      if (_matches(shortcut.key, pressedModifiers)) {
+      if (_matches(shortcut.key, pressedModifiers) && (shortcut.key.allowRepeat || event is! KeyRepeatEvent)) {
         final action = widget.actions[shortcut.value.runtimeType];
         if (action != null) {
           // ignore: invalid_use_of_protected_member

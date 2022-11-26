@@ -1,4 +1,6 @@
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../../stateManagement/ChangeNotifierWidget.dart';
@@ -7,6 +9,7 @@ import '../../../utils/utils.dart';
 import 'DoubleClickablePropTextField.dart';
 import 'UnderlinePropTextField.dart';
 import 'primaryPropTextField.dart';
+import 'textFieldAutocomplete.dart';
 import 'transparentPropTextField.dart';
 
 class PropTFOptions {
@@ -14,12 +17,14 @@ class PropTFOptions {
   final bool isMultiline;
   final bool useIntrinsicWidth;
   final String? hintText;
+  final FutureOr<Iterable<AutocompleteConfig>> Function()? autocompleteOptions;
 
   const PropTFOptions({
     this.constraints = const BoxConstraints(minWidth: 50),
     this.isMultiline = false,
     this.useIntrinsicWidth = true,
     this.hintText,
+    this.autocompleteOptions,
   });
 }
 
@@ -105,6 +110,7 @@ abstract class PropTextField<P extends Prop> extends ChangeNotifierWidget {
 
 abstract class PropTextFieldState<P extends Prop> extends ChangeNotifierState<PropTextField<P>> {
   late final TextEditingController controller;
+  final FocusNode focusNode = FocusNode();
   String? errorMsg;
 
   String _getDisplayText() => widget.prop.toString();

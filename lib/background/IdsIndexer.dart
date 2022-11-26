@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:convert/convert.dart';
 import 'package:path/path.dart';
 import 'package:xml/xml.dart';
 
@@ -446,7 +447,7 @@ class IdsIndexer {
       _indexSceneState(root);
       return;
     }
-    if (rootName?.text == "CharName" && root.getElement("text") == null) {
+    if (rootName?.text == "CharName" && root.getElement("text") != null) {
       _indexCharNames(root);
       return;
     }
@@ -516,6 +517,40 @@ class IdsIndexer {
   }
 
   void _indexCharNames(XmlElement root) {
-    // TODO char names index
+    // convert prop rows of hex to single string
+    var hexStr = root.getElement("text")!.findElements("value")
+      .map((t) => t.text)
+      .join();
+    var bytes = hex.decode(hexStr);
+    var text = decodeString(bytes, StringEncoding.utf8);
+
+    // parse lines into translations
+    var lines = text.split("\n");
+    lines = lines.sublist(1, lines.length - 1);
+    String currentKey = "";
+    List<MapEntry<String, String>> currentTranslations = [];
+    for (var line in lines) {
+      if (line.startsWith("  ")) {
+        line = line.substring(2);
+        var spaceIndex = line.indexOf(" ");
+        var key = line.substring(0, spaceIndex);
+        var val = line.substring(spaceIndex + 1);
+        currentTranslations.add(MapEntry(key, val));
+      }
+      else {
+        if (currentKey != "") {
+          indexedCharNames[currentKey] = IndexedCharNameData(
+            currentKey,
+            Map.fromEntries(currentTranslations),
+          );
+        }
+        currentKey = line.substring(1);
+        currentTranslations = [];
+      }
+    }
+    indexedCharNames[currentKey] = IndexedCharNameData(
+      currentKey,
+      Map.fromEntries(currentTranslations),
+    );
   }
 }

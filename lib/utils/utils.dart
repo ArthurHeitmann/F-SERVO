@@ -137,7 +137,40 @@ Future<void> scrollIntoView(BuildContext context, {
   if (target == position.pixels)
     return;
 
-  await position.animateTo(target, duration: duration, curve: curve);
+  if (duration == Duration.zero)
+    position.jumpTo(target);
+  else
+    await position.animateTo(target, duration: duration, curve: curve);
+}
+
+void scrollIntoViewOptionally(BuildContext context, {
+  double viewOffset = 0,
+  Duration duration = const Duration(milliseconds: 300),
+  Curve curve = Curves.easeInOut,
+  bool smallStep = true,
+}) {
+  var scrollState = Scrollable.of(context);
+  if (scrollState == null)
+    return;
+  var scrollViewStart = 0;
+  var scrollEnd = scrollViewStart + scrollState.position.viewportDimension;
+  var renderObject = context.findRenderObject() as RenderBox;
+  var renderObjectStart = renderObject.localToGlobal(Offset.zero, ancestor: scrollState.context.findRenderObject()).dy;
+  var renderObjectEnd = renderObjectStart + renderObject.size.height;
+  ScrollPositionAlignmentPolicy? alignment;
+  if (renderObjectStart < scrollViewStart) {
+    if (smallStep)
+      alignment = ScrollPositionAlignmentPolicy.keepVisibleAtStart;
+    else
+      alignment = ScrollPositionAlignmentPolicy.keepVisibleAtEnd;
+  } else if (renderObjectEnd > scrollEnd) {
+    if (smallStep)
+      alignment = ScrollPositionAlignmentPolicy.keepVisibleAtEnd;
+    else
+      alignment = ScrollPositionAlignmentPolicy.keepVisibleAtStart;
+  }
+  if (alignment != null)
+    scrollIntoView(context, viewOffset: viewOffset, duration: duration, curve: curve, alignment: alignment);
 }
 
 bool isShiftPressed() {

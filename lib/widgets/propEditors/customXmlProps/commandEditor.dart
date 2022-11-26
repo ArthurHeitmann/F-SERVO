@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../../../utils/labelsPresets.dart';
 import '../../../widgets/theme/customTheme.dart';
 import '../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
@@ -11,6 +12,9 @@ import '../../misc/Selectable.dart';
 import '../../misc/nestedContextMenu.dart';
 import '../simpleProps/XmlPropEditorFactory.dart';
 import '../simpleProps/propEditorFactory.dart';
+import '../simpleProps/propTextField.dart';
+import '../simpleProps/textFieldAutocomplete.dart';
+import '../simpleProps/transparentPropTextField.dart';
 import 'puidReferenceEditor.dart';
 
 class CommandEditor extends ChangeNotifierWidget {
@@ -94,7 +98,7 @@ class CommandEditorState extends ChangeNotifierState<CommandEditor> {
                       if (args != null)
                         Padding(
                           padding: const EdgeInsets.only(left: 8.0),
-                          child: makeXmlPropEditor(args, widget.showDetails),
+                          child: makeXmlPropEditor<TransparentPropTextField>(args, widget.showDetails),
                         ),
                     ],
                   ),
@@ -118,45 +122,48 @@ class CommandEditorState extends ChangeNotifierState<CommandEditor> {
         var value = command.get("value");
         var args = commParent.get("args");
         return NestedContextMenu(
-        buttons: [
-          if (label == null)
+          buttons: [
+            if (label == null)
+              optionalValPropButtonConfig(
+                command, "label", () => 0,
+                () => StringProp("commandLabel")
+              ),
             optionalValPropButtonConfig(
-              command, "label", () => 0,
-              () => StringProp("commandLabel")
+              command, "value", () => command.length,
+              () => NumberProp(1, true)
             ),
-          optionalValPropButtonConfig(
-            command, "value", () => command.length,
-            () => NumberProp(1, true)
+            optionalValPropButtonConfig(
+              commParent, "args", () => commParent.length,
+              () => StringProp("arg")
+            ),
+          ],
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Divider(color: getTheme(context).textColor!.withOpacity(0.5), thickness: 2,),
+              if (commLabel != null)
+                Center(
+                  child: Text(commLabel, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),)
+                ),
+              if (label != null)
+                makePropEditor<TransparentPropTextField>(label, PropTFOptions(
+                  autocompleteOptions: () => commandLabels
+                    .map((l) => AutocompleteConfig(l))
+                )),
+              if (value != null)
+                Padding(
+                  padding: const EdgeInsets.only(left: 8.0),
+                  child: makeXmlPropEditor<TransparentPropTextField>(value, widget.showDetails),
+                ),
+              if (args != null)
+                Padding(
+                  padding: const EdgeInsets.only(left: 8.0),
+                  child: makeXmlPropEditor<TransparentPropTextField>(args, widget.showDetails),
+                ),
+            ]
           ),
-          optionalValPropButtonConfig(
-            commParent, "args", () => commParent.length,
-            () => StringProp("arg")
-          ),
-        ],
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Divider(color: getTheme(context).textColor!.withOpacity(0.5), thickness: 2,),
-            if (commLabel != null)
-              Center(
-                child: Text(commLabel, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),)
-              ),
-            if (label != null)
-              makePropEditor(label),
-            if (value != null)
-              Padding(
-                padding: const EdgeInsets.only(left: 8.0),
-                child: makeXmlPropEditor(value, widget.showDetails),
-              ),
-            if (args != null)
-              Padding(
-                padding: const EdgeInsets.only(left: 8.0),
-                child: makeXmlPropEditor(args, widget.showDetails),
-              ),
-          ]
-        ),
-      );
+        );
       },
     );
   }

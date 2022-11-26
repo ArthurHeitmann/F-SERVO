@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../widgets/theme/customTheme.dart';
 import '../../../stateManagement/ChangeNotifierWidget.dart';
 import 'propTextField.dart';
+import 'textFieldAutocomplete.dart';
 
 class PrimaryPropTextField extends PropTextField {
   PrimaryPropTextField({
@@ -42,15 +43,22 @@ class _PrimaryPropTextFieldState extends PropTextFieldState {
                   if (widget.left == null)
                     const SizedBox(width: 8),
                   Flexible(
-                    child: TextField(
-                      controller: controller,
-                      onChanged: onTextChange,
-                      style: getTheme(context).propInputTextStyle,
-                      scrollController: ScrollController(keepScrollOffset: false),
-                      maxLines: widget.options.isMultiline ? null : 1,
-                      keyboardType: widget.options.isMultiline ? TextInputType.multiline : null,
-                      decoration: InputDecoration(
-                        hintText: widget.options.hintText,
+                    child: TextFieldAutocomplete(
+                      focusNode: focusNode,
+                      textController: controller,
+                      prop: widget.prop,
+                      getOptions: widget.options.autocompleteOptions,
+                      child: TextField(
+                        controller: controller,
+                        focusNode: focusNode,
+                        onChanged: onTextChange,
+                        style: getTheme(context).propInputTextStyle,
+                        scrollController: ScrollController(keepScrollOffset: false),
+                        maxLines: widget.options.isMultiline ? null : 1,
+                        keyboardType: widget.options.isMultiline ? TextInputType.multiline : null,
+                        decoration: InputDecoration(
+                          hintText: widget.options.hintText,
+                        ),
                       ),
                     ),
                   ),
