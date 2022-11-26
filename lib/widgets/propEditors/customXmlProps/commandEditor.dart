@@ -78,29 +78,29 @@ class CommandEditorState extends ChangeNotifierState<CommandEditor> {
                     optionalPropButtonConfig(widget.prop, "hitout", () => widget.prop.length,
                       () => _makeAreaCommandPropChildren(widget.prop, "hitout")),
                 ],
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: getTheme(context).formElementBgColor,
-                    borderRadius: BorderRadius.circular(5),
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      PuidReferenceEditor(prop: widget.prop.get("puid")!, showDetails: widget.showDetails),
-                      if (command != null)
-                        makeCommandEditor(command, isAreaCommand ? "hit" : null)
-                      else if (!isAreaCommand)
-                        const Text("No command"),
-                      if (hitoutCommand != null)
-                        makeCommandEditor(hitoutCommand, "hitout"),
-                      if (args != null)
-                        Padding(
-                          padding: const EdgeInsets.only(left: 8.0),
-                          child: makeXmlPropEditor<TransparentPropTextField>(args, widget.showDetails),
-                        ),
-                    ],
+                child: Material(
+                  color: getTheme(context).formElementBgColor,
+                  borderRadius: BorderRadius.circular(5),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        PuidReferenceEditor(prop: widget.prop.get("puid")!, showDetails: widget.showDetails),
+                        if (command != null)
+                          makeCommandEditor(command, isAreaCommand ? "hit" : null)
+                        else if (!isAreaCommand)
+                          const Text("No command"),
+                        if (hitoutCommand != null)
+                          makeCommandEditor(hitoutCommand, "hitout"),
+                        if (args != null)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8.0),
+                            child: makeXmlPropEditor<TransparentPropTextField>(args, widget.showDetails),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
               ),

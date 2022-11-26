@@ -10,6 +10,7 @@ import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/openFilesManager.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
 import '../../../utils/paramPresets.dart';
+import '../../../utils/puidPresets.dart';
 import '../../../utils/utils.dart';
 import '../../misc/CustomIcons.dart';
 import '../../misc/selectionPopup.dart';
@@ -285,7 +286,7 @@ class XmlPresets {
   );
   static XmlRawPreset codeAndId = XmlRawPreset(
     "Child",
-    <T extends PropTextField>(prop, showDetails) => XmlPropEditor<T>(prop: prop, showDetails: showDetails),
+    <T extends PropTextField>(prop, showDetails) => PuidReferenceEditor(prop: prop, showDetails: showDetails, initiallyShowLookup: false,),
     (cxt) => XmlProp.fromXml(
       makeXmlElement(name: "value", children: [
           makeXmlElement(name: "code", text: "0x0"),
@@ -374,6 +375,10 @@ XmlRawPreset getXmlPropPreset(XmlProp prop) {
     prop.length == 1 && { "min", "max" }.contains(prop[0].tagName)  
   ) {
     return XmlPresets.minMax;
+  }
+  // code and id
+  if (prop.length == 2 && prop[0].tagName == "code" && prop[1].tagName == "id") {
+    return XmlPresets.codeAndId;
   }
   // fallback
   return XmlPresets.fallback;
@@ -502,15 +507,9 @@ final _areaTypes = {
 };
 
 // puid references
-final _puidRefCodes = {
-  crc32("LayoutObj"),
-  crc32("app::EntityLayout"),
-  crc32("hap::Action"),
-  crc32("hap::GroupImpl"),
-  crc32("hap::Hap"),
-  crc32("hap::SceneEntities"),
-  crc32("hap::StateObject"),
-};
+final _puidRefCodes = puidCodes
+  .map((c) => crc32(c))
+  .toSet();
 
 const _puidRefIdTags = {
   "id",

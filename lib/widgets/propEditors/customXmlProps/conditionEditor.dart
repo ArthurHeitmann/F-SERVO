@@ -67,39 +67,39 @@ class _ConditionEditorState extends ChangeNotifierState<ConditionEditor> {
                     () => StringProp("arg")
                   ),
                 ],
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: getTheme(context).formElementBgColor,
-                    borderRadius: BorderRadius.circular(5),
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      PuidReferenceEditor(prop: widget.prop.get("puid")!, showDetails: widget.showDetails),
-                      Divider(color: getTheme(context).textColor!.withOpacity(0.5), thickness: 2,),
-                      if (label != null)
-                        makePropEditor<TransparentPropTextField>(label, PropTFOptions(
-                          autocompleteOptions: () => conditionLabels
-                            .map((l) => AutocompleteConfig(l))
-                        )),
-                      if (value != null)
-                        Padding(
-                          padding: const EdgeInsets.only(left: 8.0),
-                          child: makeXmlPropEditor<TransparentPropTextField>(value, widget.showDetails),
-                        ),
-                      if (args != null)
-                        Padding(
-                          padding: const EdgeInsets.only(left: 8.0),
-                          child: makeXmlPropEditor<TransparentPropTextField>(args, widget.showDetails),
-                        ),
-                      if (type != null && widget.showDetails)
-                        Padding(
-                          padding: const EdgeInsets.only(left: 8.0),
-                          child: makeXmlPropEditor<TransparentPropTextField>(type, widget.showDetails),
-                        ),
-                    ],
+                child: Material(
+                  color: getTheme(context).formElementBgColor,
+                  borderRadius: BorderRadius.circular(5),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        PuidReferenceEditor(prop: widget.prop.get("puid")!, showDetails: widget.showDetails),
+                        Divider(color: getTheme(context).textColor!.withOpacity(0.5), thickness: 2,),
+                        if (label != null)
+                          makePropEditor<TransparentPropTextField>(label, PropTFOptions(
+                            autocompleteOptions: () => conditionLabels
+                              .map((l) => AutocompleteConfig(l))
+                          )),
+                        if (value != null)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8.0),
+                            child: makeXmlPropEditor<TransparentPropTextField>(value, widget.showDetails),
+                          ),
+                        if (args != null)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8.0),
+                            child: makeXmlPropEditor<TransparentPropTextField>(args, widget.showDetails),
+                          ),
+                        if (type != null && widget.showDetails)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8.0),
+                            child: makeXmlPropEditor<TransparentPropTextField>(type, widget.showDetails),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
               ),

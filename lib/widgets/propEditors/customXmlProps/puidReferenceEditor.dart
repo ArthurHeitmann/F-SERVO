@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../../../background/IdLookup.dart';
 import '../../../background/IdsIndexer.dart';
 import '../../../stateManagement/events/jumpToEvents.dart';
+import '../../../utils/puidPresets.dart';
 import '../../../widgets/theme/customTheme.dart';
 import '../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
@@ -17,13 +18,16 @@ import '../../misc/nestedContextMenu.dart';
 import '../simpleProps/UnderlinePropTextField.dart';
 import '../simpleProps/XmlPropEditorFactory.dart';
 import '../simpleProps/propEditorFactory.dart';
+import '../simpleProps/propTextField.dart';
+import '../simpleProps/textFieldAutocomplete.dart';
 import 'objIdEditor.dart';
 
 class PuidReferenceEditor extends ChangeNotifierWidget {
   final bool showDetails;
   final XmlProp prop;
+  final bool initiallyShowLookup;
 
-  PuidReferenceEditor({super.key, required this.prop, required this.showDetails})
+  PuidReferenceEditor({super.key, required this.prop, required this.showDetails, this.initiallyShowLookup = true})
     : super(notifiers: [prop.get("code")!, prop.get("id") ?? prop.get("value")!]);
 
   @override
@@ -31,12 +35,13 @@ class PuidReferenceEditor extends ChangeNotifierWidget {
 }
 
 class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor> {
-  bool showLookup = true;
+  late bool showLookup;
   Future<List<IndexedIdData>>? lookupFuture;
   StringProp objIdProp = StringProp("");
 
   @override
   void initState() {
+    showLookup = widget.initiallyShowLookup;
     var id = widget.prop.get("id") ?? widget.prop.get("value")!;
     var idProp = id.value;
     if (idProp is HexProp) {
@@ -85,72 +90,21 @@ class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor>
     return Padding(
       padding: const EdgeInsets.all(4.0),
       child: interactionsWrapper(context,
-        child: Container(
-          decoration: BoxDecoration(
-            color: getTheme(context).formElementBgColor,
-            borderRadius: BorderRadius.circular(5),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.link, size: 25,),
-              const SizedBox(width: 4,),
-              showLookup && idProp is HexProp ? FutureBuilder(
-                future: lookupFuture,
-                builder: (context, AsyncSnapshot<List<IndexedIdData>> snapshot) {
-                  var lookup = snapshot.data;
-                  if (lookup == null || lookup.isEmpty)
-                    lookup = [IndexedIdData(idProp.value, codeProp.isHashed ? codeProp.strVal! : codeProp.toString(), "", "", "")];
-                  var puidRef = lookup.first;
-                  if (puidRef is IndexedEntityIdData)
-                    objIdProp.value = puidRef.objId;
-                  return Expanded(
-                    child: Column(
-                      children: [
-                        ConstrainedBox(
-                          constraints: const BoxConstraints(maxHeight: 25),
-                          child: Text(
-                            puidRef.type,
-                            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        const SizedBox(height: 4,),
-                        if (puidRef is IndexedActionIdData)
-                          Text(puidRef.actionName, overflow: TextOverflow.ellipsis,),
-                        if (puidRef is IndexedEntityIdData)
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              ObjIdIcon(key: Key(puidRef.objId), objId: objIdProp, size: 28,),
-                              Text(puidRef.objId),
-                              if (puidRef.name != null)
-                                Flexible(child: Text(" (${puidRef.name})", overflow: TextOverflow.ellipsis,)),
-                              if (puidRef.level != null)
-                                Text(" (lvl ${puidRef.level})"),
-                            ],
-                          ),
-                        if (puidRef is! IndexedActionIdData && puidRef is! IndexedEntityIdData)
-                          Text(idProp.isHashed ? idProp.strVal! : idProp.toString()),
-                      ],
-                    ),
-                  );
-                }
-              )
-              : Flexible(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    makePropEditor<UnderlinePropTextField>(code.value),
-                    if (id.value is HexProp)
-                      makePropEditor<UnderlinePropTextField>(id.value)
-                    else
-                      makeXmlPropEditor<UnderlinePropTextField>(id, widget.showDetails),
-                  ],
-                ),
-              ),
-            ],
+        child: Material(
+          color: getTheme(context).formElementBgColor,
+          borderRadius: BorderRadius.circular(5),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.link, size: 25,),
+                const SizedBox(width: 4,),
+                showLookup && idProp is HexProp
+                  ? makeLookup(codeProp, idProp)
+                  : makeEditor(code, id),
+              ],
+            ),
           ),
         ),
       ),
@@ -185,6 +139,75 @@ class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor>
       prop: widget.prop,
       borderRadius: BorderRadius.circular(5),
       child: child,
+    );
+  }
+
+  Widget makeLookup(HexProp codeProp, HexProp idProp) {
+    return FutureBuilder(
+      future: lookupFuture,
+      builder: (context, AsyncSnapshot<List<IndexedIdData>> snapshot) {
+        var lookup = snapshot.data;
+        if (lookup == null || lookup.isEmpty)
+          lookup = [IndexedIdData(idProp.value, codeProp.isHashed ? codeProp.strVal! : codeProp.toString(), "", "", "")];
+        var puidRef = lookup.first;
+        if (puidRef is IndexedEntityIdData)
+          objIdProp.value = puidRef.objId;
+        return Expanded(
+          child: Column(
+            children: [
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 25),
+                child: Text(
+                  puidRef.type,
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(height: 4,),
+              if (puidRef is IndexedActionIdData)
+                Text(puidRef.actionName, overflow: TextOverflow.ellipsis,),
+              if (puidRef is IndexedEntityIdData)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ObjIdIcon(key: Key(puidRef.objId), objId: objIdProp, size: 28,),
+                    Text(puidRef.objId),
+                    if (puidRef.name != null)
+                      Flexible(child: Text(" (${puidRef.name})", overflow: TextOverflow.ellipsis,)),
+                    if (puidRef.level != null)
+                      Text(" (lvl ${puidRef.level})"),
+                  ],
+                ),
+              if (puidRef is! IndexedActionIdData && puidRef is! IndexedEntityIdData)
+                Text(idProp.isHashed ? idProp.strVal! : idProp.toString()),
+            ],
+          ),
+        );
+      }
+    );
+  }
+
+  Widget makeEditor(XmlProp code, XmlProp id) {
+    var codeStr = (code.value as HexProp).strVal ?? "";
+    var preset = puidPresetsMap[codeStr];
+    return Flexible(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          makePropEditor<UnderlinePropTextField>(code.value, PropTFOptions(
+            autocompleteOptions: () => puidPresets.map((p) => AutocompleteConfig(p.code)),
+          )),
+          if (id.value is HexProp)
+            makePropEditor<UnderlinePropTextField>(id.value, PropTFOptions(
+              key: Key(codeStr),
+              autocompleteOptions: preset?.getIds != null 
+                ? () async => (await preset!.getIds!.call()).map((id) => AutocompleteConfig(id))
+                : null,
+            ))
+          else
+            makeXmlPropEditor<UnderlinePropTextField>(id, widget.showDetails),
+        ],
+      ),
     );
   }
 

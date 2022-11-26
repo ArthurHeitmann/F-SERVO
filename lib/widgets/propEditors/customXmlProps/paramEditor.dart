@@ -26,7 +26,7 @@ class ParamsEditor extends StatefulWidget {
 }
 
 class _ParamsEditorState extends State<ParamsEditor> {
-  String prevName = "";
+  String? prevValidName;
 
   StringProp get nameProp => widget.prop[0].value as StringProp;
   HexProp get codeProp => widget.prop[1].value as HexProp;
@@ -34,7 +34,7 @@ class _ParamsEditorState extends State<ParamsEditor> {
 
   @override
   void initState() {
-    prevName = nameProp.value;
+    _onNameChange();
     nameProp.addListener(_onNameChange);
     super.initState();
   }
@@ -97,10 +97,11 @@ class _ParamsEditorState extends State<ParamsEditor> {
   }
 
   void _onNameChange() {
-    if (nameProp.value != prevName) {
-      prevName = nameProp.value;
+    var name = nameProp.value;
+    var preset = paramPresetsMap[name];
+    if (preset?.name != prevValidName)
       setState(() {});
-    }
+    prevValidName = preset?.name;
   }
 
   void _onNameTagPressed() async {

@@ -5,9 +5,9 @@ import '../background/IdLookup.dart';
 
 class PuidPreset {
   final String code;
-  final FutureOr<List<String>> Function()? getOptions;
+  final FutureOr<List<String>> Function()? getIds;
 
-  const PuidPreset(this.code, [this.getOptions]);
+  const PuidPreset(this.code, [this.getIds]);
 }
 
 final List<PuidPreset> puidPresets = [
@@ -44,6 +44,11 @@ final List<PuidPreset> puidPresets = [
   const PuidPreset("Hacking"),
   const PuidPreset("Event"),
 ];
+var puidPresetsMap = {
+  for (var preset in puidPresets)
+    preset.code: preset
+};
+final puidCodes = puidPresets.map((e) => e.code).toList();
 final List<PuidPreset> variablePuidPresets = [
   const PuidPreset("app::EntityLayout"),
   const PuidPreset("hap::Action"),

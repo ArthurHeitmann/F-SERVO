@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../stateManagement/Property.dart';
+import '../../../utils/utils.dart';
 import '../../misc/SelectableListEntry.dart';
 import '../../misc/SmoothScrollBuilder.dart';
 import '../../misc/arrowNavigationList.dart';
@@ -255,7 +256,10 @@ class __AutocompleteOverlayState extends State<_AutocompleteOverlay> with ArrowN
 
   void onOptionSelected(AutocompleteConfig option) {
     widget.textController.text = option.displayText;
-    widget.prop.updateWith(option.insertText);
+    if (widget.prop is! HexProp || isHexInt(option.displayText))
+      widget.prop.updateWith(option.insertText);
+    else
+      (widget.prop as HexProp).updateWith(option.insertText, isStr: true);
     option.onSelect?.call();
     widget.focusNode.unfocus();
   }
