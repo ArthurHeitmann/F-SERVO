@@ -22,21 +22,18 @@ class ScriptVariableEditor<T extends PropTextField> extends StatelessWidget {
     return optionalIdAnchor(
       child: Padding(
         padding: const EdgeInsets.all(4.0),
-        child: optionalSelectable(
-          child: Container(
-            decoration: BoxDecoration(
-              color: getTheme(context).formElementBgColor,
-              borderRadius: BorderRadius.circular(4.0),
-            ),
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              // crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                makePropEditor<TransparentPropTextField>(prop.get("name")!.value),
-                const Divider(thickness: 2,),
-                PuidReferenceEditor(prop: prop.get("value")!, showDetails: showDetails),
-              ],
-            ),
+        child: Container(
+          decoration: BoxDecoration(
+            color: getTheme(context).formElementBgColor,
+            borderRadius: BorderRadius.circular(4.0),
+          ),
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            children: [
+              makePropEditor<TransparentPropTextField>(prop.get("name")!.value),
+              const Divider(thickness: 2,),
+              PuidReferenceEditor(prop: prop.get("value")!, showDetails: showDetails),
+            ],
           ),
         ),
       ),
@@ -49,16 +46,6 @@ class ScriptVariableEditor<T extends PropTextField> extends StatelessWidget {
       return child;
     return XmlWidgetWithId(
       id: idProp.value as HexProp,
-      child: child,
-    );
-  }
-
-  Widget optionalSelectable({ required Widget child }) {
-    if (showDetails)
-      return child;
-    return SelectableWidget(
-      prop: prop,
-      borderRadius: BorderRadius.circular(4),
       child: child,
     );
   }

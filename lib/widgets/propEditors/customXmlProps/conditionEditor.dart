@@ -37,88 +37,74 @@ class _ConditionEditorState extends ChangeNotifierState<ConditionEditor> {
 
     return Padding(
       padding: const EdgeInsets.all(4.0),
-      child: optionalSelectable(
-        child: Row(
-          children: [
-            const Text(
-              "?",
-              style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: NestedContextMenu(
-                buttons: [
-                  if (widget.showDetails)
-                    optionalValPropButtonConfig(
-                      widget.prop, "type", () => 0,
-                      () => NumberProp(0, true)
-                    ),
-                  if (label == null)
-                    optionalValPropButtonConfig(
-                      conditionState!, "label", () => 0,
-                      () => StringProp("conditionLabel")
-                    ),
+    child: Row(
+        children: [
+          const Text(
+            "?",
+            style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: NestedContextMenu(
+              buttons: [
+                if (widget.showDetails)
                   optionalValPropButtonConfig(
-                    conditionState!, "value", () => conditionState.length,
-                    () => NumberProp(1, true)
+                    widget.prop, "type", () => 0,
+                    () => NumberProp(0, true)
                   ),
+                if (label == null)
                   optionalValPropButtonConfig(
-                    widget.prop, "args", () => widget.prop.length,
-                    () => StringProp("arg")
+                    conditionState!, "label", () => 0,
+                    () => StringProp("conditionLabel")
                   ),
-                ],
-                child: Material(
-                  color: getTheme(context).formElementBgColor,
-                  borderRadius: BorderRadius.circular(5),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        PuidReferenceEditor(prop: widget.prop.get("puid")!, showDetails: widget.showDetails),
-                        Divider(color: getTheme(context).textColor!.withOpacity(0.5), thickness: 2,),
-                        if (label != null)
-                          makePropEditor<TransparentPropTextField>(label, PropTFOptions(
-                            autocompleteOptions: () => conditionLabels
-                              .map((l) => AutocompleteConfig(l))
-                          )),
-                        if (value != null)
-                          Padding(
-                            padding: const EdgeInsets.only(left: 8.0),
-                            child: makeXmlPropEditor<TransparentPropTextField>(value, widget.showDetails),
-                          ),
-                        if (args != null)
-                          Padding(
-                            padding: const EdgeInsets.only(left: 8.0),
-                            child: makeXmlPropEditor<TransparentPropTextField>(args, widget.showDetails),
-                          ),
-                        if (type != null && widget.showDetails)
-                          Padding(
-                            padding: const EdgeInsets.only(left: 8.0),
-                            child: makeXmlPropEditor<TransparentPropTextField>(type, widget.showDetails),
-                          ),
-                      ],
-                    ),
+                optionalValPropButtonConfig(
+                  conditionState!, "value", () => conditionState.length,
+                  () => NumberProp(1, true)
+                ),
+                optionalValPropButtonConfig(
+                  widget.prop, "args", () => widget.prop.length,
+                  () => StringProp("arg")
+                ),
+              ],
+              child: Material(
+                color: getTheme(context).formElementBgColor,
+                borderRadius: BorderRadius.circular(5),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      PuidReferenceEditor(prop: widget.prop.get("puid")!, showDetails: widget.showDetails),
+                      Divider(color: getTheme(context).textColor!.withOpacity(0.5), thickness: 2,),
+                      if (label != null)
+                        makePropEditor<TransparentPropTextField>(label, PropTFOptions(
+                          autocompleteOptions: () => conditionLabels
+                            .map((l) => AutocompleteConfig(l))
+                        )),
+                      if (value != null)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 8.0),
+                          child: makeXmlPropEditor<TransparentPropTextField>(value, widget.showDetails),
+                        ),
+                      if (args != null)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 8.0),
+                          child: makeXmlPropEditor<TransparentPropTextField>(args, widget.showDetails),
+                        ),
+                      if (type != null && widget.showDetails)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 8.0),
+                          child: makeXmlPropEditor<TransparentPropTextField>(type, widget.showDetails),
+                        ),
+                    ],
                   ),
                 ),
               ),
-            )
-          ]
-        ),
+            ),
+          )
+        ]
       ),
-    );
-  }
-
-  Widget optionalSelectable({ required Widget child }) {
-    if (widget.showDetails)
-      return child;
-    if (widget.prop.tagName == "action")
-      return child;
-    return SelectableWidget(
-      prop: widget.prop,
-      borderRadius: BorderRadius.circular(5),
-      child: child,
     );
   }
 }

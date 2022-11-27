@@ -46,52 +46,33 @@ class XmlActionEditorState<T extends XmlActionEditor> extends ChangeNotifierStat
   Widget build(BuildContext context) {
     return XmlWidgetWithId(
       id: widget.action.id,
-      child: SelectableWidget(
-        prop: widget.action,
-        color: getActionPrimaryColor(context).withOpacity(0.5),
-        child: NestedContextMenu(
-          buttons: [
-            null,
-            ContextMenuButtonConfig(
-              "Copy Action PUID ref",
-              icon: const Icon(Icons.content_copy, size: 14,),
-              onPressed: () => copyPuidRef("hap::Action", widget.action.id.value)
-            ),
-          ],
-          child: SizedBox(
-            width: 450,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                makeActionHeader(context),
-                makeActionBody(),
-              ],
-            ),
+      child: NestedContextMenu(
+        buttons: [
+          null,
+          ContextMenuButtonConfig(
+            "Copy Action PUID ref",
+            icon: const Icon(Icons.content_copy, size: 14,),
+            onPressed: () => copyPuidRef("hap::Action", widget.action.id.value)
+          ),
+        ],
+        child: SizedBox(
+          width: 450,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              makeActionHeader(context),
+              makeActionBody(),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Color getActionPrimaryColor(BuildContext context) {
-    Color color;
-    if (widget.action.attribute.value & 0x8 != 0)
-      color = getTheme(context).actionTypeBlockingAccent!;
-    else if (spawningActionCodes.contains(widget.action.code.value))
-      color = getTheme(context).actionTypeEntityAccent!;
-    else
-      color = getTheme(context).actionTypeDefaultAccent!;
-    
-    if (widget.action.attribute.value & 0x2 != 0)
-      color = Color.fromRGBO(color.red ~/ 2, color.green ~/ 2, color.blue ~/ 2, 1);
-    
-    return color;
-  }
-
   Widget makeActionHeader(BuildContext context) {
     return Material(
       // decoration: BoxDecoration(
-        color: getActionPrimaryColor(context),
+        color: getActionPrimaryColor(context, widget.action),
         borderRadius: BorderRadius.only(topLeft: Radius.circular(getTheme(context).actionBorderRadius!), topRight: Radius.circular(getTheme(context).actionBorderRadius!)),
       // ),
       child: Theme(
@@ -170,4 +151,19 @@ class XmlActionEditorState<T extends XmlActionEditor> extends ChangeNotifierStat
       ),
     );
   }
+}
+
+Color getActionPrimaryColor(BuildContext context, XmlActionProp action) {
+  Color color;
+  if (action.attribute.value & 0x8 != 0)
+    color = getTheme(context).actionTypeBlockingAccent!;
+  else if (spawningActionCodes.contains(action.code.value))
+    color = getTheme(context).actionTypeEntityAccent!;
+  else
+    color = getTheme(context).actionTypeDefaultAccent!;
+  
+  if (action.attribute.value & 0x2 != 0)
+    color = Color.fromRGBO(color.red ~/ 2, color.green ~/ 2, color.blue ~/ 2, 1);
+  
+  return color;
 }

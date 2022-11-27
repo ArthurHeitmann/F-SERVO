@@ -275,8 +275,10 @@ class XmlPresets {
             makeXmlElement(name: "code", text: "0x0"),
             makeXmlElement(name: "id", text: "0x0"),
           ]),
-          makeXmlElement(name: "command", children: [ // TODO SendCommand vs SendCommands
-            makeXmlElement(name: "label", text: "commandLabel"),
+          makeXmlElement(name: "command", children: [
+            makeXmlElement(name: "command", children: [
+              makeXmlElement(name: "label", text: "commandLabel"),
+            ]),
           ]),
         ]
       ),
@@ -289,7 +291,7 @@ class XmlPresets {
     <T extends PropTextField>(prop, showDetails) => PuidReferenceEditor(
       prop: prop,
       showDetails: showDetails,
-      initiallyShowLookup: (prop.get("code") as HexProp).value != 0x0,
+      initiallyShowLookup: (prop.get("code")!.value as HexProp).value != 0x0,
     ),
     (cxt) => XmlProp.fromXml(
       makeXmlElement(name: "value", children: [

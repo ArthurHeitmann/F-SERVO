@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../stateManagement/openFilesManager.dart';
 import '../stateManagement/undoable.dart';
 import '../utils/utils.dart';
+import '../widgets/misc/Selectable.dart';
 import 'intents.dart';
 
 class TabChangeAction extends Action<TabChangeIntent> {
@@ -52,5 +53,14 @@ class RedoAction extends Action<RedoIntent> {
   @override
   void invoke(RedoIntent intent) {
     undoHistoryManager.redo();
+  }
+}
+
+class ChildKeyboardAction extends Action<ChildKeyboardActionIntent> {
+  ChildKeyboardAction();
+
+  @override
+  void invoke(ChildKeyboardActionIntent intent) {
+    selectable.active.value?.onKeyboardAction?.call(intent.action);
   }
 }

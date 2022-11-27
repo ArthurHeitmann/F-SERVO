@@ -11,6 +11,7 @@ import '../misc/Selectable.dart';
 import '../misc/SmoothScrollBuilder.dart';
 import '../misc/nestedContextMenu.dart';
 import '../misc/syncButton.dart';
+import '../propEditors/xmlActions/XmlActionEditor.dart';
 import '../propEditors/xmlActions/XmlActionEditorFactory.dart';
 import '../propEditors/xmlActions/XmlActionPresets.dart';
 import '../propEditors/xmlActions/actionAddButton.dart';
@@ -43,7 +44,7 @@ class _XmlActionsEditorState extends XmlArrayEditorState<XmlActionsEditor> {
             child: XmlJumpToLineEventWrapper(
               file: widget.root.file!,
               child: Padding(
-                padding: const EdgeInsets.only(top: 20, right: 20, bottom: 100, left: 20),
+                padding: const EdgeInsets.only(top: 20, right: 20, bottom: 120, left: 20),
                 child: ColumnReorderable(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   onReorder: (int oldIndex, int newIndex) {
@@ -54,7 +55,8 @@ class _XmlActionsEditorState extends XmlArrayEditorState<XmlActionsEditor> {
                     widget.root.move(oldIndex + firstChildOffset, newIndex + firstChildOffset);
                   },
                   header: ActionAddButton(parent: widget.root, index: 0),
-                  children: actions.map((action) {
+                  children: List.generate(actions.length, (index) {
+                    var action = actions[index];
                     var actionEditor = makeXmlActionEditor(
                       action: action as XmlActionProp,
                       showDetails: false,
@@ -65,13 +67,18 @@ class _XmlActionsEditorState extends XmlArrayEditorState<XmlActionsEditor> {
                       children: [
                         NestedContextMenu(
                           buttons: getContextMenuButtons(actions.indexOf(action)),
-                          child: actionEditor
+                          child: SelectableWidget(
+                            prop: action,
+                            color: getActionPrimaryColor(context, action),
+                            borderRadius: BorderRadius.circular(14),
+                            onKeyboardAction: (actionType) => onChildKeyboardAction(index, actionType),
+                            child: actionEditor
+                          ),
                         ),
                         ActionAddButton(parent: widget.root, index: actions.indexOf(action) + 1),
                       ],
                     );
-                  })
-                  .toList(),
+                  }),
                 ),
               ),
             ),

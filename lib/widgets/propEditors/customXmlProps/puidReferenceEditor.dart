@@ -112,33 +112,21 @@ class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor>
   }
 
   Widget interactionsWrapper(BuildContext context, { required Widget child }) {
-    return optionalSelectable(
-      child: NestedContextMenu(
-        buttons: [
-          ContextMenuButtonConfig("Copy PUID ref", icon: const Icon(Icons.content_copy, size: 14), onPressed: copyRef),
-          ContextMenuButtonConfig("Paste PUID ref", icon: const Icon(Icons.content_paste, size: 14), onPressed: pasteRef),
-          ContextMenuButtonConfig("Go to Reference", icon: const Icon(Icons.east, size: 14), shortcutLabel: "(ctrl + click)", onPressed: goToReference),
-          ContextMenuButtonConfig("Toggle Editing", icon: const Icon(Icons.edit, size: 14), shortcutLabel: "(double click)", onPressed: () => setState(() => showLookup = !showLookup)),
-          null,
-        ],
-        child: MouseRegion(
-          cursor: SystemMouseCursors.click,
-          child: GestureDetector(
-            onTap: onClick,
-            child: child,
-          ),
-        )
-      ),
-    );
-  }
-
-  Widget optionalSelectable({ required Widget child }) {
-    if (widget.showDetails)
-      return child;
-    return SelectableWidget(
-      prop: widget.prop,
-      borderRadius: BorderRadius.circular(5),
-      child: child,
+    return NestedContextMenu(
+      buttons: [
+        ContextMenuButtonConfig("Copy PUID ref", icon: const Icon(Icons.content_copy, size: 14), onPressed: copyRef),
+        ContextMenuButtonConfig("Paste PUID ref", icon: const Icon(Icons.content_paste, size: 14), onPressed: pasteRef),
+        ContextMenuButtonConfig("Go to Reference", icon: const Icon(Icons.east, size: 14), shortcutLabel: "(ctrl + click)", onPressed: goToReference),
+        ContextMenuButtonConfig("Toggle Editing", icon: const Icon(Icons.edit, size: 14), shortcutLabel: "(double click)", onPressed: () => setState(() => showLookup = !showLookup)),
+        null,
+      ],
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          onTap: onClick,
+          child: child,
+        ),
+      )
     );
   }
 

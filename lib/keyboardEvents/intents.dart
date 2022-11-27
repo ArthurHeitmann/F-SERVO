@@ -23,3 +23,16 @@ class UndoIntent extends Intent {
 class RedoIntent extends Intent {
   const RedoIntent();
 }
+
+enum ChildKeyboardActionType {
+  copy,
+  cut,
+  paste,
+  delete,
+  duplicate,
+}
+
+class ChildKeyboardActionIntent extends Intent {
+  final ChildKeyboardActionType action;
+  const ChildKeyboardActionIntent(this.action);
+}

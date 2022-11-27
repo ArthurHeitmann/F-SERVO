@@ -60,53 +60,51 @@ class CommandEditorState extends ChangeNotifierState<CommandEditor> {
 
     return Padding(
       padding: const EdgeInsets.all(4.0),
-      child: optionalSelectable(
-        child: Row(
-          children: [
-            const Text(
-              "!",
-              style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: NestedContextMenu(
-                buttons: [
-                  if (isAreaCommand && (hitCommand == null || hitoutCommand != null))
-                    optionalPropButtonConfig(widget.prop, "hit", () => 6, 
-                      () => _makeAreaCommandPropChildren(widget.prop, "hit")),
-                  if (isAreaCommand && (hitoutCommand == null || hitCommand != null))
-                    optionalPropButtonConfig(widget.prop, "hitout", () => widget.prop.length,
-                      () => _makeAreaCommandPropChildren(widget.prop, "hitout")),
-                ],
-                child: Material(
-                  color: getTheme(context).formElementBgColor,
-                  borderRadius: BorderRadius.circular(5),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        PuidReferenceEditor(prop: widget.prop.get("puid")!, showDetails: widget.showDetails),
-                        if (command != null)
-                          makeCommandEditor(command, isAreaCommand ? "hit" : null)
-                        else if (!isAreaCommand)
-                          const Text("No command"),
-                        if (hitoutCommand != null)
-                          makeCommandEditor(hitoutCommand, "hitout"),
-                        if (args != null)
-                          Padding(
-                            padding: const EdgeInsets.only(left: 8.0),
-                            child: makeXmlPropEditor<TransparentPropTextField>(args, widget.showDetails),
-                          ),
-                      ],
-                    ),
+      child: Row(
+        children: [
+          const Text(
+            "!",
+            style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: NestedContextMenu(
+              buttons: [
+                if (isAreaCommand && (hitCommand == null || hitoutCommand != null))
+                  optionalPropButtonConfig(widget.prop, "hit", () => 6, 
+                    () => _makeAreaCommandPropChildren(widget.prop, "hit")),
+                if (isAreaCommand && (hitoutCommand == null || hitCommand != null))
+                  optionalPropButtonConfig(widget.prop, "hitout", () => widget.prop.length,
+                    () => _makeAreaCommandPropChildren(widget.prop, "hitout")),
+              ],
+              child: Material(
+                color: getTheme(context).formElementBgColor,
+                borderRadius: BorderRadius.circular(5),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      PuidReferenceEditor(prop: widget.prop.get("puid")!, showDetails: widget.showDetails),
+                      if (command != null)
+                        makeCommandEditor(command, isAreaCommand ? "hit" : null)
+                      else if (!isAreaCommand)
+                        const Text("No command"),
+                      if (hitoutCommand != null)
+                        makeCommandEditor(hitoutCommand, "hitout"),
+                      if (args != null)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 8.0),
+                          child: makeXmlPropEditor<TransparentPropTextField>(args, widget.showDetails),
+                        ),
+                    ],
                   ),
                 ),
               ),
-            )
-          ]
-        ),
+            ),
+          )
+        ]
       ),
     );
   }
@@ -123,11 +121,10 @@ class CommandEditorState extends ChangeNotifierState<CommandEditor> {
         var args = commParent.get("args");
         return NestedContextMenu(
           buttons: [
-            if (label == null)
-              optionalValPropButtonConfig(
-                command, "label", () => 0,
-                () => StringProp("commandLabel")
-              ),
+            optionalValPropButtonConfig(
+              command, "label", () => 0,
+              () => StringProp("commandLabel")
+            ),
             optionalValPropButtonConfig(
               command, "value", () => command.length,
               () => NumberProp(1, true)
@@ -165,18 +162,6 @@ class CommandEditorState extends ChangeNotifierState<CommandEditor> {
           ),
         );
       },
-    );
-  }
-
-  Widget optionalSelectable({ required Widget child }) {
-    if (widget.showDetails)
-      return child;
-    if (widget.prop.tagName == "action")
-      return child;
-    return SelectableWidget(
-      prop: widget.prop,
-      borderRadius: BorderRadius.circular(5),
-      child: child,
     );
   }
 }

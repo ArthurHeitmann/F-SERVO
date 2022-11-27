@@ -22,13 +22,24 @@ Widget globalShortcutsWrapper(BuildContext context, { required Widget child }) {
         UndoIntent(),
       KeyCombo(LogicalKeyboardKey.keyY, {ModifierKey.controlModifier}):
         RedoIntent(),
+      KeyCombo(LogicalKeyboardKey.keyC, {ModifierKey.controlModifier}):
+        ChildKeyboardActionIntent(ChildKeyboardActionType.copy),
+      KeyCombo(LogicalKeyboardKey.keyX, {ModifierKey.controlModifier}):
+        ChildKeyboardActionIntent(ChildKeyboardActionType.cut),
+      KeyCombo(LogicalKeyboardKey.keyV, {ModifierKey.controlModifier}):
+        ChildKeyboardActionIntent(ChildKeyboardActionType.paste),
+      KeyCombo(LogicalKeyboardKey.delete):
+        ChildKeyboardActionIntent(ChildKeyboardActionType.delete),
+      KeyCombo(LogicalKeyboardKey.keyD, {ModifierKey.controlModifier}):
+        ChildKeyboardActionIntent(ChildKeyboardActionType.duplicate),
     },
     actions: {
       TabChangeIntent: TabChangeAction(),
       CloseTabIntent: CloseTabAction(),
       SaveTabIntent: SaveTabAction(),
       UndoIntent: UndoAction(),
-      RedoIntent:RedoAction(),
+      RedoIntent: RedoAction(),
+      ChildKeyboardActionIntent: ChildKeyboardAction(),
     },
     child: child
   );

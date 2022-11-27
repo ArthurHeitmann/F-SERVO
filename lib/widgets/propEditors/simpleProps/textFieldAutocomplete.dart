@@ -133,7 +133,6 @@ class _AutocompleteOverlay extends StatefulWidget {
   final Widget child;
 
   const _AutocompleteOverlay({
-    super.key,
     required this.layerLink,
     required this.options,
     required this.textController,

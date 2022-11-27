@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../../keyboardEvents/intents.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/openFilesManager.dart';
 import '../../stateManagement/xmlProps/xmlProp.dart';
@@ -11,12 +12,15 @@ import '../../utils/utils.dart';
 Per file[uuid] one or zero selected (has uuid + XmlProp)
 */
 
+typedef ChildKeyboardActionCallback = void Function(ChildKeyboardActionType actionType);
+
 class _SelectedData {
   final String uuid;
   final XmlProp prop;
   final void Function() onDispose;
+  final ChildKeyboardActionCallback? onKeyboardAction;
 
-  _SelectedData(this.uuid, this.prop, this.onDispose) {
+  _SelectedData(this.uuid, this.prop, this.onDispose, this.onKeyboardAction) {
     prop.onDisposed.addListener(onDispose);
   }
 
@@ -33,14 +37,14 @@ class _Selectable {
     areasManager.subEvents.addListener(_onAreaChanges);
   }
 
-  void select(OpenFileId id, XmlProp prop) {
+  void select(OpenFileId id, XmlProp prop, [ChildKeyboardActionCallback? onKeyboardAction]) {
     _selectedData[id]?.dispose();
     _selectedData[id] = _SelectedData(prop.uuid, prop, () {
       if (_selectedData[id]?.uuid == prop.uuid)
         _selectedData[id] = null;
       if (active.value?.uuid == prop.uuid)
         active.value = null;
-    });
+    }, onKeyboardAction);
     if (id == areasManager.activeArea?.currentFile?.uuid)
       active.value = _selectedData[id];
     active.value = _selectedData[id];
@@ -84,15 +88,19 @@ final  selectable = _Selectable();
 class SelectableWidget extends ChangeNotifierWidget {
   final Color? color;
   final BorderRadius? borderRadius;
+  final double? padding;
   final OpenFileId id;
   final XmlProp prop;
+  final ChildKeyboardActionCallback? onKeyboardAction;
   final Widget child;
 
   SelectableWidget({
     super.key,
     this.color,
     this.borderRadius,
+    this.padding,
     required this.prop,
+    this.onKeyboardAction,
     required this.child
   }) : id = prop.file!,
        super(notifier: selectable.active);
@@ -102,39 +110,26 @@ class SelectableWidget extends ChangeNotifierWidget {
 }
 
 class _SelectableWidgetState<T> extends ChangeNotifierState<SelectableWidget> {
-  void select() {
-    if (!mounted)
-      return;
-    selectable.select(widget.id, widget.prop);
-  }
-
-  void deselect() {
-    if (!mounted)
-      return;
-    selectable.deselect(widget.prop.uuid);
-  }
-  
   @override
   Widget build(BuildContext context) {
-    Color borderColor;
-    if (selectable.isSelected(widget.prop.uuid))
-      borderColor = widget.color ?? getTheme(context).selectedColor!;
-    else
-      borderColor = Colors.transparent;
+    Color borderColor = selectable.isSelected(widget.prop.uuid)
+      ? widget.color ?? getTheme(context).selectedColor!
+      : Colors.transparent;
+    double padding = widget.padding != null ? -widget.padding! : -4;
     return Stack(
       clipBehavior: Clip.none,
       children: [
         Positioned(
-          top: -4,
-          right: -4,
-          left: -4,
-          bottom: -4,
+          top: padding,
+          right: padding,
+          left: padding,
+          bottom: padding,
           child: IgnorePointer(
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 125),
               decoration: BoxDecoration(
                 border: Border.all(color: borderColor, width: 2),
-                borderRadius: widget.borderRadius ?? BorderRadius.circular(14),
+                borderRadius: widget.borderRadius ?? BorderRadius.circular(5),
               ),
             ),
           ),
@@ -144,7 +139,7 @@ class _SelectableWidgetState<T> extends ChangeNotifierState<SelectableWidget> {
               if ((isCtrlPressed() || isShiftPressed()) && selectable.isSelected(widget.prop.uuid))
                 selectable.deselect(widget.prop.uuid);
               else
-                selectable.select(widget.id, widget.prop);
+                selectable.select(widget.id, widget.prop, widget.onKeyboardAction);
             },
             child: widget.child,
           ),
