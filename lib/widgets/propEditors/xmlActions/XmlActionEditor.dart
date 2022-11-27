@@ -42,6 +42,8 @@ class XmlActionEditor extends ChangeNotifierWidget {
 }
 
 class XmlActionEditorState<T extends XmlActionEditor> extends ChangeNotifierState<T> {
+  bool isCollapsed = false;
+
   @override
   Widget build(BuildContext context) {
     return XmlWidgetWithId(
@@ -61,7 +63,7 @@ class XmlActionEditorState<T extends XmlActionEditor> extends ChangeNotifierStat
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               makeActionHeader(context),
-              makeActionBody(),
+              makeActionBody()
             ],
           ),
         ),
@@ -71,10 +73,8 @@ class XmlActionEditorState<T extends XmlActionEditor> extends ChangeNotifierStat
 
   Widget makeActionHeader(BuildContext context) {
     return Material(
-      // decoration: BoxDecoration(
-        color: getActionPrimaryColor(context, widget.action),
-        borderRadius: BorderRadius.only(topLeft: Radius.circular(getTheme(context).actionBorderRadius!), topRight: Radius.circular(getTheme(context).actionBorderRadius!)),
-      // ),
+      color: getActionPrimaryColor(context, widget.action),
+      borderRadius: BorderRadius.only(topLeft: Radius.circular(getTheme(context).actionBorderRadius!), topRight: Radius.circular(getTheme(context).actionBorderRadius!)),
       child: Theme(
         data: Theme.of(context).copyWith(
           textSelectionTheme: TextSelectionThemeData(
@@ -95,7 +95,7 @@ class XmlActionEditorState<T extends XmlActionEditor> extends ChangeNotifierStat
           padding: const EdgeInsets.all(4.0),
           child: Row(
             children: [
-              const SizedBox(width: 10, height: 10),  // placeholder for future icon or button
+              ...getLeftHeaderButtons(context),
               Expanded(
                 child: Column(
                   children: [
@@ -121,6 +121,17 @@ class XmlActionEditorState<T extends XmlActionEditor> extends ChangeNotifierStat
     );
   }
 
+  List<Widget> getLeftHeaderButtons(BuildContext context) {
+    return [
+      IconButton(
+        onPressed: () => setState(() => isCollapsed = !isCollapsed),
+        color: getTheme(context).textColor!.withOpacity(0.5),
+        splashRadius: 20,
+        icon: Icon(isCollapsed ? Icons.expand_more : Icons.expand_less),
+      )
+    ];
+  }
+
   List<Widget> getRightHeaderButtons(BuildContext context) {
     return [
       FlexDraggableHandle(
@@ -137,7 +148,9 @@ class XmlActionEditorState<T extends XmlActionEditor> extends ChangeNotifierStat
       ),
       child: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: makeInnerActionBody(),
+        child: !isCollapsed
+          ? makeInnerActionBody()
+          : const Center(child: Text(".  .  .")),
       ),
     );
   }
