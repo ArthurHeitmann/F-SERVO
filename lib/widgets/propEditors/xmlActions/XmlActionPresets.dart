@@ -392,6 +392,218 @@ class XmlActionPresets {
     ),
     XmlRawPreset.defaultDuplicateWithRandIdAsXml,
   );
+  static XmlRawPreset multiMarkLocation = XmlRawPreset(
+    "Action",
+    XmlActionPresets.action.editor,
+    (cxt) => XmlProp.fromXml(
+      _makeAction("HapMultiMarkLocationAction", [
+        makeXmlElement(name: "location", children: [
+          makeXmlElement(name: "position", text: "0 0 0"),
+        ]),
+        makeXmlElement(name: "parentID", text: "0x0"),
+        makeXmlElement(name: "questId", text: "0x0"),
+        makeXmlElement(name: "uiMessID", text: "0"),
+        makeXmlElement(name: "radius", text: "0"),
+        makeXmlElement(name: "ftTag", text: "\"\""),
+        makeXmlElement(name: "markIdx", text: "1"),
+      ]),
+      file: cxt.file,
+      parentTags: cxt.parentTags,
+    ),
+    XmlRawPreset.defaultDuplicateWithRandIdAsXml,
+  );
+  static XmlRawPreset enemyGenerator = XmlRawPreset(
+    "Action",
+    XmlActionPresets.action.editor,
+    (cxt) => XmlProp.fromXml(
+      _makeAction("EnemyGenerator", [
+        makeXmlElement(name: "points", children: [
+          makeXmlElement(name: "attribute", text: "0x0"),
+          makeXmlElement(name: "nodes", children: [
+            makeXmlElement(name: "size", text: "1"),
+            makeXmlElement(name: "value", children: [
+              makeXmlElement(name: "point", text: "0 0 0"),
+              makeXmlElement(name: "radius", text: "10"),
+              makeXmlElement(name: "rate", text: "0"),
+              makeXmlElement(name: "minDistance", text: "0"),
+            ]),
+          ]),
+        ]),
+        makeXmlElement(name: "items", children: [
+          makeXmlElement(name: "size", text: "1"),
+          makeXmlElement(name: "value", children: [
+            makeXmlElement(name: "objId", text: "em0000"),
+            makeXmlElement(name: "rate", text: "1"),
+          ]),
+        ]),
+        makeXmlElement(name: "spawnRange", children: [
+          makeXmlElement(name: "min", text: "1"),
+          makeXmlElement(name: "max", text: "1"),
+        ]),
+        makeXmlElement(name: "createRange", children: [
+          makeXmlElement(name: "min", text: "1"),
+          makeXmlElement(name: "max", text: "1"),
+        ]),
+        makeXmlElement(name: "levelRange", children: [
+          makeXmlElement(name: "min", text: "20"),
+          makeXmlElement(name: "max", text: "30"),
+        ]),
+        makeXmlElement(name: "relativeLevel", text: "0"),
+        makeXmlElement(name: "area", children: [
+          makeXmlElement(name: "size", text: "0"),
+        ]),
+        makeXmlElement(name: "resetArea", children: [
+          makeXmlElement(name: "size", text: "0"),
+        ]),
+        makeXmlElement(name: "resetType", text: "3"),
+        makeXmlElement(name: "searchArea", children: [
+          makeXmlElement(name: "size", text: "0"),
+        ]),
+        makeXmlElement(name: "escapeArea", children: [
+          makeXmlElement(name: "size", text: "0"),
+        ]),
+        makeXmlElement(name: "dist", children: [
+          makeXmlElement(name: "position", text: "0 0 0"),
+          makeXmlElement(name: "areaDist", text: "60"),
+          makeXmlElement(name: "resetDist", text: "80"),
+        ]),
+      ]),
+      file: cxt.file,
+      parentTags: cxt.parentTags,
+    ),
+  );
+  static XmlRawPreset phaseEventAction = XmlRawPreset(
+    "Action",
+    XmlActionPresets.action.editor,
+    (cxt) => XmlProp.fromXml(
+      _makeAction("PhaseEventAction", [
+        makeXmlElement(name: "eventNo", text: "0x00000000"),
+        makeXmlElement(name: "startType", text: "1"),
+        makeXmlElement(name: "subPhase", text: ""),
+        makeXmlElement(name: "area", children: [
+          makeXmlElement(name: "size", text: "0"),
+        ]),
+        makeXmlElement(name: "loadArea", children: [
+          makeXmlElement(name: "size", text: "0"),
+        ]),
+        makeXmlElement(name: "connectWalkDist_", text: "0"),
+        makeXmlElement(name: "connectWalkCaptionWait_", text: "1"),
+        makeXmlElement(name: "bStop", text: "0"),
+        makeXmlElement(name: "fadePhase", text: "0x00000000"),
+        makeXmlElement(name: "fadeSubPhase", text: ""),
+      ]),
+      file: cxt.file,
+      parentTags: cxt.parentTags,
+    ),
+  );
+  static XmlRawPreset phaseJumpAction = XmlRawPreset(
+    "Action",
+    XmlActionPresets.action.editor,
+    (cxt) => XmlProp.fromXml(
+      _makeAction("PhaseJumpAction", [
+        makeXmlElement(name: "area", children: [
+          makeXmlElement(name: "size", text: "0"),
+        ]),
+        makeXmlElement(name: "phase", text: "0x00000100"),
+        makeXmlElement(name: "subPhase", text: ""),
+        makeXmlElement(name: "type", text: "1"),
+      ]),
+      file: cxt.file,
+      parentTags: cxt.parentTags,
+    ),
+  );
+  static XmlRawPreset hapLocationAction = XmlRawPreset(
+    "Action",
+    XmlActionPresets.action.editor,
+    (cxt) => XmlProp.fromXml(
+      _makeAction("HapLocationAction", [
+        makeXmlElement(name: "location", children: [
+          makeXmlElement(name: "position", text: "0 0 0"),
+        ]),
+      ]),
+      file: cxt.file,
+      parentTags: cxt.parentTags,
+    ),
+  );
+  static XmlRawPreset hapGoalLocationAction = XmlRawPreset(
+    "Action",
+    XmlActionPresets.action.editor,
+    (cxt) => XmlProp.fromXml(
+      _makeAction("HapGoalLocationAction", [
+        makeXmlElement(name: "location", children: [
+          makeXmlElement(name: "position", text: "0 0 0"),
+        ]),
+        makeXmlElement(name: "radius", text: "0"),
+        makeXmlElement(name: "icon", text: "0"),
+      ]),
+      file: cxt.file,
+      parentTags: cxt.parentTags,
+    ),
+  );
+  static XmlRawPreset cameraTargetAction = XmlRawPreset(
+    "Action",
+    XmlActionPresets.action.editor,
+    (cxt) => XmlProp.fromXml(
+      _makeAction("CameraTargetAction", [
+        makeXmlElement(name: "location", children: [
+          makeXmlElement(name: "position", text: "0 0 0"),
+        ]),
+        makeXmlElement(name: "area", children: [
+          makeXmlElement(name: "size", text: "0"),
+        ]),
+        makeXmlElement(name: "time", text: "0"),
+        makeXmlElement(name: "rate", text: "0"),
+      ]),
+      file: cxt.file,
+      parentTags: cxt.parentTags,
+    ),
+  );
+  static XmlRawPreset multiConditionBlock = XmlRawPreset(
+    "Action",
+    XmlActionPresets.action.editor,
+    (cxt) => XmlProp.fromXml(
+      _makeAction("MultiConditionBlock", [
+        makeXmlElement(name: "condition", children: [
+          makeXmlElement(name: "conditions", children: [
+            makeXmlElement(name: "size", text: "1"),
+            makeXmlElement(name: "value", children: [
+              _makePuid(),
+              makeXmlElement(name: "condition", children: [
+                makeXmlElement(name: "state", children: [
+                  makeXmlElement(name: "label", text: "state"),
+                ]),
+                makeXmlElement(name: "pred", text: "0"),
+              ]),
+            ]),
+          ]),
+          makeXmlElement(name: "type", text: "0"),
+        ]),
+        makeXmlElement(name: "delay", text: "0"),
+      ], attribute: 0x8),
+      file: cxt.file,
+      parentTags: cxt.parentTags,
+    ),
+  );
+  static XmlRawPreset areaCommand = XmlRawPreset(
+    "Action",
+    XmlActionPresets.action.editor,
+    (cxt) => XmlProp.fromXml(
+      _makeAction("AreaCommand", [
+        makeXmlElement(name: "area", children: [
+          makeXmlElement(name: "size", text: "1"),
+          _makeArea()
+        ]),
+        _makePuid(),
+        makeXmlElement(name: "hit", children: [
+          makeXmlElement(name: "command", children: [
+            makeXmlElement(name: "label", text: "command"),
+          ]),
+        ]),
+      ]),
+      file: cxt.file,
+      parentTags: cxt.parentTags,
+    ),
+  );
 }
 
 final _actionPreset = {
@@ -399,12 +611,21 @@ final _actionPreset = {
   "SendCommands": XmlActionPresets.sendCommands,
   "ConditionBlock": XmlActionPresets.conditionBlock,
   "ConditionCommands": XmlActionPresets.conditionCommands,
+  "MultiConditionBlock": XmlActionPresets.multiConditionBlock,
+  "DelayAction": XmlActionPresets.delay,
   "EntityLayoutAction": XmlActionPresets.entityLayout,
   "EntityLayoutArea": XmlActionPresets.entityLayoutArea,
+  "EnemyGenerator": XmlActionPresets.enemyGenerator,
   "EnemySetAction": XmlActionPresets.enemySet,
   "EnemySetArea": XmlActionPresets.enemySetArea,
   "AreaAction": XmlActionPresets.area,
-  "DelayAction": XmlActionPresets.delay,
-  "ScriptAction": XmlActionPresets.script,
+  "AreaCommand": XmlActionPresets.areaCommand,
+  "CameraTargetAction": XmlActionPresets.cameraTargetAction,
   "BezierCurveAction": XmlActionPresets.bezierCurve,
+  "ScriptAction": XmlActionPresets.script,
+  "HapGoalLocationAction": XmlActionPresets.hapGoalLocationAction,
+  "HapLocationAction": XmlActionPresets.hapLocationAction,
+  "HapMultiMarkLocationAction": XmlActionPresets.multiMarkLocation,
+  "PhaseEventAction": XmlActionPresets.phaseEventAction,
+  "PhaseJumpAction": XmlActionPresets.phaseJumpAction,
 };
