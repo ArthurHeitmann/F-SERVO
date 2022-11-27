@@ -98,6 +98,7 @@ class _XmlActionsEditorState extends XmlArrayEditorState<XmlActionsEditor> {
               var file = widget.root.file;
               if (file != null)
                 selectable.deselectFile(file);
+              FocusScope.of(context).unfocus();
             },
             behavior: HitTestBehavior.translucent,
           ),

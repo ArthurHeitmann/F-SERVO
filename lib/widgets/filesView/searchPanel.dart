@@ -98,18 +98,20 @@ class _SearchPanelState extends State<SearchPanel> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _makeSearchTypeRow(context),
-        _makeIsSearchingIndicator(),
-        const SizedBox(height: 4),
-        if (searchType == _SearchType.text)
-          _makeTextSearchOptions(),
-        if (searchType == _SearchType.id)
-          _makeIdSearchOptions(),
-        _makeSearchResults(),
-      ],
+    return FocusScope(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _makeSearchTypeRow(context),
+          _makeIsSearchingIndicator(),
+          const SizedBox(height: 4),
+          if (searchType == _SearchType.text)
+            _makeTextSearchOptions(),
+          if (searchType == _SearchType.id)
+            _makeIdSearchOptions(),
+          _makeSearchResults(),
+        ],
+      ),
     );
   }
 

@@ -148,9 +148,11 @@ class XmlActionEditorState<T extends XmlActionEditor> extends ChangeNotifierStat
       ),
       child: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: !isCollapsed
-          ? makeInnerActionBody()
-          : const Center(child: Text(".  .  .")),
+        child: FocusScope(
+          child: !isCollapsed
+            ? makeInnerActionBody()
+            : const Center(child: Text(".  .  .")),
+        ),
       ),
     );
   }

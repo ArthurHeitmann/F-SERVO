@@ -61,23 +61,25 @@ class _FileMetaEditorState extends ChangeNotifierState<FileMetaEditor> {
   @override
   Widget build(BuildContext context) {
     var entry = openHierarchyManager.selectedEntry;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        makeTopRow(),
-        const Divider(height: 1),
-        Expanded(
-          key: Key(openHierarchyManager.selectedEntry?.name.value ?? "noGroup"),
-          child: SmoothSingleChildScrollView(
-            stepSize: 60,
-            controller: scrollController,
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: entry != null ? getEditor()(entry) : makeFallback(null),
+    return FocusScope(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          makeTopRow(),
+          const Divider(height: 1),
+          Expanded(
+            key: Key(openHierarchyManager.selectedEntry?.name.value ?? "noGroup"),
+            child: SmoothSingleChildScrollView(
+              stepSize: 60,
+              controller: scrollController,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: entry != null ? getEditor()(entry) : makeFallback(null),
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
