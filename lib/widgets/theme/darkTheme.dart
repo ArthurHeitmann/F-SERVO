@@ -35,14 +35,18 @@ class NierDarkThemeExtension extends NierThemeExtension {
       actionTypeBlockingAccent: const Color.fromARGB(255, 223, 134, 0),
       actionBorderRadius: 10,
       dialogPrimaryButtonStyle: ButtonStyle(
+        animationDuration: const Duration(milliseconds: 200),
         backgroundColor: MaterialStateProperty.all(Colors.blue),
         foregroundColor: MaterialStateProperty.all(Colors.white),
+        overlayColor: MaterialStateProperty.all(Colors.white.withOpacity(0.2)),
       ),
       dialogSecondaryButtonStyle: ButtonStyle(
+        animationDuration: const Duration(milliseconds: 200),
         backgroundColor: MaterialStateProperty.all(Colors.transparent),
         foregroundColor: MaterialStateProperty.all(Colors.white),
-        side: MaterialStateProperty.all(const BorderSide(color: Colors.grey)),
+        overlayColor: MaterialStateProperty.all(Colors.white.withOpacity(0.2)),
         shadowColor: MaterialStateProperty.all(Colors.transparent),
+        side: MaterialStateProperty.all(BorderSide(color: Colors.grey.withOpacity(0.5))),
       ),
       selectedColor: Colors.blue.shade500.withOpacity(0.5),
       propInputTextStyle: const TextStyle(

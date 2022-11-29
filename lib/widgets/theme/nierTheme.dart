@@ -52,15 +52,29 @@ class NierNierThemeExtension extends NierThemeExtension {
       actionTypeEntityAccent: _ncCyan2,
       actionTypeBlockingAccent: _ncRed,
       actionBorderRadius: 10,
+      // dialogPrimaryButtonStyle: ButtonStyle(
+      //   backgroundColor: MaterialStateProperty.all(_ncDark),
+      //   foregroundColor: MaterialStateProperty.all(_ncLight),
+      // ),
+      // dialogSecondaryButtonStyle: ButtonStyle(
+      //   backgroundColor: MaterialStateProperty.all(_ncLight),
+      //   foregroundColor: MaterialStateProperty.all(_ncDark),
+      //   side: MaterialStateProperty.all(const BorderSide(color: _ncDark)),
+      //   shadowColor: MaterialStateProperty.all(Colors.transparent),
+      // ),
       dialogPrimaryButtonStyle: ButtonStyle(
+        animationDuration: const Duration(milliseconds: 200),
         backgroundColor: MaterialStateProperty.all(_ncDark),
         foregroundColor: MaterialStateProperty.all(_ncLight),
+        overlayColor: MaterialStateProperty.all(_ncLight.withOpacity(0.2)),
       ),
       dialogSecondaryButtonStyle: ButtonStyle(
-        backgroundColor: MaterialStateProperty.all(_ncLight),
+        animationDuration: const Duration(milliseconds: 200),
+        backgroundColor: MaterialStateProperty.all(Colors.transparent),
         foregroundColor: MaterialStateProperty.all(_ncDark),
-        side: MaterialStateProperty.all(const BorderSide(color: _ncDark)),
+        overlayColor: MaterialStateProperty.all(_ncDark.withOpacity(0.2)),
         shadowColor: MaterialStateProperty.all(Colors.transparent),
+        side: MaterialStateProperty.all(const BorderSide(color: _ncDark)),
       ),
       selectedColor: _ncBrownDark,
       propInputTextStyle: const TextStyle(
