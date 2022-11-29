@@ -9,6 +9,7 @@ import 'package:path/path.dart' as path;
 import 'package:window_manager/window_manager.dart';
 
 import '../../stateManagement/FileHierarchy.dart';
+import '../../stateManagement/HierarchyEntryTypes.dart';
 import '../../stateManagement/openFileTypes.dart';
 import '../../stateManagement/events/statusInfo.dart';
 import 'FileTabEntry.dart';

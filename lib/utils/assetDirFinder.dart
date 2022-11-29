@@ -12,6 +12,8 @@ Future<void> assetDirDone = _assetDirSearchCompleter.future;
 const _assetsDirName = "assets";
 const _assetsDirSubDirs = { "fonts", "MrubyDecompiler" };
 Future<bool> findAssetsDir() async {
+  if (assetsDir != null)
+    return true;
   var path = Directory.current.path;
   // search cwd breadth first
   List<String> searchPathsQueue = [path];

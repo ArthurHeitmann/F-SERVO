@@ -10,6 +10,7 @@ import '../../background/IdsIndexer.dart';
 import '../../background/searchService.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/FileHierarchy.dart';
+import '../../stateManagement/HierarchyEntryTypes.dart';
 import '../../stateManagement/Property.dart';
 import '../../stateManagement/events/jumpToEvents.dart';
 import '../../stateManagement/nestedNotifier.dart';

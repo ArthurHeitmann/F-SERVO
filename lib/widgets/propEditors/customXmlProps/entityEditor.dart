@@ -8,7 +8,6 @@ import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
 import '../../../utils/utils.dart';
 import '../../filesView/xmlJumpToLineEventWrapper.dart';
-import '../../misc/Selectable.dart';
 import '../../misc/nestedContextMenu.dart';
 import '../simpleProps/UnderlinePropTextField.dart';
 import '../simpleProps/XmlPropEditorFactory.dart';

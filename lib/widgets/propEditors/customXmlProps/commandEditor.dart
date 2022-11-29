@@ -8,7 +8,6 @@ import '../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
 import '../../../utils/utils.dart';
-import '../../misc/Selectable.dart';
 import '../../misc/nestedContextMenu.dart';
 import '../simpleProps/XmlPropEditorFactory.dart';
 import '../simpleProps/propEditorFactory.dart';

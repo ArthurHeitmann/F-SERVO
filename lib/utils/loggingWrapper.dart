@@ -19,7 +19,10 @@ void loggingWrapper(void Function() run) {
       run();
     },
     (error, stackTrace) {
-      _logErrorToFile("$error\nStack trace:\n$stackTrace");
+      FlutterError.presentError(FlutterErrorDetails(
+        exception: error,
+        stack: stackTrace,
+      ));
     },
     zoneSpecification: ZoneSpecification(
       print: (Zone self, ZoneDelegate parent, Zone zone, String line) {

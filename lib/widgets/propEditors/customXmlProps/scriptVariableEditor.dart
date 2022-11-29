@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
 import '../../filesView/xmlJumpToLineEventWrapper.dart';
-import '../../misc/Selectable.dart';
 import '../../theme/customTheme.dart';
 import '../simpleProps/propEditorFactory.dart';
 import '../simpleProps/propTextField.dart';

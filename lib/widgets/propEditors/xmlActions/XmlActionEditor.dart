@@ -9,7 +9,6 @@ import '../../../stateManagement/xmlProps/xmlActionProp.dart';
 import '../../../utils/utils.dart';
 import '../../filesView/xmlJumpToLineEventWrapper.dart';
 import '../../misc/FlexReorderable.dart';
-import '../../misc/Selectable.dart';
 import '../../misc/nestedContextMenu.dart';
 import '../simpleProps/DoubleClickablePropTextField.dart';
 import '../simpleProps/XmlPropEditorFactory.dart';

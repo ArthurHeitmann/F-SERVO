@@ -131,7 +131,7 @@ class TitleBarState extends ChangeNotifierState<TitleBar> with WindowListener {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 15),
                   alignment: Alignment.center,
-                  child: Text(windowTitle.value, style: TextStyle(color: getTheme(context).titleBarTextColor)),
+                  child: Text(windowTitle.value, style: TextStyle(color: getTheme(context).titleBarTextColor), overflow: TextOverflow.ellipsis),
                 )
               ),
             ),

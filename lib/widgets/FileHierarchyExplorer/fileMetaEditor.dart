@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../../stateManagement/HierarchyEntryTypes.dart';
 import '../../widgets/theme/customTheme.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/FileHierarchy.dart';
@@ -68,7 +69,7 @@ class _FileMetaEditorState extends ChangeNotifierState<FileMetaEditor> {
           makeTopRow(),
           const Divider(height: 1),
           Expanded(
-            key: Key(openHierarchyManager.selectedEntry?.name.value ?? "noGroup"),
+            key: Key(openHierarchyManager.selectedEntry?.uuid ?? "noGroup"),
             child: SmoothSingleChildScrollView(
               stepSize: 60,
               controller: scrollController,

@@ -23,7 +23,7 @@ class _OpenFilesAreasState extends ChangeNotifierState<OpenFilesAreas> {
   @override
   Widget build(BuildContext context) {
 
-    return Container(
+    return Material(
       color: getTheme(context).editorBackgroundColor,
       child: ResizableWidget(
         axis: Axis.horizontal,
