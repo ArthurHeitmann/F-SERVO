@@ -144,6 +144,48 @@ class ByteDataWrapper {
     return List<int>.generate(length, (_) => readUint64());
   }
 
+  List<int> asUint8List(int length) {
+    var list = Uint8List.view(buffer, _position, length);
+    _position += length;
+    return list;
+  }
+
+  List<int> asUint16List(int length) {
+    var list = Uint16List.view(buffer, _position, length);
+    _position += length * 2;
+    return list;
+  }
+
+  List<int> asUint32List(int length) {
+    var list = Uint32List.view(buffer, _position, length);
+    _position += length * 4;
+    return list;
+  }
+
+  List<int> asUint64List(int length) {
+    var list = Uint64List.view(buffer, _position, length);
+    _position += length * 8;
+    return list;
+  }
+
+  List<int> asInt8List(int length) {
+    var list = Int8List.view(buffer, _position, length);
+    _position += length;
+    return list;
+  }
+
+  List<int> asInt16List(int length) {
+    var list = Int16List.view(buffer, _position, length);
+    _position += length * 2;
+    return list;
+  }
+
+  List<int> asInt32List(int length) {
+    var list = Int32List.view(buffer, _position, length);
+    _position += length * 4;
+    return list;
+  }
+
   String readString(int length, {StringEncoding encoding = StringEncoding.utf8}) {
     List<int> bytes;
     if (encoding != StringEncoding.utf16)

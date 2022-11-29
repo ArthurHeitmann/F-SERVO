@@ -256,4 +256,41 @@ class BoolProp extends ValueProp<bool> {
     return prop;
   }
 }
+
+class AudioSampleNumberProp extends ValueProp<int> {
+  final int samplesPerSecond;
   
+  @override
+  final PropType type = PropType.number;
+
+  AudioSampleNumberProp(super.value, this.samplesPerSecond);
+
+  @override
+  String toString() {
+    double seconds = value / samplesPerSecond;
+    int min = seconds ~/ 60;
+    int sec = seconds.toInt() % 60;
+    String ms = ((seconds * 1000) % 1000).toInt().toString().padLeft(3, '0');
+    return "${min.toString().padLeft(2, "0")}:${sec.toString().padLeft(2, "0")}.$ms";
+  }
+  
+  @override
+  void updateWith(String str) {
+    var matches = RegExp(r"(\d+):(\d+)\.(\d+)").firstMatch(str);
+    if (matches == null)
+      throw Exception("Invalid time format: $str");
+    int min = int.parse(matches.group(1)!);
+    int sec = int.parse(matches.group(2)!);
+    int ms = int.parse(matches.group(3)!);
+    if (min < 0 || sec < 0 || sec >= 60 || ms < 0 || ms >= 1000)
+      throw Exception("Invalid time format: $str");
+    value = ((min * 60 + sec + ms / 1000)  * samplesPerSecond).toInt();
+  }
+
+  @override
+  Undoable takeSnapshot() {
+    var prop = AudioSampleNumberProp(value, samplesPerSecond);
+    prop.overrideUuid(uuid);
+    return prop;
+  }
+}

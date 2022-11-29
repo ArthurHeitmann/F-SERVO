@@ -1,10 +1,13 @@
 
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 import 'package:xml/xml.dart';
 
+import '../fileTypeUtils/audio/riffParser.dart';
+import '../fileTypeUtils/audio/wemToWavConverter.dart';
 import '../fileTypeUtils/smd/smdReader.dart';
 import '../fileTypeUtils/smd/smdWriter.dart';
 import '../fileTypeUtils/tmd/tmdReader.dart';
@@ -12,10 +15,13 @@ import '../fileTypeUtils/tmd/tmdWriter.dart';
 import '../utils/utils.dart';
 import '../widgets/filesView/FileType.dart';
 import 'FileHierarchy.dart';
+import 'HierarchyEntryTypes.dart';
 import 'Property.dart';
 import 'changesExporter.dart';
 import 'hasUuid.dart';
 import 'miscValues.dart';
+import 'nestedNotifier.dart';
+import 'openFilesManager.dart';
 import 'otherFileTypes/FtbFileData.dart';
 import 'otherFileTypes/McdData.dart';
 import 'otherFileTypes/SmdFileData.dart';
@@ -58,6 +64,8 @@ abstract class OpenFileData extends ChangeNotifier with HasUuid, Undoable {
       return McdFileData(name, path, secondaryName: secondaryName);
     else if (path.endsWith(".ftb"))
       return FtbFileData(name, path, secondaryName: secondaryName);
+    else if (path.endsWith(".wem"))
+      return WemFileData(name, path, secondaryName: secondaryName);
     else
       return TextFileData(name, path, secondaryName: secondaryName);
   }
@@ -75,6 +83,8 @@ abstract class OpenFileData extends ChangeNotifier with HasUuid, Undoable {
       return FileType.mcd;
     else if (path.endsWith(".ftb"))
       return FileType.ftb;
+    else if (path.endsWith(".wem"))
+      return FileType.wem;
     else
       return FileType.text;
   }
@@ -485,5 +495,149 @@ class FtbFileData extends OpenFileData {
   @override
   void restoreWith(Undoable snapshot) {
     // nothing to do
+  }
+}
+
+class CuePointMarker with HasUuid, Undoable {
+  final AudioSampleNumberProp sample;
+  final StringProp name;
+  final OpenFileId file;
+
+  CuePointMarker(this.sample, this.name, this.file) {
+    sample.addListener(_onChanged);
+    name.addListener(_onChanged);
+  }
+
+  void dispose() {
+    sample.dispose();
+    name.dispose();
+  }
+
+  void _onChanged() {
+    var file = areasManager.fromId(this.file);
+    if (file == null)
+      return;
+    file.hasUnsavedChanges = true;
+    undoHistoryManager.onUndoableEvent();
+  }
+
+  @override
+  Undoable takeSnapshot() {
+    var snapshot = CuePointMarker(sample.takeSnapshot() as AudioSampleNumberProp, name.takeSnapshot() as StringProp, file);
+    snapshot.overrideUuid(uuid);
+    return snapshot;
+  }
+  
+  @override
+  void restoreWith(Undoable snapshot) {
+    var content = snapshot as CuePointMarker;
+    sample.restoreWith(content.sample);
+    name.restoreWith(content.name);
+  }
+}
+mixin AudioFileData on ChangeNotifier, HasUuid {
+  String? audioFilePath;
+  late final ValueNestedNotifier<CuePointMarker> cuePoints;
+  bool cuePointsStartAt1 = false;
+  int samplesPerSec = 44100;
+  int totalSamples = 0;
+  List<int>? wavSamples;
+
+  Future<void> load();
+}
+class WemFileData extends OpenFileData with AudioFileData {
+  static const int _wavSamplesCount = 40000;
+  
+  WemFileData(super.name, super.path, { super.secondaryName, ValueNestedNotifier<CuePointMarker>? cuePoints }) {
+    this.cuePoints = cuePoints ?? ValueNestedNotifier([]);
+    this.cuePoints.addListener(_onCuePointsChanged);
+  }
+
+  @override
+  Future<void> load() async {
+    if (_loadingState != LoadingState.notLoaded && audioFilePath != null)
+      return;
+    _loadingState = LoadingState.loading;
+
+    // extract wav
+    audioFilePath = await wemToWav(path);
+
+    var wavData = await RiffFile.fromFile(audioFilePath!);
+    samplesPerSec = wavData.formatChunk.samplesPerSec;
+    totalSamples = wavData.dataChunk.samples.length ~/ wavData.formatChunk.channels;
+
+    // rough wav samples
+    var rawSamples = wavData.dataChunk.samples;
+    int sampleCount = min(_wavSamplesCount, rawSamples.length);
+    int samplesSize = rawSamples.length ~/ sampleCount;
+    wavSamples = List.generate(sampleCount, (i) => rawSamples[i * samplesSize]);
+
+    // cue points
+    var wemData = await RiffFile.fromFile(path);
+    List<RiffListLabelSubChunk> pendingLabels = [];
+    for (var listChunk in wemData.listChunks) {
+      if (listChunk.chunkType != "adtl")
+        continue;
+      for (var subChunk in listChunk.subChunks) {
+        if (subChunk is! RiffListLabelSubChunk)
+          continue;
+        pendingLabels.add(subChunk);
+      }
+    }
+    if (pendingLabels.isNotEmpty) {
+      int maxLabelCueIndex = pendingLabels.map((l) => l.cuePointIndex).reduce(max);
+      // sometimes indexes start at 1, sometimes at 0
+      cuePointsStartAt1 = maxLabelCueIndex == pendingLabels.length;
+      int iOff = cuePointsStartAt1 ? -1 : 0;
+      cuePoints.addAll(pendingLabels.map((l) {
+        var cuePoint = wemData.cueChunk!.points[l.cuePointIndex + iOff];
+        return CuePointMarker(
+          AudioSampleNumberProp(cuePoint.sampleOffset, samplesPerSec),
+          StringProp(l.label),
+          uuid
+        );
+      }));
+    }
+
+    hasUnsavedChanges = false;
+
+    await super.load();
+  }
+
+  @override
+  void dispose() {
+    if (audioFilePath != null) {
+      File(audioFilePath!).delete();
+      audioFilePath = null;
+    }
+    wavSamples = null;
+    cuePoints.dispose();
+    super.dispose();
+  }
+
+  void _onCuePointsChanged() {
+    hasUnsavedChanges = true;
+    undoHistoryManager.onUndoableEvent();
+  }
+
+  @override
+  Undoable takeSnapshot() {
+    var snapshot = WemFileData(
+      _name, _path, secondaryName: _secondaryName,
+      cuePoints: cuePoints.takeSnapshot() as ValueNestedNotifier<CuePointMarker>
+    );
+    snapshot._unsavedChanges = _unsavedChanges;
+    snapshot._loadingState = _loadingState;
+    snapshot.overrideUuid(uuid);
+    return snapshot;
+  }
+
+  @override
+  void restoreWith(Undoable snapshot) {
+    var content = snapshot as WemFileData;
+    name = content._name;
+    path = content._path;
+    cuePoints.restoreWith(content.cuePoints);
+    hasUnsavedChanges = content._unsavedChanges;
   }
 }
