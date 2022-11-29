@@ -112,54 +112,57 @@ class MyAppBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return globalShortcutsWrapper(context,
-      child: MousePosition(
-        child: ContextMenuOverlay(
-          cardBuilder: (context, children) => ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 300, minWidth: 200),
-            child: Material(
-              color: getTheme(context).contextMenuBgColor,
-              borderRadius: const BorderRadius.all(Radius.circular(8)),
-              clipBehavior: Clip.antiAlias,
-              elevation: 5,
-              shadowColor: Colors.black,
-              child: Column(
-                children: children,
+    return CustomPaint(
+      foregroundPainter: Theme.of(context).brightness == Brightness.light ? _NierOverlayPainter() : null,
+      child: globalShortcutsWrapper(context,
+        child: MousePosition(
+          child: ContextMenuOverlay(
+            cardBuilder: (context, children) => ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 300, minWidth: 200),
+              child: Material(
+                color: getTheme(context).contextMenuBgColor,
+                borderRadius: const BorderRadius.all(Radius.circular(8)),
+                clipBehavior: Clip.antiAlias,
+                elevation: 5,
+                shadowColor: Colors.black,
+                child: Column(
+                  children: children,
+                ),
               ),
             ),
-          ),
-          buttonBuilder: (context, config, [style]) => InkWell(
-            onTap: config.onPressed,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 5),
-              child: Row(
-                children: [
-                  if (config.icon != null)
-                    config.icon!,
-                  if (config.icon != null)
-                    const SizedBox(width: 8),
-                  if (config.icon == null)
-                    const SizedBox(width: 16),
-                  Expanded(
-                    child: Text(config.label, overflow: TextOverflow.ellipsis,)
-                  ),
-                  if (config.shortcutLabel != null)
-                    Text(
-                      config.shortcutLabel!,
-                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+            buttonBuilder: (context, config, [style]) => InkWell(
+              onTap: config.onPressed,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 5),
+                child: Row(
+                  children: [
+                    if (config.icon != null)
+                      config.icon!,
+                    if (config.icon != null)
+                      const SizedBox(width: 8),
+                    if (config.icon == null)
+                      const SizedBox(width: 16),
+                    Expanded(
+                      child: Text(config.label, overflow: TextOverflow.ellipsis,)
                     ),
-                ],
+                    if (config.shortcutLabel != null)
+                      Text(
+                        config.shortcutLabel!,
+                        style: const TextStyle(fontSize: 12, color: Colors.grey),
+                      ),
+                  ],
+                ),
               ),
             ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TitleBar(),
-              const Expanded(child: EditorLayout()),
-              Divider(height: 1, color: getTheme(context).dividerColor),
-              const Statusbar(),
-            ],
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TitleBar(),
+                const Expanded(child: EditorLayout()),
+                Divider(height: 1, color: getTheme(context).dividerColor),
+                const Statusbar(),
+              ],
+            ),
           ),
         ),
       ),
@@ -183,4 +186,38 @@ Future<bool> ensureHasStoragePermission() async {
       return false;
   }
   return true;
+}
+
+class _NierOverlayPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    // grid
+    const gridSize = 10;
+    const gridColor = Color.fromARGB(10, 133, 125, 65);
+    const lineW = 3.0;
+
+    final paint = Paint()
+      ..color = gridColor;
+
+    for (double x = 0; x < size.width; x += gridSize)
+      canvas.drawRect(Rect.fromLTWH(x, 0, lineW, size.height), paint);
+    for (double y = 0; y < size.height; y += gridSize)
+      canvas.drawRect(Rect.fromLTWH(0, y, size.width, lineW), paint);
+    
+    // vignette
+    final vignettePaint = Paint()
+      ..shader = RadialGradient(
+        colors: [
+          Colors.black.withOpacity(0.0),
+          Colors.black.withOpacity(0.2),
+        ],
+        stops: const [0.7, 5.0],
+        center: Alignment.center,
+        radius: 1.0,
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), vignettePaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
