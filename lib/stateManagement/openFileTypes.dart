@@ -66,6 +66,8 @@ abstract class OpenFileData extends ChangeNotifier with HasUuid, Undoable {
       return FtbFileData(name, path, secondaryName: secondaryName);
     else if (path.endsWith(".wem"))
       return WemFileData(name, path, secondaryName: secondaryName);
+    else if (path.endsWith(".wsp"))
+      return WspFileData(name, path, secondaryName: secondaryName);
     else
       return TextFileData(name, path, secondaryName: secondaryName);
   }
@@ -85,6 +87,8 @@ abstract class OpenFileData extends ChangeNotifier with HasUuid, Undoable {
       return FileType.ftb;
     else if (path.endsWith(".wem"))
       return FileType.wem;
+    else if (path.endsWith(".wsp"))
+      return FileType.wsp;
     else
       return FileType.text;
   }
@@ -639,5 +643,62 @@ class WemFileData extends OpenFileData with AudioFileData {
     path = content._path;
     cuePoints.restoreWith(content.cuePoints);
     hasUnsavedChanges = content._unsavedChanges;
+  }
+}
+
+class WspFileData extends OpenFileData {
+  List<WemFileData> wems = [];
+
+  WspFileData(super.name, super.path, { super.secondaryName });
+
+  @override
+  Future<void> load() async {
+    if (_loadingState != LoadingState.notLoaded)
+      return;
+    _loadingState = LoadingState.loading;
+
+    var wspHierarchyEntry = openHierarchyManager.find((e) => e is WspHierarchyEntry && e.path == path);
+    if (wspHierarchyEntry == null) {
+      showToast("WSP hierarchy entry not found");
+      throw Exception("WSP hierarchy entry not found for $path");
+    }
+    wems = wspHierarchyEntry
+      .map((e) => e as WemHierarchyEntry)
+      .map((e) => WemFileData(
+        e.name.value,
+        e.path,
+      ))
+      .toList();
+
+    await Future.wait(wems.map((w) => w.load()));
+
+    await super.load();
+  }
+
+  @override
+  void dispose() {
+    for (var wem in wems)
+      wem.dispose();
+    super.dispose();
+  }
+
+  @override
+  Undoable takeSnapshot() {
+    var snapshot = WspFileData(_name, _path);
+    snapshot.wems = wems.map((w) => w.takeSnapshot() as WemFileData).toList();
+    snapshot._unsavedChanges = _unsavedChanges;
+    snapshot._loadingState = _loadingState;
+    snapshot.overrideUuid(uuid);
+    return snapshot;
+  }
+
+  @override
+  void restoreWith(Undoable snapshot) {
+    var content = snapshot as WspFileData;
+    name = content._name;
+    path = content._path;
+    hasUnsavedChanges = content._unsavedChanges;
+    for (var i = 0; i < wems.length; i++)
+      wems[i].restoreWith(content.wems[i]);
   }
 }

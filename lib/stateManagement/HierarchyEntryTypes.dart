@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:path/path.dart';
 import 'package:xml/xml.dart';
 
-import '../fileTypeUtils/audio/waiExtracter.dart';
+import '../fileTypeUtils/audio/waiExtractor.dart';
 import '../fileTypeUtils/audio/waiIO.dart';
 import '../fileTypeUtils/utils/ByteDataWrapper.dart';
 import '../fileTypeUtils/yax/yaxToXml.dart';
@@ -497,18 +497,18 @@ class FtbHierarchyEntry extends GenericFileHierarchyEntry {
 }
 
 class WaiHierarchyEntry extends ExtractableHierarchyEntry {
-  WaiFile? waiFile;
+  WaiFile? _waiFile;
   List<WaiChild> structure = [];
 
   WaiHierarchyEntry(StringProp name, String path, String extractedPath)
     : super(name, path, extractedPath, true, false);
 
   Future<WaiFile> readWaiFile() async {
-    if (waiFile != null)
-      return waiFile!;
+    if (_waiFile != null)
+      return _waiFile!;
     var bytes = await File(path).readAsBytes();
-    waiFile = WaiFile.read(ByteDataWrapper(bytes.buffer));
-    return waiFile!;
+    _waiFile = WaiFile.read(ByteDataWrapper(bytes.buffer));
+    return _waiFile!;
   }
   
   @override
@@ -522,17 +522,48 @@ class WaiHierarchyEntry extends ExtractableHierarchyEntry {
     name.restoreWith(entry.name);
     _isSelected = entry._isSelected;
     _isCollapsed = entry._isCollapsed;
-    // waiFile = entry.waiFile;
+  }
+}
+
+class WaiFolderHierarchyEntry extends GenericFileHierarchyEntry {
+  WaiFolderHierarchyEntry(StringProp name, String path, List<WaiChild> children)
+    : super(name, path, true, false) {
+    _isCollapsed = true;
+    addAll(children.map((child) => makeWaiChildEntry(child)));
+  }
+  
+  @override
+  HierarchyEntry clone() {
+    return WspHierarchyEntry(name.takeSnapshot() as StringProp, path, []);
   }
 }
 
 class WspHierarchyEntry extends GenericFileHierarchyEntry {
-  WspHierarchyEntry(StringProp name, String path)
-    : super(name, path, true, true);
+  final List<WaiChild> _childWems;
+  bool _hasLoadedChildren = false;
+
+  WspHierarchyEntry(StringProp name, String path, List<WaiChild> childWems) :
+    _childWems = childWems,
+    super(name, path, true, true) {
+    _isCollapsed = true;
+    name.value += " (${childWems.length})";
+  }
+  
+  @override
+  set isCollapsed(bool value) {
+    if (value == _isCollapsed)
+      return;
+    _isCollapsed = value;
+    notifyListeners();
+    if (!_isCollapsed && !_hasLoadedChildren) {
+      _hasLoadedChildren = true;
+      addAll(_childWems.map((child) => makeWaiChildEntry(child)));
+    }
+  }
   
   @override
   HierarchyEntry clone() {
-    return WspHierarchyEntry(name.takeSnapshot() as StringProp, path);
+    return WspHierarchyEntry(name.takeSnapshot() as StringProp, path, _childWems);
   }
 }
 
@@ -544,4 +575,17 @@ class WemHierarchyEntry extends GenericFileHierarchyEntry {
   HierarchyEntry clone() {
     return WemHierarchyEntry(name.takeSnapshot() as StringProp, path);
   }
+}
+
+HierarchyEntry makeWaiChildEntry(WaiChild child) {
+  HierarchyEntry entry;
+  if (child is WaiChildDir)
+    entry = WaiFolderHierarchyEntry(StringProp(child.name), child.path, child.children);
+  else if (child is WaiChildWsp)
+    entry = WspHierarchyEntry(StringProp(child.name), child.path, child.children);
+  else if (child is WaiChildWem)
+    entry = WemHierarchyEntry(StringProp(child.name), child.path);
+  else
+    throw Exception("Unknown WAI child type: ${child.runtimeType}");
+  return entry;
 }

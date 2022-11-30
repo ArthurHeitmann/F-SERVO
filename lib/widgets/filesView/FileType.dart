@@ -19,6 +19,7 @@ enum FileType {
   mcd,
   ftb,
   wem,
+  wsp,
 }
 
 Widget makeFileEditor(OpenFileData content) {

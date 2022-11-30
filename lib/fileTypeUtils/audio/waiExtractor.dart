@@ -17,24 +17,30 @@ class WaiChildList extends WaiChild {
   const WaiChildList(String name, this.children) : super(name);
 }
 class WaiChildDir extends WaiChildList {
-  const WaiChildDir(String name, List<WaiChild> children) : super(name, children);
+  final String path;
+
+  const WaiChildDir(String name, this.path, List<WaiChild> children) : super(name, children);
 }
 class WaiChildWsp extends WaiChildList {
-  const WaiChildWsp(String name, List<WaiChild> children) : super(name, children);
+  final String path;
+
+  const WaiChildWsp(String name, this.path, List<WaiChild> children) : super(name, children);
 }
 class WaiChildWem extends WaiChild {
-  const WaiChildWem(String name) : super(name);
+  final String path;
+
+  const WaiChildWem(String name, this.path) : super(name);
 }
 Future<List<WaiChild>> extractWaiWsps(WaiFile wai, String waiPath, String extractPath, [bool noExtract = false]) async {
   List<WaiChild> structure = [];
   String waiDir = dirname(waiPath);
-  for (var dir in wai.wspDirectories) {
+  await Future.wait(wai.wspDirectories.map((dir) async {
     String wspsDir = dir.name.isNotEmpty ? join(extractPath, dir.name) : extractPath;
     await Directory(wspsDir).create(recursive: true);
     List<WaiChild> wspFilesInDir = structure;
     if (dir.name.isNotEmpty) {
       wspFilesInDir = [];
-      structure.add(WaiChildDir(dir.name, wspFilesInDir));
+      structure.add(WaiChildDir(dir.name, join(extractPath, dir.name), wspFilesInDir));
     }
     List<WemStruct> dirWemStructs = List.generate(
       dir.endStructIndex - dir.startStructIndex,
@@ -47,7 +53,7 @@ Future<List<WaiChild>> extractWaiWsps(WaiFile wai, String waiPath, String extrac
         wemStructsByWspName[wspName] = [];
       wemStructsByWspName[wspName]!.add(wemStruct);
     }
-    for (String wspName in wemStructsByWspName.keys) {
+    await Future.wait(wemStructsByWspName.keys.map((wspName) async {
       List<WemStruct> wemStructs = wemStructsByWspName[wspName]!;
       wemStructs.sort((a, b) => a.wemOffset.compareTo(b.wemOffset));
       String wspPath = join(waiDir, "stream");
@@ -57,30 +63,35 @@ Future<List<WaiChild>> extractWaiWsps(WaiFile wai, String waiPath, String extrac
       String wspExtractDir = join(wspsDir, wspName);
 
       List<WaiChild> wemFilesInWsp = [];
-      wspFilesInDir.add(WaiChildWsp(wspName, wemFilesInWsp));
+      wspFilesInDir.add(WaiChildWsp(wspName, wspExtractDir, wemFilesInWsp));
       if (noExtract) {
         wemFilesInWsp.addAll([
-          for (var wem in wemStructs)
-            WaiChildWem(join(wspExtractDir, "${wem.wemID}.wem"))
+          for (int i = 0; i < wemStructs.length; i++)
+            WaiChildWem("${i}_${wemStructs[i].wemID}.wem", join(wspExtractDir, "${i}_${wemStructs[i].wemID}.wem"))
         ]);
-        continue;
+        return;
       }
       messageLog.add("Extracting $wspName");
       await Directory(wspExtractDir).create(recursive: true);
       var wspFile = await File(wspPath).open();
       try {
-        for (var wemStruct in wemStructs) {
-          var wemPath = join(wspExtractDir, "${wemStruct.wemID}.wem");
+        for (int i = 0; i < wemStructs.length; i++) {
+          var wemStruct = wemStructs[i];
+          var wemPath = join(wspExtractDir, "${i}_${wemStruct.wemID}.wem");
           var wemFile = File(wemPath);
           await wspFile.setPosition(wemStruct.wemOffset);
           await wemFile.writeAsBytes(await wspFile.read(wemStruct.wemEntrySize));
-          wemFilesInWsp.add(WaiChildWem(wemPath));
+          wemFilesInWsp.add(WaiChildWem("${i}_${wemStruct.wemID}.wem", wemPath));
         }
       } finally {
         await wspFile.close();
       }
-    }
-  }
+    }));
+
+    wspFilesInDir.sort((a, b) => a.name.compareTo(b.name));
+  }));
+
+  structure.sort((a, b) => a.name.compareTo(b.name));
 
   return structure;
 }

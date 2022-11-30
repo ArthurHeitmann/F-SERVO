@@ -63,7 +63,12 @@ class _AudioFileEditorState extends State<AudioFileEditor> {
               player: _player,
             ),
             const SizedBox(height: 30),
-          ],
+          ]
+          else
+            const SizedBox(
+              height: 2,
+              child: LinearProgressIndicator(backgroundColor: Colors.transparent,)
+            ),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [

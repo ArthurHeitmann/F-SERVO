@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:path/path.dart' as path;
 import 'package:xml/xml.dart';
 
-import '../fileTypeUtils/audio/waiExtracter.dart';
+import '../fileTypeUtils/audio/waiExtractor.dart';
 import '../fileTypeUtils/dat/datExtractor.dart';
 import '../fileTypeUtils/ruby/pythonRuby.dart';
 import '../fileTypeUtils/yax/xmlToYax.dart';
@@ -109,6 +109,9 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
           entry = await openWaiFile(filePath);
         else
           throw FileSystemException("File not found: $filePath");
+      }
+      else if (filePath.endsWith(".wsp")) {
+        entry = openWspFile(filePath);
       }
       else if (filePath.endsWith(".wem")) {
         if (await File(filePath).exists())
@@ -336,8 +339,22 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
     if (!noExtract)
       await extractedFile.writeAsString("Delete this file to re-extract files");
     waiEntry.structure = structure;
+
+    // move folders to top of list
+    List<WaiChild> topLevelFolders = structure.whereType<WaiChildDir>().toList();
+    topLevelFolders.sort((a, b) => a.name.compareTo(b.name));
+    structure.removeWhere((child) => child is WaiChildDir);
+    for (int i = 0; i < topLevelFolders.length; i++)
+      structure.insert(i, topLevelFolders[i]);
+    waiEntry.addAll(structure.map((e) => makeWaiChildEntry(e)));
+
     add(waiEntry);
     return waiEntry;
+  }
+
+  HierarchyEntry openWspFile(String wspPath) {
+    showToast("Please open WwiseStreamInfo.wai instead", const Duration(seconds: 6));
+    throw Exception("Can't open WSP file directly");
   }
 
   @override

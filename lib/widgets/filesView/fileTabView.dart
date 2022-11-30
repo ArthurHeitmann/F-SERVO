@@ -66,7 +66,7 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
     if (files.isEmpty)
       return;
     OpenFileData? firstFile;
-    const fileExplorerExtensions = { ".pak", ".dat", ".yax", ".bin" };
+    const fileExplorerExtensions = { ".pak", ".dat", ".yax", ".bin", ".wai", ".wsp" };
     for (var file in files) {
       if (fileExplorerExtensions.contains(path.extension(file.name)) || await Directory(file.path).exists()) {
         var entry = await openHierarchyManager.openFile(file.path);

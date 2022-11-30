@@ -13,6 +13,7 @@ import '../propEditors/simpleProps/boolPropSwitch.dart';
 import '../propEditors/simpleProps/primaryPropTextField.dart';
 import '../propEditors/simpleProps/propTextField.dart';
 import 'RowSeparated.dart';
+import 'SmoothScrollBuilder.dart';
 import 'smallButton.dart';
 
 class PreferencesEditor extends ChangeNotifierWidget {
@@ -27,21 +28,25 @@ class PreferencesEditor extends ChangeNotifierWidget {
 
 class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
   static const sectionHeaderStyle = TextStyle(fontWeight: FontWeight.w300, fontSize: 18);
+  final controller = ScrollController();
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(32),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text("Preferences", style: TextStyle(fontWeight: FontWeight.w300, fontSize: 25),),
-          const SizedBox(height: 20,),
-          ...makeDataExportEditor(context),
-          ...makeIndexingEditor(),
-          ...makeThemeEditor(),
-          ...makeMusicEditor(),
-        ],
+    return SmoothSingleChildScrollView(
+      controller: controller,
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text("Preferences", style: TextStyle(fontWeight: FontWeight.w300, fontSize: 25),),
+            const SizedBox(height: 20,),
+            ...makeDataExportEditor(context),
+            ...makeIndexingEditor(),
+            ...makeThemeEditor(),
+            ...makeMusicEditor(),
+          ],
+        ),
       ),
     );
   }
