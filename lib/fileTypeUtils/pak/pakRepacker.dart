@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 
 import '../../stateManagement/events/statusInfo.dart';
+import '../../utils/utils.dart';
 import '../utils/ByteDataWrapper.dart';
 
 const ZLibEncoder _zLibEncoder = ZLibEncoder();
@@ -78,9 +79,6 @@ Future<void> repackPak(String pakDir) async {
   var infoJsonFile = File(path.join(pakDir, "pakInfo.json"));
   var pakInfo = jsonDecode(await infoJsonFile.readAsString());
 
-  var pakFileName = path.basename(pakDir);
-  var pakFile = File(path.join(path.dirname(path.dirname(pakDir)), pakFileName));
-
   var filesOffset = (pakInfo["files"] as List).length * 12 + 0x4;
   var lastFileOffset = filesOffset;
   var fileEntries = <_FileEntry>[];
@@ -101,6 +99,10 @@ Future<void> repackPak(String pakDir) async {
   for (var fileEntry in fileEntries)
     fileEntry.writeFileEntryToFile(bytes);
 
+  var pakFileName = path.basename(pakDir);
+  var pakFilePath = path.join(path.dirname(path.dirname(pakDir)), pakFileName);
+  await backupFile(pakFilePath);
+  var pakFile = File(pakFilePath);
   await pakFile.writeAsBytes(bytes.buffer.asUint8List());
 
   print("Pak file $pakFileName created (${fileEntries.length} file repacked)");

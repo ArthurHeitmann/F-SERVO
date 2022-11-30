@@ -1,9 +1,12 @@
 
 import 'dart:io';
 
-import 'package:path/path.dart' as path;
+import 'package:path/path.dart';
 import 'package:xml/xml.dart';
 
+import '../fileTypeUtils/audio/waiExtracter.dart';
+import '../fileTypeUtils/audio/waiIO.dart';
+import '../fileTypeUtils/utils/ByteDataWrapper.dart';
 import '../fileTypeUtils/yax/yaxToXml.dart';
 import '../utils/utils.dart';
 import 'FileHierarchy.dart';
@@ -145,7 +148,7 @@ class DatHierarchyEntry extends ExtractableHierarchyEntry {
 
   @override
   Undoable takeSnapshot() {
-    var entry = DatHierarchyEntry(name.takeSnapshot() as StringProp, this.path, extractedPath);
+    var entry = DatHierarchyEntry(name.takeSnapshot() as StringProp, path, extractedPath);
     entry.overrideUuid(uuid);
     entry._isSelected = _isSelected;
     entry._isCollapsed = _isCollapsed;
@@ -237,7 +240,7 @@ class PakHierarchyEntry extends ExtractableHierarchyEntry {
   
   @override
   Undoable takeSnapshot() {
-    var snapshot = PakHierarchyEntry(name.takeSnapshot() as StringProp, this.path, extractedPath);
+    var snapshot = PakHierarchyEntry(name.takeSnapshot() as StringProp, path, extractedPath);
     snapshot.overrideUuid(uuid);
     snapshot._isSelected = _isSelected;
     snapshot._isCollapsed = _isCollapsed;
@@ -282,7 +285,7 @@ class HapGroupHierarchyEntry extends FileHierarchyEntry {
   
   HapGroupHierarchyEntry(StringProp name, this.prop)
     : id = (prop.get("id")!.value as HexProp).value,
-    super(name, path.dirname(areasManager.fromId(prop.file)?.path ?? ""), true, false);
+    super(name, dirname(areasManager.fromId(prop.file)?.path ?? ""), true, false);
   
   HapGroupHierarchyEntry addChild({ String name = "New Group" }) {
     var newGroupProp = XmlProp.fromXml(
@@ -383,7 +386,7 @@ class XmlScriptHierarchyEntry extends FileHierarchyEntry {
   Future<void> readMeta() async {
     if (_hasReadMeta) return;
 
-    var scriptFile = File(this.path);
+    var scriptFile = File(path);
     var scriptContents = await scriptFile.readAsString();
     var xmlRoot = XmlDocument.parse(scriptContents).firstElementChild!;
     var group = xmlRoot.findElements("group");
@@ -399,7 +402,7 @@ class XmlScriptHierarchyEntry extends FileHierarchyEntry {
   
   @override
   Undoable takeSnapshot() {
-    var snapshot = XmlScriptHierarchyEntry(name.takeSnapshot() as StringProp, this.path);
+    var snapshot = XmlScriptHierarchyEntry(name.takeSnapshot() as StringProp, path);
     snapshot.overrideUuid(uuid);
     snapshot._isSelected = _isSelected;
     snapshot._isCollapsed = _isCollapsed;
@@ -449,7 +452,7 @@ class RubyScriptHierarchyEntry extends GenericFileHierarchyEntry {
   
   @override
   HierarchyEntry clone() {
-    return RubyScriptHierarchyEntry(name.takeSnapshot() as StringProp, this.path);
+    return RubyScriptHierarchyEntry(name.takeSnapshot() as StringProp, path);
   }
 }
 
@@ -459,7 +462,7 @@ class TmdHierarchyEntry extends GenericFileHierarchyEntry {
   
   @override
   HierarchyEntry clone() {
-    return TmdHierarchyEntry(name.takeSnapshot() as StringProp, this.path);
+    return TmdHierarchyEntry(name.takeSnapshot() as StringProp, path);
   }
 }
 
@@ -469,7 +472,7 @@ class SmdHierarchyEntry extends GenericFileHierarchyEntry {
   
   @override
   HierarchyEntry clone() {
-    return SmdHierarchyEntry(name.takeSnapshot() as StringProp, this.path);
+    return SmdHierarchyEntry(name.takeSnapshot() as StringProp, path);
   }
 }
 
@@ -479,7 +482,7 @@ class McdHierarchyEntry extends GenericFileHierarchyEntry {
   
   @override
   HierarchyEntry clone() {
-    return McdHierarchyEntry(name.takeSnapshot() as StringProp, this.path);
+    return McdHierarchyEntry(name.takeSnapshot() as StringProp, path);
   }
 }
 
@@ -489,27 +492,47 @@ class FtbHierarchyEntry extends GenericFileHierarchyEntry {
   
   @override
   HierarchyEntry clone() {
-    return FtbHierarchyEntry(name.takeSnapshot() as StringProp, this.path);
+    return FtbHierarchyEntry(name.takeSnapshot() as StringProp, path);
   }
 }
 
-class WaiHierarchyEntry extends GenericFileHierarchyEntry {
-  WaiHierarchyEntry(StringProp name, String path)
-    : super(name, path, false, true);
+class WaiHierarchyEntry extends ExtractableHierarchyEntry {
+  WaiFile? waiFile;
+  List<WaiChild> structure = [];
+
+  WaiHierarchyEntry(StringProp name, String path, String extractedPath)
+    : super(name, path, extractedPath, true, false);
+
+  Future<WaiFile> readWaiFile() async {
+    if (waiFile != null)
+      return waiFile!;
+    var bytes = await File(path).readAsBytes();
+    waiFile = WaiFile.read(ByteDataWrapper(bytes.buffer));
+    return waiFile!;
+  }
   
   @override
-  HierarchyEntry clone() {
-    return WaiHierarchyEntry(name.takeSnapshot() as StringProp, this.path);
+  Undoable takeSnapshot() {
+    return WaiHierarchyEntry(name.takeSnapshot() as StringProp, path, extractedPath);
+  }
+  
+  @override
+  void restoreWith(Undoable snapshot) {
+    var entry = snapshot as WaiHierarchyEntry;
+    name.restoreWith(entry.name);
+    _isSelected = entry._isSelected;
+    _isCollapsed = entry._isCollapsed;
+    // waiFile = entry.waiFile;
   }
 }
 
 class WspHierarchyEntry extends GenericFileHierarchyEntry {
   WspHierarchyEntry(StringProp name, String path)
-    : super(name, path, false, true);
+    : super(name, path, true, true);
   
   @override
   HierarchyEntry clone() {
-    return WspHierarchyEntry(name.takeSnapshot() as StringProp, this.path);
+    return WspHierarchyEntry(name.takeSnapshot() as StringProp, path);
   }
 }
 
@@ -519,6 +542,6 @@ class WemHierarchyEntry extends GenericFileHierarchyEntry {
   
   @override
   HierarchyEntry clone() {
-    return WemHierarchyEntry(name.takeSnapshot() as StringProp, this.path);
+    return WemHierarchyEntry(name.takeSnapshot() as StringProp, path);
   }
 }

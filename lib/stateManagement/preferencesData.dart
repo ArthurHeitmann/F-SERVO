@@ -21,6 +21,7 @@ class SavableProp<T> extends ValueProp<T> {
 
   SavableProp(this.key, SharedPreferences prefs, T fallback)
     : super(fallback) {
+    changesUndoable = false;
     value = _getValue(prefs) ?? fallback;
     addListener(saveChanges);
   }
@@ -72,6 +73,8 @@ class PreferencesData extends OpenFileData {
   SavableProp<bool>? exportPaks;
   SavableProp<bool>? convertXmls;
   SavableProp<ThemeType>? themeType;
+  SavableProp<String>? waiExtractDir;
+  SavableProp<String>? wwiseCliPath;
 
   PreferencesData._() 
     : prefsFuture = SharedPreferences.getInstance(),
@@ -110,6 +113,8 @@ class PreferencesData extends OpenFileData {
     exportPaks = SavableProp<bool>("exportPak", _prefs!, true);
     convertXmls = SavableProp<bool>("convertXml", _prefs!, true);
     themeType = SavableProp<ThemeType>("themeType", _prefs!, ThemeType.dark);
+    waiExtractDir = SavableProp<String>("waiExtractDir", _prefs!, "");
+    wwiseCliPath = SavableProp<String>("wwiseCliPath", _prefs!, "");
 
     await super.load();
     _loadingState = LoadingState.loaded;

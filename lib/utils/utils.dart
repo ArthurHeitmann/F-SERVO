@@ -624,3 +624,9 @@ List<T> spaceListWith<T>(List<T> list, T Function() generator, [bool outer = fal
     newList.add(generator());
   return newList;
 }
+
+Future<void> backupFile(String file) async {
+  var backupName = "$file.backup";
+  if (!await File(backupName).exists())
+    await File(file).copy(backupName);
+}

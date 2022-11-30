@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
+import '../../utils/assetDirFinder.dart';
+import '../../utils/utils.dart';
 import '../../widgets/theme/customTheme.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/preferencesData.dart';
@@ -35,15 +37,31 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
         children: [
           const Text("Preferences", style: TextStyle(fontWeight: FontWeight.w300, fontSize: 25),),
           const SizedBox(height: 20,),
-          ...makeDataExportEditor(),
+          ...makeDataExportEditor(context),
           ...makeIndexingEditor(),
           ...makeThemeEditor(),
+          ...makeMusicEditor(),
         ],
       ),
     );
   }
 
-  List<Widget> makeDataExportEditor() {
+  Widget makeFilePickerButton(String dialogTitle, String? initialDir, void Function(String) onPick) {
+    return SmallButton(
+      constraints: BoxConstraints.tight(const Size(30, 30)),
+      onPressed: () async {
+        var dir = await FilePicker.platform.getDirectoryPath(
+          dialogTitle: dialogTitle,
+          initialDirectory: initialDir,
+        );
+        if (dir != null)
+          onPick(dir);
+      },
+      child: const Icon(Icons.folder, size: 17,),
+    );
+  }
+
+  List<Widget> makeDataExportEditor(BuildContext context) {
     var exportPathProp = widget.prefs.dataExportPath;
     var exportOptions = [
       widget.prefs.exportDats,
@@ -72,18 +90,10 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
               options: const PropTFOptions(constraints: BoxConstraints(minHeight: 30)),
             ),
           ),
-          SmallButton(
-            constraints: BoxConstraints.tight(const Size(30, 30)),
-            onPressed: () async {
-              var dir = await FilePicker.platform.getDirectoryPath(
-                dialogTitle: "Select Indexing Directory",
-                initialDirectory: exportPathProp.value.isNotEmpty ? exportPathProp.value : null,
-              );
-              if (dir != null) {
-                widget.prefs.dataExportPath!.value = dir;
-              }
-            },
-            child: const Icon(Icons.folder, size: 17,),
+          makeFilePickerButton(
+            "Select Indexing Directory",
+            exportPathProp.value.isNotEmpty ? exportPathProp.value : null,
+            (dir) => widget.prefs.dataExportPath!.value = dir,
           ),
         ],
       ),
@@ -137,18 +147,10 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
                 options: const PropTFOptions(constraints: BoxConstraints(minHeight: 30)),
               ),
             ),
-            SmallButton(
-              constraints: BoxConstraints.tight(const Size(30, 30)),
-              onPressed: () async {
-                var dir = await FilePicker.platform.getDirectoryPath(
-                  dialogTitle: "Select Indexing Directory",
-                  initialDirectory: path.value,
-                );
-                if (dir != null) {
-                  widget.prefs.indexingPaths!.setPath(path, dir);
-                }
-              },
-              child: const Icon(Icons.folder, size: 17,),
+            makeFilePickerButton(
+              "Select Indexing Directory",
+              path.value.isNotEmpty ? path.value : null,
+              (dir) => widget.prefs.indexingPaths!.setPath(path, dir),
             ),
             SmallButton(
               constraints: BoxConstraints.tight(const Size(30, 30)),
@@ -224,6 +226,59 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
             makeThemeSelectable(context, ThemeType.nier, const Color.fromARGB(255, 218, 212, 187), const Color.fromARGB(255, 78, 75, 61)),
           ],
         ),
+      ),
+    ];
+  }
+
+  List<Widget> makeMusicEditor() {
+    return [
+      const Text("Music preferences:", style: sectionHeaderStyle,),
+      const SizedBox(height: 10,),
+      RowSeparated(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const Text("WAI Extract Directory:", overflow: TextOverflow.ellipsis,),
+          Expanded(
+            child: PrimaryPropTextField(
+              prop: widget.prefs.waiExtractDir!,
+              onValid: (value) => widget.prefs.waiExtractDir!.value = value,
+              validatorOnChange: (value) => value.isEmpty || Directory(value).existsSync() ? null : "Directory does not exist",
+              options: const PropTFOptions(constraints: BoxConstraints(minHeight: 30)),
+            ),
+          ),
+          makeFilePickerButton(
+            "Select WAI Extract Directory",
+            widget.prefs.waiExtractDir!.value.isNotEmpty ? widget.prefs.waiExtractDir!.value : null,
+            (dir) => widget.prefs.waiExtractDir!.value = dir,
+          ),
+        ],
+      ),
+      RowSeparated(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const Text("Wwise Path:", overflow: TextOverflow.ellipsis,),
+          Expanded(
+            child: PrimaryPropTextField(
+              prop: widget.prefs.wwiseCliPath!,
+              onValid: (value) => widget.prefs.wwiseCliPath!.value = value.isNotEmpty ? findWwiseCliExe(value)! : "",
+              validatorOnChange: (value) => value.isEmpty || findWwiseCliExe(value) != null ? null : "Directory does not exist",
+              options: const PropTFOptions(constraints: BoxConstraints(minHeight: 30)),
+            ),
+          ),
+          makeFilePickerButton(
+            "Select Wwise Path",
+            widget.prefs.wwiseCliPath!.value.isNotEmpty ? widget.prefs.wwiseCliPath!.value : null,
+            (dir) {
+              var cliExe = findWwiseCliExe(dir);
+              if (cliExe != null)
+                widget.prefs.wwiseCliPath!.value = cliExe;
+              else {
+                widget.prefs.wwiseCliPath!.value = "";
+                showToast("Could not find Wwise CLI executable in directory");
+              }
+            },
+          ),
+        ],
       ),
     ];
   }

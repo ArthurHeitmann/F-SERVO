@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:path/path.dart' as path;
 import 'package:xml/xml.dart';
 
+import '../fileTypeUtils/audio/waiExtracter.dart';
 import '../fileTypeUtils/dat/datExtractor.dart';
 import '../fileTypeUtils/ruby/pythonRuby.dart';
 import '../fileTypeUtils/yax/xmlToYax.dart';
@@ -11,6 +12,7 @@ import '../fileTypeUtils/yax/yaxToXml.dart';
 import '../main.dart';
 import '../utils/utils.dart';
 import '../widgets/misc/confirmDialog.dart';
+import '../widgets/misc/fileSelectionDialog.dart';
 import '../widgets/propEditors/xmlActions/XmlActionPresets.dart';
 import 'HierarchyEntryTypes.dart';
 import 'Property.dart';
@@ -18,6 +20,7 @@ import 'nestedNotifier.dart';
 import '../fileTypeUtils/pak/pakExtractor.dart';
 import 'openFilesManager.dart';
 import 'events/statusInfo.dart';
+import 'preferencesData.dart';
 import 'undoable.dart';
 import 'xmlProps/xmlProp.dart';
 
@@ -98,6 +101,12 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
       else if (filePath.endsWith(".ftb")) {
         if (await File(filePath).exists())
           entry = openGenericFile<FtbHierarchyEntry>(filePath, parent, (n ,p) => FtbHierarchyEntry(n, p));
+        else
+          throw FileSystemException("File not found: $filePath");
+      }
+      else if (filePath.endsWith(".wai")) {
+        if (await File(filePath).exists())
+          entry = await openWaiFile(filePath);
         else
           throw FileSystemException("File not found: $filePath");
       }
@@ -267,7 +276,7 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
     return openGenericFile<XmlScriptHierarchyEntry>(xmlFilePath,parent, (n, p) => XmlScriptHierarchyEntry(n, p));
   }
 
-  HierarchyEntry openGenericFile<T extends FileHierarchyEntry>(String filePath, HierarchyEntry? parent, HierarchyEntry Function(StringProp n, String p) make) {
+  HierarchyEntry openGenericFile<T extends FileHierarchyEntry>(String filePath, HierarchyEntry? parent, T Function(StringProp n, String p) make) {
     var existing = findRecWhere((entry) => entry is T && entry.path == filePath);
     if (existing != null)
       return existing;
@@ -292,6 +301,43 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
     }
 
     return openGenericFile<RubyScriptHierarchyEntry>(rbPath, parent, (n, p) => RubyScriptHierarchyEntry(n, p));
+  }
+
+  Future<HierarchyEntry> openWaiFile(String waiPath) async {
+    var existing = findRecWhere((entry) => entry is WaiHierarchyEntry && entry.path == waiPath);
+    if (existing != null)
+      return existing;
+    
+    if (!waiPath.contains("WwiseStreamInfo")) {
+      showToast("Only WwiseStreamInfo.wai files are supported");
+      throw Exception("Only WwiseStreamInfo.wai files are supported");
+    }
+
+    var prefs = PreferencesData();
+    if (prefs.waiExtractDir!.value.isEmpty) {
+      String? waiExtractDir = await fileSelectionDialog(getGlobalContext(), isFile: false, title: "Select WAI Extract Directory");
+      if (waiExtractDir == null) {
+        showToast("WAI Extract Directory not set");
+        throw Exception("WAI Extract Directory not set");
+      }
+      prefs.waiExtractDir!.value = waiExtractDir;
+    }
+    var waiExtractDir = prefs.waiExtractDir!.value;
+    
+    var waiEntry = WaiHierarchyEntry(StringProp(path.basename(waiPath)), waiPath, waiExtractDir);
+
+    // create EXTRACTION_COMPLETED file, to mark as extract dir
+    bool noExtract = true;
+    var extractedFile = File(path.join(waiExtractDir, "EXTRACTION_COMPLETED"));
+    if (!await extractedFile.exists())
+      noExtract = false;
+    var wai = await waiEntry.readWaiFile();
+    var structure = await extractWaiWsps(wai, waiPath, waiExtractDir, noExtract);
+    if (!noExtract)
+      await extractedFile.writeAsString("Delete this file to re-extract files");
+    waiEntry.structure = structure;
+    add(waiEntry);
+    return waiEntry;
   }
 
   @override

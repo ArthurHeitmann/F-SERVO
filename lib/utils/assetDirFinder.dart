@@ -169,3 +169,36 @@ Future<bool> hasPipDeps() async {
   _hasPipDepsComplete = true;
   return _hasPipDeps;
 }
+
+String? findWwiseCliExe(String path, [int depth = 0]) {
+  if (depth >= 5)
+    return null;
+  const exeName = "WwiseCLI.exe";
+  // best case, exe is directly selected
+  if (File(path).existsSync() && basename(path) == exeName)
+    return path;
+
+  if (!Directory(path).existsSync())
+    return null;
+  
+  List<FileSystemEntity> dirContents = Directory(path).listSync();
+  List<String> dirNames = dirContents.map((e) => basename(e.path)).toList();
+  // exe is in the directory
+  if (dirNames.contains(exeName))
+    return join(path, exeName);
+  // directory is the root of the wwise install
+  if (dirNames.contains("Authoring")) {
+    var x64Path = join(path, "Authoring", "x64", "Release", "bin", exeName);
+    if (File(x64Path).existsSync())
+      return x64Path;
+  }
+  // search recursively
+  for (var dir in dirContents) {
+    if (dir is! Directory)
+      continue;
+    var exePath = findWwiseCliExe(join(path, dir.path), depth + 1);
+    if (exePath != null)
+      return exePath;
+  }
+  return null;
+}
