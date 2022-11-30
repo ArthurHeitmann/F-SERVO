@@ -214,11 +214,11 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
   Color colorOfFiletype(HierarchyEntry entry) {
     if (entry is XmlScriptHierarchyEntry || entry is RubyScriptHierarchyEntry || entry is TmdHierarchyEntry || entry is TmdHierarchyEntry)
       return filetypeDocColor!;
-    if (entry is PakHierarchyEntry)
+    if (entry is PakHierarchyEntry || entry is WspHierarchyEntry)
       return filetypePakColor!;
-    if (entry is DatHierarchyEntry)
+    if (entry is DatHierarchyEntry || entry is WaiFolderHierarchyEntry)
       return filetypeDatColor!;
-    if (entry is HapGroupHierarchyEntry)
+    if (entry is HapGroupHierarchyEntry || entry is WemHierarchyEntry)
       return filetypeGroupColor!;
     
     return Colors.white;

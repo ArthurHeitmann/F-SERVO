@@ -15,6 +15,7 @@ import '../../stateManagement/miscValues.dart';
 import '../../stateManagement/openFilesManager.dart';
 import '../../stateManagement/preferencesData.dart';
 import '../../utils/utils.dart';
+import 'wemPreviewButton.dart';
 
 class HierarchyEntryWidget extends ChangeNotifierWidget {
   final HierarchyEntry entry;
@@ -30,9 +31,9 @@ class HierarchyEntryWidget extends ChangeNotifierWidget {
 class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
   Icon? getEntryIcon(BuildContext context) {
     var iconColor = getTheme(context).colorOfFiletype(widget.entry);
-    if (widget.entry is DatHierarchyEntry)
+    if (widget.entry is DatHierarchyEntry || widget.entry is WaiFolderHierarchyEntry)
       return Icon(Icons.folder, color: iconColor, size: 15);
-    else if (widget.entry is PakHierarchyEntry)
+    else if (widget.entry is PakHierarchyEntry || widget.entry is WspHierarchyEntry)
       return Icon(Icons.source, color: iconColor, size: 15);
     else if (widget.entry is HapGroupHierarchyEntry)
       return Icon(Icons.workspaces, color: iconColor, size: 15);
@@ -40,6 +41,8 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
       return Icon(Icons.subtitles, color: iconColor, size: 15);
     else if (widget.entry is RubyScriptGroupHierarchyEntry)
       return null;
+    else if (widget.entry is WemHierarchyEntry)
+      return Icon(Icons.music_note, color: iconColor, size: 15);
     else
       return Icon(Icons.description, color: iconColor, size: 15);
   }
@@ -95,7 +98,9 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
                         ),
                       ),
                     )
-                  )
+                  ),
+                  if (widget.entry is WemHierarchyEntry)
+                    WemPreviewButton(wemPath: (widget.entry as WemHierarchyEntry).path),
                 ]
               ),
             ),

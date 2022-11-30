@@ -30,7 +30,7 @@ class EditorLayout extends StatelessWidget {
                 icon: Icons.folder,
                 child: ResizableWidget(
                   axis: Axis.vertical,
-                  percentages: const [0.55, 0.45],
+                  percentages: const [0.6, 0.4],
                   draggableThickness: 5,
                   children: [
                     FileExplorer(),
