@@ -3,10 +3,11 @@ import 'package:flutter/material.dart';
 import '../../stateManagement/openFileTypes.dart';
 import '../../stateManagement/preferencesData.dart';
 import '../misc/preferencesEditor.dart';
-import '../propEditors/otherFileTypes/AudioFileEditor.dart';
 import '../propEditors/otherFileTypes/ftbEditor.dart';
 import '../propEditors/otherFileTypes/genericTable/TableFileEditor.dart';
 import '../propEditors/otherFileTypes/mcdEditor.dart';
+import '../propEditors/otherFileTypes/wemFileEditor.dart';
+import '../propEditors/otherFileTypes/wspFileEditor.dart';
 import 'TextFileEditor.dart';
 import 'XmlFileEditor.dart';
 
@@ -37,7 +38,9 @@ Widget makeFileEditor(OpenFileData content) {
     case FileType.ftb:
       return FtbEditor(key: Key(content.uuid), file: content as FtbFileData);
     case FileType.wem:
-      return AudioFileEditor(key: Key(content.uuid), file: content as WemFileData);
+      return WemFileEditor(key: Key(content.uuid), wem: content as WemFileData, topPadding: true,);
+    case FileType.wsp:
+      return WspFileEditor(key: Key(content.uuid), wsp: content as WspFileData);
     default:
       return TextFileEditor(key: Key(content.uuid), fileContent: content as TextFileData);
   }

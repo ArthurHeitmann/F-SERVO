@@ -328,6 +328,7 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
     var waiExtractDir = prefs.waiExtractDir!.value;
     
     var waiEntry = WaiHierarchyEntry(StringProp(path.basename(waiPath)), waiPath, waiExtractDir);
+    add(waiEntry);
 
     // create EXTRACTION_COMPLETED file, to mark as extract dir
     bool noExtract = true;
@@ -348,7 +349,6 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
       structure.insert(i, topLevelFolders[i]);
     waiEntry.addAll(structure.map((e) => makeWaiChildEntry(e)));
 
-    add(waiEntry);
     return waiEntry;
   }
 

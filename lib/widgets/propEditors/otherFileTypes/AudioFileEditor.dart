@@ -24,8 +24,10 @@ import '../simpleProps/propTextField.dart';
 
 class AudioFileEditor extends StatefulWidget {
   final AudioFileData file;
+  final bool lockControls;
+  final Widget? additionalControls;
 
-  const AudioFileEditor({ super.key, required this.file });
+  const AudioFileEditor({ super.key, required this.file, this.lockControls = false, this.additionalControls });
 
   @override
   State<AudioFileEditor> createState() => _AudioFileEditorState();
@@ -40,7 +42,8 @@ class _AudioFileEditorState extends State<AudioFileEditor> {
     _player = AudioPlayer();
     widget.file.load().then((_) {
       _player!.setSourceDeviceFile(widget.file.audioFilePath!);
-      setState(() {});
+      if (mounted)
+        setState(() {});
     });
   }
 
@@ -56,11 +59,12 @@ class _AudioFileEditorState extends State<AudioFileEditor> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const SizedBox(height: 50),
+          // const SizedBox(height: 50),
           if (widget.file.audioFilePath != null) ...[
             _TimelineEditor(
               file: widget.file,
               player: _player,
+              lockControls: widget.lockControls,
             ),
             const SizedBox(height: 30),
           ]
@@ -72,27 +76,44 @@ class _AudioFileEditorState extends State<AudioFileEditor> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              StreamBuilder(
-                stream: _player?.onPlayerStateChanged,
-                builder: (context, snapshot) {
-                  return IconButton(
-                    icon: _player?.state == PlayerState.playing
-                      ? const Icon(Icons.pause)
-                      : const Icon(Icons.play_arrow),
-                    onPressed: _player?.state == PlayerState.playing
-                      ? _player?.pause
-                      : _player?.resume,
-                  );
-                }
+              const SizedBox(width: 10),
+              Expanded(
+                child: Center(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          StreamBuilder(
+                            stream: _player?.onPlayerStateChanged,
+                            builder: (context, snapshot) {
+                              return IconButton(
+                                icon: _player?.state == PlayerState.playing
+                                  ? const Icon(Icons.pause)
+                                  : const Icon(Icons.play_arrow),
+                                onPressed: _player?.state == PlayerState.playing
+                                  ? _player?.pause
+                                  : _player?.resume,
+                              );
+                            }
+                          ),
+                          const SizedBox(width: 15),
+                          DurationStream(
+                            time: _player?.onPositionChanged,
+                          ),
+                          Text(" / ${widget.file.duration != null ? formatDuration(widget.file.duration!) : "00:00"}"),
+                          const SizedBox(width: 15),
+                        ],
+                      ),
+                      if (widget.additionalControls != null) ...[
+                        const SizedBox(height: 10),
+                        widget.additionalControls!,
+                      ]
+                    ],
+                  ),
+                ),
               ),
-              DurationStream(
-                time: _player?.onPositionChanged,
-              ),
-              const Text("/"),
-              DurationStream(
-                time: _player?.onDurationChanged,
-              ),
-              const Expanded(child: SizedBox(),),
               _CuePointsEditor(
                 cuePoints: widget.file.cuePoints,
                 file: widget.file,
@@ -108,8 +129,9 @@ class _AudioFileEditorState extends State<AudioFileEditor> {
 class _TimelineEditor extends ChangeNotifierWidget {
   final AudioFileData file;
   final AudioPlayer? player;
+  final bool lockControls;
 
-  _TimelineEditor({ super.key, required this.file, required this.player }) : super(notifier: file.cuePoints);
+  _TimelineEditor({ super.key, required this.file, required this.player, required this.lockControls }) : super(notifier: file.cuePoints);
 
   @override
   State<_TimelineEditor> createState() => __TimelineEditorState();
@@ -141,13 +163,13 @@ class __TimelineEditorState extends ChangeNotifierState<_TimelineEditor> {
         return SizedBox(
           height: 100,
           child: Listener(
-            onPointerSignal: _onPointerSignal,
+            onPointerSignal: !widget.lockControls ? _onPointerSignal : null,
             child: Stack(
               children: [
                 Positioned.fill(
                   child: GestureDetector(
                     onTap: _onTimelineTap,
-                    onHorizontalDragUpdate: _onHorizontalDragUpdate,
+                    onHorizontalDragUpdate: !widget.lockControls ? _onHorizontalDragUpdate : null,
                     child: CustomPaint(
                       painter: _WaveformPainter(
                         samples: widget.file.wavSamples!,
@@ -309,8 +331,7 @@ class _WaveformPainter extends CustomPainter {
 
     // the denser the view, the lower the opacity
     double samplesPerPixel = viewSamples.length / size.width;
-    double fac = 1.2;
-    double opacity = (pow(fac, -samplesPerPixel) * fac*2).clamp(0.1, 1).toDouble();
+    double opacity = (-samplesPerPixel/40+1).clamp(0.1, 1).toDouble();
     Color color = lineColor.withOpacity(opacity);
     int bwColorVal = (color.red + color.green + color.blue) ~/ 3;
     Color bwColor = Color.fromARGB(color.alpha, bwColorVal, bwColorVal, bwColorVal);
@@ -329,7 +350,7 @@ class _WaveformPainter extends CustomPainter {
     var x = startX;
     var y = height / 2;
     var xStep = (endX - startX) / samples.length;
-    var yStep = height / (0x7FFF * 1.25);
+    var yStep = height / (0x7FFF * 2);
     path.moveTo(x, y);
     for (var i = 0; i < samples.length; i++) {
       x += xStep;
@@ -372,12 +393,7 @@ class _WaveformPainter extends CustomPainter {
       canvas.drawLine(Offset(x, yOff - 5), Offset(x, size.height), paint);
       // text to the right
       double totalSecs = i / samplesPerSec;
-      int minutes = totalSecs ~/ 60;
-      double seconds = totalSecs % 60;
-      String minStr = minutes.toString().padLeft(2, '0');
-      String secIntStr = seconds.floor().toString().padLeft(2, '0');
-      String secDecStr = (seconds % 1 * 100).round().toString().padLeft(2, '0');
-      String text = "$minStr:$secIntStr.$secDecStr";
+      String text = formatDuration(Duration(milliseconds: (totalSecs * 1000).round()), true);
       textPainter.text = TextSpan(
         text: text,
         style: TextStyle(
@@ -558,9 +574,7 @@ class DurationStream extends StreamBuilder<Duration> {
     builder: (context, snapshot) {
       if (snapshot.hasData) {
         var pos = snapshot.data!;
-        var mins = pos.inMinutes.toString().padLeft(2, "0");
-        var secs = (pos.inSeconds % 60).toString().padLeft(2, "0");
-        return Text("$mins:$secs");
+        return Text(formatDuration(pos));
       } else {
         return const Text("00:00");
       }

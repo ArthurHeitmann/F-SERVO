@@ -268,10 +268,7 @@ class AudioSampleNumberProp extends ValueProp<int> {
   @override
   String toString() {
     double seconds = value / samplesPerSecond;
-    int min = seconds ~/ 60;
-    int sec = seconds.toInt() % 60;
-    String ms = ((seconds * 1000) % 1000).toInt().toString().padLeft(3, '0');
-    return "${min.toString().padLeft(2, "0")}:${sec.toString().padLeft(2, "0")}.$ms";
+    return formatDuration(Duration(milliseconds: (seconds * 1000).round()), true);
   }
   
   @override

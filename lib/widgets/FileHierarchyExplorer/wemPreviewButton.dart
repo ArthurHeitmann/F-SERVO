@@ -34,10 +34,11 @@ class _WemPreviewButtonState extends State<WemPreviewButton> {
   Future<void> loadWav() async {
     try {
       setState(() => isLoading = true);
-      wavPath = await wemToWav(widget.wemPath);
+      wavPath = await wemToWav(widget.wemPath, "hierarchyPreview");
       player = AudioPlayer();
       player!.onPlayerStateChanged.listen((state) {
-        setState(() {});
+        if (mounted)
+          setState(() {});
       });
       await player!.setSourceDeviceFile(wavPath!);
       setState(() => isLoading = false);
@@ -62,9 +63,9 @@ class _WemPreviewButtonState extends State<WemPreviewButton> {
     if (isLoading)
       icon = const Icon(Icons.hourglass_empty, size: 14);
     else if (player?.state == PlayerState.playing)
-      icon = const Icon(Icons.pause, size: 16);
+      icon = const Icon(Icons.pause, size: 15);
     else
-      icon = const Icon(Icons.play_arrow, size: 16);
+      icon = const Icon(Icons.play_arrow, size: 15);
     return Padding(
       padding: const EdgeInsets.only(right: 16),
       child: Container(

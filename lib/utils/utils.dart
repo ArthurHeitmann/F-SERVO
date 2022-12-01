@@ -630,3 +630,13 @@ Future<void> backupFile(String file) async {
   if (!await File(backupName).exists())
     await File(file).copy(backupName);
 }
+
+String formatDuration(Duration duration, [bool showMs = false]) {
+  var mins = duration.inMinutes.toString().padLeft(2, "0");
+  var secs = (duration.inSeconds % 60).toString().padLeft(2, "0");
+  if (showMs) {
+    var ms = ((duration.inMilliseconds) % 1000).toInt().toString().padLeft(3, "0");
+    return "$mins:$secs.$ms";
+  }
+  return "$mins:$secs";
+}

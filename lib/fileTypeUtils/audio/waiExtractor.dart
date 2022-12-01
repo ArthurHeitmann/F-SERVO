@@ -55,7 +55,7 @@ Future<List<WaiChild>> extractWaiWsps(WaiFile wai, String waiPath, String extrac
     }
     await Future.wait(wemStructsByWspName.keys.map((wspName) async {
       List<WemStruct> wemStructs = wemStructsByWspName[wspName]!;
-      wemStructs.sort((a, b) => a.wemOffset.compareTo(b.wemOffset));
+      wemStructs.sort((a, b) => a.wemID.compareTo(b.wemID));
       String wspPath = join(waiDir, "stream");
       if (dir.name.isNotEmpty)
         wspPath = join(wspPath, dir.name);
@@ -71,7 +71,6 @@ Future<List<WaiChild>> extractWaiWsps(WaiFile wai, String waiPath, String extrac
         ]);
         return;
       }
-      messageLog.add("Extracting $wspName");
       await Directory(wspExtractDir).create(recursive: true);
       var wspFile = await File(wspPath).open();
       try {
@@ -83,6 +82,7 @@ Future<List<WaiChild>> extractWaiWsps(WaiFile wai, String waiPath, String extrac
           await wemFile.writeAsBytes(await wspFile.read(wemStruct.wemEntrySize));
           wemFilesInWsp.add(WaiChildWem("${i}_${wemStruct.wemID}.wem", wemPath));
         }
+        messageLog.add("Extracted $wspName");
       } finally {
         await wspFile.close();
       }

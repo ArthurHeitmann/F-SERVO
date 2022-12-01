@@ -541,45 +541,32 @@ class CuePointMarker with HasUuid, Undoable {
 }
 mixin AudioFileData on ChangeNotifier, HasUuid {
   String? audioFilePath;
-  late final ValueNestedNotifier<CuePointMarker> cuePoints;
+  ValueNestedNotifier<CuePointMarker> cuePoints = ValueNestedNotifier([]);
   bool cuePointsStartAt1 = false;
+  Duration? duration;
   int samplesPerSec = 44100;
   int totalSamples = 0;
   List<int>? wavSamples;
 
   Future<void> load();
-}
-class WemFileData extends OpenFileData with AudioFileData {
-  static const int _wavSamplesCount = 40000;
-  
-  WemFileData(super.name, super.path, { super.secondaryName, ValueNestedNotifier<CuePointMarker>? cuePoints }) {
-    this.cuePoints = cuePoints ?? ValueNestedNotifier([]);
-    this.cuePoints.addListener(_onCuePointsChanged);
+
+  void _readMeta(RiffFile riff) {
+    samplesPerSec = riff.formatChunk.samplesPerSec;
+    totalSamples = riff.dataChunk.samples.length ~/ riff.formatChunk.channels;
+    duration = Duration(milliseconds: (totalSamples / samplesPerSec * 1000).round());
   }
 
-  @override
-  Future<void> load() async {
-    if (_loadingState != LoadingState.notLoaded && audioFilePath != null)
-      return;
-    _loadingState = LoadingState.loading;
-
-    // extract wav
-    audioFilePath = await wemToWav(path);
-
-    var wavData = await RiffFile.fromFile(audioFilePath!);
-    samplesPerSec = wavData.formatChunk.samplesPerSec;
-    totalSamples = wavData.dataChunk.samples.length ~/ wavData.formatChunk.channels;
-
-    // rough wav samples
-    var rawSamples = wavData.dataChunk.samples;
+  static const int _wavSamplesCount = 40000;
+  void _parsePreviewSamples(RiffFile riff) {
+    var rawSamples = riff.dataChunk.samples;
     int sampleCount = min(_wavSamplesCount, rawSamples.length);
     int samplesSize = rawSamples.length ~/ sampleCount;
     wavSamples = List.generate(sampleCount, (i) => rawSamples[i * samplesSize]);
+  }
 
-    // cue points
-    var wemData = await RiffFile.fromFile(path);
+  void _readCuePoints(RiffFile riff) {
     List<RiffListLabelSubChunk> pendingLabels = [];
-    for (var listChunk in wemData.listChunks) {
+    for (var listChunk in riff.listChunks) {
       if (listChunk.chunkType != "adtl")
         continue;
       for (var subChunk in listChunk.subChunks) {
@@ -594,7 +581,7 @@ class WemFileData extends OpenFileData with AudioFileData {
       cuePointsStartAt1 = maxLabelCueIndex == pendingLabels.length;
       int iOff = cuePointsStartAt1 ? -1 : 0;
       cuePoints.addAll(pendingLabels.map((l) {
-        var cuePoint = wemData.cueChunk!.points[l.cuePointIndex + iOff];
+        var cuePoint = riff.cueChunk!.points[l.cuePointIndex + iOff];
         return CuePointMarker(
           AudioSampleNumberProp(cuePoint.sampleOffset, samplesPerSec),
           StringProp(l.label),
@@ -602,6 +589,51 @@ class WemFileData extends OpenFileData with AudioFileData {
         );
       }));
     }
+  }
+}
+class WavFileData with ChangeNotifier, HasUuid, AudioFileData {
+  String path;
+
+  WavFileData(this.path) {
+    audioFilePath = path;
+  }
+
+  @override
+  Future<void> load() async {
+    var wavData = await RiffFile.fromFile(path);
+    _readMeta(wavData);
+    _parsePreviewSamples(wavData);
+    _readCuePoints(wavData);
+    notifyListeners();
+  }
+}
+class WemFileData extends OpenFileData with AudioFileData {
+  ValueNotifier<WavFileData?> overrideData = ValueNotifier(null);
+  
+  WemFileData(super.name, super.path, { super.secondaryName, Iterable<CuePointMarker>? cuePoints }) {
+    if (cuePoints != null)
+      this.cuePoints.addAll(cuePoints);
+    this.cuePoints.addListener(_onCuePointsChanged);
+  }
+
+  @override
+  Future<void> load() async {
+    if (_loadingState != LoadingState.notLoaded && audioFilePath != null)
+      return;
+    _loadingState = LoadingState.loading;
+
+    // extract wav
+    audioFilePath = await wemToWav(path);
+
+    var wavData = await RiffFile.fromFile(audioFilePath!);
+    _readMeta(wavData);
+
+    // rough wav samples
+    _parsePreviewSamples(wavData);
+
+    // cue points
+    var wemData = await RiffFile.fromFile(path);
+    _readCuePoints(wemData);
 
     hasUnsavedChanges = false;
 
@@ -622,6 +654,10 @@ class WemFileData extends OpenFileData with AudioFileData {
   void _onCuePointsChanged() {
     hasUnsavedChanges = true;
     undoHistoryManager.onUndoableEvent();
+  }
+
+  Future<void> applyOverride() async {
+
   }
 
   @override
@@ -657,7 +693,7 @@ class WspFileData extends OpenFileData {
       return;
     _loadingState = LoadingState.loading;
 
-    var wspHierarchyEntry = openHierarchyManager.find((e) => e is WspHierarchyEntry && e.path == path);
+    var wspHierarchyEntry = openHierarchyManager.findRecWhere((e) => e is WspHierarchyEntry && e.path == path);
     if (wspHierarchyEntry == null) {
       showToast("WSP hierarchy entry not found");
       throw Exception("WSP hierarchy entry not found for $path");
