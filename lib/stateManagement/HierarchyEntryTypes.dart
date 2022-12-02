@@ -1,11 +1,13 @@
 
 import 'dart:io';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart';
 import 'package:xml/xml.dart';
 
 import '../fileTypeUtils/audio/waiExtractor.dart';
 import '../fileTypeUtils/audio/waiIO.dart';
+import '../fileTypeUtils/audio/wemToWavConverter.dart';
 import '../fileTypeUtils/utils/ByteDataWrapper.dart';
 import '../fileTypeUtils/yax/yaxToXml.dart';
 import '../utils/utils.dart';
@@ -579,6 +581,22 @@ class WspHierarchyEntry extends GenericFileHierarchyEntry {
   HierarchyEntry clone() {
     return WspHierarchyEntry(name.takeSnapshot() as StringProp, path, _childWems);
   }
+
+  Future<void> exportAsWav() async {
+    var saveDir = await FilePicker.platform.getDirectoryPath();
+    if (saveDir == null)
+      return;
+    var wspDir = join(saveDir, basename(path));
+    await Directory(wspDir).create(recursive: true);
+    await Future.wait(
+      whereType<WemHierarchyEntry>()
+      .map((e) => e.exportAsWav(
+        wavPath:  join(wspDir, "${basenameWithoutExtension(e.path)}.wav"),
+        displayToast: false,
+      )),
+    );
+    showToast("Saved $length WEMs");
+  }
 }
 
 class WemHierarchyEntry extends GenericFileHierarchyEntry {
@@ -588,6 +606,18 @@ class WemHierarchyEntry extends GenericFileHierarchyEntry {
   @override
   HierarchyEntry clone() {
     return WemHierarchyEntry(name.takeSnapshot() as StringProp, path);
+  }
+
+  Future<void> exportAsWav({ String? wavPath, bool displayToast = true }) async {
+    wavPath ??= await FilePicker.platform.saveFile(
+      fileName: "${basenameWithoutExtension(path)}.wav",
+      allowedExtensions: ["wav"],
+    );
+    if (wavPath == null)
+      return;
+    await wemToWav(path, wavPath);
+    if (displayToast)
+      showToast("Saved as ${basename(wavPath)}");
   }
 }
 

@@ -7,6 +7,7 @@ import 'package:path/path.dart';
 import 'package:xml/xml.dart';
 
 import '../fileTypeUtils/audio/riffParser.dart';
+import '../fileTypeUtils/audio/wavToWemConverter.dart';
 import '../fileTypeUtils/audio/wemToWavConverter.dart';
 import '../fileTypeUtils/smd/smdReader.dart';
 import '../fileTypeUtils/smd/smdWriter.dart';
@@ -547,6 +548,7 @@ mixin AudioFileData on ChangeNotifier, HasUuid {
   int samplesPerSec = 44100;
   int totalSamples = 0;
   List<int>? wavSamples;
+  abstract String name;
 
   Future<void> load();
 
@@ -593,8 +595,9 @@ mixin AudioFileData on ChangeNotifier, HasUuid {
 }
 class WavFileData with ChangeNotifier, HasUuid, AudioFileData {
   String path;
+  String name;
 
-  WavFileData(this.path) {
+  WavFileData(this.path) : name = basename(path) {
     audioFilePath = path;
   }
 
@@ -623,7 +626,7 @@ class WemFileData extends OpenFileData with AudioFileData {
     _loadingState = LoadingState.loading;
 
     // extract wav
-    audioFilePath = await wemToWav(path);
+    audioFilePath = await wemToWavTmp(path);
 
     var wavData = await RiffFile.fromFile(audioFilePath!);
     _readMeta(wavData);
@@ -657,7 +660,16 @@ class WemFileData extends OpenFileData with AudioFileData {
   }
 
   Future<void> applyOverride() async {
-
+    if (overrideData.value == null)
+      throw Exception("No override data");
+    var wai = openHierarchyManager.findRecWhere((e) => e is WaiHierarchyEntry);
+    if (wai == null) {
+      showToast("No open WAI file found");
+      throw Exception("No WAI file found");
+    }
+    
+    var wav = overrideData.value!;
+    await wavToWem(wav.path, path);
   }
 
   @override

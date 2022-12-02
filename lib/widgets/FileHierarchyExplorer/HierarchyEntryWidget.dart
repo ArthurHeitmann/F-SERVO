@@ -200,6 +200,18 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
               },
             ),
           ],
+          if (widget.entry is WemHierarchyEntry)
+            ContextMenuButtonConfig(
+              "Save as WAV",
+              icon: const Icon(Icons.file_download, size: 15,),
+              onPressed: (widget.entry as WemHierarchyEntry).exportAsWav,
+            ),
+          if (widget.entry is WspHierarchyEntry)
+            ContextMenuButtonConfig(
+              "Save all as WAV",
+              icon: const Icon(Icons.file_download, size: 15,),
+              onPressed: (widget.entry as WspHierarchyEntry).exportAsWav,
+            ),
           if (openHierarchyManager.contains(widget.entry)) ...[
             ContextMenuButtonConfig(
               "Close",

@@ -1,5 +1,4 @@
 
-
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
@@ -82,6 +81,11 @@ class _AudioFileEditorState extends State<AudioFileEditor> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
+                      Text(
+                        "  ${widget.file.name}",
+                        style: const TextStyle(fontFamily: "FiraCode", fontSize: 16),
+                      ),
+                      const SizedBox(height: 10),
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [

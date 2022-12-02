@@ -34,7 +34,7 @@ class _WemPreviewButtonState extends State<WemPreviewButton> {
   Future<void> loadWav() async {
     try {
       setState(() => isLoading = true);
-      wavPath = await wemToWav(widget.wemPath, "hierarchyPreview");
+      wavPath = await wemToWavTmp(widget.wemPath, "hierarchyPreview");
       player = AudioPlayer();
       player!.onPlayerStateChanged.listen((state) {
         if (mounted)

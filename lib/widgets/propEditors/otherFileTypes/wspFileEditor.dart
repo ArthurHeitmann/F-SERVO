@@ -38,10 +38,6 @@ class _WspFileEditorState extends State<WspFileEditor> {
             if (i == 0)
               const SizedBox(height: 20),
             const SizedBox(height: 20),
-            Text(
-              "  ${widget.wsp.wems[i].name}",
-              style: const TextStyle(fontFamily: "FiraCode", fontSize: 16),
-            ),
             const SizedBox(height: 20),
             WemFileEditor(wem: widget.wsp.wems[i], lockControls: true),
             if (i != widget.wsp.wems.length - 1)
