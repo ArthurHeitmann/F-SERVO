@@ -10,11 +10,13 @@ import '../../utils/assetDirFinder.dart';
 import '../../utils/utils.dart';
 
 Future<String> _makeWwiseProject() async {
-  String wwiseProjectTemplate = join(assetsDir!, "wwiseProjectTemplate.zip");
+  String wwiseProjectTemplate = join(assetsDir!, "wavToWemTemplate.zip");
   String tempProjectDir = (await Directory.systemTemp.createTemp("wwiseProject")).path;
 
-  var archive = ZipDecoder().decodeBuffer(InputFileStream(wwiseProjectTemplate));
-  extractArchiveToDisk(archive, tempProjectDir);  // TODO compute?
+  var fs = InputFileStream(wwiseProjectTemplate);
+  var archive = ZipDecoder().decodeBuffer(fs);
+  extractArchiveToDisk(archive, tempProjectDir);
+  fs.close();
 
   return tempProjectDir;
 }
@@ -50,13 +52,14 @@ Future<void> wavToWem(String wavPath, String wemSavePath) async {
   String projectPath = await _makeWwiseProject();
 
   String wavSrcDir = join(projectPath, "wavSrc");
-  await File(wavPath).copy(join(wavSrcDir, basename(wavPath)));
-  XmlDocument wSourcesXml = _getWwiseSourcesXml(wavPath, wemSavePath);
+  String tmpWavPath = join(wavSrcDir, basename(wavPath));
+  await File(wavPath).copy(tmpWavPath);
+  XmlDocument wSourcesXml = _getWwiseSourcesXml(tmpWavPath, wemSavePath);
   String wSourcesXmlPath = join(wavSrcDir, "ExtSourceList.xml");
   await File(wSourcesXmlPath).writeAsString(wSourcesXml.toXmlString(pretty: true));
 
   String wwiseCliPath = prefs.wwiseCliPath!.value;
-  String wwiseProjectPath = join(projectPath, "WwiseProject.wproj");  // TODO check
+  String wwiseProjectPath = join(projectPath, "wavToWemTemplate.wproj");
   List<String> args = [
     wwiseProjectPath,
     "-ConvertExternalSources",

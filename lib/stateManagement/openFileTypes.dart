@@ -1,18 +1,22 @@
 
 import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:mutex/mutex.dart';
 import 'package:path/path.dart';
 import 'package:xml/xml.dart';
 
 import '../fileTypeUtils/audio/riffParser.dart';
+import '../fileTypeUtils/audio/waiIO.dart';
 import '../fileTypeUtils/audio/wavToWemConverter.dart';
 import '../fileTypeUtils/audio/wemToWavConverter.dart';
 import '../fileTypeUtils/smd/smdReader.dart';
 import '../fileTypeUtils/smd/smdWriter.dart';
 import '../fileTypeUtils/tmd/tmdReader.dart';
 import '../fileTypeUtils/tmd/tmdWriter.dart';
+import '../fileTypeUtils/utils/ByteDataWrapper.dart';
 import '../utils/utils.dart';
 import '../widgets/filesView/FileType.dart';
 import 'FileHierarchy.dart';
@@ -69,6 +73,8 @@ abstract class OpenFileData extends ChangeNotifier with HasUuid, Undoable {
       return WemFileData(name, path, secondaryName: secondaryName);
     else if (path.endsWith(".wsp"))
       return WspFileData(name, path, secondaryName: secondaryName);
+    else if (path.endsWith(".wai"))
+      return WaiFileData(name, path, secondaryName: secondaryName);
     else
       return TextFileData(name, path, secondaryName: secondaryName);
   }
@@ -562,8 +568,12 @@ mixin AudioFileData on ChangeNotifier, HasUuid {
   void _parsePreviewSamples(RiffFile riff) {
     var rawSamples = riff.dataChunk.samples;
     int sampleCount = min(_wavSamplesCount, rawSamples.length);
-    int samplesSize = rawSamples.length ~/ sampleCount;
-    wavSamples = List.generate(sampleCount, (i) => rawSamples[i * samplesSize]);
+    if (riff.formatChunk.formatTag == 1 || riff.formatChunk.formatTag == 3) {
+      int samplesSize = rawSamples.length ~/ sampleCount;
+      wavSamples = List.generate(sampleCount, (i) => rawSamples[i * samplesSize]);
+    } else {
+      wavSamples = List.generate(sampleCount, (i) => 0);
+    }
   }
 
   void _readCuePoints(RiffFile riff) {
@@ -582,6 +592,7 @@ mixin AudioFileData on ChangeNotifier, HasUuid {
       // sometimes indexes start at 1, sometimes at 0
       cuePointsStartAt1 = maxLabelCueIndex == pendingLabels.length;
       int iOff = cuePointsStartAt1 ? -1 : 0;
+      cuePoints.clear();
       cuePoints.addAll(pendingLabels.map((l) {
         var cuePoint = riff.cueChunk!.points[l.cuePointIndex + iOff];
         return CuePointMarker(
@@ -594,8 +605,9 @@ mixin AudioFileData on ChangeNotifier, HasUuid {
   }
 }
 class WavFileData with ChangeNotifier, HasUuid, AudioFileData {
-  String path;
+  @override
   String name;
+  String path;
 
   WavFileData(this.path) : name = basename(path) {
     audioFilePath = path;
@@ -662,14 +674,38 @@ class WemFileData extends OpenFileData with AudioFileData {
   Future<void> applyOverride() async {
     if (overrideData.value == null)
       throw Exception("No override data");
-    var wai = openHierarchyManager.findRecWhere((e) => e is WaiHierarchyEntry);
-    if (wai == null) {
-      showToast("No open WAI file found");
-      throw Exception("No WAI file found");
-    }
     
+    var wai = areasManager.hiddenArea.whereType<WaiFileData>().first;
+    var wsp = openHierarchyManager
+      .findRecWhere((e) => e is WspHierarchyEntry && e.any((c) => (c as FileHierarchyEntry).path == path))
+      as WspHierarchyEntry?;
+    
+    await backupFile(path);
     var wav = overrideData.value!;
     await wavToWem(wav.path, path);
+
+    await wai.updateMutex.acquire();
+    wai.wai!.patchWithWspDir(
+      WspPatch(
+        basenameWithoutExtension(path),
+        wsp!
+          .whereType<WemHierarchyEntry>()
+          .map((e) => WspPatchWem(e.name.value, e.wemId))
+          .toList()
+      ),
+      join(dirname(wai.path), "stream")
+    );
+    await wai.save();
+    wai.updateMutex.release();
+
+    // reload
+    _loadingState = LoadingState.notLoaded;
+    await load();
+
+    // update override
+    overrideData.value = null;
+
+    notifyListeners();
   }
 
   @override
@@ -748,5 +784,59 @@ class WspFileData extends OpenFileData {
     hasUnsavedChanges = content._unsavedChanges;
     for (var i = 0; i < wems.length; i++)
       wems[i].restoreWith(content.wems[i]);
+  }
+}
+
+class WaiFileData extends OpenFileData {
+  WaiFile? wai;
+  Mutex updateMutex = Mutex();
+
+  WaiFileData(super.name, super.path, { super.secondaryName });
+
+  @override
+  Future<void> load() async {
+    if (_loadingState != LoadingState.notLoaded)
+      return;
+    _loadingState = LoadingState.loading;
+    
+    var bytes = await File(path).readAsBytes();
+    wai = WaiFile.read(ByteDataWrapper(bytes.buffer));
+
+    await super.load();
+  }
+
+  @override
+  void dispose() {
+    wai = null;
+    super.dispose();
+  }
+
+  @override
+  Future<void> save() async {
+    var fileSize = wai!.size;
+    var bytes = Uint8List(fileSize);
+    var byteData = ByteDataWrapper(bytes.buffer);
+    wai!.write(byteData);
+    await backupFile(path);
+    await File(path).writeAsBytes(bytes);
+  }
+
+  @override
+  Undoable takeSnapshot() {
+    var snapshot = WaiFileData(_name, _path);
+    snapshot.wai = wai;
+    snapshot._unsavedChanges = _unsavedChanges;
+    snapshot._loadingState = _loadingState;
+    snapshot.overrideUuid(uuid);
+    return snapshot;
+  }
+
+  @override
+  void restoreWith(Undoable snapshot) {
+    var content = snapshot as WaiFileData;
+    name = content._name;
+    path = content._path;
+    hasUnsavedChanges = content._unsavedChanges;
+    // wai = content.wai;
   }
 }

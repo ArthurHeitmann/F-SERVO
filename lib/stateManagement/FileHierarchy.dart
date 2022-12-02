@@ -18,6 +18,7 @@ import 'HierarchyEntryTypes.dart';
 import 'Property.dart';
 import 'nestedNotifier.dart';
 import '../fileTypeUtils/pak/pakExtractor.dart';
+import 'openFileTypes.dart';
 import 'openFilesManager.dart';
 import 'events/statusInfo.dart';
 import 'preferencesData.dart';
@@ -112,12 +113,6 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
       }
       else if (filePath.endsWith(".wsp")) {
         entry = openWspFile(filePath);
-      }
-      else if (filePath.endsWith(".wem")) {
-        if (await File(filePath).exists())
-          entry = openGenericFile<WemHierarchyEntry>(filePath, parent, (n ,p) => WemHierarchyEntry(n, p));
-        else
-          throw FileSystemException("File not found: $filePath");
       }
       else
         throw FileSystemException("Unsupported file type: $filePath");
@@ -326,8 +321,11 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
       prefs.waiExtractDir!.value = waiExtractDir;
     }
     var waiExtractDir = prefs.waiExtractDir!.value;
+
+    var waiData = areasManager.openFileAsHidden(waiPath) as WaiFileData;
+    await waiData.load();
     
-    var waiEntry = WaiHierarchyEntry(StringProp(path.basename(waiPath)), waiPath, waiExtractDir);
+    var waiEntry = WaiHierarchyEntry(StringProp(path.basename(waiPath)), waiPath, waiExtractDir, waiData.uuid);
     add(waiEntry);
 
     // create EXTRACTION_COMPLETED file, to mark as extract dir
@@ -335,7 +333,7 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
     var extractedFile = File(path.join(waiExtractDir, "EXTRACTION_COMPLETED"));
     if (!await extractedFile.exists())
       noExtract = false;
-    var wai = await waiEntry.readWaiFile();
+    var wai = waiData.wai!;
     var structure = await extractWaiWsps(wai, waiPath, waiExtractDir, noExtract);
     if (!noExtract)
       await extractedFile.writeAsString("Delete this file to re-extract files");

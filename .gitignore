@@ -50,4 +50,5 @@ app.*.map.json
 assets/bins
 assets/mcdFonts
 assets/entityThumbnails
+assets/wavToWemTemplate.zip
 log.txt

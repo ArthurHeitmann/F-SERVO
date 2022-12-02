@@ -499,23 +499,15 @@ class FtbHierarchyEntry extends GenericFileHierarchyEntry {
 }
 
 class WaiHierarchyEntry extends ExtractableHierarchyEntry {
-  WaiFile? _waiFile;
+  OpenFileId waiDataId;
   List<WaiChild> structure = [];
 
-  WaiHierarchyEntry(StringProp name, String path, String extractedPath)
+  WaiHierarchyEntry(StringProp name, String path, String extractedPath, this.waiDataId)
     : super(name, path, extractedPath, true, false);
 
-  Future<WaiFile> readWaiFile() async {
-    if (_waiFile != null)
-      return _waiFile!;
-    var bytes = await File(path).readAsBytes();
-    _waiFile = WaiFile.read(ByteDataWrapper(bytes.buffer));
-    return _waiFile!;
-  }
-  
   @override
   Undoable takeSnapshot() {
-    return WaiHierarchyEntry(name.takeSnapshot() as StringProp, path, extractedPath);
+    return WaiHierarchyEntry(name.takeSnapshot() as StringProp, path, extractedPath, waiDataId);
   }
   
   @override
@@ -600,12 +592,14 @@ class WspHierarchyEntry extends GenericFileHierarchyEntry {
 }
 
 class WemHierarchyEntry extends GenericFileHierarchyEntry {
-  WemHierarchyEntry(StringProp name, String path)
+  final int wemId;
+
+  WemHierarchyEntry(StringProp name, String path, this.wemId)
     : super(name, path, false, true);
   
   @override
   HierarchyEntry clone() {
-    return WemHierarchyEntry(name.takeSnapshot() as StringProp, path);
+    return WemHierarchyEntry(name.takeSnapshot() as StringProp, path, wemId);
   }
 
   Future<void> exportAsWav({ String? wavPath, bool displayToast = true }) async {
@@ -628,7 +622,7 @@ HierarchyEntry makeWaiChildEntry(WaiChild child) {
   else if (child is WaiChildWsp)
     entry = WspHierarchyEntry(StringProp(child.name), child.path, child.children);
   else if (child is WaiChildWem)
-    entry = WemHierarchyEntry(StringProp(child.name), child.path);
+    entry = WemHierarchyEntry(StringProp(child.name), child.path, child.wemId);
   else
     throw Exception("Unknown WAI child type: ${child.runtimeType}");
   return entry;
