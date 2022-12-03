@@ -347,6 +347,8 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
       structure.insert(i, topLevelFolders[i]);
     waiEntry.addAll(structure.map((e) => makeWaiChildEntry(e)));
 
+    undoHistoryManager.onUndoableEvent();
+
     return waiEntry;
   }
 

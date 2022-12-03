@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:path/path.dart';
 
 import '../../utils/assetDirFinder.dart';
+import '../../utils/utils.dart';
 
 Map<String, String> _tmpExtractDirs = {};
 
@@ -11,7 +12,7 @@ Future<String> wemToWavTmp(String wemPath, [String folderPrefix = ""]) async {
   if (!_tmpExtractDirs.containsKey(folderPrefix))
     _tmpExtractDirs[folderPrefix] = (await Directory.systemTemp.createTemp("wemToWav")).path;
   var tmpDir = _tmpExtractDirs[folderPrefix]!;
-  var tempWavPath = join(tmpDir, "${basenameWithoutExtension(wemPath)}.wav");
+  var tempWavPath = join(tmpDir, "${basenameWithoutExtension(wemPath)}_${randomId().toRadixString(36)}.wav");
   await wemToWav(wemPath, tempWavPath);
   return tempWavPath;
 }

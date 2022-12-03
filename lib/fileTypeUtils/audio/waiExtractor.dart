@@ -68,7 +68,7 @@ Future<List<WaiChild>> extractWaiWsps(WaiFile wai, String waiPath, String extrac
       if (noExtract) {
         wemFilesInWsp.addAll([
           for (int i = 0; i < wemStructs.length; i++)
-            WaiChildWem("${i}_${wemStructs[i].wemID}.wem", join(wspExtractDir, "${i}_${wemStructs[i].wemID}.wem",), wemStructs[i].wemID)
+            WaiChildWem(wemStructs[i].toFileName(i), join(wspExtractDir, wemStructs[i].toFileName(i)), wemStructs[i].wemID)
         ]);
         return;
       }
@@ -77,11 +77,11 @@ Future<List<WaiChild>> extractWaiWsps(WaiFile wai, String waiPath, String extrac
       try {
         for (int i = 0; i < wemStructs.length; i++) {
           var wemStruct = wemStructs[i];
-          var wemPath = join(wspExtractDir, "${i}_${wemStruct.wemID}.wem");
+          var wemPath = join(wspExtractDir, wemStruct.toFileName(i));
           var wemFile = File(wemPath);
           await wspFile.setPosition(wemStruct.wemOffset);
           await wemFile.writeAsBytes(await wspFile.read(wemStruct.wemEntrySize));
-          wemFilesInWsp.add(WaiChildWem("${i}_${wemStruct.wemID}.wem", wemPath, wemStruct.wemID));
+          wemFilesInWsp.add(WaiChildWem(wemStruct.toFileName(i), wemPath, wemStruct.wemID));
         }
         messageLog.add("Extracted $wspName");
       } finally {

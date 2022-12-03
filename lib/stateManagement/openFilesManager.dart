@@ -175,7 +175,7 @@ class FilesAreaManager extends NestedNotifier<OpenFileData> implements Undoable 
         .map((file) => file.save()));
     } catch (e) {
       print("Error while saving all files");
-      print(e);
+      rethrow;
     }
   }
 

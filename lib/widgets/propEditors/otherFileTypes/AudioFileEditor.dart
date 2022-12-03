@@ -271,14 +271,14 @@ class __TimelineEditorState extends ChangeNotifierState<_TimelineEditor> {
     var localPos = renderBox.globalToLocal(Offset(xPos, 0));
     int viewArea = _viewEnd.value - _viewStart.value;
     int sample = (localPos.dx / context.size!.width * viewArea + _viewStart.value).round();
-    sample = clamp(sample, 0, widget.file.totalSamples);
+    sample = clamp(sample, 0, widget.file.totalSamples - 1);
     cuePoint.sample.value = sample;
     setState(() {});
   }
 }
 
 class _WaveformPainter extends CustomPainter {
-  final List<int> samples;
+  final List<double> samples;
   final int viewStart;
   final int viewEnd;
   final int totalSamples;
@@ -329,9 +329,9 @@ class _WaveformPainter extends CustomPainter {
     int curSampleIdx = (curSampleRel * samples.length).round();
     curSampleIdx = clamp(curSampleIdx, startSample, endSample);
     double curSampleX = (curSampleIdx - startSample) / (endSample - startSample) * size.width;
-    List<int> viewSamples = samples.sublist(startSample, endSample);
-    List<int> playedSamples = samples.sublist(startSample, curSampleIdx);
-    List<int> unplayedSamples = samples.sublist(curSampleIdx, endSample);
+    List<double> viewSamples = samples.sublist(startSample, endSample);
+    List<double> playedSamples = samples.sublist(startSample, curSampleIdx);
+    List<double> unplayedSamples = samples.sublist(curSampleIdx, endSample);
 
     // the denser the view, the lower the opacity
     double samplesPerPixel = viewSamples.length / size.width;
@@ -343,7 +343,7 @@ class _WaveformPainter extends CustomPainter {
     _paintSamples(canvas, size, unplayedSamples, bwColor, curSampleX, size.width);
   }
 
-  double _paintSamples(Canvas canvas, Size size, List<int> samples, Color color, double startX, double endX) {
+  double _paintSamples(Canvas canvas, Size size, List<double> samples, Color color, double startX, double endX) {
     var paint = Paint()
       ..color = color
       ..strokeWidth = 1
@@ -354,7 +354,7 @@ class _WaveformPainter extends CustomPainter {
     var x = startX;
     var y = height / 2;
     var xStep = (endX - startX) / samples.length;
-    var yStep = height / (0x7FFF * 2);
+    var yStep = height;
     path.moveTo(x, y);
     for (var i = 0; i < samples.length; i++) {
       x += xStep;
@@ -667,7 +667,7 @@ class __CuePointsEditorState extends ChangeNotifierState<_CuePointsEditor> {
                 ),
               ),
               IconButton(
-                onPressed: () => p.sample.value = widget.file.totalSamples,
+                onPressed: () => p.sample.value = widget.file.totalSamples - 1,
                 color: p.sample.value == widget.file.totalSamples ? Theme.of(context).colorScheme.secondary.withOpacity(0.75) : null,
                 splashRadius: 18,
                 icon: const Icon(Icons.arrow_right),

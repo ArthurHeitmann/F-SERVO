@@ -30,7 +30,7 @@ class AudioSampleNumberPropTextField<T extends PropTextField> extends StatelessW
       if (min < 0 || sec < 0 || sec >= 60 || ms < 0 || ms >= 1000)
         return "Invalid format";
       int sample = min * 60 * samplesPerSecond + sec * samplesPerSecond + ms * samplesPerSecond ~/ 1000;
-      if (sample < 0 || sample >= samplesCount)
+      if (sample < 0 || sample >= samplesCount + 1)
         return "Invalid sample number";
       return null;
     } catch (e) {

@@ -2,38 +2,46 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
+import '../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../stateManagement/openFileTypes.dart';
 import '../../../utils/utils.dart';
 import '../../misc/debugContainer.dart';
 import '../../theme/customTheme.dart';
 import 'AudioFileEditor.dart';
 
-class WemFileEditor extends StatefulWidget {
+class WemFileEditor extends ChangeNotifierWidget {
   final WemFileData wem;
   final bool lockControls;
   final bool topPadding;
   final bool showOverride;
 
-  const WemFileEditor({ super.key, required this.wem, this.lockControls = false, this.topPadding = false, this.showOverride = true });
+  WemFileEditor({ super.key, required this.wem, this.lockControls = false, this.topPadding = false, this.showOverride = true })
+    : super(notifier: wem);
 
   @override
   State<WemFileEditor> createState() => _WemFileEditorState();
 }
 
-class _WemFileEditorState extends State<WemFileEditor> {
+class _WemFileEditorState extends ChangeNotifierState<WemFileEditor> {
+  Key refreshKey = UniqueKey();
+
   @override
   void initState() {
     widget.wem.overrideData.addListener(_onOverrideChanged);
+    widget.wem.onOverrideApplied.addListener(_onOverrideApplied);
     super.initState();
   }
 
   @override
   void dispose() {
     widget.wem.overrideData.removeListener(_onOverrideChanged);
+    widget.wem.onOverrideApplied.removeListener(_onOverrideApplied);
     super.dispose();
   }
 
   void _onOverrideChanged() => setState(() {});
+
+  void _onOverrideApplied() => setState(() => refreshKey = UniqueKey());
 
   Future<void> _pickOverride() async {
     var files = await FilePicker.platform.pickFiles(
@@ -58,6 +66,7 @@ class _WemFileEditorState extends State<WemFileEditor> {
     var audioEditor = Column(
       children: [
         AudioFileEditor(
+          key: refreshKey,
           file: widget.wem,
           lockControls: widget.lockControls,
           additionalControls: widget.showOverride ? Row(
@@ -78,6 +87,14 @@ class _WemFileEditorState extends State<WemFileEditor> {
             ],
           ) : null,
         ),
+        AnimatedOpacity(
+          duration: const Duration(milliseconds: 200),
+          opacity: widget.wem.isReplacing ? 1 : 0,
+          child: const SizedBox(
+            height: 2,
+            child: LinearProgressIndicator(backgroundColor: Colors.transparent),
+          ),
+        ),
         if (widget.showOverride && widget.wem.overrideData.value != null) ...[
           AudioFileEditor(
             key: Key(widget.wem.overrideData.value!.uuid),
@@ -89,7 +106,7 @@ class _WemFileEditorState extends State<WemFileEditor> {
                 ElevatedButton(
                   onPressed: () => widget.wem.applyOverride(),
                   style: getTheme(context).dialogPrimaryButtonStyle,
-                  child: const Text("Apply Override"),
+                  child: const Text("Replace WEM"),
                 ),
               ],
             ),

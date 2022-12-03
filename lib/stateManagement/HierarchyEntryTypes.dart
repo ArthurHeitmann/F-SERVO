@@ -507,7 +507,13 @@ class WaiHierarchyEntry extends ExtractableHierarchyEntry {
 
   @override
   Undoable takeSnapshot() {
-    return WaiHierarchyEntry(name.takeSnapshot() as StringProp, path, extractedPath, waiDataId);
+    var snaphot =  WaiHierarchyEntry(name.takeSnapshot() as StringProp, path, extractedPath, waiDataId);
+    snaphot.overrideUuid(uuid);
+    snaphot._isSelected = _isSelected;
+    snaphot._isCollapsed = _isCollapsed;
+    snaphot.structure = structure;
+    snaphot.replaceWith(map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
+    return snaphot;
   }
   
   @override
@@ -516,10 +522,11 @@ class WaiHierarchyEntry extends ExtractableHierarchyEntry {
     name.restoreWith(entry.name);
     _isSelected = entry._isSelected;
     _isCollapsed = entry._isCollapsed;
+    replaceWith(entry.map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
   }
 }
 
-class WaiFolderHierarchyEntry extends FileHierarchyEntry {
+class WaiFolderHierarchyEntry extends GenericFileHierarchyEntry {
   WaiFolderHierarchyEntry(StringProp name, String path, List<WaiChild> children)
     : super(name, path, true, false) {
     _isCollapsed = true;
@@ -527,22 +534,8 @@ class WaiFolderHierarchyEntry extends FileHierarchyEntry {
   }
   
   @override
-  Undoable takeSnapshot() {
-    var snapshot = WspHierarchyEntry(name.takeSnapshot() as StringProp, path, []);
-    snapshot.overrideUuid(uuid);
-    snapshot._isSelected = _isSelected;
-    snapshot._isCollapsed = _isCollapsed;
-    snapshot.replaceWith(map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
-    return snapshot;
-  }
-
-  @override
-  void restoreWith(Undoable snapshot) {
-    var entry = snapshot as WaiFolderHierarchyEntry;
-    name.restoreWith(entry.name);
-    _isSelected = entry._isSelected;
-    _isCollapsed = entry._isCollapsed;
-    updateOrReplaceWith(entry.toList(), (obj) => obj.takeSnapshot() as HierarchyEntry);
+  HierarchyEntry clone() {
+    return WspHierarchyEntry(name.takeSnapshot() as StringProp, path, []);
   }
 }
 
@@ -552,9 +545,8 @@ class WspHierarchyEntry extends GenericFileHierarchyEntry {
 
   WspHierarchyEntry(StringProp name, String path, List<WaiChild> childWems) :
     _childWems = childWems,
-    super(name, path, true, true) {
+    super(name, path, true, false) {
     _isCollapsed = true;
-    name.value += " (${childWems.length})";
   }
   
   @override

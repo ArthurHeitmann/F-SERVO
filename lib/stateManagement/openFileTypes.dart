@@ -553,24 +553,26 @@ mixin AudioFileData on ChangeNotifier, HasUuid {
   Duration? duration;
   int samplesPerSec = 44100;
   int totalSamples = 0;
-  List<int>? wavSamples;
+  List<double>? wavSamples;
   abstract String name;
 
   Future<void> load();
 
   void _readMeta(RiffFile riff) {
-    samplesPerSec = riff.formatChunk.samplesPerSec;
-    totalSamples = riff.dataChunk.samples.length ~/ riff.formatChunk.channels;
+    samplesPerSec = riff.format.samplesPerSec;
+    totalSamples = riff.data.samples.length ~/ riff.format.channels;
     duration = Duration(milliseconds: (totalSamples / samplesPerSec * 1000).round());
   }
 
   static const int _wavSamplesCount = 40000;
   void _parsePreviewSamples(RiffFile riff) {
-    var rawSamples = riff.dataChunk.samples;
+    var rawSamples = riff.data.samples;
     int sampleCount = min(_wavSamplesCount, rawSamples.length);
-    if (riff.formatChunk.formatTag == 1 || riff.formatChunk.formatTag == 3) {
+    if (riff.format.formatTag == 1 || riff.format.formatTag == 3) {
       int samplesSize = rawSamples.length ~/ sampleCount;
-      wavSamples = List.generate(sampleCount, (i) => rawSamples[i * samplesSize]);
+      int bitsPerSample = riff.format.bitsPerSample;
+      var scaleFactor = pow(2, bitsPerSample - 1);
+      wavSamples = List.generate(sampleCount, (i) => rawSamples[i * samplesSize] / scaleFactor);
     } else {
       wavSamples = List.generate(sampleCount, (i) => 0);
     }
@@ -578,11 +580,11 @@ mixin AudioFileData on ChangeNotifier, HasUuid {
 
   void _readCuePoints(RiffFile riff) {
     List<RiffListLabelSubChunk> pendingLabels = [];
-    for (var listChunk in riff.listChunks) {
-      if (listChunk.chunkType != "adtl")
-        continue;
-      for (var subChunk in listChunk.subChunks) {
+    if (riff.labelsList != null) {
+      for (var subChunk in riff.labelsList!.subChunks) {
         if (subChunk is! RiffListLabelSubChunk)
+          continue;
+        if (subChunk.chunkId != "labl")
           continue;
         pendingLabels.add(subChunk);
       }
@@ -594,7 +596,7 @@ mixin AudioFileData on ChangeNotifier, HasUuid {
       int iOff = cuePointsStartAt1 ? -1 : 0;
       cuePoints.clear();
       cuePoints.addAll(pendingLabels.map((l) {
-        var cuePoint = riff.cueChunk!.points[l.cuePointIndex + iOff];
+        var cuePoint = riff.cues!.points[l.cuePointIndex + iOff];
         return CuePointMarker(
           AudioSampleNumberProp(cuePoint.sampleOffset, samplesPerSec),
           StringProp(l.label),
@@ -624,6 +626,8 @@ class WavFileData with ChangeNotifier, HasUuid, AudioFileData {
 }
 class WemFileData extends OpenFileData with AudioFileData {
   ValueNotifier<WavFileData?> overrideData = ValueNotifier(null);
+  ChangeNotifier onOverrideApplied = ChangeNotifier();
+  bool isReplacing = false;
   
   WemFileData(super.name, super.path, { super.secondaryName, Iterable<CuePointMarker>? cuePoints }) {
     if (cuePoints != null)
@@ -656,6 +660,17 @@ class WemFileData extends OpenFileData with AudioFileData {
   }
 
   @override
+  Future<void> save() async {
+    await _saveCuePoints();
+
+    var wai = areasManager.hiddenArea.whereType<WaiFileData>().first;
+    var wemId = RegExp(r"(\d+)\.wem").firstMatch(name)!.group(1)!;
+    wai.pendingPatches.add(WemPatch(path, int.parse(wemId)));
+
+    await super.save();
+  }
+
+  @override
   void dispose() {
     if (audioFilePath != null) {
       File(audioFilePath!).delete();
@@ -664,6 +679,46 @@ class WemFileData extends OpenFileData with AudioFileData {
     wavSamples = null;
     cuePoints.dispose();
     super.dispose();
+  }
+
+  Future<void> _saveCuePoints() async {
+
+    var riff = await RiffFile.fromFile(path);
+
+    var iOff = cuePointsStartAt1 ? 1 : 0;
+    var cueChunk = CueChunk(
+      cuePoints.length,
+      List.generate(cuePoints.length, (i) => CuePoint(
+        i + iOff, cuePoints[i].sample.value, "data", 0, 0, cuePoints[i].sample.value
+      ))
+    );
+    int markersSize = 0;
+    var adtlMarkers = List.generate(cuePoints.length, (i) {
+      int chunkSize = 4 + cuePoints[i].name.value.length + 1;
+      markersSize += chunkSize + 8 + chunkSize % 2;
+      return RiffListLabelSubChunk(
+        "labl", chunkSize, i + iOff, cuePoints[i].name.value
+      );
+    });
+    var adtListChunk = RiffListChunk("adtl", adtlMarkers, 4 + markersSize);
+
+    var cuesIndex = riff.chunks.indexWhere((c) => c is CueChunk);
+    if (cuesIndex != -1)
+      riff.chunks[cuesIndex] = cueChunk;
+    else
+      riff.chunks.insert(riff.chunks.length - 1, cueChunk);
+
+    var adtlIndex = riff.chunks.indexWhere((c) => c is RiffListChunk && c.chunkType == "adtl");
+    if (adtlIndex != -1)
+      riff.chunks[adtlIndex] = adtListChunk;
+    else
+      riff.chunks.insert(riff.chunks.length - 1, adtListChunk);
+
+    var fileSize = riff.size;
+    riff.header.size = fileSize - 8;
+    var newBytes = ByteData(fileSize);
+    riff.write(ByteDataWrapper(newBytes.buffer));
+    await File(path).writeAsBytes(newBytes.buffer.asUint8List());
   }
 
   void _onCuePointsChanged() {
@@ -675,37 +730,22 @@ class WemFileData extends OpenFileData with AudioFileData {
     if (overrideData.value == null)
       throw Exception("No override data");
     
-    var wai = areasManager.hiddenArea.whereType<WaiFileData>().first;
-    var wsp = openHierarchyManager
-      .findRecWhere((e) => e is WspHierarchyEntry && e.any((c) => (c as FileHierarchyEntry).path == path))
-      as WspHierarchyEntry?;
-    
+    isReplacing = true;
+    notifyListeners();
+
     await backupFile(path);
     var wav = overrideData.value!;
     await wavToWem(wav.path, path);
-
-    await wai.updateMutex.acquire();
-    wai.wai!.patchWithWspDir(
-      WspPatch(
-        basenameWithoutExtension(path),
-        wsp!
-          .whereType<WemHierarchyEntry>()
-          .map((e) => WspPatchWem(e.name.value, e.wemId))
-          .toList()
-      ),
-      join(dirname(wai.path), "stream")
-    );
-    await wai.save();
-    wai.updateMutex.release();
+    overrideData.value = null;
 
     // reload
     _loadingState = LoadingState.notLoaded;
     await load();
 
-    // update override
-    overrideData.value = null;
-
+    hasUnsavedChanges = true;
+    isReplacing = false;
     notifyListeners();
+    onOverrideApplied.notifyListeners();
   }
 
   @override
@@ -789,7 +829,7 @@ class WspFileData extends OpenFileData {
 
 class WaiFileData extends OpenFileData {
   WaiFile? wai;
-  Mutex updateMutex = Mutex();
+  Set<WemPatch> pendingPatches = {};
 
   WaiFileData(super.name, super.path, { super.secondaryName });
 
@@ -819,6 +859,18 @@ class WaiFileData extends OpenFileData {
     wai!.write(byteData);
     await backupFile(path);
     await File(path).writeAsBytes(bytes);
+  }
+
+  Future<void> processPendingPatches() async {
+    if (pendingPatches.isEmpty)
+      return;
+    // update WSPs & wai data
+    var exportDir = join(dirname(path), "stream");
+    await wai!.patchWems(pendingPatches.toList(), exportDir);
+    pendingPatches.clear();
+
+    // write wai
+    await save();
   }
 
   @override

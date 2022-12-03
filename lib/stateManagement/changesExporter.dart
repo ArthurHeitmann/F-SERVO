@@ -9,6 +9,7 @@ import '../fileTypeUtils/ruby/pythonRuby.dart';
 import '../fileTypeUtils/yax/xmlToYax.dart';
 import '../utils/utils.dart';
 import 'openFileTypes.dart';
+import 'openFilesManager.dart';
 import 'preferencesData.dart';
 
 List<XmlFileData> changedXmlFiles = [];
@@ -87,6 +88,11 @@ Future<void> processChangedFiles() async {
       return repackDat(datDir, exportPath);
     }));
   }
+
+  // save WAI
+  await Future.wait(areasManager.hiddenArea
+    .whereType<WaiFileData>()
+    .map((wai) => wai.processPendingPatches()));
 
   messageLog.add("Done :)");
 }

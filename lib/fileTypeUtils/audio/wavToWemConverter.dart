@@ -2,12 +2,16 @@
 import 'dart:io';
 
 import 'package:archive/archive_io.dart';
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 import 'package:xml/xml.dart';
 
+import '../../stateManagement/events/statusInfo.dart';
 import '../../stateManagement/preferencesData.dart';
 import '../../utils/assetDirFinder.dart';
 import '../../utils/utils.dart';
+import '../utils/ByteDataWrapper.dart';
+import 'riffParser.dart';
 
 Future<String> _makeWwiseProject() async {
   String wwiseProjectTemplate = join(assetsDir!, "wavToWemTemplate.zip");
@@ -21,21 +25,56 @@ Future<String> _makeWwiseProject() async {
   return tempProjectDir;
 }
 
-XmlDocument _getWwiseSourcesXml(String wavPath, String wemPath) {
+XmlDocument _getWwiseSourcesXml(String wavPath) {
   return XmlDocument([
     XmlProcessing("xml", "version=\"1.0\" encoding=\"UTF-8\""),
     XmlElement(XmlName("ExternalSourcesList"), [
       XmlAttribute(XmlName("SchemaVersion"), "1"),
-      XmlAttribute(XmlName("Root"), dirname(wavPath)),
+      XmlAttribute(XmlName("Root"), "wavSrc"),
     ], [
       XmlElement(XmlName("Source"), [
         XmlAttribute(XmlName("Path"), wavPath),
-        XmlAttribute(XmlName("Destination"), wemPath),
         XmlAttribute(XmlName("AnalysisTypes"), "2"),  // TODO 6?
         XmlAttribute(XmlName("Conversion"), "External_HighQuality"),
       ]),
     ]),
   ]);
+}
+
+Future<void> patchWemForNier(String wemPath) async {
+  var bytes = await File(wemPath).readAsBytes();
+  var byteData = ByteDataWrapper(bytes.buffer);
+  var riff = RiffFile.fromBytes(byteData, true);
+
+  var format = riff.format as WemFormatChunk;
+  var data = riff.data;
+
+  var duration = format.numSamples / format.samplesPerSec;
+  var projectedDataCount = (duration * 188).round();
+  if (projectedDataCount % 2 != 0)
+    projectedDataCount += 1;
+  
+  var initialSetupPacketOffset = format.setupPacketOffset;
+  riff.header.size += projectedDataCount;
+  format.setupPacketOffset += projectedDataCount;
+  format.firstAudioPacketOffset += projectedDataCount;
+  data.size += projectedDataCount;
+
+  var dataCopy = ByteDataWrapper(ByteData(riff.header.size + 8).buffer);
+  riff.data.write(dataCopy);
+  List<int> newDataBytesTmp = List.from(dataCopy.buffer.asUint8List());
+  int dataStartOffset = 8 + initialSetupPacketOffset;
+  newDataBytesTmp.insertAll(dataStartOffset, List.filled(projectedDataCount, 0));
+  Uint8List newDataBytes = Uint8List.fromList(newDataBytesTmp);
+  DataChunk newData = DataChunk.read(ByteDataWrapper(newDataBytes.buffer), format);
+
+  var dataIndex = riff.chunks.indexOf(riff.data);
+  riff.chunks[dataIndex] = newData;
+
+  bytes = Uint8List(riff.header.size + 8);
+  byteData = ByteDataWrapper(bytes.buffer);
+  riff.write(byteData);
+  await File(wemPath).writeAsBytes(bytes);
 }
 
 Future<void> wavToWem(String wavPath, String wemSavePath) async {
@@ -49,15 +88,18 @@ Future<void> wavToWem(String wavPath, String wemSavePath) async {
     throw Exception("Wwise CLI path not set");
   }
 
+  messageLog.add("Preparing Wwise project");
   String projectPath = await _makeWwiseProject();
 
   String wavSrcDir = join(projectPath, "wavSrc");
-  String tmpWavPath = join(wavSrcDir, basename(wavPath));
-  await File(wavPath).copy(tmpWavPath);
-  XmlDocument wSourcesXml = _getWwiseSourcesXml(tmpWavPath, wemSavePath);
-  String wSourcesXmlPath = join(wavSrcDir, "ExtSourceList.xml");
-  await File(wSourcesXmlPath).writeAsString(wSourcesXml.toXmlString(pretty: true));
+  // String tmpWavPath = join(wavSrcDir, basename(wavPath));
+  // await File(wavPath).copy(tmpWavPath);
+  XmlDocument wSourcesXml = _getWwiseSourcesXml(wavPath);
+  String wSourcesXmlPath = join(wavSrcDir, "ExtSourceList.wsources");
+  var xmlStr = wSourcesXml.toXmlString(pretty: true, indent: "\t");
+  await File(wSourcesXmlPath).writeAsString(xmlStr);
 
+  messageLog.add("Converting WAV to WEM");
   String wwiseCliPath = prefs.wwiseCliPath!.value;
   String wwiseProjectPath = join(projectPath, "wavToWemTemplate.wproj");
   List<String> args = [
@@ -71,10 +113,14 @@ Future<void> wavToWem(String wavPath, String wemSavePath) async {
   var result = await Process.run(wwiseCliPath, args);
   print(result.stdout);
   print(result.stderr);
-  if (result.exitCode != 0) {
+  var wemExportedPath = join(projectPath, "GeneratedSoundBanks", "Windows", "${basenameWithoutExtension(wavPath)}.wem");
+  if (result.exitCode != 0 && result.exitCode != 2 || !await File(wemExportedPath).exists()) {
     showToast("Error converting WAV to WEM");
     throw Exception("Error converting WAV to WEM");
-  } 
+  }
+
+  await File(wemExportedPath).copy(wemSavePath);
+  await patchWemForNier(wemSavePath);
 
   await Directory(projectPath).delete(recursive: true);
 
