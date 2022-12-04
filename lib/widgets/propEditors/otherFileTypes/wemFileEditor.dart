@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import '../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../stateManagement/openFileTypes.dart';
 import '../../../utils/utils.dart';
-import '../../misc/debugContainer.dart';
 import '../../theme/customTheme.dart';
 import 'AudioFileEditor.dart';
 

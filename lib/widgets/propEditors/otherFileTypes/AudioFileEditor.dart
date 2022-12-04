@@ -13,7 +13,6 @@ import '../../../stateManagement/nestedNotifier.dart';
 import '../../../stateManagement/openFileTypes.dart';
 import '../../../utils/utils.dart';
 import '../../misc/FlexReorderable.dart';
-import '../../misc/debugContainer.dart';
 import '../../misc/mousePosition.dart';
 import '../../theme/customTheme.dart';
 import '../simpleProps/AudioSampleNumberPropTextField.dart';
@@ -34,21 +33,27 @@ class AudioFileEditor extends StatefulWidget {
 
 class _AudioFileEditorState extends State<AudioFileEditor> {
   late final AudioPlayer? _player;
+  final ValueNotifier<int> _viewStart = ValueNotifier(0);
+  final ValueNotifier<int> _viewEnd = ValueNotifier(1000);
 
   @override
   void initState() {
     super.initState();
     _player = AudioPlayer();
     widget.file.load().then((_) {
+      if (!mounted)
+        return;
       _player!.setSourceDeviceFile(widget.file.audioFilePath!);
-      if (mounted)
-        setState(() {});
+      _viewEnd.value = widget.file.totalSamples;
+      setState(() {});
     });
   }
 
   @override
   void dispose() {
     _player!.dispose();
+    _viewStart.dispose();
+    _viewEnd.dispose();
     super.dispose();
   }
 
@@ -58,20 +63,19 @@ class _AudioFileEditorState extends State<AudioFileEditor> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // const SizedBox(height: 50),
-          if (widget.file.audioFilePath != null) ...[
-            _TimelineEditor(
-              file: widget.file,
-              player: _player,
-              lockControls: widget.lockControls,
-            ),
-            const SizedBox(height: 30),
-          ]
-          else
+          if (widget.file.audioFilePath == null)
             const SizedBox(
               height: 2,
               child: LinearProgressIndicator(backgroundColor: Colors.transparent,)
             ),
+          _TimelineEditor(
+            file: widget.file,
+            player: _player,
+            lockControls: widget.lockControls,
+            viewStart: _viewStart,
+            viewEnd: _viewEnd,
+          ),
+          const SizedBox(height: 30),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -89,18 +93,30 @@ class _AudioFileEditorState extends State<AudioFileEditor> {
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          IconButton(
+                            icon: const Icon(Icons.first_page),
+                            onPressed: () => _player?.seek(Duration.zero),
+                          ),
                           StreamBuilder(
                             stream: _player?.onPlayerStateChanged,
-                            builder: (context, snapshot) {
-                              return IconButton(
-                                icon: _player?.state == PlayerState.playing
-                                  ? const Icon(Icons.pause)
-                                  : const Icon(Icons.play_arrow),
-                                onPressed: _player?.state == PlayerState.playing
-                                  ? _player?.pause
-                                  : _player?.resume,
-                              );
-                            }
+                            builder: (context, snapshot) => IconButton(
+                              icon: _player?.state == PlayerState.playing
+                                ? const Icon(Icons.pause)
+                                : const Icon(Icons.play_arrow),
+                              onPressed: _player?.state == PlayerState.playing
+                                ? _player?.pause
+                                : _player?.resume,
+                            )
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.last_page),
+                            onPressed: () => _player?.seek(Duration(milliseconds: widget.file.totalSamples ~/ widget.file.samplesPerSec - 200)),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.repeat),
+                            color: _player?.releaseMode == ReleaseMode.loop ? Theme.of(context).colorScheme.secondary : null,
+                            onPressed: () => _player?.setReleaseMode(_player?.releaseMode == ReleaseMode.loop ? ReleaseMode.stop : ReleaseMode.loop)
+                                                    .then((_) => setState(() {})),
                           ),
                           const SizedBox(width: 15),
                           DurationStream(
@@ -134,8 +150,12 @@ class _TimelineEditor extends ChangeNotifierWidget {
   final AudioFileData file;
   final AudioPlayer? player;
   final bool lockControls;
+  final ValueNotifier<int> viewStart;
+  final ValueNotifier<int> viewEnd;
 
-  _TimelineEditor({ super.key, required this.file, required this.player, required this.lockControls }) : super(notifier: file.cuePoints);
+  _TimelineEditor({ required this.file, required this.player,
+    required this.lockControls, required this.viewStart, required this.viewEnd })
+    : super(notifier: file.cuePoints);
 
   @override
   State<_TimelineEditor> createState() => __TimelineEditorState();
@@ -144,12 +164,11 @@ class _TimelineEditor extends ChangeNotifierWidget {
 class __TimelineEditorState extends ChangeNotifierState<_TimelineEditor> {
   int _currentPosition = 0;
   late StreamSubscription<Duration> updateSub;
-  final ValueNotifier<int> _viewStart = ValueNotifier(0);
-  final ValueNotifier<int> _viewEnd = ValueNotifier(0);
+  ValueNotifier<int> get viewStart => widget.viewStart;
+  ValueNotifier<int> get viewEnd => widget.viewEnd;
 
   @override
   void initState() {
-    _viewEnd.value = widget.file.totalSamples;
     updateSub = widget.player!.onPositionChanged.listen(_onPositionChange);
     super.initState();
   }
@@ -176,9 +195,9 @@ class __TimelineEditorState extends ChangeNotifierState<_TimelineEditor> {
                     onHorizontalDragUpdate: !widget.lockControls ? _onHorizontalDragUpdate : null,
                     child: CustomPaint(
                       painter: _WaveformPainter(
-                        samples: widget.file.wavSamples!,
-                        viewStart: _viewStart.value,
-                        viewEnd: _viewEnd.value,
+                        samples: widget.file.wavSamples,
+                        viewStart: viewStart.value,
+                        viewEnd: viewEnd.value,
                         totalSamples: widget.file.totalSamples,
                         curSample: _currentPosition,
                         samplesPerSec: widget.file.samplesPerSec,
@@ -193,13 +212,13 @@ class __TimelineEditorState extends ChangeNotifierState<_TimelineEditor> {
                     key: Key(cuePoint.uuid),
                     notifiers: [cuePoint.sample, cuePoint.name],
                     builder: (context) => Positioned(
-                      left: (cuePoint.sample.value - _viewStart.value) / (_viewEnd.value - _viewStart.value) * constraints.maxWidth - 8,
+                      left: (cuePoint.sample.value - viewStart.value) / (viewEnd.value - viewStart.value) * constraints.maxWidth - 8,
                       top: 0,
                       bottom: 0,
                       child: _CuePointMarker(
                         cuePoint: cuePoint,
-                        viewStart: _viewStart,
-                        viewEnd: _viewEnd,
+                        viewStart: viewStart,
+                        viewEnd: viewEnd,
                         totalSamples: widget.file.totalSamples,
                         samplesPerSec: widget.file.samplesPerSec,
                         parentWidth: constraints.maxWidth,
@@ -225,33 +244,31 @@ class __TimelineEditorState extends ChangeNotifierState<_TimelineEditor> {
     if (event is! PointerScrollEvent)
       return;
     double delta = event.scrollDelta.dy;
-    var viewStart = _viewStart.value;
-    var viewEnd = _viewEnd.value;
-    int viewArea = viewEnd - viewStart;
+    int viewArea = viewEnd.value - viewStart.value;
     // zoom in/out by 10% of the view area
     if (delta < 0) {
-      _viewStart.value = max((viewStart + viewArea * 0.1).round(), 0);
-      _viewEnd.value = min((viewEnd - viewArea * 0.1).round(), widget.file.totalSamples);
+      viewStart.value = max((viewStart.value + viewArea * 0.1).round(), 0);
+      viewEnd.value = min((viewEnd.value - viewArea * 0.1).round(), widget.file.totalSamples);
     } else {
-      _viewStart.value = max((viewStart - viewArea * 0.1).round(), 0);
-      _viewEnd.value= min((viewEnd + viewArea * 0.1).round(), widget.file.totalSamples);
+      viewStart.value = max((viewStart.value - viewArea * 0.1).round(), 0);
+      viewEnd.value= min((viewEnd.value + viewArea * 0.1).round(), widget.file.totalSamples);
     }
     setState(() {});
   }
 
   void _onHorizontalDragUpdate(DragUpdateDetails details) {
     var totalViewWidth = context.size!.width;
-    int viewArea = _viewEnd.value - _viewStart.value;
+    int viewArea = viewEnd.value - viewStart.value;
     int delta = (details.delta.dx / totalViewWidth * viewArea).round();
     if (delta > 0) {
-      int maxChange = _viewStart.value;
+      int maxChange = viewStart.value;
       delta = min(delta, maxChange);
     } else {
-      int maxChange = widget.file.totalSamples - _viewEnd.value;
+      int maxChange = widget.file.totalSamples - viewEnd.value;
       delta = max(delta, -maxChange);
     }
-    _viewStart.value -= delta;
-    _viewEnd.value -= delta;
+    viewStart.value -= delta;
+    viewEnd.value -= delta;
     setState(() {});
   }
 
@@ -260,8 +277,8 @@ class __TimelineEditorState extends ChangeNotifierState<_TimelineEditor> {
     var locTapPos = renderBox.globalToLocal(MousePosition.pos);
     var xPos = locTapPos.dx;
     double relX = xPos / context.size!.width;
-    int viewArea = _viewEnd.value - _viewStart.value;
-    int newPosition = (_viewStart.value + relX * viewArea).round();
+    int viewArea = viewEnd.value - viewStart.value;
+    int newPosition = (viewStart.value + relX * viewArea).round();
     _currentPosition = clamp(newPosition, 0, widget.file.totalSamples);
     widget.player!.seek(Duration(microseconds: _currentPosition * 1000000 ~/ widget.file.samplesPerSec));
   }
@@ -269,8 +286,8 @@ class __TimelineEditorState extends ChangeNotifierState<_TimelineEditor> {
   void _onCuePointDrag(double xPos, CuePointMarker cuePoint) {
     var renderBox = context.findRenderObject() as RenderBox;
     var localPos = renderBox.globalToLocal(Offset(xPos, 0));
-    int viewArea = _viewEnd.value - _viewStart.value;
-    int sample = (localPos.dx / context.size!.width * viewArea + _viewStart.value).round();
+    int viewArea = viewEnd.value - viewStart.value;
+    int sample = (localPos.dx / context.size!.width * viewArea + viewStart.value).round();
     sample = clamp(sample, 0, widget.file.totalSamples - 1);
     cuePoint.sample.value = sample;
     setState(() {});
@@ -278,7 +295,7 @@ class __TimelineEditorState extends ChangeNotifierState<_TimelineEditor> {
 }
 
 class _WaveformPainter extends CustomPainter {
-  final List<double> samples;
+  final List<double>? samples;
   final int viewStart;
   final int viewEnd;
   final int totalSamples;
@@ -315,11 +332,14 @@ class _WaveformPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     prevSize = size;
-    paintWaveform(canvas, size);
+    if (samples != null)
+      paintWaveform(canvas, size, samples!);
+    else
+      paintTimeline(canvas, size);
     paintTimeMarkers(canvas, size);
   }
   
-  void paintWaveform(Canvas canvas, Size size) {
+  void paintWaveform(Canvas canvas, Size size, List<double> samples) {
     // only show samples that are in the view up to pixel resolution
     double viewStartRel = viewStart / totalSamples;
     double viewEndRel = viewEnd / totalSamples;
@@ -366,6 +386,32 @@ class _WaveformPainter extends CustomPainter {
     return x;
   }
 
+  void paintTimeline(Canvas canvas, Size size) {
+    double curSampleRel = (curSample - viewStart) / (viewEnd - viewStart);
+    double curSampleX = curSampleRel * size.width;
+    double playedWidth = curSampleX;
+
+    int bwColorVal = (lineColor.red + lineColor.green + lineColor.blue) ~/ 3;
+    Color bwColor = Color.fromARGB(lineColor.alpha, bwColorVal, bwColorVal, bwColorVal);
+    _paintTimeline(canvas, size, playedWidth, size.width, bwColor);
+    _paintTimeline(canvas, size, 0, playedWidth, lineColor);
+  }
+
+  void _paintTimeline(Canvas canvas, Size size, double startX, double endX, Color color) {
+    var paint = Paint()
+      ..color = color
+      ..strokeWidth = 20
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    var path = Path();
+    var startOffset = startX == 0 ? 10 : 0;
+    var endOffset = endX == size.width ? -10 : 0;
+    path.moveTo(clamp(startX + startOffset, 10, size.width), size.height / 2);
+    path.lineTo(clamp(endX + endOffset, 10, size.width), size.height / 2);
+    canvas.drawPath(path, paint);
+  }
+
   void paintTimeMarkers(Canvas canvas, Size size) {
     var paint = Paint()
       ..color = textColor
@@ -392,6 +438,8 @@ class _WaveformPainter extends CustomPainter {
     const double fontSize = 12;
     for (int i = markersStart; i <= markersEnd; i += markersIntervalSamples) {
       double x = (i - viewStart) / (viewEnd - viewStart) * size.width;
+      if (x.isNaN || x.isInfinite)
+        continue;
       // small marker on the bottom
       double yOff = size.height - fontSize;
       canvas.drawLine(Offset(x, yOff - 5), Offset(x, size.height), paint);
@@ -420,68 +468,68 @@ class _WaveformPainter extends CustomPainter {
   }
 }
 
-class _CurrentPositionMarker extends StatefulWidget {
-  final void Function(double delta) onDrag;
-  final Stream<Duration> positionChangeStream;
-
-  const _CurrentPositionMarker({ super.key, required this.onDrag, required this.positionChangeStream });
-
-  @override
-  State<_CurrentPositionMarker> createState() => _CurrentPositionMarkerState();
-}
-
-class _CurrentPositionMarkerState extends State<_CurrentPositionMarker> {
-  late final StreamSubscription<Duration> _positionChangeSubscription;
-
-  @override
-  void initState() {
-    super.initState();
-    _positionChangeSubscription = widget.positionChangeStream.listen((position) {
-      print("position changed: $position");
-      setState(() {});
-    });
-  }
-
-  @override
-  void dispose() {
-    _positionChangeSubscription.cancel();
-    MousePosition.removeDragListener(_onDrag);
-    MousePosition.removeDragEndListener(_onDragEnd);
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return DebugContainer(
-      child: GestureDetector(
-        onPanStart: (_) {
-          MousePosition.addDragListener(_onDrag);
-          MousePosition.addDragEndListener(_onDragEnd);
-        },
-        behavior: HitTestBehavior.translucent,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Container(
-            width: 2,
-            color: Theme.of(context).colorScheme.secondary,
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _onDrag(Offset pos) {
-    print("drag $pos");
-    var renderBox = context.findRenderObject() as RenderBox;
-    var localPos = renderBox.globalToLocal(pos);
-    widget.onDrag(localPos.dx);
-  }
-
-  void _onDragEnd() {
-    MousePosition.removeDragListener(_onDrag);
-    MousePosition.removeDragEndListener(_onDragEnd);
-  }
-}
+// class _CurrentPositionMarker extends StatefulWidget {
+//   final void Function(double delta) onDrag;
+//   final Stream<Duration> positionChangeStream;
+//
+//   const _CurrentPositionMarker({ super.key, required this.onDrag, required this.positionChangeStream });
+//
+//   @override
+//   State<_CurrentPositionMarker> createState() => _CurrentPositionMarkerState();
+// }
+//
+// class _CurrentPositionMarkerState extends State<_CurrentPositionMarker> {
+//   late final StreamSubscription<Duration> _positionChangeSubscription;
+//
+//   @override
+//   void initState() {
+//     super.initState();
+//     _positionChangeSubscription = widget.positionChangeStream.listen((position) {
+//       print("position changed: $position");
+//       setState(() {});
+//     });
+//   }
+//
+//   @override
+//   void dispose() {
+//     _positionChangeSubscription.cancel();
+//     MousePosition.removeDragListener(_onDrag);
+//     MousePosition.removeDragEndListener(_onDragEnd);
+//     super.dispose();
+//   }
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return DebugContainer(
+//       child: GestureDetector(
+//         onPanStart: (_) {
+//           MousePosition.addDragListener(_onDrag);
+//           MousePosition.addDragEndListener(_onDragEnd);
+//         },
+//         behavior: HitTestBehavior.translucent,
+//         child: Padding(
+//           padding: const EdgeInsets.symmetric(horizontal: 12),
+//           child: Container(
+//             width: 2,
+//             color: Theme.of(context).colorScheme.secondary,
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+//
+//   void _onDrag(Offset pos) {
+//     print("drag $pos");
+//     var renderBox = context.findRenderObject() as RenderBox;
+//     var localPos = renderBox.globalToLocal(pos);
+//     widget.onDrag(localPos.dx);
+//   }
+//
+//   void _onDragEnd() {
+//     MousePosition.removeDragListener(_onDrag);
+//     MousePosition.removeDragEndListener(_onDragEnd);
+//   }
+// }
 
 class _CuePointMarker extends ChangeNotifierWidget {
   final CuePointMarker cuePoint;
@@ -493,7 +541,7 @@ class _CuePointMarker extends ChangeNotifierWidget {
   final void Function(double xPos, CuePointMarker cuePoint) onDrag;
 
   _CuePointMarker({
-    super.key, required this.cuePoint,
+    required this.cuePoint,
     required this.viewStart, required this.viewEnd,
     required this.totalSamples, required this.samplesPerSec,
     required this.parentWidth, required this.onDrag,
@@ -504,13 +552,46 @@ class _CuePointMarker extends ChangeNotifierWidget {
 }
 
 class __CuePointMarkerState extends ChangeNotifierState<_CuePointMarker> {
-  bool isHovered = false;
+  OverlayEntry? _textOverlay;
 
   @override
   void dispose() {
     MousePosition.removeDragListener(_onDrag);
     MousePosition.removeDragEndListener(_onDragEnd);
+    _textOverlay?.remove();
     super.dispose();
+  }
+
+  void onMouseEnter(_) {
+    var renderBox = context.findRenderObject() as RenderBox;
+    var pos = renderBox.localToGlobal(Offset.zero); 
+    var size = renderBox.size;
+    var isOnLeftSide = MousePosition.pos.dx < MediaQuery.of(context).size.width / 2;
+
+    _textOverlay = OverlayEntry(
+      builder: (context) => Positioned(
+        left: isOnLeftSide ? pos.dx + size.width / 2 : null,
+        right: isOnLeftSide ? null : MediaQuery.of(context).size.width - pos.dx,
+        top: pos.dy - 15,
+        child: Material(
+          color: Colors.transparent,
+          child: Text(
+            widget.cuePoint.name.value,
+            style: TextStyle(
+              color: getTheme(context).textColor!.withOpacity(0.8),
+              fontSize: 12,
+              fontFamily: "FiraCode",
+            ),  
+          )
+        ),
+      ),
+    );
+    Overlay.of(context)!.insert(_textOverlay!);
+  }
+
+  void onMouseLeave(_) {
+    _textOverlay?.remove();
+    _textOverlay = null;    
   }
 
   @override
@@ -520,13 +601,13 @@ class __CuePointMarkerState extends ChangeNotifierState<_CuePointMarker> {
     
     const double leftPadding = 8;
     return MouseRegion(
-      onEnter: (_) => setState(() => isHovered = true),
-      onExit: (_) => setState(() => isHovered = false),
+      onEnter: onMouseEnter,
+      onExit: onMouseLeave,
       child: Stack(
         children: [
-          // marker
-          Transform.translate(
-            offset: const Offset(-17, -21.5),
+          Positioned(
+            left: -17,
+            top: -21.5,
             child: Icon(
               Icons.arrow_drop_down_rounded,
               color: Theme.of(context).colorScheme.secondary,
@@ -534,8 +615,7 @@ class __CuePointMarkerState extends ChangeNotifierState<_CuePointMarker> {
             ),
           ),
           // line
-          Transform.translate(
-            offset: const Offset(0, 0),
+          Positioned(
             child: GestureDetector(
               onPanStart: (_) {
                 MousePosition.addDragListener(_onDrag);
@@ -551,12 +631,6 @@ class __CuePointMarkerState extends ChangeNotifierState<_CuePointMarker> {
               ),
             ),
           ),
-          // text
-          if (isHovered)
-            Transform.translate(
-              offset: const Offset(leftPadding * 2, -leftPadding * .2),
-              child: makePropEditor<UnderlinePropTextField>(widget.cuePoint.name)
-            ),
         ],
       ),
     );
@@ -590,7 +664,7 @@ class _CuePointsEditor extends ChangeNotifierWidget {
   final NestedNotifier<CuePointMarker> cuePoints;
   final AudioFileData file;
 
-  _CuePointsEditor({ super.key, required this.cuePoints, required this.file }) : super(notifier: cuePoints);
+  _CuePointsEditor({ required this.cuePoints, required this.file }) : super(notifier: cuePoints);
 
   @override
   State<_CuePointsEditor> createState() => __CuePointsEditorState();

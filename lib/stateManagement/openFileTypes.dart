@@ -4,7 +4,6 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:mutex/mutex.dart';
 import 'package:path/path.dart';
 import 'package:xml/xml.dart';
 
@@ -552,7 +551,7 @@ mixin AudioFileData on ChangeNotifier, HasUuid {
   bool cuePointsStartAt1 = false;
   Duration? duration;
   int samplesPerSec = 44100;
-  int totalSamples = 0;
+  int totalSamples = 1000;
   List<double>? wavSamples;
   abstract String name;
 
@@ -574,7 +573,7 @@ mixin AudioFileData on ChangeNotifier, HasUuid {
       var scaleFactor = pow(2, bitsPerSample - 1);
       wavSamples = List.generate(sampleCount, (i) => rawSamples[i * samplesSize] / scaleFactor);
     } else {
-      wavSamples = List.generate(sampleCount, (i) => 0);
+      wavSamples = null;
     }
   }
 
@@ -642,6 +641,10 @@ class WemFileData extends OpenFileData with AudioFileData {
     _loadingState = LoadingState.loading;
 
     // extract wav
+    if (audioFilePath != null) {
+      await File(audioFilePath!).delete();
+      audioFilePath = null;
+    }
     audioFilePath = await wemToWavTmp(path);
 
     var wavData = await RiffFile.fromFile(audioFilePath!);

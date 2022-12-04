@@ -6,9 +6,7 @@ import 'package:path/path.dart';
 import 'package:xml/xml.dart';
 
 import '../fileTypeUtils/audio/waiExtractor.dart';
-import '../fileTypeUtils/audio/waiIO.dart';
 import '../fileTypeUtils/audio/wemToWavConverter.dart';
-import '../fileTypeUtils/utils/ByteDataWrapper.dart';
 import '../fileTypeUtils/yax/yaxToXml.dart';
 import '../utils/utils.dart';
 import 'FileHierarchy.dart';
@@ -507,13 +505,13 @@ class WaiHierarchyEntry extends ExtractableHierarchyEntry {
 
   @override
   Undoable takeSnapshot() {
-    var snaphot =  WaiHierarchyEntry(name.takeSnapshot() as StringProp, path, extractedPath, waiDataId);
-    snaphot.overrideUuid(uuid);
-    snaphot._isSelected = _isSelected;
-    snaphot._isCollapsed = _isCollapsed;
-    snaphot.structure = structure;
-    snaphot.replaceWith(map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
-    return snaphot;
+    var snapshot =  WaiHierarchyEntry(name.takeSnapshot() as StringProp, path, extractedPath, waiDataId);
+    snapshot.overrideUuid(uuid);
+    snapshot._isSelected = _isSelected;
+    snapshot._isCollapsed = _isCollapsed;
+    snapshot.structure = structure;
+    snapshot.replaceWith(map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
+    return snapshot;
   }
   
   @override

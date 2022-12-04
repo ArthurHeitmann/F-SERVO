@@ -107,7 +107,6 @@ class WemFormatChunk extends RiffChunk with FormatChunk {
   late int blockSize1Exp;
 
   WemFormatChunk.read(ByteDataWrapper bytes) : super.read(bytes) {
-    int pos = bytes.position;
     formatTag = bytes.readUint16();
     channels = bytes.readUint16();
     samplesPerSec = bytes.readUint32();
