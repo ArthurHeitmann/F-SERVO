@@ -3,10 +3,11 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:path/path.dart';
 
 import 'utils.dart';
 
-const _logFileName = "log.txt";
+final _logFileName = join(Directory.current.path, "log.txt");
 
 void loggingWrapper(void Function() run) {
   // log all output to file

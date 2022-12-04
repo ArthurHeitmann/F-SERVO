@@ -74,7 +74,7 @@ class _WemFileEditorState extends ChangeNotifierState<WemFileEditor> {
               ElevatedButton(
                 onPressed: _pickOverride,
                 style: getTheme(context).dialogPrimaryButtonStyle,
-                child: const Text("Select Override"),
+                child: const Text("Select WAV"),
               ),
               const SizedBox(width: 10),
               if (widget.wem.overrideData.value != null)

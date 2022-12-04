@@ -34,7 +34,7 @@ XmlDocument _getWwiseSourcesXml(String wavPath) {
     ], [
       XmlElement(XmlName("Source"), [
         XmlAttribute(XmlName("Path"), wavPath),
-        XmlAttribute(XmlName("AnalysisTypes"), "2"),  // TODO 6?
+        // XmlAttribute(XmlName("AnalysisTypes"), "2"),
         XmlAttribute(XmlName("Conversion"), "External_HighQuality"),
       ]),
     ]),
@@ -113,15 +113,15 @@ Future<void> wavToWem(String wavPath, String wemSavePath, bool patchForBgm) asyn
     print(result.stdout);
     print(result.stderr);
     var wemExportedPath = join(projectPath, "GeneratedSoundBanks", "Windows", "${basenameWithoutExtension(wavPath)}.wem");
-    if (result.exitCode != 0 && result.exitCode != 2 || !await File(wemExportedPath).exists()) {
+    if (!await File(wemExportedPath).exists()) {
       showToast("Error converting WAV to WEM");
       throw Exception("Error converting WAV to WEM");
     }
 
     await File(wemExportedPath).copy(wemSavePath);
 
-    if (patchForBgm)
-      await patchWemForNierBgm(wemSavePath);
+    // if (patchForBgm)
+    //   await patchWemForNierBgm(wemSavePath);
 
     print("WAV to WEM conversion successful");
     messageLog.add("WAV to WEM conversion successful");
