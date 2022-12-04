@@ -56,7 +56,7 @@ Future<List<WaiChild>> extractWaiWsps(WaiFile wai, String waiPath, String extrac
     }
     await Future.wait(wemStructsByWspName.keys.map((wspName) async {
       List<WemStruct> wemStructs = wemStructsByWspName[wspName]!;
-      wemStructs.sort((a, b) => a.wemID.compareTo(b.wemID));
+      wemStructs.sort((a, b) => a.wemOffset.compareTo(b.wemOffset));
       String wspPath = join(waiDir, "stream");
       if (dir.name.isNotEmpty)
         wspPath = join(wspPath, dir.name);

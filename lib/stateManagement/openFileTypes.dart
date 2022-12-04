@@ -738,7 +738,7 @@ class WemFileData extends OpenFileData with AudioFileData {
 
     await backupFile(path);
     var wav = overrideData.value!;
-    await wavToWem(wav.path, path);
+    await wavToWem(wav.path, path, basename(path).contains("BGM"));
     overrideData.value = null;
 
     // reload

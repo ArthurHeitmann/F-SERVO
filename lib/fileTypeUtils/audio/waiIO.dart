@@ -5,6 +5,7 @@ import 'package:path/path.dart';
 
 import '../../utils/utils.dart';
 import '../utils/ByteDataWrapper.dart';
+import 'wemIdsToNames.dart';
 
 class WaiHeader {
   int fileType;
@@ -119,7 +120,8 @@ class WemStruct {
   }
 
   String toFileName(int index) {
-    return "${index}_$wemID.wem";
+    var lookupName = wemIdsToNames[wemID] ?? "";
+    return "${index}_${lookupName}_$wemID.wem";
   }
 
   static const int size = 16;

@@ -88,6 +88,7 @@ class _AudioFileEditorState extends State<AudioFileEditor> {
                       Text(
                         "  ${widget.file.name}",
                         style: const TextStyle(fontFamily: "FiraCode", fontSize: 16),
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 10),
                       Row(
@@ -201,6 +202,7 @@ class __TimelineEditorState extends ChangeNotifierState<_TimelineEditor> {
                         totalSamples: widget.file.totalSamples,
                         curSample: _currentPosition,
                         samplesPerSec: widget.file.samplesPerSec,
+                        scaleFactor: MediaQuery.of(context).devicePixelRatio,
                         lineColor: Theme.of(context).colorScheme.primary,
                         textColor: getTheme(context).textColor!.withOpacity(0.5),
                       ),
@@ -301,6 +303,7 @@ class _WaveformPainter extends CustomPainter {
   final int totalSamples;
   final int curSample;
   final int samplesPerSec;
+  final double scaleFactor;
   final Color lineColor;
   final Color textColor;
   Size prevSize = Size.zero;
@@ -326,7 +329,7 @@ class _WaveformPainter extends CustomPainter {
     required this.samples,
     required this.viewStart, required this.viewEnd,
     required this.totalSamples, required this.curSample, required this.samplesPerSec,
-    required this.lineColor, required this.textColor
+     required this.scaleFactor, required this.lineColor, required this.textColor,
   });
 
   @override
@@ -355,7 +358,11 @@ class _WaveformPainter extends CustomPainter {
 
     // the denser the view, the lower the opacity
     double samplesPerPixel = viewSamples.length / size.width;
-    double opacity = (-samplesPerPixel/40+1).clamp(0.1, 1).toDouble();
+    double opacity;
+    if (scaleFactor == 1)
+      opacity = (-samplesPerPixel/40+1).clamp(0.1, 1).toDouble();
+    else
+      opacity = 1;
     Color color = lineColor.withOpacity(opacity);
     int bwColorVal = (color.red + color.green + color.blue) ~/ 3;
     Color bwColor = Color.fromARGB(color.alpha, bwColorVal, bwColorVal, bwColorVal);
@@ -581,7 +588,7 @@ class __CuePointMarkerState extends ChangeNotifierState<_CuePointMarker> {
               color: getTheme(context).textColor!.withOpacity(0.8),
               fontSize: 12,
               fontFamily: "FiraCode",
-            ),  
+            ),
           )
         ),
       ),

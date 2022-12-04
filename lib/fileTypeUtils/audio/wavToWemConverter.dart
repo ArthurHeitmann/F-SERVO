@@ -41,7 +41,7 @@ XmlDocument _getWwiseSourcesXml(String wavPath) {
   ]);
 }
 
-Future<void> patchWemForNier(String wemPath) async {
+Future<void> patchWemForNierBgm(String wemPath) async {
   var bytes = await File(wemPath).readAsBytes();
   var byteData = ByteDataWrapper(bytes.buffer);
   var riff = RiffFile.fromBytes(byteData, true);
@@ -77,7 +77,7 @@ Future<void> patchWemForNier(String wemPath) async {
   await File(wemPath).writeAsBytes(bytes);
 }
 
-Future<void> wavToWem(String wavPath, String wemSavePath) async {
+Future<void> wavToWem(String wavPath, String wemSavePath, bool patchForBgm) async {
   var prefs = PreferencesData();
   if (assetsDir == null) {
     showToast("Assets directory not found");
@@ -91,38 +91,41 @@ Future<void> wavToWem(String wavPath, String wemSavePath) async {
   messageLog.add("Preparing Wwise project");
   String projectPath = await _makeWwiseProject();
 
-  String wavSrcDir = join(projectPath, "wavSrc");
-  // String tmpWavPath = join(wavSrcDir, basename(wavPath));
-  // await File(wavPath).copy(tmpWavPath);
-  XmlDocument wSourcesXml = _getWwiseSourcesXml(wavPath);
-  String wSourcesXmlPath = join(wavSrcDir, "ExtSourceList.wsources");
-  var xmlStr = wSourcesXml.toXmlString(pretty: true, indent: "\t");
-  await File(wSourcesXmlPath).writeAsString(xmlStr);
+  try {
+    String wavSrcDir = join(projectPath, "wavSrc");
+    XmlDocument wSourcesXml = _getWwiseSourcesXml(wavPath);
+    String wSourcesXmlPath = join(wavSrcDir, "ExtSourceList.wsources");
+    var xmlStr = wSourcesXml.toXmlString(pretty: true, indent: "\t");
+    await File(wSourcesXmlPath).writeAsString(xmlStr);
 
-  messageLog.add("Converting WAV to WEM");
-  String wwiseCliPath = prefs.wwiseCliPath!.value;
-  String wwiseProjectPath = join(projectPath, "wavToWemTemplate.wproj");
-  List<String> args = [
-    wwiseProjectPath,
-    "-ConvertExternalSources",
-    "Windows",
-    wSourcesXmlPath,
-    "-NoWwiseDat"
-    "-Verbose",
-  ];
-  var result = await Process.run(wwiseCliPath, args);
-  print(result.stdout);
-  print(result.stderr);
-  var wemExportedPath = join(projectPath, "GeneratedSoundBanks", "Windows", "${basenameWithoutExtension(wavPath)}.wem");
-  if (result.exitCode != 0 && result.exitCode != 2 || !await File(wemExportedPath).exists()) {
-    showToast("Error converting WAV to WEM");
-    throw Exception("Error converting WAV to WEM");
+    messageLog.add("Converting WAV to WEM${patchForBgm ? " (with BGM patch)" : ""}");
+    String wwiseCliPath = prefs.wwiseCliPath!.value;
+    String wwiseProjectPath = join(projectPath, "wavToWemTemplate.wproj");
+    List<String> args = [
+      wwiseProjectPath,
+      "-ConvertExternalSources",
+      "Windows",
+      wSourcesXmlPath,
+      "-NoWwiseDat"
+      "-Verbose",
+    ];
+    var result = await Process.run(wwiseCliPath, args);
+    print(result.stdout);
+    print(result.stderr);
+    var wemExportedPath = join(projectPath, "GeneratedSoundBanks", "Windows", "${basenameWithoutExtension(wavPath)}.wem");
+    if (result.exitCode != 0 && result.exitCode != 2 || !await File(wemExportedPath).exists()) {
+      showToast("Error converting WAV to WEM");
+      throw Exception("Error converting WAV to WEM");
+    }
+
+    await File(wemExportedPath).copy(wemSavePath);
+
+    if (patchForBgm)
+      await patchWemForNierBgm(wemSavePath);
+
+    print("WAV to WEM conversion successful");
+    messageLog.add("WAV to WEM conversion successful");
+  } finally {
+    await Directory(projectPath).delete(recursive: true);
   }
-
-  await File(wemExportedPath).copy(wemSavePath);
-  await patchWemForNier(wemSavePath);
-
-  await Directory(projectPath).delete(recursive: true);
-
-  print("WAV to WEM conversion successful");
 }
