@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../stateManagement/openFileTypes.dart';
 import '../../stateManagement/preferencesData.dart';
 import '../misc/preferencesEditor.dart';
+import '../propEditors/otherFileTypes/BnkPlaylistEditor.dart';
 import '../propEditors/otherFileTypes/ftbEditor.dart';
 import '../propEditors/otherFileTypes/genericTable/TableFileEditor.dart';
 import '../propEditors/otherFileTypes/mcdEditor.dart';
@@ -21,6 +22,7 @@ enum FileType {
   ftb,
   wem,
   wsp,
+  bnkPlaylist,
 }
 
 Widget makeFileEditor(OpenFileData content) {
@@ -41,6 +43,8 @@ Widget makeFileEditor(OpenFileData content) {
       return WemFileEditor(key: Key(content.uuid), wem: content as WemFileData, topPadding: true,);
     case FileType.wsp:
       return WspFileEditor(key: Key(content.uuid), wsp: content as WspFileData);
+    case FileType.bnkPlaylist:
+      return BnkPlaylistEditor(playlist: content as BnkFilePlaylistData);
     default:
       return TextFileEditor(key: Key(content.uuid), fileContent: content as TextFileData);
   }

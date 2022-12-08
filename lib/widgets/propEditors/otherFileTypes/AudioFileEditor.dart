@@ -207,7 +207,8 @@ class __TimelineEditorState extends ChangeNotifierState<_TimelineEditor> {
                         curSample: _currentPosition,
                         samplesPerSec: widget.file.samplesPerSec,
                         scaleFactor: MediaQuery.of(context).devicePixelRatio,
-                        lineColor: Theme.of(context).colorScheme.primary,
+                        lineColor: getTheme(context).audioColor!,
+                        lineInactiveColor: getTheme(context).audioDisabledColor!,
                         textColor: getTheme(context).textColor!.withOpacity(0.5),
                       ),
                     ),
@@ -309,6 +310,7 @@ class _WaveformPainter extends CustomPainter {
   final int samplesPerSec;
   final double scaleFactor;
   final Color lineColor;
+  final Color lineInactiveColor;
   final Color textColor;
   Size prevSize = Size.zero;
 
@@ -333,7 +335,7 @@ class _WaveformPainter extends CustomPainter {
     required this.samples,
     required this.viewStart, required this.viewEnd,
     required this.totalSamples, required this.curSample, required this.samplesPerSec,
-     required this.scaleFactor, required this.lineColor, required this.textColor,
+     required this.scaleFactor, required this.lineColor, required this.lineInactiveColor, required this.textColor,
   });
 
   @override
@@ -368,8 +370,7 @@ class _WaveformPainter extends CustomPainter {
     else
       opacity = 1;
     Color color = lineColor.withOpacity(opacity);
-    int bwColorVal = (color.red + color.green + color.blue) ~/ 3;
-    Color bwColor = Color.fromARGB(color.alpha, bwColorVal, bwColorVal, bwColorVal);
+    Color bwColor = lineInactiveColor.withOpacity(opacity/2);
     _paintSamples(canvas, size, playedSamples, color, 0, curSampleX);
     _paintSamples(canvas, size, unplayedSamples, bwColor, curSampleX, size.width);
   }
@@ -621,7 +622,7 @@ class __CuePointMarkerState extends ChangeNotifierState<_CuePointMarker> {
             top: -21.5,
             child: Icon(
               Icons.arrow_drop_down_rounded,
-              color: Theme.of(context).colorScheme.secondary,
+              color: getTheme(context).audioColor,
               size: 50,
             ),
           ),
@@ -637,7 +638,7 @@ class __CuePointMarkerState extends ChangeNotifierState<_CuePointMarker> {
                 padding: const EdgeInsets.symmetric(horizontal: leftPadding),
                 child: Container(
                   width: 2,
-                  color: Theme.of(context).colorScheme.secondary,
+                  color: getTheme(context).audioColor,
                 ),
               ),
             ),
