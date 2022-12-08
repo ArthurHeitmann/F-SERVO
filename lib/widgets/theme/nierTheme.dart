@@ -87,6 +87,13 @@ class NierNierThemeExtension extends NierThemeExtension {
       contextMenuBgColor: _ncLight2,
       tableBgColor: _ncLight,
       tableBgAltColor: _ncLight2,
+      audioColor: _ncDark,
+      audioDisabledColor: _ncBrownDark.withOpacity(0.5),
+      audioTimelineBgColor: _ncLight,
+      audioLabelColor: _ncBrownDark,
+      entryCueColor: _ncCyan,
+      exitCueColor: _ncOrange,
+      customCueColor: _ncRed,
     );
 
   static ThemeData makeTheme() {

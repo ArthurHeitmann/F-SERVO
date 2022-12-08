@@ -59,6 +59,13 @@ class NierDarkThemeExtension extends NierThemeExtension {
       contextMenuBgColor: const Color.fromARGB(255, 25, 25, 25),
       tableBgColor: const Color.fromARGB(255, 33, 33, 33),
       tableBgAltColor: const Color.fromARGB(255, 54, 54, 54),
+      audioColor: const Color.fromARGB(255, 228, 162, 21),
+      audioDisabledColor: const Color.fromARGB(126, 85, 63, 15),
+      audioTimelineBgColor: const Color.fromARGB(255, 44, 44, 44),
+      audioLabelColor: const Color.fromARGB(132, 255, 255, 255),
+      entryCueColor: const Color.fromARGB(255, 66, 173, 45),
+      exitCueColor: const Color.fromARGB(255, 204, 59, 43),
+      customCueColor: const Color.fromARGB(255, 43, 129, 204),
     );
 
   static ThemeData makeTheme() {

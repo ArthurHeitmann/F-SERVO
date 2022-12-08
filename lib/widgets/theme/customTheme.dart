@@ -43,6 +43,13 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
   final Color? contextMenuBgColor;
   final Color? tableBgColor;
   final Color? tableBgAltColor;
+  final Color? audioColor;
+  final Color? audioDisabledColor;
+  final Color? audioTimelineBgColor;
+  final Color? audioLabelColor;
+  final Color? entryCueColor;
+  final Color? exitCueColor;
+  final Color? customCueColor;
 
   NierThemeExtension({
     this.editorBackgroundColor,
@@ -82,6 +89,13 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
     this.contextMenuBgColor,
     this.tableBgColor,
     this.tableBgAltColor,
+    this.audioColor,
+    this.audioDisabledColor,
+    this.audioTimelineBgColor,
+    this.audioLabelColor,
+    this.entryCueColor,
+    this.exitCueColor,
+    this.customCueColor,
   });
   
   @override
@@ -123,6 +137,13 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
     Color? contextMenuBgColor,
     Color? tableBgColor,
     Color? tableBgAltColor,
+    Color? audioColor,
+    Color? audioDisabledColor,
+    Color? audioTimelineBgColor,
+    Color? audioLabelColor,
+    Color? entryCueColor,
+    Color? exitCueColor,
+    Color? customCueColor,
   }) {
     return NierThemeExtension(
       editorBackgroundColor: editorBackgroundColor ?? this.editorBackgroundColor,
@@ -162,6 +183,13 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
       contextMenuBgColor: contextMenuBgColor ?? this.contextMenuBgColor,
       tableBgColor: tableBgColor ?? this.tableBgColor,
       tableBgAltColor: tableBgAltColor ?? this.tableBgAltColor,
+      audioColor: audioColor ?? this.audioColor,
+      audioDisabledColor: audioDisabledColor ?? this.audioDisabledColor,
+      audioTimelineBgColor: audioTimelineBgColor ?? this.audioTimelineBgColor,
+      audioLabelColor: audioLabelColor ?? this.audioLabelColor,
+      entryCueColor: entryCueColor ?? this.entryCueColor,
+      exitCueColor: exitCueColor ?? this.exitCueColor,
+      customCueColor: customCueColor ?? this.customCueColor,
     );
   }
   
@@ -208,6 +236,13 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
       contextMenuBgColor: Color.lerp(contextMenuBgColor, other.contextMenuBgColor, t),
       tableBgColor: Color.lerp(tableBgColor, other.tableBgColor, t),
       tableBgAltColor: Color.lerp(tableBgAltColor, other.tableBgAltColor, t),
+      audioColor: Color.lerp(audioColor, other.audioColor, t),
+      audioDisabledColor: Color.lerp(audioDisabledColor, other.audioDisabledColor, t),
+      audioTimelineBgColor: Color.lerp(audioTimelineBgColor, other.audioTimelineBgColor, t),
+      audioLabelColor: Color.lerp(audioLabelColor, other.audioLabelColor, t),
+      entryCueColor: Color.lerp(entryCueColor, other.entryCueColor, t),
+      exitCueColor: Color.lerp(exitCueColor, other.exitCueColor, t),
+      customCueColor: Color.lerp(customCueColor, other.customCueColor, t),
     );
   }
 
