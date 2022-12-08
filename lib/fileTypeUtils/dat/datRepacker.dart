@@ -62,7 +62,7 @@ Future<void> repackDat(String datDir, String exportPath) async {
   var datSize = fileOffsets.last + fileSizes.last + 1;
   if (datSize % 16 != 0)
     datSize = (datSize / 16).ceil() * 16;
-  var datBytes = ByteDataWrapper(ByteData(datSize).buffer);
+  var datBytes = ByteDataWrapper.allocate(datSize);
   datBytes.writeString0P(fileID);
   datBytes.writeUint32(fileNumber);
   datBytes.writeUint32(fileOffsetsOffset);

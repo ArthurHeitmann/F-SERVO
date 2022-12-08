@@ -10,6 +10,7 @@ import '../../../stateManagement/nestedNotifier.dart';
 import '../../../stateManagement/openFileTypes.dart';
 import '../../../stateManagement/otherFileTypes/McdData.dart';
 import '../../../utils/utils.dart';
+import '../../misc/onHoverBuilder.dart';
 import '../simpleProps/boolPropIcon.dart';
 import 'FontsManager.dart';
 import 'McdFontDebugger.dart';
@@ -436,27 +437,17 @@ class _McdEventEditorState extends ChangeNotifierState<_McdEventEditor> {
   }
 }
 
-class _McdEventInsertionMarker extends StatefulWidget {
+class _McdEventInsertionMarker extends StatelessWidget {
   final NestedNotifier<McdEvent> events;
   final int index;
 
   const _McdEventInsertionMarker({ required this.events, required this.index });
 
-  @override
-  State<_McdEventInsertionMarker> createState() => _McdEventInsertionMarkerState();
-}
-
-class _McdEventInsertionMarkerState extends State<_McdEventInsertionMarker> {
-  bool isHovering = false;
-
-  @override
   Widget build(BuildContext context) {
-    bool isEventTarget = _McdEditorBody.movingEvent.value!.event != widget.events[widget.index];
-    return MouseRegion(
-      onEnter: (_) => setState(() => isHovering = true),
-      onExit: (_) => setState(() => isHovering = false),
+    bool isEventTarget = _McdEditorBody.movingEvent.value!.event != events[index];
+    return OnHoverBuilder(
       cursor: SystemMouseCursors.click,
-      child: AnimatedScale(
+      builder: (cxt, isHovering) => AnimatedScale(
         duration: const Duration(milliseconds: 200),
         scale: isHovering && isEventTarget ? 1.2 : 1,
         child: IconButton(
@@ -468,12 +459,12 @@ class _McdEventInsertionMarkerState extends State<_McdEventInsertionMarker> {
               return;
             }
             var curIndex = _McdEditorBody.movingEvent.value!.index;
-            if (curIndex != widget.index && _McdEditorBody.movingEvent.value!.src == widget.events) {
-              var newIndex = widget.index;
-              widget.events.move(curIndex, newIndex);
-            } else if (_McdEditorBody.movingEvent.value!.src != widget.events) {
-              _McdEditorBody.movingEvent.value!.event.file = widget.events[widget.index].file;
-              widget.events.insert(widget.index, _McdEditorBody.movingEvent.value!.event);
+            if (curIndex != index && _McdEditorBody.movingEvent.value!.src == events) {
+              var newIndex = index;
+              events.move(curIndex, newIndex);
+            } else if (_McdEditorBody.movingEvent.value!.src != events) {
+              _McdEditorBody.movingEvent.value!.event.file = events[index].file;
+              events.insert(index, _McdEditorBody.movingEvent.value!.event);
               _McdEditorBody.movingEvent.value!.src.remove(_McdEditorBody.movingEvent.value!.event);
             }
             _McdEditorBody.movingEvent.value = null;

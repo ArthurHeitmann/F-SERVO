@@ -1,5 +1,6 @@
 
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:euc/jis.dart';
@@ -27,6 +28,18 @@ class ByteDataWrapper {
     length = length ?? buffer.lengthInBytes - parentOffset {
     _data = buffer.asByteData(0, buffer.lengthInBytes);
     _position = _parentOffset;
+  }
+
+  ByteDataWrapper.allocate(int size, { this.endian = Endian.little }) : 
+    buffer = ByteData(size).buffer,
+    _parentOffset = 0,
+    length = size,
+    _data = ByteData(size),
+    _position = 0;
+
+  static Future<ByteDataWrapper> fromFile(String path) async {
+    var buffer = await File(path).readAsBytes();
+    return ByteDataWrapper(buffer.buffer);
   }
 
   int get position => _position;

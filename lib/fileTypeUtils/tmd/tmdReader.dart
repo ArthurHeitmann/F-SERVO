@@ -26,9 +26,7 @@ class TmdEntry {
 }
 
 Future<List<TmdEntry>> readTmdFile(String path) async {
-  var file = File(path);
-  var bytes = await file.readAsBytes();
-  var reader = ByteDataWrapper(bytes.buffer);
+  var reader = await ByteDataWrapper.fromFile(path);
   var entries = <TmdEntry>[];
   int count = reader.readUint32();
   for (int i = 0; i < count; i++) {

@@ -89,13 +89,13 @@ class WtaFile {
   }
 
   static Future<WtaFile> readFromFile(String path) async {
-    var bytes = ByteDataWrapper((await File(path).readAsBytes()).buffer);
+    var bytes = await ByteDataWrapper.fromFile(path);
     return WtaFile.read(bytes);
   }
 
   Future<void> writeToFile(String path) async {
     var fileSize = header.offsetTextureInfo + textureInfo.length * 0x14;
-    var bytes = ByteDataWrapper(ByteData(fileSize).buffer);
+    var bytes = ByteDataWrapper.allocate(fileSize);
     header.write(bytes);
     
     bytes.position = header.offsetTextureOffsets;

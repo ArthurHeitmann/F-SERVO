@@ -90,7 +90,7 @@ Future<void> processFile(String mcd) async {
     print("Texture file not found: $textureFile");
     return;
   }
-  var texBytes = ByteDataWrapper((await File(textureFile).readAsBytes()).buffer);
+  var texBytes = await ByteDataWrapper.fromFile(textureFile);
   texBytes.position = 0xC;
   var texHeight = texBytes.readUint32();
   var texWidth = texBytes.readUint32();
@@ -106,7 +106,7 @@ Future<void> processFile(String mcd) async {
 
   // get mcd data
   tMcdData.start();
-  var mcdBytes = ByteDataWrapper((await File(mcd).readAsBytes()).buffer);
+  var mcdBytes = await ByteDataWrapper.fromFile(mcd);
   var mcdHeader = McdFileHeader.read(mcdBytes);
   mcdBytes.position = mcdHeader.glyphsOffset;
   List<McdFileGlyph> glyphs = List.generate(

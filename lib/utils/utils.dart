@@ -214,7 +214,7 @@ Future<List<String>> getDatFiles(String extractedDir) async {
   }
   var fileOrderMetadata = path.join(extractedDir, "file_order.metadata");
   if (await File(fileOrderMetadata).exists()) {
-    var filesBytes = ByteDataWrapper((await File(fileOrderMetadata).readAsBytes()).buffer);
+    var filesBytes = await ByteDataWrapper.fromFile(fileOrderMetadata);
     var numFiles = filesBytes.readUint32();
     var nameLength = filesBytes.readUint32();
     List<String> datFiles = List
@@ -517,7 +517,7 @@ Future<List<String>> _getDatFileListFromJson(String datInfoPath) async {
 }
 
 Future<List<String>> _getDatFileListFromMetadata(String metadataPath) async {
-  var metadataBytes = ByteDataWrapper((await File(metadataPath).readAsBytes()).buffer);
+  var metadataBytes = await ByteDataWrapper.fromFile(metadataPath);
   var numFiles = metadataBytes.readUint32();
   var nameLength = metadataBytes.readUint32();
   List<String> files = [];
@@ -580,8 +580,7 @@ class SizeInt {
   String toString() => "$width x $height";
 }
 Future<SizeInt> getDdsFileSize(String path) async {
-  var bytes = await File(path).readAsBytes();
-  var reader = ByteDataWrapper(bytes.buffer);
+  var reader = await ByteDataWrapper.fromFile(path);
   reader.position = 0xc;
   var height = reader.readUint32();
   var width = reader.readUint32();

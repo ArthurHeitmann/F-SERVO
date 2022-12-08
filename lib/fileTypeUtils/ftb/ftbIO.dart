@@ -111,7 +111,7 @@ class FtbFile {
   }
 
   static Future<FtbFile> fromFile(String path) async {
-    var bytes = ByteDataWrapper((await File(path).readAsBytes()).buffer);
+    var bytes = await ByteDataWrapper.fromFile(path);
     return FtbFile.read(bytes);
   }
 
@@ -127,7 +127,7 @@ class FtbFile {
 
   Future<void> writeToFile(String path) async {
     var size = header.charsOffset + chars.length * 0xC;
-    var bytes = ByteDataWrapper(ByteData(size).buffer);
+    var bytes = ByteDataWrapper.allocate(size);
     write(bytes);
     await File(path).writeAsBytes(bytes.buffer.asUint8List());
   }

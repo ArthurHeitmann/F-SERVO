@@ -70,7 +70,7 @@ ByteDataWrapper xmlToYax(XmlElement root) {
   }
 
   int byteLength = lastOffset;
-  ByteDataWrapper bytes = ByteDataWrapper(ByteData(byteLength).buffer);
+  ByteDataWrapper bytes = ByteDataWrapper.allocate(byteLength);
   bytes.writeUint32(nodes.length);
   for (var node in nodes)
     node.write(bytes);

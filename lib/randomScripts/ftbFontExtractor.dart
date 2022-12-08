@@ -87,7 +87,7 @@ Future<void> processFile(String ftbPath) async {
   }
 
   // get ftb data
-  var ftbBytes = ByteDataWrapper((await File(ftbPath).readAsBytes()).buffer);
+  var ftbBytes = await ByteDataWrapper.fromFile(ftbPath);
   var ftb = FtbFile.read(ftbBytes);
   
   for (var i = 0; i < ftb.header.charsCount; i++) {

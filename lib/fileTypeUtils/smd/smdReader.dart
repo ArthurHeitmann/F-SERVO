@@ -17,9 +17,7 @@ class SmdEntry {
 }
 
 Future<List<SmdEntry>> readSmdFile(String path) async {
-  var file = File(path);
-  var bytes = await file.readAsBytes();
-  var reader = ByteDataWrapper(bytes.buffer);
+  var reader = await ByteDataWrapper.fromFile(path);
   var entries = <SmdEntry>[];
   int count = reader.readUint32();
   for (int i = 0; i < count; i++) {

@@ -42,9 +42,7 @@ Future<List<String>> extractDatFiles(String datPath, { bool shouldExtractPakFile
   print("Extracting dat files from $datPath");
   messageLog.add("Extracting ${path.basename(datPath)}...");
 
-  var datFile = File(datPath);
-  var rawBytes = await datFile.readAsBytes();
-  ByteDataWrapper bytes = ByteDataWrapper(rawBytes.buffer);
+  var bytes = await ByteDataWrapper.fromFile(datPath);
   var header = _DatHeader(bytes);
   bytes.position = header.fileOffsetsOffset;
   var fileOffsets = bytes.readUint32List(header.fileNumber);
@@ -105,9 +103,7 @@ class ExtractedInnerFile {
 
 Stream<ExtractedInnerFile> extractDatFilesAsStream(String datPath) async* {
   try {
-    var datFile = File(datPath);
-    var rawBytes = await datFile.readAsBytes();
-    ByteDataWrapper bytes = ByteDataWrapper(rawBytes.buffer);
+    var bytes = await ByteDataWrapper.fromFile(datPath);
     var header = _DatHeader(bytes);
     bytes.position = header.fileOffsetsOffset;
     var fileOffsets = bytes.readUint32List(header.fileNumber);

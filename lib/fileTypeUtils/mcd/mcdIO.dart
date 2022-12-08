@@ -424,13 +424,13 @@ class McdFile {
       this.events);
 
   static Future<McdFile> fromFile(String path) async {
-    final bytes = await File(path).readAsBytes();
-    return McdFile.read(ByteDataWrapper(bytes.buffer));
+    final bytes = await ByteDataWrapper.fromFile(path);
+    return McdFile.read(bytes);
   }
 
   Future<void> writeToFile(String path) async {
     var fileSize = header.eventsOffset + events.length * 0x28;
-    var bytes = ByteDataWrapper(ByteData(fileSize).buffer);
+    var bytes = ByteDataWrapper.allocate(fileSize);
 
     header.write(bytes);
     bytes.position = header.messagesOffset;

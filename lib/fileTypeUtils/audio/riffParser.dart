@@ -478,8 +478,8 @@ class RiffFile {
   }
 
   static Future<RiffFile> fromFile(String path) async {
-    var bytes = await File(path).readAsBytes();
-    return RiffFile.fromBytes(ByteDataWrapper(bytes.buffer), path.endsWith(".wem"));
+    var bytes = await ByteDataWrapper.fromFile(path);
+    return RiffFile.fromBytes(bytes, path.endsWith(".wem"));
   }
 
   int get size => chunks.skip(1).fold<int>(0, (p, c) => p + c.size + 8) + 12;

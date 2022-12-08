@@ -91,7 +91,7 @@ Future<void> repackPak(String pakDir) async {
     lastFileOffset += fileEntry.pakSize;
   }
 
-  var bytes = ByteDataWrapper(ByteData(lastFileOffset).buffer);
+  var bytes = ByteDataWrapper.allocate(lastFileOffset);
   for (var fileEntry in fileEntries)
     fileEntry.writeHeaderEntry(bytes);
   

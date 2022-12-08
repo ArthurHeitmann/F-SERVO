@@ -7,7 +7,7 @@ import 'smdReader.dart';
 
 Future<void> saveSmd(List<SmdEntry> entries, String path) async {
   var totalSize = 4 + entries.length * 0x888;
-  var bytes = ByteDataWrapper(ByteData(totalSize).buffer);
+  var bytes = ByteDataWrapper.allocate(totalSize);
   bytes.writeUint32(entries.length);
   for (var entry in entries) {
     var id = entry.id.padRight(0x40, '\x00');

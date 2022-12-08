@@ -307,8 +307,8 @@ class IdsIndexer {
       String datPath = join(dirname(dirname(datExtractDir)), datName);
       String pakName = basename(indexPath);
       String pakExtractDir = join(datExtractDir, "pakExtracted", pakName);
-      ByteBuffer pakBytes = (await File(indexPath).readAsBytes()).buffer;
-      _indexPakContents(datPath, indexPath, pakExtractDir, ByteDataWrapper(pakBytes));
+      var pakBytes = await ByteDataWrapper.fromFile(indexPath);
+      _indexPakContents(datPath, indexPath, pakExtractDir, pakBytes);
     }
     else if (indexPath.endsWith(".yax") || indexPath.endsWith(".xml")) {
       String pakExtractDir = dirname(indexPath);
@@ -319,8 +319,8 @@ class IdsIndexer {
       String datPath = join(dirname(dirname(datExtractDir)), datName);
 
       if (indexPath.endsWith(".yax")) {
-        ByteBuffer yaxBytes = (await File(indexPath).readAsBytes()).buffer;
-        _indexYaxContents(datPath, pakPath, indexPath, ByteDataWrapper(yaxBytes));
+        var yaxBytes = await ByteDataWrapper.fromFile(indexPath);
+        _indexYaxContents(datPath, pakPath, indexPath, yaxBytes);
       }
       else {
         String xml = await File(indexPath).readAsString();
@@ -372,8 +372,8 @@ class IdsIndexer {
     for (var pakFile in pakFiles) {
       var pakPath = join(datExtractDir, pakFile);
       var pakExtractDir = join(datExtractDir, "pakExtracted", basename(pakFile));
-      var pakFileBytes = (await File(pakPath).readAsBytes()).buffer;
-      await _indexPakContents(datPath, pakPath, pakExtractDir, ByteDataWrapper(pakFileBytes));
+      var pakFileBytes = await ByteDataWrapper.fromFile(pakPath);
+      await _indexPakContents(datPath, pakPath, pakExtractDir, pakFileBytes);
     }
   }
 
@@ -408,8 +408,8 @@ class IdsIndexer {
                     .toList();
     for (var yaxFile in pakFiles) {
       var yaxPath = join(pakExtractPath, yaxFile);
-      var yaxBytes = (await File(yaxPath).readAsBytes());
-      await _indexYaxContents(datPath, pakPath, yaxPath, ByteDataWrapper(yaxBytes.buffer));
+      var yaxBytes = await ByteDataWrapper.fromFile(yaxPath);
+      await _indexYaxContents(datPath, pakPath, yaxPath, yaxBytes);
     }
   }
 
