@@ -1,6 +1,5 @@
 
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:path/path.dart' as path;
 import 'package:xml/xml.dart';
 

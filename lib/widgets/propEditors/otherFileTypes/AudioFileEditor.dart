@@ -91,8 +91,8 @@ class _AudioFileEditorState extends State<AudioFileEditor> {
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 10),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
+                      Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
                           IconButton(
                             icon: const Icon(Icons.first_page),
@@ -123,7 +123,11 @@ class _AudioFileEditorState extends State<AudioFileEditor> {
                           DurationStream(
                             time: _player?.onPositionChanged,
                           ),
-                          Text(" / ${widget.file.duration != null ? formatDuration(widget.file.duration!) : "00:00"}"),
+                          const Text(" / "),
+                          DurationStream(
+                            time: _player?.onDurationChanged,
+                            fallback: widget.file.duration,
+                          ),
                           const SizedBox(width: 15),
                         ],
                       ),
@@ -654,15 +658,18 @@ class __CuePointMarkerState extends ChangeNotifierState<_CuePointMarker> {
 }
 
 class DurationStream extends StreamBuilder<Duration> {
-  DurationStream({ super.key, required Stream<Duration>? time }) : super(
+  final Duration? fallback;
+  DurationStream({ super.key, required Stream<Duration>? time, this.fallback }) : super(
     stream: time,
     builder: (context, snapshot) {
       if (snapshot.hasData) {
         var pos = snapshot.data!;
         return Text(formatDuration(pos));
-      } else {
-        return const Text("00:00");
       }
+      else if (fallback != null)
+        return Text(formatDuration(fallback));
+      else
+        return const Text("00:00");
     }
   );
 }

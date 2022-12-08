@@ -81,15 +81,17 @@ class SmoothSingleChildScrollView extends StatelessWidget {
   final Duration duration;
   final double stepSize;
   final ScrollPhysics? physics;
+  final Axis scrollDirection;
   final Widget child;
 
   const SmoothSingleChildScrollView({
     super.key,
     required this.controller,
-    required this.child,
     this.duration = const Duration(milliseconds: 150),
     this.stepSize = 100,
     this.physics,
+    this.scrollDirection = Axis.vertical,
+    required this.child,
   });
 
   @override
@@ -102,6 +104,7 @@ class SmoothSingleChildScrollView extends StatelessWidget {
       builder: (context, controller, physics) => SingleChildScrollView(
         controller: controller,
         physics: physics,
+        scrollDirection: scrollDirection,
         child: child,
       ),
     );

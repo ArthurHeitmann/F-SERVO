@@ -68,8 +68,7 @@ class _WemFileEditorState extends ChangeNotifierState<WemFileEditor> {
           key: refreshKey,
           file: widget.wem,
           lockControls: widget.lockControls,
-          additionalControls: widget.showOverride ? Row(
-            mainAxisSize: MainAxisSize.min,
+          additionalControls: widget.showOverride ? Wrap(
             children: [
               ElevatedButton(
                 onPressed: _pickOverride,

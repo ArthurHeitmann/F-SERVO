@@ -1,8 +1,6 @@
 
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
-
 import '../utils/ByteDataWrapper.dart';
 
 class McdFileHeader {

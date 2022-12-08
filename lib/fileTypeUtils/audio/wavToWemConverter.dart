@@ -2,7 +2,6 @@
 import 'dart:io';
 
 import 'package:archive/archive_io.dart';
-import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 import 'package:xml/xml.dart';
 
@@ -10,8 +9,6 @@ import '../../stateManagement/events/statusInfo.dart';
 import '../../stateManagement/preferencesData.dart';
 import '../../utils/assetDirFinder.dart';
 import '../../utils/utils.dart';
-import '../utils/ByteDataWrapper.dart';
-import 'riffParser.dart';
 
 Future<String> _makeWwiseProject() async {
   String wwiseProjectTemplate = join(assetsDir!, "wavToWemTemplate.zip");
@@ -39,42 +36,6 @@ XmlDocument _getWwiseSourcesXml(String wavPath) {
       ]),
     ]),
   ]);
-}
-
-Future<void> patchWemForNierBgm(String wemPath) async {
-  var bytes = await File(wemPath).readAsBytes();
-  var byteData = ByteDataWrapper(bytes.buffer);
-  var riff = RiffFile.fromBytes(byteData, true);
-
-  var format = riff.format as WemFormatChunk;
-  var data = riff.data;
-
-  var duration = format.numSamples / format.samplesPerSec;
-  var projectedDataCount = (duration * 188).round();
-  if (projectedDataCount % 2 != 0)
-    projectedDataCount += 1;
-  
-  var initialSetupPacketOffset = format.setupPacketOffset;
-  riff.header.size += projectedDataCount;
-  format.setupPacketOffset += projectedDataCount;
-  format.firstAudioPacketOffset += projectedDataCount;
-  data.size += projectedDataCount;
-
-  var dataCopy = ByteDataWrapper(ByteData(riff.header.size + 8).buffer);
-  riff.data.write(dataCopy);
-  List<int> newDataBytesTmp = List.from(dataCopy.buffer.asUint8List());
-  int dataStartOffset = 8 + initialSetupPacketOffset;
-  newDataBytesTmp.insertAll(dataStartOffset, List.filled(projectedDataCount, 0));
-  Uint8List newDataBytes = Uint8List.fromList(newDataBytesTmp);
-  DataChunk newData = DataChunk.read(ByteDataWrapper(newDataBytes.buffer), format);
-
-  var dataIndex = riff.chunks.indexOf(riff.data);
-  riff.chunks[dataIndex] = newData;
-
-  bytes = Uint8List(riff.header.size + 8);
-  byteData = ByteDataWrapper(bytes.buffer);
-  riff.write(byteData);
-  await File(wemPath).writeAsBytes(bytes);
 }
 
 Future<void> wavToWem(String wavPath, String wemSavePath, bool patchForBgm) async {
@@ -119,9 +80,6 @@ Future<void> wavToWem(String wavPath, String wemSavePath, bool patchForBgm) asyn
     }
 
     await File(wemExportedPath).copy(wemSavePath);
-
-    // if (patchForBgm)
-    //   await patchWemForNierBgm(wemSavePath);
 
     print("WAV to WEM conversion successful");
     messageLog.add("WAV to WEM conversion successful");

@@ -1,6 +1,4 @@
 
-import 'dart:io';
-
 import '../utils/ByteDataWrapper.dart';
 
 class TmdEntry {

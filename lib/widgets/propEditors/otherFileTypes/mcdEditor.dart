@@ -443,6 +443,7 @@ class _McdEventInsertionMarker extends StatelessWidget {
 
   const _McdEventInsertionMarker({ required this.events, required this.index });
 
+  @override
   Widget build(BuildContext context) {
     bool isEventTarget = _McdEditorBody.movingEvent.value!.event != events[index];
     return OnHoverBuilder(
