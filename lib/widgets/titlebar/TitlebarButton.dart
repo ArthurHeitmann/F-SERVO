@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 
 import '../../widgets/theme/customTheme.dart';
 import '../../utils/utils.dart';
+import '../misc/onHoverBuilder.dart';
 
-class TitleBarButton extends StatefulWidget {
+class TitleBarButton extends StatelessWidget {
   final IconData icon;
   final void Function()? onPressed;
   final Color? primaryColor;
@@ -17,27 +18,18 @@ class TitleBarButton extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<TitleBarButton> createState() => _TitleBarButtonState();
-}
-
-class _TitleBarButtonState extends State<TitleBarButton> with SingleTickerProviderStateMixin {
-  bool isHovered = false;
-
-  @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      onHover: (_) => setState(() => isHovered = true),
-      onExit: (_) => setState(() => isHovered = false),
-      child: TextButton.icon(
+    return OnHoverBuilder(
+      builder: (context, isHovering) => TextButton.icon(
         icon: Icon(
-          widget.icon,
-          color: isHovered ? widget.primaryColor : getTheme(context).textColor,
+          icon,
+          color: isHovering ? primaryColor : getTheme(context).textColor,
           size: titleBarHeight * 0.75,
         ),
         label: const Text(""),
-        onPressed: widget.onPressed,
+        onPressed: onPressed,
         style: TextButton.styleFrom(
-          foregroundColor: isHovered ? widget.primaryColor : getTheme(context).textColor,
+          foregroundColor: isHovering ? primaryColor : getTheme(context).textColor,
         ),
       ),
     );

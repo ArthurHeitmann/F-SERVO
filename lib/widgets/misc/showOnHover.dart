@@ -1,7 +1,9 @@
 
 import 'package:flutter/material.dart';
 
-class ShowOnHover extends StatefulWidget {
+import 'onHoverBuilder.dart';
+
+class ShowOnHover extends StatelessWidget {
   final Widget? child;
   final Widget Function(BuildContext, bool isHovered)? builder;
 
@@ -11,33 +13,14 @@ class ShowOnHover extends StatefulWidget {
     : child = null;
 
   @override
-  State<ShowOnHover> createState() => _ShowOnHoverState();
-}
-
-class _ShowOnHoverState extends State<ShowOnHover> {
-  bool isHovered = false;
-
-  void onMouseEnter(_) {
-    isHovered = true;
-    setState(() {});
-  }
-
-  void onMouseExit(_) {
-    isHovered = false;
-    setState(() {});
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: onMouseEnter,
-      onExit: onMouseExit,
-      child: AnimatedOpacity(
-        opacity: isHovered ? 1 : 0,
+    return OnHoverBuilder(
+      builder: (cxt, isHovering) => AnimatedOpacity(
+        opacity: isHovering ? 1 : 0,
         duration: const Duration(milliseconds: 300),
-        child: widget.builder == null
-          ? widget.child!
-          : widget.builder!(context, isHovered),
+        child: builder == null
+          ? child!
+          : builder!(context, isHovering),
       ),
     );
   }

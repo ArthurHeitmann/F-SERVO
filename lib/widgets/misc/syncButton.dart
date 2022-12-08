@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/sync/syncObjects.dart';
 import '../../stateManagement/sync/syncServer.dart';
+import 'onHoverBuilder.dart';
 
 class SyncButton extends ChangeNotifierWidget {
   final String uuid;
@@ -17,7 +18,6 @@ class SyncButton extends ChangeNotifierWidget {
 
 class _SyncButtonState extends ChangeNotifierState<SyncButton> {
   bool _isSynced = false;
-  bool _isHovering = false;
 
   @override
   void initState() {
@@ -42,21 +42,19 @@ class _SyncButtonState extends ChangeNotifierState<SyncButton> {
 
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovering = true),
-      onExit: (_) => setState(() => _isHovering = false),
-      child: _makeButton(),
+    return OnHoverBuilder(
+      builder: (cxt, isHovering) => _makeButton(isHovering),
     );
   }
 
-  Widget _makeButton() {
+  Widget _makeButton(bool isHovering) {
     if (!canSync.value) {
       return Tooltip(
         message: "No connection to Blender",
         waitDuration: const Duration(milliseconds: 750),
         child: AnimatedOpacity(
           duration: const Duration(milliseconds: 200),
-          opacity: _isHovering ? 1 : 0,
+          opacity: isHovering ? 1 : 0,
           child: const IconButton(
             icon: Icon(Icons.sync_disabled),
             onPressed: null,
@@ -67,7 +65,7 @@ class _SyncButtonState extends ChangeNotifierState<SyncButton> {
     if (!_isSynced) {
       return AnimatedOpacity(
         duration: const Duration(milliseconds: 200),
-        opacity: _isHovering ? 1 : 0.5,
+        opacity: isHovering ? 1 : 0.5,
         child: IconButton(
           icon: const Icon(Icons.sync, size: 20),
           splashRadius: 20,
@@ -76,7 +74,7 @@ class _SyncButtonState extends ChangeNotifierState<SyncButton> {
       );
     }
     return IconButton(
-      icon: _isHovering ? const Icon(Icons.sync_disabled, size: 20) : const Icon(Icons.sync_alt, size: 20),
+      icon: isHovering ? const Icon(Icons.sync_disabled, size: 20) : const Icon(Icons.sync_alt, size: 20),
       splashRadius: 20,
       onPressed: () => syncedObjects[widget.uuid]?.endSync(),
     );

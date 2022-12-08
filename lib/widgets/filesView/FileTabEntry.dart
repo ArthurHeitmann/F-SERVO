@@ -7,6 +7,7 @@ import '../../widgets/theme/customTheme.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/openFileTypes.dart';
 import '../../stateManagement/openFilesManager.dart';
+import '../misc/onHoverBuilder.dart';
 
 
 class FileTabEntry extends ChangeNotifierWidget {
@@ -22,8 +23,6 @@ class FileTabEntry extends ChangeNotifierWidget {
 }
 
 class _FileTabEntryState extends ChangeNotifierState<FileTabEntry> {
-  bool isHoveringCloseButton = false;
-
   @override
   Widget build(BuildContext context) {
     var file = areasManager.fromId(widget.file)!;
@@ -71,13 +70,11 @@ class _FileTabEntryState extends ChangeNotifierState<FileTabEntry> {
                         ),
                       ),
                     ),
-                    MouseRegion(
-                      onEnter: (event) => setState(() => isHoveringCloseButton = true),
-                      onExit: (event) => setState(() => isHoveringCloseButton = false),
-                      child: IconButton(
+                    OnHoverBuilder(
+                      builder: (cxt, isHovering) => IconButton(
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
-                        icon: file.hasUnsavedChanges && !isHoveringCloseButton
+                        icon: file.hasUnsavedChanges && !isHovering
                                 ? const Icon(Icons.circle, size: 11,)
                                 : const Icon(Icons.close),
                         onPressed: () => widget.area.closeFile(file),

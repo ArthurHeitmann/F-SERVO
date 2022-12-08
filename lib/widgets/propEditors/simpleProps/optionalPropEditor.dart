@@ -3,11 +3,12 @@
 import 'package:flutter/material.dart';
 
 import '../../../stateManagement/xmlProps/xmlProp.dart';
+import '../../misc/onHoverBuilder.dart';
 import '../../misc/smallButton.dart';
 import 'propEditorFactory.dart';
 import 'propTextField.dart';
 
-class OptionalPropEditor<T extends PropTextField> extends StatefulWidget {
+class OptionalPropEditor<T extends PropTextField> extends StatelessWidget {
   final XmlProp? prop;
   final XmlProp parent;
   final void Function() onAdd;
@@ -15,39 +16,30 @@ class OptionalPropEditor<T extends PropTextField> extends StatefulWidget {
   const OptionalPropEditor({super.key, this.prop, required this.parent, required this.onAdd});
 
   @override
-  State<OptionalPropEditor> createState() => _OptionalPropEditorState<T>();
-}
-
-class _OptionalPropEditorState<T extends PropTextField> extends State<OptionalPropEditor> {
-  bool isHovered = false;
-
-  @override
   Widget build(BuildContext context) {
-    if (widget.prop == null) {
+    if (prop == null) {
       return Padding(
         padding: const EdgeInsets.all(2.5),
         child: SmallButton(
-          onPressed: widget.onAdd,
+          onPressed: onAdd,
           constraints: BoxConstraints.tight(const Size(25, 24)),
           child: const Icon(Icons.add, size: 17,),
         ),
       );
     }
-    return MouseRegion(
-      onEnter: (_) => setState(() => isHovered = true),
-      onExit: (_) => setState(() => isHovered = false),
-      child: Row(
+    return OnHoverBuilder(
+      builder: (context, isHovering) => Row(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          Flexible(child: makePropEditor<T>(widget.prop!.value)),
+          Flexible(child: makePropEditor<T>(prop!.value)),
           const SizedBox(width: 5),
           AnimatedOpacity(
             duration: const Duration(milliseconds: 100),
-            opacity: isHovered ? 1 : 0,
+            opacity: isHovering ? 1 : 0,
             child: SmallButton(
-              onPressed: () => widget.parent.remove(
-                widget.prop!
+              onPressed: () => parent.remove(
+                prop!
                   ..dispose()
               ),
               constraints: BoxConstraints.tight(const Size(25, 25)),
