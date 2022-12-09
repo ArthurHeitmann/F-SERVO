@@ -24,8 +24,9 @@ class AudioFileEditor extends StatefulWidget {
   final AudioFileData file;
   final bool lockControls;
   final Widget? additionalControls;
+  final Widget? rightSide;
 
-  const AudioFileEditor({ super.key, required this.file, this.lockControls = false, this.additionalControls });
+  const AudioFileEditor({ super.key, required this.file, this.lockControls = false, this.additionalControls, this.rightSide });
 
   @override
   State<AudioFileEditor> createState() => _AudioFileEditorState();
@@ -43,8 +44,8 @@ class _AudioFileEditorState extends State<AudioFileEditor> {
     widget.file.load().then((_) {
       if (!mounted)
         return;
-      _player!.setSourceDeviceFile(widget.file.audioFilePath!);
-      _viewEnd.value = widget.file.totalSamples;
+      _player!.setSourceDeviceFile(widget.file.resource!.wavPath);
+      _viewEnd.value = widget.file.resource!.totalSamples;
       setState(() {});
     });
   }
@@ -63,7 +64,7 @@ class _AudioFileEditorState extends State<AudioFileEditor> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          if (widget.file.audioFilePath == null)
+          if (widget.file.resource == null)
             const SizedBox(
               height: 2,
               child: LinearProgressIndicator(backgroundColor: Colors.transparent,)
@@ -111,7 +112,7 @@ class _AudioFileEditorState extends State<AudioFileEditor> {
                           ),
                           IconButton(
                             icon: const Icon(Icons.last_page),
-                            onPressed: () => _player?.seek(Duration(milliseconds: widget.file.totalSamples ~/ widget.file.samplesPerSec - 200)),
+                            onPressed: () => _player?.seek(Duration(milliseconds: widget.file.resource!.totalSamples ~/ widget.file.resource!.sampleRate - 200)),
                           ),
                           IconButton(
                             icon: const Icon(Icons.repeat),
@@ -126,7 +127,7 @@ class _AudioFileEditorState extends State<AudioFileEditor> {
                           const Text(" / "),
                           DurationStream(
                             time: _player?.onDurationChanged,
-                            fallback: widget.file.duration,
+                            fallback: widget.file.resource?.duration,
                           ),
                           const SizedBox(width: 15),
                         ],
@@ -139,10 +140,14 @@ class _AudioFileEditorState extends State<AudioFileEditor> {
                   ),
                 ),
               ),
-              _CuePointsEditor(
-                cuePoints: widget.file.cuePoints,
-                file: widget.file,
-              ),  
+              // _CuePointsEditor(
+              //   cuePoints: widget.file.cuePoints,
+              //   file: widget.file,
+              // ),
+              if (widget.rightSide != null) ...[
+                const SizedBox(width: 10),
+                widget.rightSide!,
+              ],
             ],
           ),
         ],
@@ -200,12 +205,12 @@ class __TimelineEditorState extends ChangeNotifierState<_TimelineEditor> {
                     onHorizontalDragUpdate: !widget.lockControls ? _onHorizontalDragUpdate : null,
                     child: CustomPaint(
                       painter: _WaveformPainter(
-                        samples: widget.file.wavSamples,
+                        samples: widget.file.resource?.previewSamples,
                         viewStart: viewStart.value,
                         viewEnd: viewEnd.value,
-                        totalSamples: widget.file.totalSamples,
+                        totalSamples: widget.file.resource?.totalSamples ?? 44100,
                         curSample: _currentPosition,
-                        samplesPerSec: widget.file.samplesPerSec,
+                        samplesPerSec: widget.file.resource?.sampleRate ?? 44100,
                         scaleFactor: MediaQuery.of(context).devicePixelRatio,
                         lineColor: getTheme(context).audioColor!,
                         lineInactiveColor: getTheme(context).audioDisabledColor!,
@@ -214,25 +219,25 @@ class __TimelineEditorState extends ChangeNotifierState<_TimelineEditor> {
                     ),
                   ),
                 ),
-                for (var cuePoint in widget.file.cuePoints)
-                  ChangeNotifierBuilder(
-                    key: Key(cuePoint.uuid),
-                    notifiers: [cuePoint.sample, cuePoint.name],
-                    builder: (context) => Positioned(
-                      left: (cuePoint.sample.value - viewStart.value) / (viewEnd.value - viewStart.value) * constraints.maxWidth - 8,
-                      top: 0,
-                      bottom: 0,
-                      child: _CuePointMarker(
-                        cuePoint: cuePoint,
-                        viewStart: viewStart,
-                        viewEnd: viewEnd,
-                        totalSamples: widget.file.totalSamples,
-                        samplesPerSec: widget.file.samplesPerSec,
-                        parentWidth: constraints.maxWidth,
-                        onDrag: _onCuePointDrag,
-                      ),
-                    ),
-                  ),
+                // for (var cuePoint in widget.file.cuePoints)
+                //   ChangeNotifierBuilder(
+                //     key: Key(cuePoint.uuid),
+                //     notifiers: [cuePoint.sample, cuePoint.name],
+                //     builder: (context) => Positioned(
+                //       left: (cuePoint.sample.value - viewStart.value) / (viewEnd.value - viewStart.value) * constraints.maxWidth - 8,
+                //       top: 0,
+                //       bottom: 0,
+                //       child: _CuePointMarker(
+                //         cuePoint: cuePoint,
+                //         viewStart: viewStart,
+                //         viewEnd: viewEnd,
+                //         totalSamples: widget.file.resource!.totalSamples,
+                //         samplesPerSec: widget.file.resource!.sampleRate,
+                //         parentWidth: constraints.maxWidth,
+                //         onDrag: _onCuePointDrag,
+                //       ),
+                //     ),
+                //   ),
               ],
             ),
           ),
@@ -244,7 +249,7 @@ class __TimelineEditorState extends ChangeNotifierState<_TimelineEditor> {
   void _onPositionChange(event) {
     if (!mounted)
       return;
-    setState(() => _currentPosition = event.inMicroseconds * widget.file.samplesPerSec ~/ 1000000);
+    setState(() => _currentPosition = event.inMicroseconds * widget.file.resource!.sampleRate ~/ 1000000);
   }
 
   void _onPointerSignal(PointerSignalEvent event) {
@@ -255,10 +260,10 @@ class __TimelineEditorState extends ChangeNotifierState<_TimelineEditor> {
     // zoom in/out by 10% of the view area
     if (delta < 0) {
       viewStart.value = max((viewStart.value + viewArea * 0.1).round(), 0);
-      viewEnd.value = min((viewEnd.value - viewArea * 0.1).round(), widget.file.totalSamples);
+      viewEnd.value = min((viewEnd.value - viewArea * 0.1).round(), widget.file.resource!.totalSamples);
     } else {
       viewStart.value = max((viewStart.value - viewArea * 0.1).round(), 0);
-      viewEnd.value= min((viewEnd.value + viewArea * 0.1).round(), widget.file.totalSamples);
+      viewEnd.value= min((viewEnd.value + viewArea * 0.1).round(), widget.file.resource!.totalSamples);
     }
     setState(() {});
   }
@@ -271,7 +276,7 @@ class __TimelineEditorState extends ChangeNotifierState<_TimelineEditor> {
       int maxChange = viewStart.value;
       delta = min(delta, maxChange);
     } else {
-      int maxChange = widget.file.totalSamples - viewEnd.value;
+      int maxChange = widget.file.resource!.totalSamples - viewEnd.value;
       delta = max(delta, -maxChange);
     }
     viewStart.value -= delta;
@@ -286,19 +291,19 @@ class __TimelineEditorState extends ChangeNotifierState<_TimelineEditor> {
     double relX = xPos / context.size!.width;
     int viewArea = viewEnd.value - viewStart.value;
     int newPosition = (viewStart.value + relX * viewArea).round();
-    _currentPosition = clamp(newPosition, 0, widget.file.totalSamples);
-    widget.player!.seek(Duration(microseconds: _currentPosition * 1000000 ~/ widget.file.samplesPerSec));
+    _currentPosition = clamp(newPosition, 0, widget.file.resource!.totalSamples);
+    widget.player!.seek(Duration(microseconds: _currentPosition * 1000000 ~/ widget.file.resource!.sampleRate));
   }
 
-  void _onCuePointDrag(double xPos, CuePointMarker cuePoint) {
-    var renderBox = context.findRenderObject() as RenderBox;
-    var localPos = renderBox.globalToLocal(Offset(xPos, 0));
-    int viewArea = viewEnd.value - viewStart.value;
-    int sample = (localPos.dx / context.size!.width * viewArea + viewStart.value).round();
-    sample = clamp(sample, 0, widget.file.totalSamples - 1);
-    cuePoint.sample.value = sample;
-    setState(() {});
-  }
+  // void _onCuePointDrag(double xPos, CuePointMarker cuePoint) {
+  //   var renderBox = context.findRenderObject() as RenderBox;
+  //   var localPos = renderBox.globalToLocal(Offset(xPos, 0));
+  //   int viewArea = viewEnd.value - viewStart.value;
+  //   int sample = (localPos.dx / context.size!.width * viewArea + viewStart.value).round();
+  //   sample = clamp(sample, 0, widget.file.resource!.totalSamples - 1);
+  //   cuePoint.sample.value = sample;
+  //   setState(() {});
+  // }
 }
 
 class _WaveformPainter extends CustomPainter {
@@ -370,7 +375,7 @@ class _WaveformPainter extends CustomPainter {
     else
       opacity = 1;
     Color color = lineColor.withOpacity(opacity);
-    Color bwColor = lineInactiveColor.withOpacity(opacity/2);
+    Color bwColor = lineInactiveColor.withOpacity(opacity/1.5);
     _paintSamples(canvas, size, playedSamples, color, 0, curSampleX);
     _paintSamples(canvas, size, unplayedSamples, bwColor, curSampleX, size.width);
   }
@@ -722,7 +727,7 @@ class __CuePointsEditorState extends ChangeNotifierState<_CuePointsEditor> {
           IconButton(
             onPressed: () {
               widget.cuePoints.add(CuePointMarker(
-                AudioSampleNumberProp(0, widget.file.samplesPerSec),
+                AudioSampleNumberProp(0, widget.file.resource!.sampleRate),
                 StringProp("Marker ${widget.cuePoints.length + 1}"),
                 widget.file.uuid
               ));
@@ -747,8 +752,8 @@ class __CuePointsEditorState extends ChangeNotifierState<_CuePointsEditor> {
               ),
               AudioSampleNumberPropTextField<UnderlinePropTextField>(
                 prop: p.sample,
-                samplesCount: widget.file.totalSamples,
-                samplesPerSecond: widget.file.samplesPerSec,
+                samplesCount: widget.file.resource!.totalSamples,
+                samplesPerSecond: widget.file.resource!.sampleRate,
                 options: const PropTFOptions(
                   hintText: "sample",
                   constraints: BoxConstraints.tightFor(width: 90),
@@ -756,8 +761,8 @@ class __CuePointsEditorState extends ChangeNotifierState<_CuePointsEditor> {
                 ),
               ),
               IconButton(
-                onPressed: () => p.sample.value = widget.file.totalSamples - 1,
-                color: p.sample.value == widget.file.totalSamples ? Theme.of(context).colorScheme.secondary.withOpacity(0.75) : null,
+                onPressed: () => p.sample.value = widget.file.resource!.totalSamples - 1,
+                color: p.sample.value == widget.file.resource!.totalSamples ? Theme.of(context).colorScheme.secondary.withOpacity(0.75) : null,
                 splashRadius: 18,
                 icon: const Icon(Icons.arrow_right),
               ),
@@ -788,7 +793,7 @@ class __CuePointsEditorState extends ChangeNotifierState<_CuePointsEditor> {
       "name": e.name.value,
     }).toList();
     var data = {
-      "samplesPerSec": widget.file.samplesPerSec,
+      "samplesPerSec": widget.file.resource!.sampleRate,
       "cuePoints": cuePointsList,
     };
     copyToClipboard(const JsonEncoder.withIndent("\t").convert(data));
@@ -804,16 +809,16 @@ class __CuePointsEditorState extends ChangeNotifierState<_CuePointsEditor> {
       var sampleRate = json["samplesPerSec"];
       if (sampleRate is! int)
         throw Exception("Invalid sample rate $sampleRate");
-      var sampleScale = widget.file.samplesPerSec / sampleRate;
+      var sampleScale = widget.file.resource!.sampleRate / sampleRate;
       var cuePoints = (json["cuePoints"] as List).map((e) {
         var sample = e["sample"];
         var name = e["name"];
         if (sample is! int || name is! String)
           throw Exception("Invalid cue point $e");
         sample = (sample * sampleScale).round();
-        sample = clamp(sample, 0, widget.file.totalSamples);
+        sample = clamp(sample, 0, widget.file.resource!.totalSamples);
         return CuePointMarker(
-          AudioSampleNumberProp(sample, widget.file.samplesPerSec),
+          AudioSampleNumberProp(sample, widget.file.resource!.sampleRate),
           StringProp(name),
           widget.file.uuid
         );

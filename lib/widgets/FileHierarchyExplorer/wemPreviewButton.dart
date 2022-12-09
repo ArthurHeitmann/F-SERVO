@@ -1,10 +1,9 @@
 
-import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 
-import '../../fileTypeUtils/audio/wemToWavConverter.dart';
+import '../../stateManagement/otherFileTypes/audioResourceManager.dart';
 import '../../utils/utils.dart';
 import '../theme/customTheme.dart';
 
@@ -18,12 +17,12 @@ class WemPreviewButton extends StatefulWidget {
 }
 
 class _WemPreviewButtonState extends State<WemPreviewButton> {
-  String? wavPath;
+  AudioResource? resource;
   AudioPlayer? player;
   bool isLoading = false;
 
   void togglePlay() async {
-    if (wavPath == null || player == null)
+    if (resource == null || player == null)
       await loadWav();
     if (player!.state == PlayerState.playing)
       await player?.pause();
@@ -34,13 +33,13 @@ class _WemPreviewButtonState extends State<WemPreviewButton> {
   Future<void> loadWav() async {
     try {
       setState(() => isLoading = true);
-      wavPath = await wemToWavTmp(widget.wemPath, "hierarchyPreview");
+      resource = await audioResourcesManager.getAudioResource(widget.wemPath);
       player = AudioPlayer();
       player!.onPlayerStateChanged.listen((state) {
         if (mounted)
           setState(() {});
       });
-      await player!.setSourceDeviceFile(wavPath!);
+      await player!.setSourceDeviceFile(resource!.wavPath);
       setState(() => isLoading = false);
     } catch (e) {
       setState(() => isLoading = false);
@@ -52,8 +51,7 @@ class _WemPreviewButtonState extends State<WemPreviewButton> {
   @override
   void dispose() {
     player?.dispose();
-    if (wavPath != null)
-      File(wavPath!).delete();
+    resource?.dispose();
     super.dispose();
   }
 

@@ -8,6 +8,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'background/IdLookup.dart';
+import 'background/wemFilesIndexer.dart';
 import 'stateManagement/ChangeNotifierWidget.dart';
 import 'utils/loggingWrapper.dart';
 import 'utils/utils.dart';
@@ -52,6 +53,7 @@ void init() async {
   findAssetsDir();
   idLookup.init();
   await PreferencesData().load();
+  wemFilesLookup.updateIndex();
 
   runApp(const MyApp());
 }

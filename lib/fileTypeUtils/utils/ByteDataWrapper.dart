@@ -34,8 +34,9 @@ class ByteDataWrapper {
     buffer = ByteData(size).buffer,
     _parentOffset = 0,
     length = size,
-    _data = ByteData(size),
-    _position = 0;
+    _position = 0 {
+    _data = buffer.asByteData(0, buffer.lengthInBytes);
+  }
 
   static Future<ByteDataWrapper> fromFile(String path) async {
     var buffer = await File(path).readAsBytes();

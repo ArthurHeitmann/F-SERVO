@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 
 import '../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../stateManagement/openFileTypes.dart';
+import '../../../stateManagement/openFilesManager.dart';
 import '../../../utils/utils.dart';
+import '../../misc/ColumnSeparated.dart';
 import '../../theme/customTheme.dart';
 import 'AudioFileEditor.dart';
 
@@ -84,6 +86,43 @@ class _WemFileEditorState extends ChangeNotifierState<WemFileEditor> {
                 ),
             ],
           ) : null,
+          rightSide: widget.wem.relatedBnkPlaylistIds.isNotEmpty ? Align(
+            alignment: Alignment.centerRight,
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border(left: BorderSide(color: getTheme(context).propBorderColor!))
+              ),
+              padding: const EdgeInsets.only(left: 30),
+              child: ColumnSeparated(
+                children: [
+                  Text(
+                    "Used in ${pluralStr(widget.wem.relatedBnkPlaylistIds.length, "BNK playlist")}:    ",
+                    style: const TextStyle(fontFamily: "FiraCode")
+                  ),
+                  for (var playlistId in widget.wem.relatedBnkPlaylistIds)
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 150),
+                      child: ElevatedButton(
+                        style: getTheme(context).dialogSecondaryButtonStyle!.copyWith(
+                          backgroundColor: MaterialStateProperty.all(getTheme(context).actionBgColor),
+                        ),
+                        onPressed: () => areasManager.openFile("${widget.wem.bgmBnkPath!}#p=$playlistId"),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.arrow_forward, size: 20),
+                              const SizedBox(width: 10),
+                              Text(playlistId.toString(), style: const TextStyle(fontFamily: "FiraCode")),
+                            ],
+                          ),
+                        ),
+                      ),
+                    )
+                ],
+              ),
+            ),
+          ) : null,
         ),
         AnimatedOpacity(
           duration: const Duration(milliseconds: 200),
@@ -109,7 +148,7 @@ class _WemFileEditorState extends ChangeNotifierState<WemFileEditor> {
               ],
             ),
           ),
-        ]
+        ],
       ],
     );
     if (widget.topPadding) {

@@ -442,7 +442,7 @@ class RiffFile {
 
   RiffFile(this.chunks);
 
-  RiffFile.fromBytes(ByteDataWrapper bytes, bool isWem) {
+  RiffFile.fromBytes(ByteDataWrapper bytes) {
     var header = RiffHeader.read(bytes);
     chunks.add(header);
     while (bytes.position < bytes.length) {
@@ -450,7 +450,10 @@ class RiffFile {
       bytes.position -= 4;
       switch (chunkID) {
         case "fmt ":
-          if (isWem)
+          bytes.position += 4;
+          var chunkSize = bytes.readUint32();
+          bytes.position -= 8;
+          if (chunkSize == 66)
             chunks.add(WemFormatChunk.read(bytes));
           else
             chunks.add(FormatChunkGeneric.read(bytes));
@@ -471,6 +474,18 @@ class RiffFile {
     }
   }
 
+  RiffFile.onlyFormat(ByteDataWrapper bytes) {
+    var header = RiffHeader.read(bytes);
+    chunks.add(header);
+    bytes.position += 4;
+    var chunkSize = bytes.readUint32();
+    bytes.position -= 8;
+    if (chunkSize == 66)
+      chunks.add(WemFormatChunk.read(bytes));
+    else
+      chunks.add(FormatChunkGeneric.read(bytes));
+  }
+
   void write(ByteDataWrapper bytes) {
     for (int i = 0; i < chunks.length; i++)
       chunks[i].write(bytes);
@@ -478,7 +493,7 @@ class RiffFile {
 
   static Future<RiffFile> fromFile(String path) async {
     var bytes = await ByteDataWrapper.fromFile(path);
-    return RiffFile.fromBytes(bytes, path.endsWith(".wem"));
+    return RiffFile.fromBytes(bytes);
   }
 
   int get size => chunks.skip(1).fold<int>(0, (p, c) => p + c.size + 8) + 12;

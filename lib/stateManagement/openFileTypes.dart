@@ -6,11 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 import 'package:xml/xml.dart';
 
+import '../background/wemFilesIndexer.dart';
 import '../fileTypeUtils/audio/bnkIO.dart';
 import '../fileTypeUtils/audio/riffParser.dart';
 import '../fileTypeUtils/audio/waiIO.dart';
 import '../fileTypeUtils/audio/wavToWemConverter.dart';
-import '../fileTypeUtils/audio/wemToWavConverter.dart';
 import '../fileTypeUtils/smd/smdReader.dart';
 import '../fileTypeUtils/smd/smdWriter.dart';
 import '../fileTypeUtils/tmd/tmdReader.dart';
@@ -22,6 +22,7 @@ import 'FileHierarchy.dart';
 import 'HierarchyEntryTypes.dart';
 import 'Property.dart';
 import 'changesExporter.dart';
+import 'events/statusInfo.dart';
 import 'hasUuid.dart';
 import 'miscValues.dart';
 import 'nestedNotifier.dart';
@@ -30,6 +31,7 @@ import 'otherFileTypes/FtbFileData.dart';
 import 'otherFileTypes/McdData.dart';
 import 'otherFileTypes/SmdFileData.dart';
 import 'otherFileTypes/TmdFileData.dart';
+import 'otherFileTypes/audioResourceManager.dart';
 import 'undoable.dart';
 import 'xmlProps/xmlProp.dart';
 
@@ -550,80 +552,51 @@ class CuePointMarker with HasUuid, Undoable {
   }
 }
 mixin AudioFileData on ChangeNotifier, HasUuid {
-  String? audioFilePath;
+  AudioResource? resource;
   ValueNestedNotifier<CuePointMarker> cuePoints = ValueNestedNotifier([]);
   bool cuePointsStartAt1 = false;
-  Duration? duration;
-  int samplesPerSec = 44100;
-  int totalSamples = 1000;
-  List<double>? wavSamples;
   abstract String name;
 
   Future<void> load();
 
-  void _readMeta(RiffFile riff) {
-    samplesPerSec = riff.format.samplesPerSec;
-    totalSamples = riff.data.samples.length ~/ riff.format.channels;
-    duration = Duration(milliseconds: (totalSamples / samplesPerSec * 1000).round());
-  }
-
-  static const int _wavSamplesCount = 40000;
-  void _parsePreviewSamples(RiffFile riff) {
-    var rawSamples = riff.data.samples;
-    int sampleCount = min(_wavSamplesCount, rawSamples.length);
-    if (riff.format.formatTag == 1 || riff.format.formatTag == 3) {
-      int samplesSize = rawSamples.length ~/ sampleCount;
-      int bitsPerSample = riff.format.bitsPerSample;
-      var scaleFactor = pow(2, bitsPerSample - 1);
-      wavSamples = List.generate(sampleCount, (i) => rawSamples[i * samplesSize] / scaleFactor);
-    } else {
-      wavSamples = null;
-    }
-  }
-
-  void _readCuePoints(RiffFile riff) {
-    List<RiffListLabelSubChunk> pendingLabels = [];
-    if (riff.labelsList != null) {
-      for (var subChunk in riff.labelsList!.subChunks) {
-        if (subChunk is! RiffListLabelSubChunk)
-          continue;
-        if (subChunk.chunkId != "labl")
-          continue;
-        pendingLabels.add(subChunk);
-      }
-    }
-    if (pendingLabels.isNotEmpty) {
-      int maxLabelCueIndex = pendingLabels.map((l) => l.cuePointIndex).reduce(max);
-      // sometimes indexes start at 1, sometimes at 0
-      cuePointsStartAt1 = maxLabelCueIndex == pendingLabels.length;
-      int iOff = cuePointsStartAt1 ? -1 : 0;
-      cuePoints.clear();
-      cuePoints.addAll(pendingLabels.map((l) {
-        var cuePoint = riff.cues!.points[l.cuePointIndex + iOff];
-        return CuePointMarker(
-          AudioSampleNumberProp(cuePoint.sampleOffset, samplesPerSec),
-          StringProp(l.label),
-          uuid
-        );
-      }));
-    }
-  }
+  // void _readCuePoints(RiffFile riff) {
+  //   List<RiffListLabelSubChunk> pendingLabels = [];
+  //   if (riff.labelsList != null) {
+  //     for (var subChunk in riff.labelsList!.subChunks) {
+  //       if (subChunk is! RiffListLabelSubChunk)
+  //         continue;
+  //       if (subChunk.chunkId != "labl")
+  //         continue;
+  //       pendingLabels.add(subChunk);
+  //     }
+  //   }
+  //   if (pendingLabels.isNotEmpty) {
+  //     int maxLabelCueIndex = pendingLabels.map((l) => l.cuePointIndex).reduce(max);
+  //     // sometimes indexes start at 1, sometimes at 0
+  //     cuePointsStartAt1 = maxLabelCueIndex == pendingLabels.length;
+  //     int iOff = cuePointsStartAt1 ? -1 : 0;
+  //     cuePoints.clear();
+  //     cuePoints.addAll(pendingLabels.map((l) {
+  //       var cuePoint = riff.cues!.points[l.cuePointIndex + iOff];
+  //       return CuePointMarker(
+  //         AudioSampleNumberProp(cuePoint.sampleOffset, samplesPerSec),
+  //         StringProp(l.label),
+  //         uuid
+  //       );
+  //     }));
+  //   }
+  // }
 }
 class WavFileData with ChangeNotifier, HasUuid, AudioFileData {
   @override
   String name;
   String path;
 
-  WavFileData(this.path) : name = basename(path) {
-    audioFilePath = path;
-  }
+  WavFileData(this.path) : name = basename(path);
 
   @override
   Future<void> load() async {
-    var wavData = await RiffFile.fromFile(path);
-    _readMeta(wavData);
-    _parsePreviewSamples(wavData);
-    _readCuePoints(wavData);
+    resource = await audioResourcesManager.getAudioResource(path);
     notifyListeners();
   }
 }
@@ -631,6 +604,8 @@ class WemFileData extends OpenFileData with AudioFileData {
   ValueNotifier<WavFileData?> overrideData = ValueNotifier(null);
   ChangeNotifier onOverrideApplied = ChangeNotifier();
   bool isReplacing = false;
+  Set<int> relatedBnkPlaylistIds = {};
+  String? bgmBnkPath;
   
   WemFileData(super.name, super.path, { super.secondaryName, Iterable<CuePointMarker>? cuePoints }) {
     if (cuePoints != null)
@@ -640,26 +615,34 @@ class WemFileData extends OpenFileData with AudioFileData {
 
   @override
   Future<void> load() async {
-    if (_loadingState != LoadingState.notLoaded && audioFilePath != null)
+    if (_loadingState != LoadingState.notLoaded && resource != null)
       return;
     _loadingState = LoadingState.loading;
 
     // extract wav
-    if (audioFilePath != null) {
-      await File(audioFilePath!).delete();
-      audioFilePath = null;
+    await resource?.dispose();
+    resource = await audioResourcesManager.getAudioResource(path);
+
+    // var wavData = await RiffFile.fromFile(resource!.wavPath);
+    // _readMeta(wavData);
+
+    // // rough wav samples
+    // _parsePreviewSamples(wavData);
+
+    // // cue points
+    // var wemData = await RiffFile.fromFile(path);
+    // _readCuePoints(wemData);
+
+    // related bnk playlists
+    var waiRes = areasManager.hiddenArea.whereType<WaiFileData>();
+    if (waiRes.isNotEmpty) {
+      var wai = waiRes.first;
+      bgmBnkPath = wai.bgmBnkPath;
+      if (wai.wemIdsToBnkPlaylists.isNotEmpty) {
+        var wemId = int.parse(RegExp(r"(\d+)\.wem").firstMatch(name)!.group(1)!);
+        relatedBnkPlaylistIds.addAll(wai.wemIdsToBnkPlaylists[wemId] ?? []);
+      }
     }
-    audioFilePath = await wemToWavTmp(path);
-
-    var wavData = await RiffFile.fromFile(audioFilePath!);
-    _readMeta(wavData);
-
-    // rough wav samples
-    _parsePreviewSamples(wavData);
-
-    // cue points
-    var wemData = await RiffFile.fromFile(path);
-    _readCuePoints(wemData);
 
     hasUnsavedChanges = false;
 
@@ -679,15 +662,14 @@ class WemFileData extends OpenFileData with AudioFileData {
 
   @override
   void dispose() {
-    if (audioFilePath != null) {
-      File(audioFilePath!).delete();
-      audioFilePath = null;
+    if (resource != null) {
+      resource!.dispose();
+      resource = null;
     }
     if (overrideData.value != null) {
       overrideData.value!.dispose();
       overrideData.value = null;
     }
-    wavSamples = null;
     cuePoints.dispose();
     super.dispose();
   }
@@ -751,7 +733,8 @@ class WemFileData extends OpenFileData with AudioFileData {
 
     // reload
     _loadingState = LoadingState.notLoaded;
-    await load();
+    await audioResourcesManager.reloadAudioResource(resource!);
+    // await load();
 
     hasUnsavedChanges = true;
     isReplacing = false;
@@ -841,6 +824,8 @@ class WspFileData extends OpenFileData {
 class WaiFileData extends OpenFileData {
   WaiFile? wai;
   Set<WemPatch> pendingPatches = {};
+  String? bgmBnkPath;
+  Map<int, Set<int>> wemIdsToBnkPlaylists = {};
 
   WaiFileData(super.name, super.path, { super.secondaryName });
 
@@ -852,6 +837,41 @@ class WaiFileData extends OpenFileData {
     
     var bytes = await ByteDataWrapper.fromFile(path);
     wai = WaiFile.read(bytes);
+
+    var bnkPath = join(dirname(path), "bgm", "BGM.bnk");
+    if (await File(bnkPath).exists()) {
+      bgmBnkPath = bnkPath;
+      var bnk = BnkFile.read(await ByteDataWrapper.fromFile(bnkPath));
+      var hirc = bnk.chunks.whereType<BnkHircChunk>().first;
+      var hircData = hirc.chunks.whereType<BnkHircChunkBase>().toList();
+      Map<int, BnkHircChunkBase> hircMap = {
+        for (var hirc in hirc.chunks.whereType<BnkHircChunkBase>())
+          hirc.uid: hirc
+      };
+      var playlists = hircData.whereType<BnkMusicPlaylist>();
+      Map<int, Set<int>> playlistIdsToSources = {
+        for (var playlist in playlists)
+          playlist.uid: playlist.playlistItems
+            .map((e) => e.segmentId)
+            .where((e) => e != 0)
+            .map((e) => (hircMap[e] as BnkMusicSegment).musicParams.childrenList.ulChildIDs)
+            .expand((e) => e)
+            .map((e) => (hircMap[e] as BnkMusicTrack).playlists)
+            .expand((e) => e)
+            .map((e) => e.sourceID)
+            .toSet()
+      };
+      wemIdsToBnkPlaylists.clear();
+      for (var playlistKV in playlistIdsToSources.entries) {
+        for (var sourceId in playlistKV.value) {
+          if (!wemIdsToBnkPlaylists.containsKey(sourceId))
+            wemIdsToBnkPlaylists[sourceId] = {};
+          wemIdsToBnkPlaylists[sourceId]!.add(playlistKV.key);
+        }
+      }
+    } else {
+      showToast("BGM.bnk not found");
+    }
 
     await super.load();
   }
@@ -904,19 +924,35 @@ class WaiFileData extends OpenFileData {
 }
 
 class BnkTrackClip with HasUuid, Undoable {
+  final OpenFileId file;
   final BnkPlaylist srcPlaylist;
   final int sourceId;
   final NumberProp xOff;
   final NumberProp beginTrim;
   final NumberProp endTrim;
   final NumberProp srcDuration;
-  BnkTrackClip(this.srcPlaylist, this.sourceId, this.xOff, this.beginTrim, this.endTrim, this.srcDuration);
-  BnkTrackClip.fromPlaylist(this.srcPlaylist) :
+  AudioResource? resource;
+  BnkTrackClip(this.file, this.srcPlaylist, this.sourceId, this.xOff, this.beginTrim, this.endTrim, this.srcDuration) {
+    _setupListeners();
+  }
+  BnkTrackClip.fromPlaylist(this.file, this.srcPlaylist) :
     sourceId = srcPlaylist.sourceID,
     xOff = NumberProp(srcPlaylist.fPlayAt, false),
     beginTrim = NumberProp(srcPlaylist.fBeginTrimOffset, false),
     endTrim = NumberProp(srcPlaylist.fEndTrimOffset, false),
-    srcDuration = NumberProp(srcPlaylist.fSrcDuration, false);
+    srcDuration = NumberProp(srcPlaylist.fSrcDuration, false) {
+    _setupListeners();
+  }
+
+  void _setupListeners() {
+    xOff.addListener(_onPropChanged);
+    beginTrim.addListener(_onPropChanged);
+    endTrim.addListener(_onPropChanged);
+    srcDuration.addListener(_onPropChanged);
+  }
+  void _onPropChanged() {
+    areasManager.fromId(file)!.hasUnsavedChanges = true;
+  }
   
   void dispose() {
     xOff.dispose();
@@ -925,9 +961,23 @@ class BnkTrackClip with HasUuid, Undoable {
     srcDuration.dispose();
   }
 
+  void applyTo(BnkPlaylist newPlaylist) {
+    newPlaylist.fPlayAt = xOff.value.toDouble();
+    newPlaylist.fBeginTrimOffset = beginTrim.value.toDouble();
+    newPlaylist.fEndTrimOffset = endTrim.value.toDouble();
+    newPlaylist.fSrcDuration = srcDuration.value.toDouble();
+  }
+
+  Future<void> loadResource() async {
+    var wemPath = wemFilesLookup.lookup[sourceId];
+    if (wemPath == null)
+      return;
+    resource = await audioResourcesManager.getAudioResource(wemPath);
+  }
+
   @override
   Undoable takeSnapshot() {
-    var snapshot = BnkTrackClip(srcPlaylist, sourceId, xOff.takeSnapshot() as NumberProp, beginTrim.takeSnapshot() as NumberProp, endTrim.takeSnapshot() as NumberProp, srcDuration.takeSnapshot() as NumberProp);
+    var snapshot = BnkTrackClip(file, srcPlaylist, sourceId, xOff.takeSnapshot() as NumberProp, beginTrim.takeSnapshot() as NumberProp, endTrim.takeSnapshot() as NumberProp, srcDuration.takeSnapshot() as NumberProp);
     snapshot.overrideUuid(uuid);
     return snapshot;
   }
@@ -939,71 +989,116 @@ class BnkTrackClip with HasUuid, Undoable {
     endTrim.restoreWith(content.endTrim);
     srcDuration.restoreWith(content.srcDuration);
   }
-
-  bool hasSameClips(BnkTrackClip other) {
-    return (
-      sourceId == other.sourceId &&
-      xOff.value == other.xOff.value &&
-      beginTrim.value == other.beginTrim.value &&
-      endTrim.value == other.endTrim.value &&
-      srcDuration.value == other.srcDuration.value
-    );
-  }
 }
 class BnkTrackData with HasUuid, Undoable {
+  final OpenFileId file;
   final BnkMusicTrack srcTrack;
-  final ValueNestedNotifier<BnkTrackClip> clips;
-  BnkTrackData(this.srcTrack, this.clips);
-  BnkTrackData.fromTrack(this.srcTrack) :
-    clips = ValueNestedNotifier(srcTrack.playlists.map((s) => BnkTrackClip.fromPlaylist(s)).toList());
+  final List<BnkTrackClip> clips;
+  final ValueNotifier<bool> hasSourceChanged = ValueNotifier(false);
+  BnkTrackData(this.file, this.srcTrack, this.clips);
+  BnkTrackData.fromTrack(this.file, this.srcTrack) :
+    clips = srcTrack.playlists.map((s) => BnkTrackClip.fromPlaylist(file, s)).toList();
   
   void dispose() {
-    clips.dispose();
+    for (var clip in clips)
+      clip.dispose();
+    hasSourceChanged.dispose();
+  }
+
+  void applyTo(BnkMusicTrack newTrack) {
+    if (clips.length != newTrack.playlists.length)
+      throw Exception("Can't apply track data to a different track");
+    for (var i = 0; i < clips.length; i++)
+      clips[i].applyTo(newTrack.playlists[i]);
   }
 
   @override
   Undoable takeSnapshot() {
-    var snapshot = BnkTrackData(srcTrack, clips.takeSnapshot() as ValueNestedNotifier<BnkTrackClip>);
+    var snapshot = BnkTrackData(file, srcTrack, clips.map((c) => c.takeSnapshot() as BnkTrackClip).toList());
     snapshot.overrideUuid(uuid);
     return snapshot;
   }
   @override
   void restoreWith(Undoable snapshot) {
     var content = snapshot as BnkTrackData;
-    clips.restoreWith(content.clips);
+    for (var i = 0; i < clips.length; i++)
+      clips[i].restoreWith(content.clips[i]);
   }
-
-  bool hasSameClips(BnkTrackData other) {
-    return (
-      clips.length == other.clips.length &&
-      clips.every((c) => other.clips.any((o) => c.hasSameClips(o)))
-    );
+  
+  Future<void> updateDuration() async {
+    if (!srcTrack.sources.every((s) => s.sourceID == srcTrack.sources.first.sourceID))
+      throw Exception("Can't update duration of a track with multiple sources");
+    var srcId = srcTrack.sources.first.sourceID;
+    var wemPath = wemFilesLookup.lookup[srcId];
+    if (wemPath == null)
+      return;
+    var wemBytes = await ByteDataWrapper.fromFile(wemPath);
+    var wemRiff = RiffFile.onlyFormat(wemBytes);
+    var riffFormat = wemRiff.format;
+    double duration;
+    if (riffFormat is WemFormatChunk) {
+      duration = riffFormat.numSamples / riffFormat.samplesPerSec;
+    } else {
+      print("Unsupported format chunk in $wemPath");
+      return;
+    }
+    for (var clip in clips) {
+      var newDuration = duration * 1000;
+      if (newDuration == clip.srcDuration.value)
+        continue;
+      clip.srcDuration.value = newDuration;
+      if (clip.beginTrim.value > clip.srcDuration.value + clip.endTrim.value) {
+        clip.beginTrim.value = 0;
+        messageLog.add("Warning: Set clip begin to 0 on ${basename(wemPath)}");
+      }
+      if (clip.srcDuration.value + clip.endTrim.value < clip.beginTrim.value) {
+        clip.endTrim.value = 0;
+        messageLog.add("Warning: Set clip end to 0 on ${basename(wemPath)}");
+      }
+      hasSourceChanged.value = true;
+    }
   }
 }
 enum BnkMarkerRole {
   entryCue, exitCue, custom
 }
 class BnkSegmentMarker with HasUuid, Undoable {
+  final OpenFileId file;
   final BnkMusicMarker srcMarker;
   final NumberProp pos;
   final BnkMarkerRole role;
   String get name => srcMarker.pMarkerName ?? "";
-  BnkSegmentMarker(this.srcMarker, this.pos, this.role);
-  BnkSegmentMarker.fromMarker(this.srcMarker, List<BnkMusicMarker> markers) :
+  BnkSegmentMarker(this.file, this.srcMarker, this.pos, this.role) {
+    _setupListeners();
+  }
+  BnkSegmentMarker.fromMarker(this.file, this.srcMarker, List<BnkMusicMarker> markers) :
     pos = NumberProp(srcMarker.fPosition, false),
     role = markers.first == srcMarker
       ? BnkMarkerRole.entryCue
       : markers.last == srcMarker
         ? BnkMarkerRole.exitCue
-        : BnkMarkerRole.custom;
+        : BnkMarkerRole.custom {
+    _setupListeners();
+  }
+
+  void _setupListeners() {
+    pos.addListener(_onPropChanged);
+  }
+  void _onPropChanged() {
+    areasManager.fromId(file)!.hasUnsavedChanges = true;
+  }
   
   void dispose() {
     pos.dispose();
   }
 
+  void applyTo(BnkMusicMarker newMarker) {
+    newMarker.fPosition = pos.value.toDouble();
+  }
+
   @override
   Undoable takeSnapshot() {
-    var snapshot = BnkSegmentMarker(srcMarker, pos.takeSnapshot() as NumberProp, role);
+    var snapshot = BnkSegmentMarker(file, srcMarker, pos.takeSnapshot() as NumberProp, role);
     snapshot.overrideUuid(uuid);
     return snapshot;
   }
@@ -1012,37 +1107,63 @@ class BnkSegmentMarker with HasUuid, Undoable {
     var content = snapshot as BnkSegmentMarker;
     pos.restoreWith(content.pos);
   }
-
-  bool isSame(BnkSegmentMarker other) {
-    return (
-      name == other.name &&
-      pos.value == other.pos.value &&
-      role == other.role
-    );
-  }
 }
 class BnkSegmentData with HasUuid, Undoable {
+  final OpenFileId file;
   final BnkMusicSegment srcSegment;
   final NumberProp duration;
   final List<BnkTrackData> tracks;
   final List<BnkSegmentMarker> markers;
-  BnkSegmentData(this.srcSegment, this.duration, this.tracks, this.markers);
-  BnkSegmentData.fromSegment(this.srcSegment, Map<int, BnkHircChunkBase> hircMap) :
+  BnkSegmentData(this.file, this.srcSegment, this.duration, this.tracks, this.markers) {
+    _setupListeners();
+  }
+  BnkSegmentData.fromSegment(this.file, this.srcSegment, Map<int, BnkHircChunkBase> hircMap) :
     duration = NumberProp(srcSegment.fDuration, false),
     tracks = srcSegment.musicParams.childrenList.ulChildIDs.map((id) => 
-      BnkTrackData.fromTrack(hircMap[id] as BnkMusicTrack)).toList(),
-    markers = srcSegment.wwiseMarkers.map((m) => BnkSegmentMarker.fromMarker(m, srcSegment.wwiseMarkers)).toList();
+      BnkTrackData.fromTrack(file, hircMap[id] as BnkMusicTrack)).toList(),
+    markers = srcSegment.wwiseMarkers.map((m) => BnkSegmentMarker.fromMarker(file, m, srcSegment.wwiseMarkers)).toList() {
+    _setupListeners();
+  }
+
+  void _setupListeners() {
+    duration.addListener(_onPropChanged);
+  }
+  void _onPropChanged() {
+    areasManager.fromId(file)!.hasUnsavedChanges = true;
+  }
   
   void dispose() {
+    duration.dispose();
     for (var t in tracks)
       t.dispose();
     for (var m in markers)
       m.dispose();
   }
 
+  void applyTo(BnkMusicSegment newSegment, Map<int, BnkHircChunkBase> hircMap) {
+    if (markers.length != srcSegment.wwiseMarkers.length)
+      throw Exception("Cannot apply segment with different number of markers");
+    if (tracks.length != srcSegment.musicParams.childrenList.ulChildIDs.length)
+      throw Exception("Cannot apply segment with different number of tracks");
+    if (markers.length >= 2) {
+      var minMarkerPos = markers.map((m) => m.pos.value).reduce(min);
+      var maxMarkerPos = markers.map((m) => m.pos.value).reduce(max);
+      newSegment.fDuration = maxMarkerPos - minMarkerPos.toDouble();
+    }
+    for (var i = 0; i < markers.length; i++) {
+      var newMarker = newSegment.wwiseMarkers[i];
+      markers[i].applyTo(newMarker);
+    }
+    for (var i = 0; i < tracks.length; i++) {
+      var newTrack = hircMap[srcSegment.musicParams.childrenList.ulChildIDs[i]] as BnkMusicTrack;
+      tracks[i].applyTo(newTrack);
+    }
+  }
+
   @override
   Undoable takeSnapshot() {
     var snapshot = BnkSegmentData(
+      file,
       srcSegment,
       duration.takeSnapshot() as NumberProp,
       tracks.map((t) => t.takeSnapshot() as BnkTrackData).toList(),
@@ -1059,16 +1180,6 @@ class BnkSegmentData with HasUuid, Undoable {
       tracks[i].restoreWith(content.tracks[i]);
     for (var i = 0; i < markers.length; i++)
       markers[i].restoreWith(content.markers[i]);
-  }
-
-  bool hasSameClips(BnkSegmentData other) {
-    return (
-      duration.value == other.duration.value &&
-      tracks.length == other.tracks.length &&
-      tracks.every((t) => other.tracks.any((o) => t.hasSameClips(o))) &&
-      markers.length == other.markers.length &&
-      markers.every((m) => other.markers.any((o) => m.isSame(o)))
-    );
   }
 }
 enum BnkPlaylistChildResetType {
@@ -1088,43 +1199,41 @@ enum BnkPlaylistChildResetType {
   }
 }
 class BnkPlaylistChild with HasUuid, Undoable {
+  final OpenFileId file;
   final BnkPlaylistItem srcItem;
+  final int index;
   final List<BnkPlaylistChild> children;
   final BnkSegmentData? segment;
   final String loops;
   final BnkPlaylistChildResetType resetType;
   final List<int> appliesTo;  // playlist IDs
-  BnkPlaylistChild(this.srcItem, this.children, this.segment, this.loops, this.resetType) : appliesTo = [];
-  BnkPlaylistChild.fromPlaylistItem(this.srcItem, Map<int, BnkHircChunkBase> hircMap) :
+  BnkPlaylistChild(this.file, this.srcItem, this.index, this.children, this.segment, this.loops, this.resetType)
+    : appliesTo = [];
+  BnkPlaylistChild.fromPlaylistItem(this.file, this.srcItem, this.index, Map<int, BnkHircChunkBase> hircMap) :
     children = [],
-    segment = srcItem.segmentId != 0 ? BnkSegmentData.fromSegment(hircMap[srcItem.segmentId] as BnkMusicSegment, hircMap) : null,
+    segment = srcItem.segmentId != 0 ? BnkSegmentData.fromSegment(file, hircMap[srcItem.segmentId] as BnkMusicSegment, hircMap) : null,
     loops = srcItem.loop == 0 ? "Infinite" : srcItem.loop.toString(),
     resetType = BnkPlaylistChildResetType.fromValue(srcItem.eRSType),
     appliesTo = [srcItem.playlistItemId];
   
-  List<BnkPlaylistItem> parseChildren(List<BnkPlaylistItem> remainingItems, Map<int, BnkHircChunkBase> hircMap, List<BnkPlaylistChild> parsedItems) {
+  List<BnkPlaylistItem> parseChildren(int curIndex, List<BnkPlaylistItem> remainingItems, Map<int, BnkHircChunkBase> hircMap, List<BnkPlaylistChild> parsedItems) {
     var remaining = remainingItems;
     remaining = remaining.sublist(1);
+    curIndex++;
     for (int i = 0; i < srcItem.numChildren; i++) {
-      var next = remaining.first;
-      var child = BnkPlaylistChild.fromPlaylistItem(next, hircMap);
-      remaining = child.parseChildren(remaining, hircMap, parsedItems);
-      // some playlists are effectively the same, so we filter them out and add them to `appliesTo`
-      // var alreadyParsed = parsedItems.where((p) => p.hasSameClips(child));
-      // if (alreadyParsed.isNotEmpty) {
-      //   child.dispose();
-      //   alreadyParsed.first.appliesTo.add(next.playlistItemId);
-      //   continue;
-      // }
+      var child = BnkPlaylistChild.fromPlaylistItem(file, remaining.first, curIndex, hircMap);
+      int prevLength = remaining.length;
+      remaining = child.parseChildren(curIndex, remaining, hircMap, parsedItems);
+      curIndex += prevLength - remaining.length;
       children.add(child);
       parsedItems.add(child);
     }
     return remaining;
   }
 
-  static BnkPlaylistChild parsePlaylist(BnkMusicPlaylist srcPlaylist, Map<int, BnkHircChunkBase> hircMap) {
-    var root = BnkPlaylistChild.fromPlaylistItem(srcPlaylist.playlistItems.first, hircMap);
-    var remaining = root.parseChildren(srcPlaylist.playlistItems, hircMap, []);
+  static BnkPlaylistChild parsePlaylist(OpenFileId file, BnkMusicPlaylist srcPlaylist, Map<int, BnkHircChunkBase> hircMap) {
+    var root = BnkPlaylistChild.fromPlaylistItem(file, srcPlaylist.playlistItems.first, 0, hircMap);
+    var remaining = root.parseChildren(0, srcPlaylist.playlistItems, hircMap, []);
     if (remaining.isNotEmpty)
       throw Exception("Failed to parse playlist");
     return root;
@@ -1136,9 +1245,26 @@ class BnkPlaylistChild with HasUuid, Undoable {
       c.dispose();
   }
   
+  void applyTo(List<BnkPlaylistItem> newItems, Map<int, BnkHircChunkBase> hircMap) {
+    var newItem = newItems[index];
+    if (srcItem.playlistItemId != newItem.playlistItemId)
+      throw Exception("Playlist item ID mismatch");
+    if (children.length != newItem.numChildren)
+      throw Exception("Number of children mismatch");
+    if ((segment == null) != (newItem.segmentId == 0))
+      throw Exception("Segment mismatch");
+    if (segment != null) {
+      var newSegment = hircMap[newItem.segmentId] as BnkMusicSegment;
+      segment!.applyTo(newSegment, hircMap);
+    }
+    for (var i = 0; i < children.length; i++) {
+      children[i].applyTo(newItems, hircMap);
+    }
+  }
+
   @override
   Undoable takeSnapshot() {
-    var snapshot = BnkPlaylistChild(srcItem, children.map((c) => c.takeSnapshot() as BnkPlaylistChild).toList(), segment?.takeSnapshot() as BnkSegmentData?, loops, resetType);
+    var snapshot = BnkPlaylistChild(file, srcItem, index, children.map((c) => c.takeSnapshot() as BnkPlaylistChild).toList(), segment?.takeSnapshot() as BnkSegmentData?, loops, resetType);
     snapshot.overrideUuid(uuid);
     return snapshot;
   }
@@ -1151,20 +1277,22 @@ class BnkPlaylistChild with HasUuid, Undoable {
       segment!.restoreWith(content.segment!);
   }
 
-  bool hasSameClips(BnkPlaylistChild other) {
-    return (
-      (
-        segment == null && other.segment == null ||
-        segment != null && other.segment != null && segment!.hasSameClips(other.segment!)
-      ) &&
-      children.length == other.children.length &&
-      children.every((c) => other.children.any((o) => c.hasSameClips(o)))
-    );
+  Future<void> updateTrackDurations() async {
+    List<BnkPlaylistChild> pending = [this];
+    List<Future<void>> futures = [];
+    while (pending.isNotEmpty) {
+      var child = pending.removeAt(0);
+      pending.addAll(child.children);
+      if (child.segment != null) {
+        for (var track in child.segment!.tracks)
+          futures.add(track.updateDuration());
+      }
+    }
+    await Future.wait(futures);
   }
 }
 class BnkFilePlaylistData extends OpenFileData {
   final int playlistId;
-  BnkFile? bnk;
   BnkMusicPlaylist? srcPlaylist;
   BnkPlaylistChild? rootChild;
 
@@ -1179,8 +1307,8 @@ class BnkFilePlaylistData extends OpenFileData {
     _loadingState = LoadingState.loading;
 
     var bytes = await ByteDataWrapper.fromFile(path.split("#").first);
-    bnk = BnkFile.read(bytes);
-    var hircChunk = bnk!.chunks.whereType<BnkHircChunk>().first;
+    var bnk = BnkFile.read(bytes);
+    var hircChunk = bnk.chunks.whereType<BnkHircChunk>().first;
     Map<int, BnkHircChunkBase> hircMap = {
       for (var hirc in hircChunk.chunks.whereType<BnkHircChunkBase>())
         hirc.uid: hirc
@@ -1188,9 +1316,33 @@ class BnkFilePlaylistData extends OpenFileData {
     srcPlaylist = hircChunk.chunks
       .whereType<BnkMusicPlaylist>()
       .firstWhere((p) => p.uid == playlistId);
-    rootChild = BnkPlaylistChild.parsePlaylist(srcPlaylist!, hircMap);
+    rootChild = BnkPlaylistChild.parsePlaylist(uuid, srcPlaylist!, hircMap);
+    await rootChild!.updateTrackDurations();
 
     await super.load();
+  }
+
+  @override
+  Future<void> save() async {
+    if (_loadingState != LoadingState.loaded)
+      return;
+    
+    var bnkPath = path.split("#").first;
+    var bytes = await ByteDataWrapper.fromFile(bnkPath);
+    var bnk = BnkFile.read(bytes);
+    var hircChunk = bnk.chunks.whereType<BnkHircChunk>().first;
+    Map<int, BnkHircChunkBase> hircMap = {
+      for (var hirc in hircChunk.chunks.whereType<BnkHircChunkBase>())
+        hirc.uid: hirc
+    };
+    var newPlaylist = hircMap[playlistId] as BnkMusicPlaylist;
+    rootChild!.applyTo(newPlaylist.playlistItems, hircMap);
+    bytes = ByteDataWrapper.allocate(bytes.length);
+    bnk.write(bytes);
+    await backupFile(bnkPath);
+    await File(bnkPath).writeAsBytes(bytes.buffer.asUint8List());
+
+    await super.save();
   }
 
   @override
