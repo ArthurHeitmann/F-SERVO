@@ -923,6 +923,96 @@ class WaiFileData extends OpenFileData {
   }
 }
 
+enum ClipAutomationType {
+  volume(0, "Volume"),
+  lpf(1, "Low Pass Filter"),
+  hpf(2, "High Pass Filter"),
+  fadeIn(3, "Fade In"),
+  fadeOut(4, "Fade Out");
+
+  final int value;
+  final String name;
+  const ClipAutomationType(this.value, this.name);
+}
+enum RtpcPointInterpolationType {
+  log3(0, "Log (base 3)"),
+  sin(1, "Sine (Constant Power Fade Out)"),
+  log1(2, "Log (base 1.41)"),
+  invSCurve(3, "Inverted S-Curve"),
+  linear(4, "Linear"),
+  sCurve(5, "S-Curve"),
+  exp1(6, "Exp (base 1.41)"),
+  sinRecip(7, "Sine (Constant Power Fade In)"),
+  exp3(8, "Exp (base 3)"),
+  constant(9, "Constant");
+
+  final int value;
+  final String name;
+  const RtpcPointInterpolationType(this.value, this.name);
+}
+class BnkClipRtpcPoint with HasUuid, Undoable {
+  final OpenFileId file;
+  final BnkRtpcGraphPoint srcAutomation;
+  final NumberProp x;
+  final NumberProp y;
+  final int interpolationType;
+  BnkClipRtpcPoint(this.file, this.srcAutomation, this.x, this.y, this.interpolationType) {
+    _setupListeners();
+  }
+  BnkClipRtpcPoint.fromAutomation(this.file, this.srcAutomation) :
+    x = NumberProp(srcAutomation.to * 1000, false),
+    y = NumberProp(srcAutomation.from, false),
+    interpolationType = srcAutomation.interpolation {
+    _setupListeners();
+  }
+  
+  void _setupListeners() {
+    x.addListener(_onPropChanged);
+    y.addListener(_onPropChanged);
+  }
+  void _onPropChanged() {
+    areasManager.fromId(file)!.hasUnsavedChanges = true;
+  }
+  
+  void dispose() {
+    x.dispose();
+    y.dispose();
+  }
+
+  void applyTo(BnkRtpcGraphPoint point) {
+    point.to = x.value.toDouble();
+    point.from = y.value.toDouble();
+  }
+
+  BnkClipRtpcPoint duplicate() {
+    return BnkClipRtpcPoint(
+      file,
+      srcAutomation,
+      x.takeSnapshot() as NumberProp,
+      y.takeSnapshot() as NumberProp,
+      interpolationType
+    );
+  }
+
+  @override
+  Undoable takeSnapshot() {
+    var snapshot = BnkClipRtpcPoint(
+      file,
+      srcAutomation,
+      x.takeSnapshot() as NumberProp,
+      y.takeSnapshot() as NumberProp,
+      interpolationType
+    );
+    snapshot.overrideUuid(uuid);
+    return snapshot;
+  }
+  @override
+  void restoreWith(Undoable snapshot) {
+    var content = snapshot as BnkClipRtpcPoint;
+    x.value = content.x.value;
+    y.value = content.y.value;
+  }
+}
 class BnkTrackClip with HasUuid, Undoable {
   final OpenFileId file;
   final BnkPlaylist srcPlaylist;
@@ -931,16 +1021,26 @@ class BnkTrackClip with HasUuid, Undoable {
   final NumberProp beginTrim;
   final NumberProp endTrim;
   final NumberProp srcDuration;
+  final Map<int, List<BnkClipRtpcPoint>> rtpcPoints;  // TODO listeners, save
   AudioResource? resource;
-  BnkTrackClip(this.file, this.srcPlaylist, this.sourceId, this.xOff, this.beginTrim, this.endTrim, this.srcDuration) {
+  BnkTrackClip(this.file, this.srcPlaylist, this.sourceId, this.xOff, this.beginTrim, this.endTrim, this.srcDuration, this.rtpcPoints) {
     _setupListeners();
   }
-  BnkTrackClip.fromPlaylist(this.file, this.srcPlaylist) :
+  BnkTrackClip.fromPlaylist(this.file, this.srcPlaylist, List<BnkClipAutomation> automations) :
     sourceId = srcPlaylist.sourceID,
     xOff = NumberProp(srcPlaylist.fPlayAt, false),
     beginTrim = NumberProp(srcPlaylist.fBeginTrimOffset, false),
     endTrim = NumberProp(srcPlaylist.fEndTrimOffset, false),
-    srcDuration = NumberProp(srcPlaylist.fSrcDuration, false) {
+    srcDuration = NumberProp(srcPlaylist.fSrcDuration, false),
+    rtpcPoints = {} {
+    for (var automation in automations) {
+      var type = automation.eAutoType;
+      if (!rtpcPoints.containsKey(type))
+        rtpcPoints[type] = [];
+      for (var point in automation.rtpcGraphPoint) {
+        rtpcPoints[type]!.add(BnkClipRtpcPoint.fromAutomation(file, point));
+      }
+    }
     _setupListeners();
   }
 
@@ -959,6 +1059,11 @@ class BnkTrackClip with HasUuid, Undoable {
     beginTrim.dispose();
     endTrim.dispose();
     srcDuration.dispose();
+    for (var points in rtpcPoints.values) {
+      for (var point in points) {
+        point.dispose();
+      }
+    }
   }
 
   void applyTo(BnkPlaylist newPlaylist) {
@@ -966,6 +1071,39 @@ class BnkTrackClip with HasUuid, Undoable {
     newPlaylist.fBeginTrimOffset = beginTrim.value.toDouble();
     newPlaylist.fEndTrimOffset = endTrim.value.toDouble();
     newPlaylist.fSrcDuration = srcDuration.value.toDouble();
+  }
+
+  BnkPlaylist makeNewSrcPl() {
+    return BnkPlaylist(
+      srcPlaylist.trackID,
+      sourceId,
+      xOff.value.toDouble(),
+      beginTrim.value.toDouble(),
+      endTrim.value.toDouble(),
+      srcDuration.value.toDouble(),
+    );
+  }
+
+  BnkTrackClip duplicate() {
+    return BnkTrackClip(
+      file,
+      makeNewSrcPl(),
+      sourceId,
+      xOff.takeSnapshot() as NumberProp,
+      beginTrim.takeSnapshot() as NumberProp,
+      endTrim.takeSnapshot() as NumberProp,
+      srcDuration.takeSnapshot() as NumberProp,
+      rtpcPoints.map((key, value) => MapEntry(key, value.map((e) => e.duplicate()).toList()))
+    );
+  }
+
+  BnkTrackClip cutAt(double time) {
+    if (time < 0 || time > srcDuration.value)
+      throw Exception("Invalid time");
+    var newClip = duplicate();
+    endTrim.value = srcDuration.value - time;
+    newClip.beginTrim.value = time;
+    return newClip;
   }
 
   Future<void> loadResource() async {
@@ -977,7 +1115,16 @@ class BnkTrackClip with HasUuid, Undoable {
 
   @override
   Undoable takeSnapshot() {
-    var snapshot = BnkTrackClip(file, srcPlaylist, sourceId, xOff.takeSnapshot() as NumberProp, beginTrim.takeSnapshot() as NumberProp, endTrim.takeSnapshot() as NumberProp, srcDuration.takeSnapshot() as NumberProp);
+    var snapshot = BnkTrackClip(
+      file,
+      srcPlaylist,
+      sourceId,
+      xOff.takeSnapshot() as NumberProp,
+      beginTrim.takeSnapshot() as NumberProp,
+      endTrim.takeSnapshot() as NumberProp,
+      srcDuration.takeSnapshot() as NumberProp,
+      rtpcPoints.map((key, value) => MapEntry(key, value.map((e) => e.takeSnapshot() as BnkClipRtpcPoint).toList()))
+    );
     snapshot.overrideUuid(uuid);
     return snapshot;
   }
@@ -993,36 +1140,59 @@ class BnkTrackClip with HasUuid, Undoable {
 class BnkTrackData with HasUuid, Undoable {
   final OpenFileId file;
   final BnkMusicTrack srcTrack;
-  final List<BnkTrackClip> clips;
+  final ValueNestedNotifier<BnkTrackClip> clips;
   final ValueNotifier<bool> hasSourceChanged = ValueNotifier(false);
   BnkTrackData(this.file, this.srcTrack, this.clips);
   BnkTrackData.fromTrack(this.file, this.srcTrack) :
-    clips = srcTrack.playlists.map((s) => BnkTrackClip.fromPlaylist(file, s)).toList();
+    clips = ValueNestedNotifier(
+      List.generate(srcTrack.playlists.length, (i) => BnkTrackClip.fromPlaylist(
+        file,
+        srcTrack.playlists[i],
+        srcTrack.clipAutomations.where((ca) => ca.uClipIndex == i).toList()
+      ))
+    );
   
   void dispose() {
     for (var clip in clips)
       clip.dispose();
+    clips.dispose();
     hasSourceChanged.dispose();
   }
 
   void applyTo(BnkMusicTrack newTrack) {
-    if (clips.length != newTrack.playlists.length)
-      throw Exception("Can't apply track data to a different track");
-    for (var i = 0; i < clips.length; i++)
+    // if (clips.length != newTrack.playlists.length)
+    //   throw Exception("Can't apply track data to a different track");
+    // for (var i = 0; i < clips.length; i++)
+    //   clips[i].applyTo(newTrack.playlists[i]);
+    int minLen = min(clips.length, newTrack.playlists.length);
+    // common
+    for (var i = 0; i < minLen; i++)
       clips[i].applyTo(newTrack.playlists[i]);
+    // newly added
+    for (var i = minLen; i < clips.length; i++) {
+      var newPlaylist = clips[i].makeNewSrcPl();
+      newTrack.playlists.add(newPlaylist);
+    }
+    // removed
+    newTrack.playlists.removeRange(minLen, newTrack.playlists.length);
+    // length
+    newTrack.numPlaylistItem = clips.length;
   }
 
   @override
   Undoable takeSnapshot() {
-    var snapshot = BnkTrackData(file, srcTrack, clips.map((c) => c.takeSnapshot() as BnkTrackClip).toList());
+    var snapshot = BnkTrackData(
+      file,
+      srcTrack,
+      clips.takeSnapshot() as ValueNestedNotifier<BnkTrackClip>,
+    );
     snapshot.overrideUuid(uuid);
     return snapshot;
   }
   @override
   void restoreWith(Undoable snapshot) {
     var content = snapshot as BnkTrackData;
-    for (var i = 0; i < clips.length; i++)
-      clips[i].restoreWith(content.clips[i]);
+    clips.restoreWith(content.clips);
   }
   
   Future<void> updateDuration() async {

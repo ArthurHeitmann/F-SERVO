@@ -8,9 +8,11 @@ import 'package:flutter/material.dart';
 import 'package:tuple/tuple.dart';
 
 import '../../../background/wemFilesIndexer.dart';
+import '../../../fileTypeUtils/audio/bnkIO.dart';
 import '../../../fileTypeUtils/audio/wemIdsToNames.dart';
 import '../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
+import '../../../stateManagement/nestedNotifier.dart';
 import '../../../stateManagement/openFileTypes.dart';
 import '../../../stateManagement/openFilesManager.dart';
 import '../../../utils/utils.dart';
@@ -19,32 +21,25 @@ import '../../misc/mousePosition.dart';
 import '../../misc/nestedContextMenu.dart';
 import '../../misc/onHoverBuilder.dart';
 import '../../theme/customTheme.dart';
-
-extension ColorFilter on Color {
-  Color withSaturation(double saturation) {
-    var hsl = HSLColor.fromColor(this);
-    return hsl.withSaturation(saturation).toColor();
-  }
-
-  Color withLightness(double lightness) {
-    var hsl = HSLColor.fromColor(this);
-    return hsl.withLightness(lightness).toColor();
-  }
-}
+import 'AudioFileEditor.dart';
 
 class _AudioEditorData extends InheritedWidget {
   final ValueNotifier<double> msPerPix;
   final ValueNotifier<double> xOff;
+  final ValueNestedNotifier<String> selectedClipUuids;
+  final BnkTrackClip? Function(String uuid) getClipByUuid;
 
   const _AudioEditorData({
     required Widget child,
     required this.msPerPix,
     required this.xOff,
+    required this.selectedClipUuids,
+    required this.getClipByUuid,
   }) : super(child: child);
 
   @override
   bool updateShouldNotify(_AudioEditorData oldWidget) {
-    return msPerPix != oldWidget.msPerPix || xOff != oldWidget.xOff;
+    return msPerPix != oldWidget.msPerPix || xOff != oldWidget.xOff || selectedClipUuids != oldWidget.selectedClipUuids;
   }
 
   static _AudioEditorData of(BuildContext context) {
@@ -62,26 +57,33 @@ class _SnapPoint {
 }
 
 class _SnapPointsData extends InheritedWidget {
-  final List<_SnapPoint> snapPoints;
+  final List<_SnapPoint> staticSnapPoints;
+  final Iterable<_SnapPoint> Function() dynamicSnapPoints;
 
   const _SnapPointsData({
     required Widget child,
-    required this.snapPoints,
+    required this.staticSnapPoints,
+    required this.dynamicSnapPoints,
   }) : super(child: child);
 
   @override
   bool updateShouldNotify(_SnapPointsData oldWidget) {
-    return snapPoints != oldWidget.snapPoints;
+    return staticSnapPoints != oldWidget.staticSnapPoints || dynamicSnapPoints != oldWidget.dynamicSnapPoints;
   }
 
   static _SnapPointsData of(BuildContext context) {
     return context.dependOnInheritedWidgetOfExactType<_SnapPointsData>()!;
   }
 
+  Iterable<_SnapPoint> getAllSnapPoints() sync* {
+    yield* staticSnapPoints;
+    yield* dynamicSnapPoints();
+  }
+
   double trySnapTo(double valMs, List<Object> owners, double msPerPix) {
     const snapThresholdPx = 8;
     var curPx = valMs / msPerPix;
-    for (var snapPoint in snapPoints) {
+    for (var snapPoint in getAllSnapPoints()) {
       if (owners.contains(snapPoint.owner))
         continue;
       var snapPx = snapPoint.getPos() / msPerPix;
@@ -94,7 +96,7 @@ class _SnapPointsData extends InheritedWidget {
   _SnapPoint? tryFindSnapPoint(double valMs, List<Object> owners, double msPerPix) {
     const snapThresholdPx = 8;
     var curPx = valMs / msPerPix;
-    for (var snapPoint in snapPoints) {
+    for (var snapPoint in getAllSnapPoints()) {
       if (owners.contains(snapPoint.owner))
         continue;
       var snapPx = snapPoint.getPos() / msPerPix;
@@ -105,7 +107,7 @@ class _SnapPointsData extends InheritedWidget {
   }
 }
 
-double _mousePosOnTrack(ValueNotifier<double> xOff, ValueNotifier<double> msPerPix, BuildContext context) {
+double _getMousePosOnTrack(ValueNotifier<double> xOff, ValueNotifier<double> msPerPix, BuildContext context) {
   var renderBox = context.findRenderObject() as RenderBox;
   var locMousePos = renderBox.globalToLocal(MousePosition.pos).dx;
   var xOffDist = locMousePos - xOff.value;
@@ -124,6 +126,7 @@ class BnkPlaylistEditor extends StatefulWidget {
 class _BnkPlaylistEditorState extends State<BnkPlaylistEditor> {
   final ValueNotifier<double> msPerPix = ValueNotifier(1);
   final ValueNotifier<double> xOff = ValueNotifier(0);
+  final selectedClipUuids = ValueNestedNotifier<String>([]);
   final scrollController = ScrollController();
 
   @override
@@ -167,6 +170,8 @@ class _BnkPlaylistEditorState extends State<BnkPlaylistEditor> {
     return _AudioEditorData(
       msPerPix: msPerPix,
       xOff: xOff,
+      selectedClipUuids: selectedClipUuids,
+      getClipByUuid: _getClipByUuid,
       child: GestureDetector(
         onHorizontalDragUpdate: (details) {
           xOff.value += details.delta.dx;
@@ -232,14 +237,35 @@ class _BnkPlaylistEditorState extends State<BnkPlaylistEditor> {
       ),
     );
   }
+
+  BnkTrackClip? _getClipByUuid(String uuid, [BnkPlaylistChild? playlistChild]) {
+    playlistChild ??= widget.playlist.rootChild;
+    if (playlistChild == null)
+      return null;
+    if (playlistChild.segment != null) {
+      for (var track in playlistChild.segment!.tracks) {
+        for (var clip in track.clips) {
+          if (clip.uuid == uuid)
+            return clip;
+        }
+      }
+    }
+
+    for (var child in playlistChild.children) {
+      var clip = _getClipByUuid(uuid, child);
+      if (clip != null)
+        return clip;
+    }
+
+    return null;
+  }
 }
 
 class BnkPlaylistChildEditor extends StatefulWidget {
   final BnkPlaylistChild plSegment;
-  final BnkPlaylistChild? prevSegment;
   final int depth;
 
-  const BnkPlaylistChildEditor({ super.key, required this.plSegment, this.prevSegment, this.depth = 0 });
+  const BnkPlaylistChildEditor({ super.key, required this.plSegment, this.depth = 0 });
 
   @override
   State<BnkPlaylistChildEditor> createState() => _BnkPlaylistChildEditorState();
@@ -295,7 +321,6 @@ class _BnkPlaylistChildEditorState extends State<BnkPlaylistChildEditor> {
           if (segment != null)
             BnkSegmentEditor(
               segment: segment!,
-              prevSegment: widget.prevSegment?.segment,
               viewNotifiers: [
                 _AudioEditorData.of(context).msPerPix,
                 _AudioEditorData.of(context).xOff,
@@ -304,7 +329,6 @@ class _BnkPlaylistChildEditorState extends State<BnkPlaylistChildEditor> {
             for (int i = 0; i < widget.plSegment.children.length; i++)
               BnkPlaylistChildEditor(
                 plSegment: widget.plSegment.children[i],
-                prevSegment: i > 0 ? widget.plSegment.children[i - 1] : null,
                 depth: widget.depth + 1,
               )
         ],
@@ -329,9 +353,8 @@ class _BnkPlaylistChildEditorState extends State<BnkPlaylistChildEditor> {
 
 class BnkSegmentEditor extends ChangeNotifierWidget {
   final BnkSegmentData segment;
-  final BnkSegmentData? prevSegment;
 
-  BnkSegmentEditor({ super.key, required this.segment, this.prevSegment, required List<Listenable> viewNotifiers })
+  BnkSegmentEditor({ super.key, required this.segment, required List<Listenable> viewNotifiers })
     : super(notifiers: [...viewNotifiers, ...segment.markers.map((m) => m.pos)]);
 
   static const headerHeight = 25.0;
@@ -349,7 +372,26 @@ class _BnkSegmentEditorState extends ChangeNotifierState<BnkSegmentEditor> {
     snapPoints = [
       _SnapPoint.value(0),
       ...widget.segment.markers.map((m) => _SnapPoint.prop(m.pos)),
-      ...widget.segment.tracks
+      // ...widget.segment.tracks TODO: add snap points for tracks
+      //   .map((t) => t.clips)
+      //   .expand((c) => c)
+      //   .map((c) => [
+      //     _SnapPoint(() => c.xOff.value + c.beginTrim.value.toDouble(), c.beginTrim),
+      //     _SnapPoint(() => c.xOff.value + c.srcDuration.value + c.endTrim.value.toDouble(), c.endTrim),
+      //     _SnapPoint(() => c.xOff.value.toDouble(), c.xOff),
+      //     _SnapPoint(() => c.xOff.value + c.srcDuration.value.toDouble(), c.srcDuration),
+      //   ])
+      //   .expand((e) => e),
+    ];
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    var viewData = _AudioEditorData.of(context);
+    return _SnapPointsData(
+      staticSnapPoints: snapPoints,
+      dynamicSnapPoints: () => widget.segment.tracks
         .map((t) => t.clips)
         .expand((c) => c)
         .map((c) => [
@@ -359,15 +401,6 @@ class _BnkSegmentEditorState extends ChangeNotifierState<BnkSegmentEditor> {
           _SnapPoint(() => c.xOff.value + c.srcDuration.value.toDouble(), c.srcDuration),
         ])
         .expand((e) => e),
-    ];
-    super.initState();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    var viewData = _AudioEditorData.of(context);
-    return _SnapPointsData(
-      snapPoints: snapPoints,
       child: Builder(
         builder: (context) {
           return Stack(
@@ -387,10 +420,6 @@ class _BnkSegmentEditorState extends ChangeNotifierState<BnkSegmentEditor> {
                   for (var track in widget.segment.tracks)
                     BnkTrackEditor(
                       track: track,
-                      prevTrack: widget.prevSegment?.tracks.firstWhere(
-                        (t) => t.clips.first.srcDuration.value == track.clips.first.srcDuration.value,
-                        orElse: () => widget.prevSegment!.tracks.last,
-                      ),
                       viewData: viewData,
                     ),
                 ],
@@ -416,7 +445,7 @@ class _BnkSegmentEditorState extends ChangeNotifierState<BnkSegmentEditor> {
           child: GestureDetector(
             onHorizontalDragUpdate: (_) {
               var pos = widget.segment.markers[i].pos;
-              var newPos = _mousePosOnTrack(viewData.xOff, viewData.msPerPix, context);
+              var newPos = _getMousePosOnTrack(viewData.xOff, viewData.msPerPix, context);
               newPos = _SnapPointsData.of(context).trySnapTo(newPos, [pos], viewData.msPerPix.value);
               pos.value = newPos;
             },
@@ -478,13 +507,14 @@ class _BnkSegmentEditorState extends ChangeNotifierState<BnkSegmentEditor> {
 
 class BnkTrackEditor extends ChangeNotifierWidget {
   final BnkTrackData track;
-  final BnkTrackData? prevTrack;
   final _AudioEditorData viewData;
 
-  BnkTrackEditor({ super.key, required this.track, this.prevTrack, required this.viewData })
+  BnkTrackEditor({ super.key, required this.track, required this.viewData })
     : super(notifiers: [
       viewData.msPerPix,
       viewData.xOff,
+      viewData.selectedClipUuids,
+      track.clips,
       ...track.clips
         .map((c) => <Listenable>[c.beginTrim, c.endTrim, c.xOff, c.srcDuration])
         .expand((e) => e)
@@ -497,14 +527,16 @@ class BnkTrackEditor extends ChangeNotifierWidget {
 }
 
 class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> {
-  final Set<int> selectedClips = {};
   double? dragStartPos;
   double? initialXOff;
 
   @override
   void initState() {
     Future.wait(widget.track.clips.map((c) => c.loadResource()))
-      .then((_) => setState(() {}));
+      .then((_) {
+        if (mounted)
+          setState(() {});
+      });
     super.initState();
   }
 
@@ -514,7 +546,7 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> {
     return SizedBox(
       height: 60,
       child: GestureDetector(
-        onTap: () => setState(() => selectedClips.clear()),
+        onTap: () => setState(() => viewData.selectedClipUuids.clear()),
         behavior: HitTestBehavior.translucent,
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -556,82 +588,40 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> {
             ContextMenuButtonConfig(
               "Copy offsets",
               icon: const Icon(Icons.copy, size: 16),
-              onPressed: () {
-                var data = {
-                  "beginTrim": clip.beginTrim.value,
-                  "endTrim": clip.endTrim.value,
-                  "xOff": clip.xOff.value,
-                };
-                copyToClipboard(jsonEncode(data));
-              },
+              onPressed: () => _copyOffsets(clip),
             ),
             ContextMenuButtonConfig(
               "Paste offsets",
               icon: const Icon(Icons.paste, size: 16),
-              onPressed: () async {
-                var txt = await getClipboardText();
-                if (txt == null) {
-                  showToast("Clipboard is empty");
-                  return;
-                }
-                var data = jsonDecode(txt) as Map<String, dynamic>;
-                if (!data.containsKey("beginTrim") || !data.containsKey("endTrim") || !data.containsKey("xOff")) {
-                  showToast("Invalid data");
-                  return;
-                }
-                clip.beginTrim.value = data["beginTrim"];
-                clip.endTrim.value = data["endTrim"];
-                clip.xOff.value = data["xOff"];
-              },
+              onPressed: () => _pasteOffsets(clip),
             ),
-            if (i == 0 && widget.prevTrack != null)
+            if (i == 0 && viewData.selectedClipUuids.length >= 2)
               ContextMenuButtonConfig(
-                "Trim start to previous",
+                "Trim start to other selection",
                 icon: const Icon(Icons.cut, size: 16),
-                onPressed: () {
-                  var prevClip = widget.prevTrack!.clips.last;
-                  if (clip.sourceId != prevClip.sourceId) {
-                    showToast("Different sources, can't trim");
-                    return;
-                  }
-                  clip.beginTrim.value = prevClip.srcDuration.value + prevClip.endTrim.value;
-                },
+                onPressed: () => _trimToOtherSelection(clip),
               ),
             ContextMenuButtonConfig(
               "Replace WEM",
               icon: const Icon(Icons.edit, size: 16),
-              onPressed: () {
-                var wemPath = wemFilesLookup.lookup[srcId];
-                if (wemPath == null) {
-                  showToast("WEM file not found");
-                  return;
-                }
-                areasManager.openFile(wemPath);
-              },
+              onPressed: () => _replaceWem(clip),
             ),
             ContextMenuButtonConfig(
               "Open WEM in explorer",
               icon: const Icon(Icons.folder_open, size: 16),
-              onPressed: () {
-                var wemPath = wemFilesLookup.lookup[srcId];
-                if (wemPath == null) {
-                  showToast("WEM file not found");
-                  return;
-                }
-                revealFileInExplorer(wemPath);
-              },
+              onPressed: () => _openWemInExplorer(clip),
             ),
           ],
           child: GestureDetector(
             onTap: () => setState(() {
               if (isCtrlPressed() || isShiftPressed()) {
-                if (selectedClips.contains(i))
-                  selectedClips.remove(i);
+                if (viewData.selectedClipUuids.contains(clip.uuid))
+                  viewData.selectedClipUuids.remove(clip.uuid);
                 else
-                  selectedClips.add(i);
+                  viewData.selectedClipUuids.add(clip.uuid);
               } else {
-                selectedClips.clear();
-                selectedClips.add(i);
+                viewData.selectedClipUuids.clear();
+                viewData.selectedClipUuids.add(clip.uuid);
               }
             }),
             onHorizontalDragStart: (_) {
@@ -639,11 +629,11 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> {
               initialXOff = clip.xOff.value.toDouble();
             },
             onHorizontalDragEnd: (_) => dragStartPos = null,
-            onHorizontalDragUpdate: selectedClips.contains(i) ? (details) {
-              if (selectedClips.length != 1) {
+            onHorizontalDragUpdate: viewData.selectedClipUuids.contains(clip.uuid) ? (details) {
+              if (viewData.selectedClipUuids.length != 1) {
                 double change = details.delta.dx * viewData.msPerPix.value;
-                for (var i in selectedClips) {
-                  var clip = widget.track.clips[i];
+                for (var id in viewData.selectedClipUuids) {
+                  var clip = viewData.getClipByUuid(id)!;
                   clip.xOff.value += change;
                 }
               }
@@ -674,18 +664,24 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> {
               children: [
                 Positioned.fill(
                   child: CustomPaint(
-                    foregroundPainter: clip.resource?.previewSamples != null ? _ClipWaveformPainter(
-                      clip: clip,
-                      viewData: viewData,
-                      lineColor: getTheme(context).editorBackgroundColor!.withOpacity(0.333),
-                      viewWidth: viewWidth,
-                    ) : null,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: getTheme(context).audioColor,
-                        border: Border.all(
-                          color: selectedClips.contains(i) ? getTheme(context).textColor! : Colors.transparent,
-                          width: 1
+                    foregroundPainter: _ClipRtpcPainter(
+                      rtpcPoints: clip.rtpcPoints,
+                      msPerPix: viewData.msPerPix.value,
+                    ),
+                    child: CustomPaint(
+                      foregroundPainter: clip.resource?.previewSamples != null ? _ClipWaveformPainter(
+                        clip: clip,
+                        viewData: viewData,
+                        lineColor: getTheme(context).editorBackgroundColor!.withOpacity(0.333),
+                        viewWidth: viewWidth,
+                      ) : null,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: getTheme(context).audioColor,
+                          border: Border.all(
+                            color: viewData.selectedClipUuids.contains(clip.uuid) ? getTheme(context).textColor! : Colors.transparent,
+                            width: 1
+                          ),
                         ),
                       ),
                     ),
@@ -700,7 +696,7 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> {
                     cursor: SystemMouseCursors.resizeLeftRight,
                     builder: (cxt, isHovering) => GestureDetector(
                       onHorizontalDragUpdate: (details) {
-                        var newBeginTrim = _mousePosOnTrack(viewData.xOff, viewData.msPerPix, context);
+                        var newBeginTrim = _getMousePosOnTrack(viewData.xOff, viewData.msPerPix, context);
                         newBeginTrim = _SnapPointsData.of(context).trySnapTo(newBeginTrim, [clip.beginTrim], viewData.msPerPix.value);
                         newBeginTrim -= clip.xOff.value;
                         newBeginTrim = clamp(newBeginTrim, 0, clip.srcDuration.value - clip.endTrim.value.toDouble());
@@ -721,7 +717,7 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> {
                     cursor: SystemMouseCursors.resizeLeftRight,
                     builder: (cxt, isHovering) => GestureDetector(
                       onHorizontalDragUpdate: (details) {
-                        var newEndTrim = _mousePosOnTrack(viewData.xOff, viewData.msPerPix, context);
+                        var newEndTrim = _getMousePosOnTrack(viewData.xOff, viewData.msPerPix, context);
                         newEndTrim = _SnapPointsData.of(context).trySnapTo(newEndTrim, [clip.endTrim], viewData.msPerPix.value);
                         newEndTrim = clip.xOff.value + clip.srcDuration.value - newEndTrim;
                         newEndTrim = clamp(newEndTrim, 0, clip.srcDuration.value - clip.beginTrim.value.toDouble());
@@ -775,6 +771,66 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> {
           ),
         ),
     ];
+  }
+
+  void _copyOffsets(BnkTrackClip clip) {
+    var data = {
+      "beginTrim": clip.beginTrim.value,
+      "endTrim": clip.endTrim.value,
+      "xOff": clip.xOff.value,
+    };
+    copyToClipboard(jsonEncode(data));
+  }
+
+  void _pasteOffsets(BnkTrackClip clip) async {
+    var txt = await getClipboardText();
+    if (txt == null) {
+      showToast("Clipboard is empty");
+      return;
+    }
+    var data = jsonDecode(txt) as Map<String, dynamic>;
+    if (!data.containsKey("beginTrim") || !data.containsKey("endTrim") || !data.containsKey("xOff")) {
+      showToast("Invalid data");
+      return;
+    }
+    clip.beginTrim.value = data["beginTrim"];
+    clip.endTrim.value = data["endTrim"];
+    clip.xOff.value = data["xOff"];
+  }
+
+  void _trimToOtherSelection(BnkTrackClip clip) {
+    var data = _AudioEditorData.of(context);
+    if (data.selectedClipUuids.length != 2) {
+      showToast("Please select 2 clips");
+      return;
+    }
+    var otherClipUuid = data.selectedClipUuids.firstWhere((element) => element != clip.uuid);
+    var otherClip = data.getClipByUuid(otherClipUuid);
+    if (otherClip == null) {
+      showToast("Clip not found");
+      return;
+    }
+    clip.beginTrim.value = otherClip.srcDuration.value + otherClip.endTrim.value;
+  }
+
+  void _replaceWem(BnkTrackClip clip) {
+    var srcId = widget.track.srcTrack.sources.first.sourceID;
+    var wemPath = wemFilesLookup.lookup[srcId];
+    if (wemPath == null) {
+      showToast("WEM file not found");
+      return;
+    }
+    areasManager.openFile(wemPath);
+  }
+
+  void _openWemInExplorer(BnkTrackClip clip) {
+    var srcId = widget.track.srcTrack.sources.first.sourceID;
+    var wemPath = wemFilesLookup.lookup[srcId];
+    if (wemPath == null) {
+      showToast("WEM file not found");
+      return;
+    }
+    revealFileInExplorer(wemPath);
   }
 }
 
@@ -833,6 +889,78 @@ class _ClipWaveformPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
 
+class _ClipRtpcPainter extends CustomPainter {
+  final Map<int, List<BnkClipRtpcPoint>> rtpcPoints;
+  final double msPerPix;
+
+  _ClipRtpcPainter({ required this.rtpcPoints, required this.msPerPix });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (var rtpcType in rtpcPoints.keys) {
+      _paintRtpcCurve(canvas, size, rtpcType, rtpcPoints[rtpcType]!);
+    }
+  }
+
+  Color _getCurveColor(int type) {
+    if (type == ClipAutomationType.volume.value)
+      return Colors.red;
+    if (type == ClipAutomationType.fadeIn.value)
+      return Colors.teal;
+    if (type == ClipAutomationType.fadeOut.value)
+      return Colors.teal;
+    if (type == ClipAutomationType.lpf.value)
+      return Colors.blue.shade900;
+    if (type == ClipAutomationType.hpf.value)
+      return Colors.blue.shade300;
+    return Colors.green;
+  }
+
+  double _getScaledY(int type, double y) {
+    if (type == ClipAutomationType.volume.value)
+      return -y;
+    if (type == ClipAutomationType.lpf.value)
+      return (100 - y) / 100;
+    if (type == ClipAutomationType.hpf.value)
+      return (100 - y) / 100;
+    return y;
+  }
+
+  void _paintRtpcCurve(Canvas canvas, Size size, int type, List<BnkClipRtpcPoint> points) {
+    var paint = Paint()
+      ..color = _getCurveColor(type)
+      ..strokeWidth = 2.5
+      ..style = PaintingStyle.stroke;
+    
+    var path = Path();
+
+    var prevPoint = points.first;
+    for (var i = 1; i < points.length; i++) {
+      var point = points[i];
+      var prevX = prevPoint.x.value / msPerPix;
+      var prevY = size.height - prevPoint.y.value * size.height;
+      var x = point.x.value / msPerPix;
+      double y;
+      if (prevPoint.interpolationType == RtpcPointInterpolationType.constant.value)
+        y = prevY;
+      else
+        y = size.height - point.y.value * size.height;
+      y = _getScaledY(type, y);
+      path.moveTo(prevX, prevY);
+      path.lineTo(x, y);
+      prevPoint = point;
+    }
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    return true;
+  }
+
+}
+
 class Timeline extends ChangeNotifierWidget {
   final double headerHeight;
 
@@ -889,7 +1017,7 @@ class _TimelinePainter extends CustomPainter {
     2000: 0.25,
     5000: 0.5,
     10000: 1,
-    20000: 2.5,
+    20000: 2,
     50000: 5,
     100000: 10,
     200000: 20,
