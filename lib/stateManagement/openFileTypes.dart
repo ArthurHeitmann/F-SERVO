@@ -1059,6 +1059,8 @@ class BnkTrackClip with HasUuid, Undoable {
     beginTrim.dispose();
     endTrim.dispose();
     srcDuration.dispose();
+    resource?.dispose();
+    resource = null;
     for (var points in rtpcPoints.values) {
       for (var point in points) {
         point.dispose();
@@ -1160,10 +1162,6 @@ class BnkTrackData with HasUuid, Undoable {
   }
 
   void applyTo(BnkMusicTrack newTrack) {
-    // if (clips.length != newTrack.playlists.length)
-    //   throw Exception("Can't apply track data to a different track");
-    // for (var i = 0; i < clips.length; i++)
-    //   clips[i].applyTo(newTrack.playlists[i]);
     int minLen = min(clips.length, newTrack.playlists.length);
     // common
     for (var i = 0; i < minLen; i++)
@@ -1175,7 +1173,7 @@ class BnkTrackData with HasUuid, Undoable {
     }
     // removed
     newTrack.playlists.removeRange(minLen, newTrack.playlists.length);
-    // length
+    
     newTrack.numPlaylistItem = clips.length;
   }
 

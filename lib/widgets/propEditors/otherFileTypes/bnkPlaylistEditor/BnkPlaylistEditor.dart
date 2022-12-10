@@ -7,21 +7,20 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:tuple/tuple.dart';
 
-import '../../../background/wemFilesIndexer.dart';
-import '../../../fileTypeUtils/audio/bnkIO.dart';
-import '../../../fileTypeUtils/audio/wemIdsToNames.dart';
-import '../../../stateManagement/ChangeNotifierWidget.dart';
-import '../../../stateManagement/Property.dart';
-import '../../../stateManagement/nestedNotifier.dart';
-import '../../../stateManagement/openFileTypes.dart';
-import '../../../stateManagement/openFilesManager.dart';
-import '../../../utils/utils.dart';
-import '../../misc/CustomIcons.dart';
-import '../../misc/mousePosition.dart';
-import '../../misc/nestedContextMenu.dart';
-import '../../misc/onHoverBuilder.dart';
-import '../../theme/customTheme.dart';
-import 'AudioFileEditor.dart';
+import '../../../../background/wemFilesIndexer.dart';
+import '../../../../fileTypeUtils/audio/wemIdsToNames.dart';
+import '../../../../stateManagement/ChangeNotifierWidget.dart';
+import '../../../../stateManagement/Property.dart';
+import '../../../../stateManagement/nestedNotifier.dart';
+import '../../../../stateManagement/openFileTypes.dart';
+import '../../../../stateManagement/openFilesManager.dart';
+import '../../../../utils/utils.dart';
+import '../../../misc/CustomIcons.dart';
+import '../../../misc/mousePosition.dart';
+import '../../../misc/nestedContextMenu.dart';
+import '../../../misc/onHoverBuilder.dart';
+import '../../../theme/customTheme.dart';
+import 'audioSequenceController.dart';
 
 class _AudioEditorData extends InheritedWidget {
   final ValueNotifier<double> msPerPix;
@@ -274,6 +273,13 @@ class BnkPlaylistChildEditor extends StatefulWidget {
 class _BnkPlaylistChildEditorState extends State<BnkPlaylistChildEditor> {
   bool isCollapsed = false;
   BnkSegmentData? get segment => widget.plSegment.segment;
+  PlaybackController? playbackController;
+
+  @override
+  void dispose() {
+    playbackController?.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -313,6 +319,31 @@ class _BnkPlaylistChildEditorState extends State<BnkPlaylistChildEditor> {
                     )
                     : const SizedBox()
                 ),
+                if (segment != null) ...[
+                  StreamBuilder(
+                    stream: playbackController?.isPlayingStream,
+                    builder: (context, snapshot) {
+                      return IconButton(
+                        iconSize: 20,
+                        splashRadius: 20,
+                        icon: playbackController?.isPlaying == true
+                          ? const Icon(Icons.pause)
+                          : const Icon(Icons.play_arrow),
+                        onPressed: _togglePlayback,
+                      );
+                    }
+                  ),
+                  StreamBuilder(
+                    stream: playbackController?.positionStream,
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData && snapshot.data != null) {
+                        var pos = snapshot.data as double;
+                        return Text(formatDuration(Duration(milliseconds: pos.toInt())));
+                      }
+                      return const Text("00:00");
+                    }
+                  ),
+                ],
               ],
             ),
           ),
@@ -348,6 +379,15 @@ class _BnkPlaylistChildEditorState extends State<BnkPlaylistChildEditor> {
       );
     }
     return inner;
+  }
+
+  void _togglePlayback() {
+    playbackController ??= BnkSegmentPlaybackController(widget.plSegment, segment!);
+    if (playbackController!.isPlaying)
+      playbackController!.pause();
+    else
+      playbackController!.play();
+    setState(() {});
   }
 }
 
@@ -515,10 +555,6 @@ class BnkTrackEditor extends ChangeNotifierWidget {
       viewData.xOff,
       viewData.selectedClipUuids,
       track.clips,
-      ...track.clips
-        .map((c) => <Listenable>[c.beginTrim, c.endTrim, c.xOff, c.srcDuration])
-        .expand((e) => e)
-        .toList(),
     ]
   );
 
@@ -528,7 +564,7 @@ class BnkTrackEditor extends ChangeNotifierWidget {
 
 class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> {
   double? dragStartPos;
-  double? initialXOff;
+  Map<String, double>? initialXOff;
 
   @override
   void initState() {
@@ -571,205 +607,194 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> {
     var srcId = widget.track.srcTrack.sources.first.sourceID;
     return [
       if (clip == widget.track.clips.first)
-        Positioned(
-          left: (clip.xOff.value) / viewData.msPerPix.value + viewData.xOff.value,
-          width: (clip.beginTrim.value) / viewData.msPerPix.value,
-          height: 60,
-          child: Container(
-            color: getTheme(context).audioDisabledColor,
-          ),
-        ),
-      Positioned(
-        left: (clip.xOff.value + clip.beginTrim.value) / viewData.msPerPix.value + viewData.xOff.value,
-        width: (clip.srcDuration.value - clip.beginTrim.value + clip.endTrim.value) / viewData.msPerPix.value,
-        height: 60,
-        child: NestedContextMenu(
-          buttons: [
-            ContextMenuButtonConfig(
-              "Copy offsets",
-              icon: const Icon(Icons.copy, size: 16),
-              onPressed: () => _copyOffsets(clip),
-            ),
-            ContextMenuButtonConfig(
-              "Paste offsets",
-              icon: const Icon(Icons.paste, size: 16),
-              onPressed: () => _pasteOffsets(clip),
-            ),
-            if (i == 0 && viewData.selectedClipUuids.length >= 2)
-              ContextMenuButtonConfig(
-                "Trim start to other selection",
-                icon: const Icon(Icons.cut, size: 16),
-                onPressed: () => _trimToOtherSelection(clip),
+        ChangeNotifierBuilder(
+          key: Key("${clip.uuid}_left"),
+          notifiers: _getClipNotifiers(clip),
+          builder: (context) {
+            return Positioned(
+              left: (clip.xOff.value) / viewData.msPerPix.value + viewData.xOff.value,
+              width: (clip.beginTrim.value) / viewData.msPerPix.value,
+              height: 60,
+              child: Container(
+                color: getTheme(context).audioDisabledColor,
               ),
-            ContextMenuButtonConfig(
-              "Replace WEM",
-              icon: const Icon(Icons.edit, size: 16),
-              onPressed: () => _replaceWem(clip),
-            ),
-            ContextMenuButtonConfig(
-              "Open WEM in explorer",
-              icon: const Icon(Icons.folder_open, size: 16),
-              onPressed: () => _openWemInExplorer(clip),
-            ),
-          ],
-          child: GestureDetector(
-            onTap: () => setState(() {
-              if (isCtrlPressed() || isShiftPressed()) {
-                if (viewData.selectedClipUuids.contains(clip.uuid))
-                  viewData.selectedClipUuids.remove(clip.uuid);
-                else
-                  viewData.selectedClipUuids.add(clip.uuid);
-              } else {
-                viewData.selectedClipUuids.clear();
-                viewData.selectedClipUuids.add(clip.uuid);
-              }
-            }),
-            onHorizontalDragStart: (_) {
-              dragStartPos = MousePosition.pos.dx;
-              initialXOff = clip.xOff.value.toDouble();
-            },
-            onHorizontalDragEnd: (_) => dragStartPos = null,
-            onHorizontalDragUpdate: viewData.selectedClipUuids.contains(clip.uuid) ? (details) {
-              if (viewData.selectedClipUuids.length != 1) {
-                double change = details.delta.dx * viewData.msPerPix.value;
-                for (var id in viewData.selectedClipUuids) {
-                  var clip = viewData.getClipByUuid(id)!;
-                  clip.xOff.value += change;
-                }
-              }
-              if (dragStartPos == null) {
-                dragStartPos = MousePosition.pos.dx;
-                return;
-              }
-              var change = (MousePosition.pos.dx - dragStartPos!) * viewData.msPerPix.value;
-              clip.xOff.value = (initialXOff! + change).roundToDouble();
-              List<Tuple2<num, List<NumberProp>>> snapAnchors = [
-                Tuple2(clip.xOff.value + clip.beginTrim.value, [clip.beginTrim, if (clip.beginTrim.value == 0) clip.xOff]),
-                Tuple2(clip.xOff.value + clip.srcDuration.value + clip.endTrim.value, [clip.endTrim, if (clip.endTrim.value == 0) clip.srcDuration]),
-                Tuple2(clip.xOff.value, [clip.xOff, if (clip.beginTrim.value == 0) clip.beginTrim]),
-                Tuple2(clip.xOff.value + clip.srcDuration.value, [clip.srcDuration, if (clip.endTrim.value == 0) clip.endTrim]),
-              ];
-              var snapPoints = _SnapPointsData.of(context);
-              for (var anchor in snapAnchors) {
-                var snap = snapPoints.tryFindSnapPoint(anchor.item1.toDouble(), anchor.item2, viewData.msPerPix.value);
-                if (snap == null)
-                  continue;
-                var snapVal = snap.getPos();
-                var diff = snapVal - anchor.item1;
-                clip.xOff.value += diff;
-                break;
-              }
-            } : null,
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: CustomPaint(
-                    foregroundPainter: _ClipRtpcPainter(
-                      rtpcPoints: clip.rtpcPoints,
-                      msPerPix: viewData.msPerPix.value,
+            );
+          }
+        ),
+      ChangeNotifierBuilder(
+        key: Key("${clip.uuid}_main"),
+        notifiers: _getClipNotifiers(clip),
+        builder: (context) {
+          return Positioned(
+            left: (clip.xOff.value + clip.beginTrim.value) / viewData.msPerPix.value + viewData.xOff.value,
+            width: (clip.srcDuration.value - clip.beginTrim.value + clip.endTrim.value) / viewData.msPerPix.value,
+            height: 60,
+            child: NestedContextMenu(
+              buttons: [
+                ContextMenuButtonConfig(
+                  "Duplicate",
+                  icon: const Icon(Icons.copy_all, size: 16),
+                  onPressed: () => _duplicateClip(clip),
+                ),
+                ContextMenuButtonConfig(
+                  "Delete",
+                  icon: const Icon(Icons.delete, size: 16),
+                  onPressed: () => _deleteClip(clip),
+                ),
+                ContextMenuButtonConfig(
+                  "Copy offsets",
+                  icon: const Icon(Icons.copy, size: 16),
+                  onPressed: () => _copyOffsets(clip),
+                ),
+                ContextMenuButtonConfig(
+                  "Paste offsets",
+                  icon: const Icon(Icons.paste, size: 16),
+                  onPressed: () => _pasteOffsets(clip),
+                ),
+                if (i == 0 && viewData.selectedClipUuids.length >= 2)
+                  ContextMenuButtonConfig(
+                    "Trim start to other selection",
+                    icon: const Icon(Icons.cut, size: 16),
+                    onPressed: () => _trimToOtherSelection(clip),
+                  ),
+                ContextMenuButtonConfig(
+                  "Replace WEM",
+                  icon: const Icon(Icons.edit, size: 16),
+                  onPressed: () => _replaceWem(clip),
+                ),
+                ContextMenuButtonConfig(
+                  "Open WEM in explorer",
+                  icon: const Icon(Icons.folder_open, size: 16),
+                  onPressed: () => _openWemInExplorer(clip),
+                ),
+              ],
+              child: GestureDetector(
+                onTap: () => _selectClip(clip),
+                onHorizontalDragStart: (_) {
+                  dragStartPos = MousePosition.pos.dx;
+                  initialXOff = {
+                    for (var id in viewData.selectedClipUuids)
+                      id: viewData.getClipByUuid(id)!.xOff.value.toDouble(),
+                  };
+                },
+                onHorizontalDragEnd: (_) => dragStartPos = null,
+                onHorizontalDragUpdate: viewData.selectedClipUuids.contains(clip.uuid)
+                  ? (details) => _moveSelectedClips(details, clip)
+                  : null,
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: CustomPaint(
+                        foregroundPainter: _ClipRtpcPainter(
+                          rtpcPoints: clip.rtpcPoints,
+                          msPerPix: viewData.msPerPix.value,
+                        ),
+                        child: CustomPaint(
+                          foregroundPainter: clip.resource?.previewSamples != null ? _ClipWaveformPainter(
+                            clip: clip,
+                            viewData: viewData,
+                            lineColor: getTheme(context).editorBackgroundColor!.withOpacity(0.333),
+                            viewWidth: viewWidth,
+                          ) : null,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: getTheme(context).audioColor,
+                              border: Border.all(
+                                color: viewData.selectedClipUuids.contains(clip.uuid) ? getTheme(context).textColor! : Colors.transparent,
+                                width: 1
+                              ),
+                            ),
+                          ),
+                        ),
+                      )
                     ),
-                    child: CustomPaint(
-                      foregroundPainter: clip.resource?.previewSamples != null ? _ClipWaveformPainter(
-                        clip: clip,
-                        viewData: viewData,
-                        lineColor: getTheme(context).editorBackgroundColor!.withOpacity(0.333),
-                        viewWidth: viewWidth,
-                      ) : null,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: getTheme(context).audioColor,
-                          border: Border.all(
-                            color: viewData.selectedClipUuids.contains(clip.uuid) ? getTheme(context).textColor! : Colors.transparent,
-                            width: 1
+                    Positioned(
+                      left: 0,
+                      top: 0,
+                      bottom: 0,
+                      width: 5,
+                      child: OnHoverBuilder(
+                        cursor: SystemMouseCursors.resizeLeftRight,
+                        builder: (cxt, isHovering) => GestureDetector(
+                          onHorizontalDragUpdate: (_) => _onBeginTrimDrag(clip),
+                          child: Container(
+                            color: isHovering ? getTheme(context).textColor!.withOpacity(0.5) : Colors.transparent,
                           ),
                         ),
                       ),
                     ),
-                  )
-                ),
-                Positioned(
-                  left: 0,
-                  top: 0,
-                  bottom: 0,
-                  width: 5,
-                  child: OnHoverBuilder(
-                    cursor: SystemMouseCursors.resizeLeftRight,
-                    builder: (cxt, isHovering) => GestureDetector(
-                      onHorizontalDragUpdate: (details) {
-                        var newBeginTrim = _getMousePosOnTrack(viewData.xOff, viewData.msPerPix, context);
-                        newBeginTrim = _SnapPointsData.of(context).trySnapTo(newBeginTrim, [clip.beginTrim], viewData.msPerPix.value);
-                        newBeginTrim -= clip.xOff.value;
-                        newBeginTrim = clamp(newBeginTrim, 0, clip.srcDuration.value - clip.endTrim.value.toDouble());
-                        clip.beginTrim.value = newBeginTrim;
-                      },
+                    Positioned(
+                      right: 0,
+                      top: 0,
+                      bottom: 0,
+                      width: 5,
+                      child: OnHoverBuilder(
+                        cursor: SystemMouseCursors.resizeLeftRight,
+                        builder: (cxt, isHovering) => GestureDetector(
+                          onHorizontalDragUpdate: (_) => _onEndTrimDrag(clip),
+                          child: Container(
+                            color: isHovering ? getTheme(context).textColor!.withOpacity(0.5) : Colors.transparent,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      height: 16,
                       child: Container(
-                        color: isHovering ? getTheme(context).textColor!.withOpacity(0.5) : Colors.transparent,
+                        color: getTheme(context).audioLabelColor,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 6),
+                          child: Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  "$srcId (${wemIdsToNames[srcId] ?? "..."})",
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: getTheme(context).editorBackgroundColor,
+                                    fontFamily: "FiraCode",
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              )
+                            ],
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
-                Positioned(
-                  right: 0,
-                  top: 0,
-                  bottom: 0,
-                  width: 5,
-                  child: OnHoverBuilder(
-                    cursor: SystemMouseCursors.resizeLeftRight,
-                    builder: (cxt, isHovering) => GestureDetector(
-                      onHorizontalDragUpdate: (details) {
-                        var newEndTrim = _getMousePosOnTrack(viewData.xOff, viewData.msPerPix, context);
-                        newEndTrim = _SnapPointsData.of(context).trySnapTo(newEndTrim, [clip.endTrim], viewData.msPerPix.value);
-                        newEndTrim = clip.xOff.value + clip.srcDuration.value - newEndTrim;
-                        newEndTrim = clamp(newEndTrim, 0, clip.srcDuration.value - clip.beginTrim.value.toDouble());
-                        clip.endTrim.value = -newEndTrim;
-                      },
-                      child: Container(
-                        color: isHovering ? getTheme(context).textColor!.withOpacity(0.5) : Colors.transparent,
-                      ),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  height: 16,
-                  child: Container(
-                    color: getTheme(context).audioLabelColor,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 6),
-                      child: Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              "$srcId (${wemIdsToNames[srcId] ?? "..."})",
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                color: getTheme(context).editorBackgroundColor,
-                                fontFamily: "FiraCode",
-                                fontSize: 11,
-                              ),
-                            ),
-                          )
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
-        ),
+          );
+        }
       ),
       if (clip == widget.track.clips.last)
-        Positioned(
-          left: (clip.xOff.value + clip.srcDuration.value + clip.endTrim.value) / viewData.msPerPix.value + viewData.xOff.value,
-          width: (-clip.endTrim.value) / viewData.msPerPix.value,
-          height: 60,
-          child: Container(
-            color: getTheme(context).audioDisabledColor,
-          ),
+        ChangeNotifierBuilder(
+          key: Key("${clip.uuid}_right"),
+          notifiers: _getClipNotifiers(clip),
+          builder: (context) {
+            return Positioned(
+              left: (clip.xOff.value + clip.srcDuration.value + clip.endTrim.value) / viewData.msPerPix.value + viewData.xOff.value,
+              width: (-clip.endTrim.value) / viewData.msPerPix.value,
+              height: 60,
+              child: Container(
+                color: getTheme(context).audioDisabledColor,
+              ),
+            );
+          }
         ),
+    ];
+  }
+
+  List<Listenable> _getClipNotifiers(BnkTrackClip clip) {
+    return [
+      clip.xOff,
+      clip.beginTrim,
+      clip.endTrim,
     ];
   }
 
@@ -831,6 +856,86 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> {
       return;
     }
     revealFileInExplorer(wemPath);
+  }
+
+  void _selectClip(BnkTrackClip clip) {
+    var viewData = _AudioEditorData.of(context);
+    if (isCtrlPressed() || isShiftPressed()) {
+      if (viewData.selectedClipUuids.contains(clip.uuid))
+        viewData.selectedClipUuids.remove(clip.uuid);
+      else
+        viewData.selectedClipUuids.add(clip.uuid);
+    } else {
+      viewData.selectedClipUuids.clear();
+      viewData.selectedClipUuids.add(clip.uuid);
+    }
+  }
+
+  void _moveSelectedClips(DragUpdateDetails details, BnkTrackClip clip) {
+    var viewData = _AudioEditorData.of(context);
+    if (dragStartPos == null) {
+      dragStartPos = MousePosition.pos.dx;
+      return;
+    }
+    var change = (MousePosition.pos.dx - dragStartPos!) * viewData.msPerPix.value;
+    for (var id in viewData.selectedClipUuids) {
+      var clip = viewData.getClipByUuid(id)!;
+      clip.xOff.value = (initialXOff![id]! + change).roundToDouble();
+    }
+    List<Tuple2<num, List<NumberProp>>> snapAnchors = [
+      Tuple2(clip.xOff.value + clip.beginTrim.value, [clip.beginTrim, if (clip.beginTrim.value == 0) clip.xOff]),
+      Tuple2(clip.xOff.value + clip.srcDuration.value + clip.endTrim.value, [clip.endTrim, if (clip.endTrim.value == 0) clip.srcDuration]),
+      Tuple2(clip.xOff.value, [clip.xOff, if (clip.beginTrim.value == 0) clip.beginTrim]),
+      Tuple2(clip.xOff.value + clip.srcDuration.value, [clip.srcDuration, if (clip.endTrim.value == 0) clip.endTrim]),
+    ];
+    var snapPoints = _SnapPointsData.of(context);
+    for (var anchor in snapAnchors) {
+      var snap = snapPoints.tryFindSnapPoint(anchor.item1.toDouble(), anchor.item2, viewData.msPerPix.value);
+      if (snap == null)
+        continue;
+      var snapVal = snap.getPos();
+      var diff = snapVal - anchor.item1;
+      for (var id in viewData.selectedClipUuids) {
+        var clip = viewData.getClipByUuid(id)!;
+        clip.xOff.value += diff;
+      }
+      break;
+    }
+  }
+
+  void _onBeginTrimDrag(BnkTrackClip clip) {
+    var viewData = _AudioEditorData.of(context);
+    var newBeginTrim = _getMousePosOnTrack(viewData.xOff, viewData.msPerPix, context);
+    newBeginTrim = _SnapPointsData.of(context).trySnapTo(newBeginTrim, [clip.beginTrim], viewData.msPerPix.value);
+    newBeginTrim -= clip.xOff.value;
+    newBeginTrim = clamp(newBeginTrim, 0, clip.srcDuration.value - clip.endTrim.value.toDouble());
+    clip.beginTrim.value = newBeginTrim;
+  }
+
+  void _onEndTrimDrag(BnkTrackClip clip) {
+    var viewData = _AudioEditorData.of(context);
+    var newEndTrim = _getMousePosOnTrack(viewData.xOff, viewData.msPerPix, context);
+    newEndTrim = _SnapPointsData.of(context).trySnapTo(newEndTrim, [clip.endTrim], viewData.msPerPix.value);
+    newEndTrim = clip.xOff.value + clip.srcDuration.value - newEndTrim;
+    newEndTrim = clamp(newEndTrim, 0, clip.srcDuration.value - clip.beginTrim.value.toDouble());
+    clip.endTrim.value = -newEndTrim;
+  }
+
+  void _duplicateClip(BnkTrackClip clip) {
+    var newClip = clip.duplicate();
+    newClip.xOff.value += clip.srcDuration.value - clip.beginTrim.value + clip.endTrim.value;
+    newClip.loadResource().then((value) => setState(() {}));
+    widget.track.clips.add(newClip);
+    var viewData = _AudioEditorData.of(context);
+    viewData.selectedClipUuids.clear();
+    viewData.selectedClipUuids.add(newClip.uuid);
+  }
+
+  void _deleteClip(BnkTrackClip clip) {
+    var viewData = _AudioEditorData.of(context);
+    viewData.selectedClipUuids.remove(clip.uuid);
+    widget.track.clips.remove(clip);
+    clip.dispose();
   }
 }
 
