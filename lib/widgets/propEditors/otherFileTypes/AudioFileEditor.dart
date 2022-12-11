@@ -1,24 +1,15 @@
 
 import 'dart:async';
-import 'dart:convert';
 import 'dart:math';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
-import '../../../stateManagement/ChangeNotifierWidget.dart';
-import '../../../stateManagement/Property.dart';
-import '../../../stateManagement/nestedNotifier.dart';
 import '../../../stateManagement/openFileTypes.dart';
 import '../../../utils/utils.dart';
-import '../../misc/FlexReorderable.dart';
 import '../../misc/mousePosition.dart';
 import '../../theme/customTheme.dart';
-import '../simpleProps/AudioSampleNumberPropTextField.dart';
-import '../simpleProps/UnderlinePropTextField.dart';
-import '../simpleProps/propEditorFactory.dart';
-import '../simpleProps/propTextField.dart';
 
 class AudioFileEditor extends StatefulWidget {
   final AudioFileData file;
@@ -156,22 +147,23 @@ class _AudioFileEditorState extends State<AudioFileEditor> {
   }
 }
 
-class _TimelineEditor extends ChangeNotifierWidget {
+class _TimelineEditor extends StatefulWidget {
   final AudioFileData file;
   final AudioPlayer? player;
   final bool lockControls;
   final ValueNotifier<int> viewStart;
   final ValueNotifier<int> viewEnd;
 
-  _TimelineEditor({ required this.file, required this.player,
-    required this.lockControls, required this.viewStart, required this.viewEnd })
-    : super(notifier: file.cuePoints);
+  const _TimelineEditor({
+    required this.file, required this.player, required this.lockControls,
+    required this.viewStart, required this.viewEnd
+  });
 
   @override
   State<_TimelineEditor> createState() => __TimelineEditorState();
 }
 
-class __TimelineEditorState extends ChangeNotifierState<_TimelineEditor> {
+class __TimelineEditorState extends State<_TimelineEditor> {
   int _currentPosition = 0;
   late StreamSubscription<Duration> updateSub;
   ValueNotifier<int> get viewStart => widget.viewStart;
@@ -485,183 +477,6 @@ class _WaveformPainter extends CustomPainter {
   }
 }
 
-// class _CurrentPositionMarker extends StatefulWidget {
-//   final void Function(double delta) onDrag;
-//   final Stream<Duration> positionChangeStream;
-//
-//   const _CurrentPositionMarker({ super.key, required this.onDrag, required this.positionChangeStream });
-//
-//   @override
-//   State<_CurrentPositionMarker> createState() => _CurrentPositionMarkerState();
-// }
-//
-// class _CurrentPositionMarkerState extends State<_CurrentPositionMarker> {
-//   late final StreamSubscription<Duration> _positionChangeSubscription;
-//
-//   @override
-//   void initState() {
-//     super.initState();
-//     _positionChangeSubscription = widget.positionChangeStream.listen((position) {
-//       print("position changed: $position");
-//       setState(() {});
-//     });
-//   }
-//
-//   @override
-//   void dispose() {
-//     _positionChangeSubscription.cancel();
-//     MousePosition.removeDragListener(_onDrag);
-//     MousePosition.removeDragEndListener(_onDragEnd);
-//     super.dispose();
-//   }
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return DebugContainer(
-//       child: GestureDetector(
-//         onPanStart: (_) {
-//           MousePosition.addDragListener(_onDrag);
-//           MousePosition.addDragEndListener(_onDragEnd);
-//         },
-//         behavior: HitTestBehavior.translucent,
-//         child: Padding(
-//           padding: const EdgeInsets.symmetric(horizontal: 12),
-//           child: Container(
-//             width: 2,
-//             color: Theme.of(context).colorScheme.secondary,
-//           ),
-//         ),
-//       ),
-//     );
-//   }
-//
-//   void _onDrag(Offset pos) {
-//     print("drag $pos");
-//     var renderBox = context.findRenderObject() as RenderBox;
-//     var localPos = renderBox.globalToLocal(pos);
-//     widget.onDrag(localPos.dx);
-//   }
-//
-//   void _onDragEnd() {
-//     MousePosition.removeDragListener(_onDrag);
-//     MousePosition.removeDragEndListener(_onDragEnd);
-//   }
-// }
-
-class _CuePointMarker extends ChangeNotifierWidget {
-  final CuePointMarker cuePoint;
-  final ValueNotifier<int> viewStart;
-  final ValueNotifier<int> viewEnd;
-  final int totalSamples;
-  final int samplesPerSec;
-  final double parentWidth;
-  final void Function(double xPos, CuePointMarker cuePoint) onDrag;
-
-  _CuePointMarker({
-    required this.cuePoint,
-    required this.viewStart, required this.viewEnd,
-    required this.totalSamples, required this.samplesPerSec,
-    required this.parentWidth, required this.onDrag,
-  }) : super(notifiers: [viewStart, viewEnd, cuePoint.sample]);
-
-  @override
-  State<_CuePointMarker> createState() => __CuePointMarkerState();
-}
-
-class __CuePointMarkerState extends ChangeNotifierState<_CuePointMarker> {
-  OverlayEntry? _textOverlay;
-
-  @override
-  void dispose() {
-    MousePosition.removeDragListener(_onDrag);
-    MousePosition.removeDragEndListener(_onDragEnd);
-    _textOverlay?.remove();
-    super.dispose();
-  }
-
-  void onMouseEnter(_) {
-    var renderBox = context.findRenderObject() as RenderBox;
-    var pos = renderBox.localToGlobal(Offset.zero); 
-    var size = renderBox.size;
-    var isOnLeftSide = MousePosition.pos.dx < MediaQuery.of(context).size.width / 2;
-
-    _textOverlay = OverlayEntry(
-      builder: (context) => Positioned(
-        left: isOnLeftSide ? pos.dx + size.width / 2 : null,
-        right: isOnLeftSide ? null : MediaQuery.of(context).size.width - pos.dx,
-        top: pos.dy - 15,
-        child: Material(
-          color: Colors.transparent,
-          child: Text(
-            widget.cuePoint.name.value,
-            style: TextStyle(
-              color: getTheme(context).textColor!.withOpacity(0.8),
-              fontSize: 12,
-              fontFamily: "FiraCode",
-            ),
-          )
-        ),
-      ),
-    );
-    Overlay.of(context)!.insert(_textOverlay!);
-  }
-
-  void onMouseLeave(_) {
-    _textOverlay?.remove();
-    _textOverlay = null;    
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (!between(widget.cuePoint.sample.value, widget.viewStart.value, widget.viewEnd.value))
-      return const SizedBox.shrink();
-    
-    const double leftPadding = 8;
-    return MouseRegion(
-      onEnter: onMouseEnter,
-      onExit: onMouseLeave,
-      child: Stack(
-        children: [
-          Positioned(
-            left: -17,
-            top: -21.5,
-            child: Icon(
-              Icons.arrow_drop_down_rounded,
-              color: getTheme(context).audioColor,
-              size: 50,
-            ),
-          ),
-          // line
-          Positioned(
-            child: GestureDetector(
-              onPanStart: (_) {
-                MousePosition.addDragListener(_onDrag);
-                MousePosition.addDragEndListener(_onDragEnd);
-              },
-              behavior: HitTestBehavior.translucent,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: leftPadding),
-                child: Container(
-                  width: 2,
-                  color: getTheme(context).audioColor,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _onDrag(Offset pos) {
-    widget.onDrag(pos.dx, widget.cuePoint);
-  }
-
-  void _onDragEnd() {
-    MousePosition.removeDragListener(_onDrag);
-    MousePosition.removeDragEndListener(_onDragEnd);
-  }
-}
 
 class DurationStream extends StreamBuilder<Duration> {
   final Duration? fallback;
@@ -678,155 +493,4 @@ class DurationStream extends StreamBuilder<Duration> {
         return const Text("00:00");
     }
   );
-}
-
-class _CuePointsEditor extends ChangeNotifierWidget {
-  final NestedNotifier<CuePointMarker> cuePoints;
-  final AudioFileData file;
-
-  _CuePointsEditor({ required this.cuePoints, required this.file }) : super(notifier: cuePoints);
-
-  @override
-  State<_CuePointsEditor> createState() => __CuePointsEditorState();
-}
-
-class __CuePointsEditorState extends ChangeNotifierState<_CuePointsEditor> {
-  @override
-  Widget build(BuildContext context) {
-    return ColumnReorderable(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      onReorder: widget.cuePoints.move,
-      header: Row(
-        children: [
-          const SizedBox(
-            width: 170,
-            child: Text("Time", textAlign: TextAlign.center, textScaleFactor: 0.9, style: TextStyle(fontFamily: "FiraCode"),),
-          ),
-          const SizedBox(width: 8),
-          const SizedBox(
-            width: 150,
-            child: Text("Cue Point Name", textAlign: TextAlign.center, textScaleFactor: 0.9, style: TextStyle(fontFamily: "FiraCode"),),
-          ),
-          IconButton(
-            onPressed: _copyToClipboard,
-            iconSize: 14,
-            splashRadius: 18,
-            icon: const Icon(Icons.copy),
-          ),
-          IconButton(
-            onPressed: _pasteFromClipboard,
-            iconSize: 14,
-            splashRadius: 18,
-            icon: const Icon(Icons.paste),
-          ),
-        ],
-      ),
-      footer: Row(
-        children: [
-          const SizedBox(width: 170 + 8 + 150 + 27),
-          IconButton(
-            onPressed: () {
-              widget.cuePoints.add(CuePointMarker(
-                AudioSampleNumberProp(0, widget.file.resource!.sampleRate),
-                StringProp("Marker ${widget.cuePoints.length + 1}"),
-                widget.file.uuid
-              ));
-            },
-            iconSize: 20,
-            splashRadius: 18,
-            icon: const Icon(Icons.add),
-          ),
-        ],
-      ),
-      children: widget.cuePoints.map((p) => ChangeNotifierBuilder(
-        key: Key(p.uuid),
-        notifier: p.sample,
-        builder: (context) {
-          return Row(
-            children: [
-              IconButton(
-                onPressed: () => p.sample.value = 0,
-                color: p.sample.value == 0 ? Theme.of(context).colorScheme.secondary.withOpacity(0.75) : null,
-                splashRadius: 18,
-                icon: const Icon(Icons.arrow_left),
-              ),
-              AudioSampleNumberPropTextField<UnderlinePropTextField>(
-                prop: p.sample,
-                samplesCount: widget.file.resource!.totalSamples,
-                samplesPerSecond: widget.file.resource!.sampleRate,
-                options: const PropTFOptions(
-                  hintText: "sample",
-                  constraints: BoxConstraints.tightFor(width: 90),
-                  useIntrinsicWidth: false,
-                ),
-              ),
-              IconButton(
-                onPressed: () => p.sample.value = widget.file.resource!.totalSamples - 1,
-                color: p.sample.value == widget.file.resource!.totalSamples ? Theme.of(context).colorScheme.secondary.withOpacity(0.75) : null,
-                splashRadius: 18,
-                icon: const Icon(Icons.arrow_right),
-              ),
-              const SizedBox(width: 8),
-              makePropEditor<UnderlinePropTextField>(p.name, const PropTFOptions(
-                hintText: "name",
-                constraints: BoxConstraints(minWidth: 150),
-              )),
-              IconButton(
-                onPressed: () => widget.cuePoints.remove(p),
-                iconSize: 16,
-                splashRadius: 18,
-                icon: const Icon(Icons.close),
-              ),
-              const FlexDraggableHandle(
-                child: Icon(Icons.drag_handle, size: 16),
-              )
-            ],
-          );
-        }
-      )).toList(),
-    );
-  }
-
-  void _copyToClipboard() {
-    var cuePointsList = widget.cuePoints.map((e) => {
-      "sample": e.sample.value,
-      "name": e.name.value,
-    }).toList();
-    var data = {
-      "samplesPerSec": widget.file.resource!.sampleRate,
-      "cuePoints": cuePointsList,
-    };
-    copyToClipboard(const JsonEncoder.withIndent("\t").convert(data));
-    showToast("Copied ${cuePointsList.length} cue points to clipboard");
-  }
-
-  void _pasteFromClipboard() async {
-    var data = await getClipboardText();
-    if (data == null)
-      return;
-    try {
-      var json = jsonDecode(data);
-      var sampleRate = json["samplesPerSec"];
-      if (sampleRate is! int)
-        throw Exception("Invalid sample rate $sampleRate");
-      var sampleScale = widget.file.resource!.sampleRate / sampleRate;
-      var cuePoints = (json["cuePoints"] as List).map((e) {
-        var sample = e["sample"];
-        var name = e["name"];
-        if (sample is! int || name is! String)
-          throw Exception("Invalid cue point $e");
-        sample = (sample * sampleScale).round();
-        sample = clamp(sample, 0, widget.file.resource!.totalSamples);
-        return CuePointMarker(
-          AudioSampleNumberProp(sample, widget.file.resource!.sampleRate),
-          StringProp(name),
-          widget.file.uuid
-        );
-      }).whereType<CuePointMarker>().toList();
-      widget.cuePoints.addAll(cuePoints);
-    } catch (e) {
-      showToast("Invalid Clipboard Data");
-      rethrow;
-    }
-  }
 }

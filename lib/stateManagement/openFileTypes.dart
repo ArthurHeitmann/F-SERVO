@@ -514,78 +514,12 @@ class FtbFileData extends OpenFileData {
   }
 }
 
-class CuePointMarker with HasUuid, Undoable {
-  final AudioSampleNumberProp sample;
-  final StringProp name;
-  final OpenFileId file;
-
-  CuePointMarker(this.sample, this.name, this.file) {
-    sample.addListener(_onChanged);
-    name.addListener(_onChanged);
-  }
-
-  void dispose() {
-    sample.dispose();
-    name.dispose();
-  }
-
-  void _onChanged() {
-    var file = areasManager.fromId(this.file);
-    if (file == null)
-      return;
-    file.hasUnsavedChanges = true;
-    undoHistoryManager.onUndoableEvent();
-  }
-
-  @override
-  Undoable takeSnapshot() {
-    var snapshot = CuePointMarker(sample.takeSnapshot() as AudioSampleNumberProp, name.takeSnapshot() as StringProp, file);
-    snapshot.overrideUuid(uuid);
-    return snapshot;
-  }
-  
-  @override
-  void restoreWith(Undoable snapshot) {
-    var content = snapshot as CuePointMarker;
-    sample.restoreWith(content.sample);
-    name.restoreWith(content.name);
-  }
-}
 mixin AudioFileData on ChangeNotifier, HasUuid {
   AudioResource? resource;
-  ValueNestedNotifier<CuePointMarker> cuePoints = ValueNestedNotifier([]);
   bool cuePointsStartAt1 = false;
   abstract String name;
 
   Future<void> load();
-
-  // void _readCuePoints(RiffFile riff) {
-  //   List<RiffListLabelSubChunk> pendingLabels = [];
-  //   if (riff.labelsList != null) {
-  //     for (var subChunk in riff.labelsList!.subChunks) {
-  //       if (subChunk is! RiffListLabelSubChunk)
-  //         continue;
-  //       if (subChunk.chunkId != "labl")
-  //         continue;
-  //       pendingLabels.add(subChunk);
-  //     }
-  //   }
-  //   if (pendingLabels.isNotEmpty) {
-  //     int maxLabelCueIndex = pendingLabels.map((l) => l.cuePointIndex).reduce(max);
-  //     // sometimes indexes start at 1, sometimes at 0
-  //     cuePointsStartAt1 = maxLabelCueIndex == pendingLabels.length;
-  //     int iOff = cuePointsStartAt1 ? -1 : 0;
-  //     cuePoints.clear();
-  //     cuePoints.addAll(pendingLabels.map((l) {
-  //       var cuePoint = riff.cues!.points[l.cuePointIndex + iOff];
-  //       return CuePointMarker(
-  //         AudioSampleNumberProp(cuePoint.sampleOffset, samplesPerSec),
-  //         StringProp(l.label),
-  //         uuid
-  //       );
-  //     }));
-  //   }
-  // }
 }
 class WavFileData with ChangeNotifier, HasUuid, AudioFileData {
   @override
@@ -607,11 +541,7 @@ class WemFileData extends OpenFileData with AudioFileData {
   Set<int> relatedBnkPlaylistIds = {};
   String? bgmBnkPath;
   
-  WemFileData(super.name, super.path, { super.secondaryName, Iterable<CuePointMarker>? cuePoints }) {
-    if (cuePoints != null)
-      this.cuePoints.addAll(cuePoints);
-    this.cuePoints.addListener(_onCuePointsChanged);
-  }
+  WemFileData(super.name, super.path, { super.secondaryName });
 
   @override
   Future<void> load() async {
@@ -622,16 +552,6 @@ class WemFileData extends OpenFileData with AudioFileData {
     // extract wav
     await resource?.dispose();
     resource = await audioResourcesManager.getAudioResource(path);
-
-    // var wavData = await RiffFile.fromFile(resource!.wavPath);
-    // _readMeta(wavData);
-
-    // // rough wav samples
-    // _parsePreviewSamples(wavData);
-
-    // // cue points
-    // var wemData = await RiffFile.fromFile(path);
-    // _readCuePoints(wemData);
 
     // related bnk playlists
     var waiRes = areasManager.hiddenArea.whereType<WaiFileData>();
@@ -644,15 +564,11 @@ class WemFileData extends OpenFileData with AudioFileData {
       }
     }
 
-    hasUnsavedChanges = false;
-
     await super.load();
   }
 
   @override
   Future<void> save() async {
-    await _saveCuePoints();
-
     var wai = areasManager.hiddenArea.whereType<WaiFileData>().first;
     var wemId = RegExp(r"(\d+)\.wem").firstMatch(name)!.group(1)!;
     wai.pendingPatches.add(WemPatch(path, int.parse(wemId)));
@@ -670,53 +586,7 @@ class WemFileData extends OpenFileData with AudioFileData {
       overrideData.value!.dispose();
       overrideData.value = null;
     }
-    cuePoints.dispose();
     super.dispose();
-  }
-
-  Future<void> _saveCuePoints() async {
-
-    var riff = await RiffFile.fromFile(path);
-
-    var iOff = cuePointsStartAt1 ? 1 : 0;
-    var cueChunk = CueChunk(
-      cuePoints.length,
-      List.generate(cuePoints.length, (i) => CuePoint(
-        i + iOff, cuePoints[i].sample.value, "data", 0, 0, cuePoints[i].sample.value
-      ))
-    );
-    int markersSize = 0;
-    var adtlMarkers = List.generate(cuePoints.length, (i) {
-      int chunkSize = 4 + cuePoints[i].name.value.length + 1;
-      markersSize += chunkSize + 8 + chunkSize % 2;
-      return RiffListLabelSubChunk(
-        "labl", chunkSize, i + iOff, cuePoints[i].name.value
-      );
-    });
-    var adtListChunk = RiffListChunk("adtl", adtlMarkers, 4 + markersSize);
-
-    var cuesIndex = riff.chunks.indexWhere((c) => c is CueChunk);
-    if (cuesIndex != -1)
-      riff.chunks[cuesIndex] = cueChunk;
-    else
-      riff.chunks.insert(riff.chunks.length - 1, cueChunk);
-
-    var adtlIndex = riff.chunks.indexWhere((c) => c is RiffListChunk && c.chunkType == "adtl");
-    if (adtlIndex != -1)
-      riff.chunks[adtlIndex] = adtListChunk;
-    else
-      riff.chunks.insert(riff.chunks.length - 1, adtListChunk);
-
-    var fileSize = riff.size;
-    riff.header.size = fileSize - 8;
-    var newBytes = ByteDataWrapper.allocate(fileSize);
-    riff.write(newBytes);
-    await File(path).writeAsBytes(newBytes.buffer.asUint8List());
-  }
-
-  void _onCuePointsChanged() {
-    hasUnsavedChanges = true;
-    undoHistoryManager.onUndoableEvent();
   }
 
   Future<void> applyOverride() async {
@@ -746,7 +616,6 @@ class WemFileData extends OpenFileData with AudioFileData {
   Undoable takeSnapshot() {
     var snapshot = WemFileData(
       _name, _path, secondaryName: _secondaryName,
-      cuePoints: cuePoints.takeSnapshot() as ValueNestedNotifier<CuePointMarker>
     );
     snapshot._unsavedChanges = _unsavedChanges;
     snapshot._loadingState = _loadingState;
@@ -759,7 +628,6 @@ class WemFileData extends OpenFileData with AudioFileData {
     var content = snapshot as WemFileData;
     name = content._name;
     path = content._path;
-    cuePoints.restoreWith(content.cuePoints);
     hasUnsavedChanges = content._unsavedChanges;
   }
 }
