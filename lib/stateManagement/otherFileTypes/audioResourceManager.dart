@@ -10,6 +10,7 @@ import '../../fileTypeUtils/audio/wemToWavConverter.dart';
 
 class AudioResource {
   String wavPath;
+  final String? wemPath;
   int sampleRate;
   int totalSamples;
   Duration duration;
@@ -18,7 +19,7 @@ class AudioResource {
   int _refCount = 0;
   final bool _deleteOnDispose;
 
-  AudioResource(this.wavPath, this.sampleRate, this.totalSamples, this.duration, this.previewSamples, this.previewSampleRate, this._deleteOnDispose);
+  AudioResource(this.wavPath, this.wemPath, this.sampleRate, this.totalSamples, this.duration, this.previewSamples, this.previewSampleRate, this._deleteOnDispose);
 
   Future<void> dispose() => audioResourcesManager._disposeAudioResource(this);
 }
@@ -54,6 +55,7 @@ class AudioResourcesManager {
     int totalSamples = riff.data.samples.length ~/ riff.format.channels;
     var resource = AudioResource(
       wavPath,
+      path.endsWith(".wem") ? path : null,
       riff.format.samplesPerSec,
       totalSamples,
       Duration(microseconds: (totalSamples * 1000000 ~/ riff.format.samplesPerSec)),
@@ -70,6 +72,8 @@ class AudioResourcesManager {
   }
 
   Future<void> reloadAudioResource(AudioResource resource) async {
+    if (resource.wemPath != null)
+      resource.wavPath = await wemToWavTmp(resource.wemPath!);
     var riff = await RiffFile.fromFile(resource.wavPath);
     Tuple2<List<double>, int>? previewData = await _getPreviewData(riff);
     int totalSamples = riff.data.samples.length ~/ riff.format.channels;
@@ -99,7 +103,7 @@ class AudioResourcesManager {
     int previewSampleCount = rawSamples.length ~/ riff.format.blockAlign ~/ previewSampleRate;
     int bitsPerSample = riff.format.bitsPerSample;
     var scaleFactor = pow(2, bitsPerSample - 1);
-    var wavSamples = List.generate(previewSampleCount, (i) => rawSamples[i * previewSampleRate] / scaleFactor);
+    var wavSamples = List.generate(previewSampleCount, (i) => rawSamples[i * previewSampleRate * riff.format.blockAlign] / scaleFactor);
     return Tuple2(wavSamples, previewSampleRate);
   }
 }

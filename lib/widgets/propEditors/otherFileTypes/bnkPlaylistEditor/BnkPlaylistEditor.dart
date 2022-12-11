@@ -53,6 +53,7 @@ class _SnapPoint {
   
   const _SnapPoint(this.getPos, [this.owner]);
   _SnapPoint.prop(NumberProp prop) : this(() => prop.value.toDouble(), prop);
+  _SnapPoint.valueNotifier(ValueNotifier<double> prop) : this(() => prop.value, prop);
   _SnapPoint.value(double value) : this(() => value);
 }
 
@@ -136,6 +137,7 @@ class AudioPlaybackScope extends InheritedWidget {
   void cancelCurrentPlayback() {
     currentPlaybackItem?.onCancel();
     setCurrentPlaybackItem(null);
+    playbackMarker.segmentUuid.value = null;
   }
 
   @override
@@ -535,6 +537,7 @@ class _BnkSegmentEditorState extends ChangeNotifierState<BnkSegmentEditor> {
     snapPoints = [
       _SnapPoint.value(0),
       ...widget.segment.markers.map((m) => _SnapPoint.prop(m.pos)),
+      _SnapPoint.valueNotifier(widget.playbackMarker.pos),
     ];
     super.initState();
   }
@@ -588,7 +591,7 @@ class _BnkSegmentEditorState extends ChangeNotifierState<BnkSegmentEditor> {
                       top: 0,
                       bottom: 0,
                       child: PlaybackMarkerWidget(
-                        onDragUpdate: onPlayMarkerDragUpdate,
+                        onDragUpdate: (details) => onPlayMarkerDragUpdate(_SnapPointsData.of(context), details),
                       ),
                     );
                   }
@@ -616,6 +619,7 @@ class _BnkSegmentEditorState extends ChangeNotifierState<BnkSegmentEditor> {
               var newPos = _getMousePosOnTrack(viewData.xOff, viewData.msPerPix, context);
               newPos = _SnapPointsData.of(context).trySnapTo(newPos, [pos], viewData.msPerPix.value);
               pos.value = newPos;
+              AudioPlaybackScope.of(context).cancelCurrentPlayback();
             },
             child: Icon(
               getMarkerIcon(widget.segment.markers[i].role),
@@ -672,7 +676,7 @@ class _BnkSegmentEditorState extends ChangeNotifierState<BnkSegmentEditor> {
     }
   }
 
-  void onPlayMarkerDragUpdate(DragUpdateDetails details) {
+  void onPlayMarkerDragUpdate(_SnapPointsData snap, DragUpdateDetails details) {
     var player = AudioPlaybackScope.of(context);
     if (player.currentPlaybackItem == null)
       return;
@@ -680,6 +684,7 @@ class _BnkSegmentEditorState extends ChangeNotifierState<BnkSegmentEditor> {
     var pos = _getMousePosOnTrack(viewData.xOff, viewData.msPerPix, context);
     var playbackController = player.currentPlaybackItem!.playbackController;
     pos = clamp(pos, 0, playbackController.duration);
+    // pos = snap.trySnapTo(pos, [widget.playbackMarker.pos], viewData.msPerPix.value);
     playbackController.seekTo(pos);
   }
 }
@@ -826,7 +831,7 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> with Audi
                       child: OnHoverBuilder(
                         builder: (context, isHovering) => AnimatedOpacity(
                           duration: const Duration(milliseconds: 200),
-                          opacity: isHovering ? 1 : 0.5,
+                          opacity: isHovering ? 1 : 0.25,
                           child: StreamBuilder(
                             key: ValueKey(currentPlaybackItem),
                             stream: currentPlaybackItem?.playbackController.isPlayingStream,
@@ -901,11 +906,17 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> with Audi
                   icon: const Icon(Icons.paste, size: 16),
                   onPressed: () => _pasteOffsets(clip),
                 ),
-                if (i == 0 && viewData.selectedClipUuids.length >= 2)
+                if (viewData.selectedClipUuids.length >= 2)
                   ContextMenuButtonConfig(
                     "Trim start to other selection",
                     icon: const Icon(Icons.cut, size: 16),
                     onPressed: () => _trimToOtherSelection(clip),
+                  ),
+                if (clip.rtpcPoints.isNotEmpty)
+                  ContextMenuButtonConfig(
+                    "Clear Graph Points",
+                    icon: const Icon(Icons.clear, size: 16),
+                    onPressed: () => _clearRtpcPoints(clip),
                   ),
                 ContextMenuButtonConfig(
                   "Replace WEM",
@@ -1058,6 +1069,7 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> with Audi
   }
 
   void _pasteOffsets(BnkTrackClip clip) async {
+    AudioPlaybackScope.of(context).cancelCurrentPlayback();
     var txt = await getClipboardText();
     if (txt == null) {
       showToast("Clipboard is empty");
@@ -1086,6 +1098,12 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> with Audi
       return;
     }
     clip.beginTrim.value = otherClip.srcDuration.value + otherClip.endTrim.value;
+    AudioPlaybackScope.of(context).cancelCurrentPlayback();
+  }
+
+  void _clearRtpcPoints(BnkTrackClip clip) {
+    clip.rtpcPoints.clear();
+    setState(() {});
   }
 
   void _replaceWem(BnkTrackClip clip) {
@@ -1151,6 +1169,7 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> with Audi
       }
       break;
     }
+    AudioPlaybackScope.of(context).cancelCurrentPlayback();
   }
 
   void _onBeginTrimDrag(BnkTrackClip clip) {
@@ -1160,6 +1179,7 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> with Audi
     newBeginTrim -= clip.xOff.value;
     newBeginTrim = clamp(newBeginTrim, 0, clip.srcDuration.value - clip.endTrim.value.toDouble());
     clip.beginTrim.value = newBeginTrim;
+    AudioPlaybackScope.of(context).cancelCurrentPlayback();
   }
 
   void _onEndTrimDrag(BnkTrackClip clip) {
@@ -1169,6 +1189,7 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> with Audi
     newEndTrim = clip.xOff.value + clip.srcDuration.value - newEndTrim;
     newEndTrim = clamp(newEndTrim, 0, clip.srcDuration.value - clip.beginTrim.value.toDouble());
     clip.endTrim.value = -newEndTrim;
+    AudioPlaybackScope.of(context).cancelCurrentPlayback();
   }
 
   void _duplicateClip(BnkTrackClip clip) {
@@ -1179,6 +1200,7 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> with Audi
     var viewData = _AudioEditorData.of(context);
     viewData.selectedClipUuids.clear();
     viewData.selectedClipUuids.add(newClip.uuid);
+    AudioPlaybackScope.of(context).cancelCurrentPlayback();
   }
 
   void _deleteClip(BnkTrackClip clip) {
@@ -1186,6 +1208,7 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> with Audi
     viewData.selectedClipUuids.remove(clip.uuid);
     widget.track.clips.remove(clip);
     clip.dispose();
+    AudioPlaybackScope.of(context).cancelCurrentPlayback();
   }
 }
 

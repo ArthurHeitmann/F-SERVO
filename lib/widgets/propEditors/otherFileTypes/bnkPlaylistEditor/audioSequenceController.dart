@@ -145,9 +145,11 @@ class GapPlaybackController extends PlaybackController {
       _isPlayingStream.add(false);
       _onEnd?.call();
     });
+    _positionTimer?.cancel();
     _positionTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
-      _position = DateTime.now().difference(_playStartTime).inMicroseconds / 1000;
-      _positionStream.add(_position);
+      var pos = DateTime.now().difference(_playStartTime).inMicroseconds / 1000;
+      pos += _position;
+      _positionStream.add(pos);
     });
     _isPlaying = true;
     _isPlayingStream.add(true);
@@ -167,9 +169,7 @@ class GapPlaybackController extends PlaybackController {
     // print("${DateTime.now()} gap seek to $ms");
     _position = ms;
     _positionStream.add(_position);
-    if (_isPlaying) {
-      _endTimer?.cancel();
-      _positionTimer?.cancel();
+    if (isPlaying) {
       play();
     }
   }
@@ -178,7 +178,15 @@ class GapPlaybackController extends PlaybackController {
   bool get isPlaying => _isPlaying;
 
   @override
-  Future<double> get position async => _position;
+  Future<double> get position async {
+    if (isPlaying) {
+      var pos = DateTime.now().difference(_playStartTime).inMicroseconds / 1000;
+      pos += _position;
+      return pos;
+    } else {
+      return _position;
+    }
+  }
 
   @override
   void dispose() {
@@ -214,7 +222,7 @@ class BnkTrackPlaybackController extends PlaybackController {
       var nextClip = i < clips.length - 1 ? clips[i + 1] : null;
       if (nextClip == null)
         continue;
-      var clipEnd = clip.xOff.value + clip.beginTrim.value + clip.endTrim.value;
+      var clipEnd = clip.xOff.value + clip.srcDuration.value + clip.endTrim.value;
       var nextClipStart = nextClip.xOff.value + nextClip.beginTrim.value;
       var gapDuration = nextClipStart - clipEnd;
       if (gapDuration == 0)
@@ -247,6 +255,7 @@ class BnkTrackPlaybackController extends PlaybackController {
       seekTo(0);
       return;
     }
+    _controllers[_currentControllerIndex].seekTo(0);
     _controllers[_currentControllerIndex].play();
   }
 
@@ -272,10 +281,16 @@ class BnkTrackPlaybackController extends PlaybackController {
       var controller = _controllers[i];
       var controllerDuration = controller.duration;
       if (position + controllerDuration > ms) {
-        if (_currentControllerIndex != i)
+        bool isPlaying = false;
+        if (_currentControllerIndex != i) {
+          if (_controllers[_currentControllerIndex].isPlaying)
+            isPlaying = true;
           _controllers[_currentControllerIndex].pause();
+        }
         _currentControllerIndex = i;
         controller.seekTo(ms - position);
+        if (isPlaying)
+          controller.play();
         break;
       }
       position += controllerDuration;
