@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../../../stateManagement/Property.dart';
 import '../../../../stateManagement/openFileTypes.dart';
+import '../../../../utils/utils.dart';
 
 abstract class PlaybackController {
   final StreamController<double> _positionStream = StreamController<double>.broadcast();
@@ -37,21 +38,22 @@ class ClipPlaybackController extends PlaybackController {
   final BnkTrackClip clip;
   final AudioPlayer _player = AudioPlayer();
   Timer? _endTimer;
+  final List<StreamSubscription> _subs = [];
   
 
   ClipPlaybackController(this.clip, [super.onEnd]) {
     _duration = clip.srcDuration.value - clip.beginTrim.value + clip.endTrim.value.toDouble();
     _player.setSourceDeviceFile(clip.resource!.wavPath)
       .then((_) => _player.seek(Duration(microseconds: (clip.beginTrim.value * 1000).toInt())));
-    _player.onPositionChanged.listen((Duration position) {
+    _subs.add(_player.onPositionChanged.listen((Duration position) {
       _positionStream.add(position.inMilliseconds.toDouble());
-    });
-    _player.onPlayerStateChanged.listen((state) {
+    }));
+    _subs.add(_player.onPlayerStateChanged.listen((state) {
       _isPlayingStream.add(state == PlayerState.playing);
-    });
-    _player.onPlayerComplete.listen((_) {
+    }));
+    _subs.add(_player.onPlayerComplete.listen((_) {
       _onEnd?.call();
-    });
+    }));
   }
 
   void _onEndTimer() async {
@@ -67,6 +69,7 @@ class ClipPlaybackController extends PlaybackController {
     _player.resume();
     var pos = await _player.getCurrentPosition();
     var endIn = duration - pos!.inMicroseconds / 1000 + clip.beginTrim.value;
+    _endTimer?.cancel();
     _endTimer = Timer(Duration(microseconds: (endIn * 1000).toInt()), _onEndTimer);
   }
 
@@ -102,8 +105,11 @@ class ClipPlaybackController extends PlaybackController {
   void dispose() {
     super.dispose();
     // print("${DateTime.now()} clip dispose");
+    for (var sub in _subs)
+      sub.cancel();
     _player.dispose();
     _endTimer?.cancel();
+
   }
 }
 
@@ -129,6 +135,7 @@ class GapPlaybackController extends PlaybackController {
     // print("${DateTime.now()} gap play");
     var endIn = duration - _position;
     _playStartTime = DateTime.now();
+    _endTimer?.cancel();
     _endTimer = Timer(Duration(microseconds: (endIn * 1000).toInt()), () {
       // print("${DateTime.now()} gap end timer");
       _endTimer?.cancel();
@@ -265,6 +272,8 @@ class BnkTrackPlaybackController extends PlaybackController {
       var controller = _controllers[i];
       var controllerDuration = controller.duration;
       if (position + controllerDuration > ms) {
+        if (_currentControllerIndex != i)
+          _controllers[_currentControllerIndex].pause();
         _currentControllerIndex = i;
         controller.seekTo(ms - position);
         break;
@@ -296,6 +305,7 @@ class BnkTrackPlaybackController extends PlaybackController {
 }
 
 class BnkSegmentPlaybackController extends PlaybackController {
+  final String uuid;
   final List<PlaybackController> _tracks = [];
   late final bool loop;
   NumberProp? _entryCue;
@@ -317,6 +327,7 @@ class BnkSegmentPlaybackController extends PlaybackController {
       void Function()? onEnd,
     }
   ) :
+    uuid = segment.uuid,
     _onExitCue = onExitCue,
     super(onEnd) {
     var trackDurations = segment.tracks.map((track) {
@@ -338,11 +349,12 @@ class BnkSegmentPlaybackController extends PlaybackController {
     seekTo(_entryCue?.value.toDouble() ?? 0);
   }
 
-  void _onExitCueCb() {
+  void _onExitCueCb() async {
     // print("${DateTime.now()} segment exit cue");
     _exitCueTimer?.cancel();
     _onExitCue?.call();
     if (loop) {
+      await waitForNextFrame();
       seekTo(_entryCue?.value.toDouble() ?? 0);
       play();
     }
@@ -376,7 +388,6 @@ class BnkSegmentPlaybackController extends PlaybackController {
       _isPlaying = false;
       _isPlayingStream.add(false);
       _positionUpdateTimer?.cancel();
-      _exitCueTimer?.cancel();
       if (!loop)
         _onEnd?.call();
     });
@@ -443,16 +454,19 @@ class BnkSegmentPlaybackController extends PlaybackController {
       track.dispose();
     _positionUpdateTimer?.cancel();
     _exitCueTimer?.cancel();
+    _endTimer?.cancel();
   }
 }
 
 class MultiSegmentPlaybackController extends PlaybackController {
   final List<BnkSegmentPlaybackController> _segments = [];
   int _currentSegment = 0;
+  final StreamController<String> _currentSegmentStream = StreamController.broadcast();
+  Stream<String> get currentSegmentStream => _currentSegmentStream.stream;
 
   MultiSegmentPlaybackController(BnkPlaylistChild plChild) {
     for (var child in plChild.children) {
-      var controller = BnkSegmentPlaybackController(plChild, child.segment!, onExitCue: _onSegmentEnd);
+      var controller = BnkSegmentPlaybackController(child, child.segment!, onExitCue: _onSegmentEnd);
       controller.positionStream.listen((_) async {
         if (controller != _segments[_currentSegment])
           return;
@@ -460,11 +474,14 @@ class MultiSegmentPlaybackController extends PlaybackController {
       });
       _segments.add(controller);
     }
+    _currentSegmentStream.add(_segments[_currentSegment].uuid);
   }
 
   void _onSegmentEnd() {
-    if (_currentSegment < _segments.length - 1) {
+    if (_currentSegment + 1 < _segments.length) {
       _currentSegment++;
+      _currentSegmentStream.add(_segments[_currentSegment].uuid);
+      _positionStream.add(0);
       _segments[_currentSegment].play();
     } else {
       _onEnd?.call();
@@ -476,6 +493,7 @@ class MultiSegmentPlaybackController extends PlaybackController {
     super.dispose();
     for (var segment in _segments)
       segment.dispose();
+    _currentSegmentStream.close();
   }
 
   @override
@@ -500,6 +518,7 @@ class MultiSegmentPlaybackController extends PlaybackController {
   @override
   void seekTo(double ms) {
     _segments[_currentSegment].seekTo(ms);
+    _positionStream.add(ms);
   }
 
   void seekToSegment(int i) {
@@ -509,5 +528,9 @@ class MultiSegmentPlaybackController extends PlaybackController {
       _segments[_currentSegment].pause();
     _currentSegment = i;
     _segments[_currentSegment].seekTo(0);
+  }
+
+  String getCurrentSegmentUuid() {
+    return _segments[_currentSegment].uuid;
   }
 }

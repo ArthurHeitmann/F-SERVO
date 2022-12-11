@@ -1,6 +1,7 @@
 
 import 'dart:convert';
 import 'dart:math';
+import 'dart:ui';
 
 import 'package:context_menus/context_menus.dart';
 import 'package:flutter/gestures.dart';
@@ -106,6 +107,99 @@ class _SnapPointsData extends InheritedWidget {
   }
 }
 
+class PlaybackMarker {
+  final ValueNotifier<String?> segmentUuid;
+  final ValueNotifier<double> pos;
+
+  const PlaybackMarker(this.segmentUuid, this.pos);
+}
+class CurrentPlaybackItem {
+  final PlaybackController playbackController;
+  final void Function() onCancel;
+
+  const CurrentPlaybackItem(this.playbackController, this.onCancel);
+}
+class AudioPlaybackScope extends InheritedWidget {
+  final CurrentPlaybackItem? currentPlaybackItem;
+  final void Function(CurrentPlaybackItem? item) setCurrentPlaybackItem;
+  final PlaybackMarker playbackMarker;
+
+  const AudioPlaybackScope({
+    super.key, 
+    required Widget child,
+    required this.currentPlaybackItem,
+    required this.setCurrentPlaybackItem,
+    required this.playbackMarker,
+  }) :
+    super(child: child);
+
+  void cancelCurrentPlayback() {
+    currentPlaybackItem?.onCancel();
+    setCurrentPlaybackItem(null);
+  }
+
+  @override
+  bool updateShouldNotify(AudioPlaybackScope oldWidget) {
+    return currentPlaybackItem != oldWidget.currentPlaybackItem;
+  }
+
+  static AudioPlaybackScope of(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<AudioPlaybackScope>()!;
+  }
+}
+
+mixin AudioPlayingWidget<T extends StatefulWidget> on State<T> {
+  CurrentPlaybackItem? currentPlaybackItem;
+
+  void onCancel([bool isDisposed = false]) {
+    if (currentPlaybackItem == null)
+      return;
+    currentPlaybackItem!.playbackController.dispose();
+    currentPlaybackItem = null;
+    if (mounted && !isDisposed)
+      setState(() {});
+  }
+
+  PlaybackController makePlaybackController();
+
+  void _togglePlayback() {
+    var audioPlaybackScope = AudioPlaybackScope.of(context);
+    if (currentPlaybackItem == null) {
+      audioPlaybackScope.cancelCurrentPlayback();
+      var playbackController = makePlaybackController();
+      audioPlaybackScope.playbackMarker.pos.value = 0;
+      playbackController.positionStream.listen(_onPositionChange);
+      currentPlaybackItem = CurrentPlaybackItem(playbackController, onCancel);
+      audioPlaybackScope.setCurrentPlaybackItem(currentPlaybackItem);
+    }
+
+    if (currentPlaybackItem!.playbackController.isPlaying)
+      currentPlaybackItem!.playbackController.pause();
+    else
+      currentPlaybackItem!.playbackController.play();
+  }
+
+  void onDispose() {
+    if (currentPlaybackItem == null)
+      return;
+    onCancel(true);
+  }
+
+  void _onSegmentChange(String segmentUuid) {
+    if (!mounted)
+      return;
+    var audioPlaybackScope = AudioPlaybackScope.of(context);
+    audioPlaybackScope.playbackMarker.segmentUuid.value = segmentUuid;
+  }
+
+  void _onPositionChange(double pos) {
+    if (!mounted)
+      return;
+    var audioPlaybackScope = AudioPlaybackScope.of(context);
+    audioPlaybackScope.playbackMarker.pos.value = pos;
+  }
+}
+
 double _getMousePosOnTrack(ValueNotifier<double> xOff, ValueNotifier<double> msPerPix, BuildContext context) {
   var renderBox = context.findRenderObject() as RenderBox;
   var locMousePos = renderBox.globalToLocal(MousePosition.pos).dx;
@@ -123,6 +217,8 @@ class BnkPlaylistEditor extends StatefulWidget {
 }
 
 class _BnkPlaylistEditorState extends State<BnkPlaylistEditor> {
+  CurrentPlaybackItem? _currentPlaybackItem;
+  final playbackMarker = PlaybackMarker(ValueNotifier(null), ValueNotifier(0));
   final ValueNotifier<double> msPerPix = ValueNotifier(1);
   final ValueNotifier<double> xOff = ValueNotifier(0);
   final selectedClipUuids = ValueNestedNotifier<String>([]);
@@ -171,65 +267,73 @@ class _BnkPlaylistEditorState extends State<BnkPlaylistEditor> {
       xOff: xOff,
       selectedClipUuids: selectedClipUuids,
       getClipByUuid: _getClipByUuid,
-      child: GestureDetector(
-        onHorizontalDragUpdate: (details) {
-          xOff.value += details.delta.dx;
+      child: AudioPlaybackScope(
+        currentPlaybackItem: _currentPlaybackItem,
+        playbackMarker: playbackMarker,
+        setCurrentPlaybackItem: (item) {
+          _currentPlaybackItem = item;
+          setState(() {});
         },
-        onVerticalDragUpdate: (details) {
-          scrollController.jumpTo(clamp(scrollController.offset - details.delta.dy, 0, scrollController.position.maxScrollExtent));
-        },
-        behavior: HitTestBehavior.translucent,
-        child: Listener(
-          onPointerSignal: (event) {
-            if (event is! PointerScrollEvent)
-              return;
-            // zoom
-            var scale = event.scrollDelta.dy / 100;
-            msPerPix.value *= scale + 1;
-            // offset
-            var renderBox = context.findRenderObject() as RenderBox;
-            var x = renderBox.globalToLocal(event.position).dx;
-            var xOffDist = x - xOff.value;
-            var xChange = xOffDist * -scale;
-            if (scale < 0)  // magic numbers :)
-              xChange *= 1.25;
-            else
-              xChange /= 1.2;
-            xOff.value -= xChange;
+        child: GestureDetector(
+          onHorizontalDragUpdate: (details) {
+            xOff.value += details.delta.dx;
+          },
+          onVerticalDragUpdate: (details) {
+            scrollController.jumpTo(clamp(scrollController.offset - details.delta.dy, 0, scrollController.position.maxScrollExtent));
           },
           behavior: HitTestBehavior.translucent,
-          child: SingleChildScrollView(
-            controller: scrollController,
-            physics: const NeverScrollableScrollPhysics(),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 40,),
-                Stack(
-                  children: [
-                    BnkPlaylistChildEditor(
-                      plSegment: widget.playlist.rootChild!
-                    ),
-                    Positioned(
-                      top: 0,
-                      right: 0,
-                      child: Material(
-                        color: Colors.transparent,
-                        child: Tooltip(
-                          message: "Update track durations",
-                          waitDuration: const Duration(milliseconds: 500),
-                          child: IconButton(
-                            onPressed: () => widget.playlist.rootChild!.updateTrackDurations()
-                              .then((_) => showToast("Updated track durations", const Duration(seconds: 2))),
-                            splashRadius: 20,
-                            icon: const Icon(Icons.refresh),
+          child: Listener(
+            onPointerSignal: (event) {
+              if (event is! PointerScrollEvent)
+                return;
+              // zoom
+              var scale = event.scrollDelta.dy / 100;
+              msPerPix.value *= scale + 1;
+              // offset
+              var renderBox = context.findRenderObject() as RenderBox;
+              var x = renderBox.globalToLocal(event.position).dx;
+              var xOffDist = x - xOff.value;
+              var xChange = xOffDist * -scale;
+              if (scale < 0)  // magic numbers :)
+                xChange *= 1.25;
+              else
+                xChange /= 1.2;
+              xOff.value -= xChange;
+            },
+            behavior: HitTestBehavior.translucent,
+            child: SingleChildScrollView(
+              controller: scrollController,
+              physics: const NeverScrollableScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 40,),
+                  Stack(
+                    children: [
+                      BnkPlaylistChildEditor(
+                        plSegment: widget.playlist.rootChild!
+                      ),
+                      Positioned(
+                        top: 0,
+                        right: 0,
+                        child: Material(
+                          color: Colors.transparent,
+                          child: Tooltip(
+                            message: "Update track durations",
+                            waitDuration: const Duration(milliseconds: 500),
+                            child: IconButton(
+                              onPressed: () => widget.playlist.rootChild!.updateTrackDurations()
+                                .then((_) => showToast("Updated track durations", const Duration(seconds: 2))),
+                              splashRadius: 20,
+                              icon: const Icon(Icons.refresh),
+                            ),
                           ),
-                        ),
+                        )
                       )
-                    )
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -270,15 +374,33 @@ class BnkPlaylistChildEditor extends StatefulWidget {
   State<BnkPlaylistChildEditor> createState() => _BnkPlaylistChildEditorState();
 }
 
-class _BnkPlaylistChildEditorState extends State<BnkPlaylistChildEditor> {
+class _BnkPlaylistChildEditorState extends State<BnkPlaylistChildEditor> with AudioPlayingWidget {
   bool isCollapsed = false;
+  BnkPlaylistChild get plSegment => widget.plSegment;
   BnkSegmentData? get segment => widget.plSegment.segment;
-  PlaybackController? playbackController;
 
   @override
   void dispose() {
-    playbackController?.dispose();
+    onDispose();
     super.dispose();
+  }
+
+  @override
+  PlaybackController makePlaybackController() {
+    var audioPlaybackScope = AudioPlaybackScope.of(context);
+    PlaybackController playbackController;
+    if (segment != null) {
+      playbackController = BnkSegmentPlaybackController(plSegment, segment!);
+      audioPlaybackScope.playbackMarker.segmentUuid.value = segment!.uuid;
+    } else if (plSegment.children.every((c) => c.segment != null)) {
+      var newController = MultiSegmentPlaybackController(plSegment);
+      playbackController = newController;
+      newController.currentSegmentStream.listen(_onSegmentChange);
+      audioPlaybackScope.playbackMarker.segmentUuid.value = plSegment.children.first.segment!.uuid;
+    } else {
+      throw Exception("Can't play this segment");
+    }
+    return playbackController;
   }
 
   @override
@@ -292,11 +414,14 @@ class _BnkPlaylistChildEditorState extends State<BnkPlaylistChildEditor> {
             child: Row(
               children: [
                 Icon(isCollapsed ? Icons.chevron_right : Icons.expand_more),
-                Text(
-                  "${segment != null ? "Segment" : "Playlist"} (Loops: ${widget.plSegment.loops}) "
-                  "${segment == null ? "(Reset type: ${widget.plSegment.resetType.name}) " : ""}"
-                  "(ID: ${segment != null ? widget.plSegment.srcItem.segmentId : widget.plSegment.srcItem.playlistItemId})",
-                  style: const TextStyle(fontFamily: "FiraCode"),
+                Flexible(
+                  child: Text(
+                    "${segment != null ? "Segment" : "Playlist"} (Loops: ${widget.plSegment.loops}) "
+                    "${segment == null ? "(Reset type: ${widget.plSegment.resetType.name}) " : ""}"
+                    "(ID: ${segment != null ? widget.plSegment.srcItem.segmentId : widget.plSegment.srcItem.playlistItemId})",
+                    style: const TextStyle(fontFamily: "FiraCode"),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
                 const SizedBox(width: 8,),
                 ChangeNotifierBuilder(
@@ -319,14 +444,14 @@ class _BnkPlaylistChildEditorState extends State<BnkPlaylistChildEditor> {
                     )
                     : const SizedBox()
                 ),
-                if (segment != null) ...[
+                if (segment != null || widget.plSegment.children.isNotEmpty && widget.plSegment.children.every((c) => c.segment != null)) ...[
                   StreamBuilder(
-                    stream: playbackController?.isPlayingStream,
+                    stream: currentPlaybackItem?.playbackController.isPlayingStream,
                     builder: (context, snapshot) {
                       return IconButton(
                         iconSize: 20,
                         splashRadius: 20,
-                        icon: playbackController?.isPlaying == true
+                        icon: currentPlaybackItem?.playbackController.isPlaying == true
                           ? const Icon(Icons.pause)
                           : const Icon(Icons.play_arrow),
                         onPressed: _togglePlayback,
@@ -334,13 +459,14 @@ class _BnkPlaylistChildEditorState extends State<BnkPlaylistChildEditor> {
                     }
                   ),
                   StreamBuilder(
-                    stream: playbackController?.positionStream,
+                    key: ValueKey(currentPlaybackItem?.playbackController.positionStream),
+                    stream: currentPlaybackItem?.playbackController.positionStream,
                     builder: (context, snapshot) {
                       if (snapshot.hasData && snapshot.data != null) {
                         var pos = snapshot.data as double;
                         return Text(formatDuration(Duration(milliseconds: pos.toInt())));
                       }
-                      return const Text("00:00");
+                      return const SizedBox();
                     }
                   ),
                 ],
@@ -356,6 +482,7 @@ class _BnkPlaylistChildEditorState extends State<BnkPlaylistChildEditor> {
                 _AudioEditorData.of(context).msPerPix,
                 _AudioEditorData.of(context).xOff,
               ],
+              playbackMarker: AudioPlaybackScope.of(context).playbackMarker,
             ),
             for (int i = 0; i < widget.plSegment.children.length; i++)
               BnkPlaylistChildEditor(
@@ -380,22 +507,18 @@ class _BnkPlaylistChildEditorState extends State<BnkPlaylistChildEditor> {
     }
     return inner;
   }
-
-  void _togglePlayback() {
-    playbackController ??= BnkSegmentPlaybackController(widget.plSegment, segment!);
-    if (playbackController!.isPlaying)
-      playbackController!.pause();
-    else
-      playbackController!.play();
-    setState(() {});
-  }
 }
 
 class BnkSegmentEditor extends ChangeNotifierWidget {
   final BnkSegmentData segment;
+  final PlaybackMarker playbackMarker;
 
-  BnkSegmentEditor({ super.key, required this.segment, required List<Listenable> viewNotifiers })
-    : super(notifiers: [...viewNotifiers, ...segment.markers.map((m) => m.pos)]);
+  BnkSegmentEditor({ super.key, required this.segment, required List<Listenable> viewNotifiers, required this.playbackMarker })
+    : super(notifiers: [
+      ...viewNotifiers,
+      ...segment.markers.map((m) => m.pos),
+      playbackMarker.segmentUuid,
+    ]);
 
   static const headerHeight = 25.0;
   static const markerSize = 20.0;
@@ -412,16 +535,6 @@ class _BnkSegmentEditorState extends ChangeNotifierState<BnkSegmentEditor> {
     snapPoints = [
       _SnapPoint.value(0),
       ...widget.segment.markers.map((m) => _SnapPoint.prop(m.pos)),
-      // ...widget.segment.tracks TODO: add snap points for tracks
-      //   .map((t) => t.clips)
-      //   .expand((c) => c)
-      //   .map((c) => [
-      //     _SnapPoint(() => c.xOff.value + c.beginTrim.value.toDouble(), c.beginTrim),
-      //     _SnapPoint(() => c.xOff.value + c.srcDuration.value + c.endTrim.value.toDouble(), c.endTrim),
-      //     _SnapPoint(() => c.xOff.value.toDouble(), c.xOff),
-      //     _SnapPoint(() => c.xOff.value + c.srcDuration.value.toDouble(), c.srcDuration),
-      //   ])
-      //   .expand((e) => e),
     ];
     super.initState();
   }
@@ -461,10 +574,25 @@ class _BnkSegmentEditorState extends ChangeNotifierState<BnkSegmentEditor> {
                     BnkTrackEditor(
                       track: track,
                       viewData: viewData,
+                      segmentUuid: widget.segment.uuid,
                     ),
                 ],
               ),
               ...getMarkers(context, viewData),
+              if (widget.playbackMarker.segmentUuid.value == widget.segment.uuid)
+                ChangeNotifierBuilder(
+                  notifier: widget.playbackMarker.pos,
+                  builder: (context) {
+                    return Positioned(
+                      left: widget.playbackMarker.pos.value / viewData.msPerPix.value + viewData.xOff.value,
+                      top: 0,
+                      bottom: 0,
+                      child: PlaybackMarkerWidget(
+                        onDragUpdate: onPlayMarkerDragUpdate,
+                      ),
+                    );
+                  }
+                ),
             ],
           );
         }
@@ -543,13 +671,98 @@ class _BnkSegmentEditorState extends ChangeNotifierState<BnkSegmentEditor> {
         return getTheme(context).customCueColor!;
     }
   }
+
+  void onPlayMarkerDragUpdate(DragUpdateDetails details) {
+    var player = AudioPlaybackScope.of(context);
+    if (player.currentPlaybackItem == null)
+      return;
+    var viewData = _AudioEditorData.of(context);
+    var pos = _getMousePosOnTrack(viewData.xOff, viewData.msPerPix, context);
+    var playbackController = player.currentPlaybackItem!.playbackController;
+    pos = clamp(pos, 0, playbackController.duration);
+    playbackController.seekTo(pos);
+  }
+}
+
+class PlaybackMarkerWidget extends StatefulWidget {
+  final void Function(DragUpdateDetails details) onDragUpdate;
+
+  const PlaybackMarkerWidget({ super.key, required this.onDragUpdate });
+
+  @override
+  State<PlaybackMarkerWidget> createState() => _PlaybackMarkerWidgetState();
+}
+
+class _PlaybackMarkerWidgetState extends State<PlaybackMarkerWidget> {
+  @override
+  Widget build(BuildContext context) {
+    const iconSize = 12.5;
+    return SizedBox(
+      width: iconSize + 5,
+      child: Stack(
+        children: [
+          Positioned(
+            left: 0,
+            top: 0,
+            bottom: 0,
+            width: iconSize,
+            child: CustomPaint(
+              painter: _PlaybackMarkerPainter(iconSize: iconSize),
+            ),
+          ),
+          Positioned(
+            left: 0,
+            top: 0,
+            width: iconSize,
+            height: 25,
+            child: MouseRegion(
+              cursor: SystemMouseCursors.resizeColumn,
+              hitTestBehavior: HitTestBehavior.translucent,
+              child: GestureDetector(
+                onHorizontalDragUpdate: widget.onDragUpdate,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PlaybackMarkerPainter extends CustomPainter {
+  final double iconSize;
+
+  _PlaybackMarkerPainter({required this.iconSize});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.teal
+      ..strokeWidth = 4
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    List<Offset> points = [
+      const Offset(0, 0),
+      Offset(iconSize, 12.5),
+      const Offset(0, 25),
+      Offset(0, size.height),
+    ];
+
+    canvas.drawPoints(PointMode.polygon, points, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class BnkTrackEditor extends ChangeNotifierWidget {
+  final String segmentUuid;
   final BnkTrackData track;
   final _AudioEditorData viewData;
 
-  BnkTrackEditor({ super.key, required this.track, required this.viewData })
+  BnkTrackEditor({ super.key, required this.segmentUuid, required this.track, required this.viewData })
     : super(notifiers: [
       viewData.msPerPix,
       viewData.xOff,
@@ -562,7 +775,7 @@ class BnkTrackEditor extends ChangeNotifierWidget {
   State<BnkTrackEditor> createState() => _BnkTrackEditorState();
 }
 
-class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> {
+class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> with AudioPlayingWidget {
   double? dragStartPos;
   Map<String, double>? initialXOff;
 
@@ -574,6 +787,14 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> {
           setState(() {});
       });
     super.initState();
+  }
+
+  @override
+  PlaybackController makePlaybackController() {
+    var audioPlaybackScope = AudioPlaybackScope.of(context);
+    var playbackController = BnkTrackPlaybackController(widget.track);
+    audioPlaybackScope.playbackMarker.segmentUuid.value = widget.segmentUuid;
+    return playbackController;
   }
 
   @override
@@ -595,6 +816,35 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> {
                     viewData,
                     constraints.maxWidth,
                   ),
+                Positioned(
+                  left: 0,
+                  top: 0,
+                  bottom: 0,
+                  child: Material(
+                    color: Colors.transparent,
+                    child: Center(
+                      child: OnHoverBuilder(
+                        builder: (context, isHovering) => AnimatedOpacity(
+                          duration: const Duration(milliseconds: 200),
+                          opacity: isHovering ? 1 : 0.5,
+                          child: StreamBuilder(
+                            key: ValueKey(currentPlaybackItem),
+                            stream: currentPlaybackItem?.playbackController.isPlayingStream,
+                            builder: (context, snapshot) {
+                              return IconButton(
+                                icon: currentPlaybackItem?.playbackController.isPlaying == true
+                                  ? const Icon(Icons.pause)
+                                  : const Icon(Icons.play_arrow),
+                                splashRadius: 20,
+                                onPressed: _togglePlayback,
+                              );
+                            }
+                          ),
+                        ),
+                      )
+                    ),
+                  )
+                ),
               ],
             );
           }
@@ -1043,14 +1293,13 @@ class _ClipRtpcPainter extends CustomPainter {
     for (var i = 1; i < points.length; i++) {
       var point = points[i];
       var prevX = prevPoint.x.value / msPerPix;
-      var prevY = size.height - prevPoint.y.value * size.height;
+      var prevY = _getScaledY(type, prevPoint.y.value.toDouble()) * size.height;
       var x = point.x.value / msPerPix;
       double y;
       if (prevPoint.interpolationType == RtpcPointInterpolationType.constant.value)
         y = prevY;
       else
-        y = size.height - point.y.value * size.height;
-      y = _getScaledY(type, y);
+        y = _getScaledY(type, point.y.value.toDouble()) * size.height;
       path.moveTo(prevX, prevY);
       path.lineTo(x, y);
       prevPoint = point;
@@ -1152,8 +1401,9 @@ class _TimelinePainter extends CustomPainter {
     if (ticksIntervalMs == -1)
       ticksIntervalMs = viewWidthMsToMarkerInterval.entries.last.value * 1000;
     var ticksInterval = ticksIntervalMs / msPerPix.value;
-    var minorTicksInterval = ticksInterval / 4;
     var ticksCount = (canvasWidth / ticksInterval).ceil() + 1;
+    var minorTicksCount = (ticksIntervalMs / 1000).floor() % 5 == 0 ? 5 : 4;
+    var minorTicksInterval = ticksInterval / minorTicksCount;
     var tickAlignmentOffset = viewStart % ticksInterval;
     if (viewStart < tickAlignmentOffset)
       tickAlignmentOffset -= ticksInterval;
@@ -1178,9 +1428,9 @@ class _TimelinePainter extends CustomPainter {
       // header major tick
       canvas.drawLine(Offset(x, 0), Offset(x, headerHeight / 2), majorTickPaint);
       // header minor ticks
-      for (int j = 1; j < 4; j++) {
+      for (int j = 1; j < minorTicksCount; j++) {
         var minorTickX = x + j * minorTicksInterval;
-        canvas.drawLine(Offset(minorTickX, 0), Offset(minorTickX, headerHeight / 4), minorTickPaint);
+        canvas.drawLine(Offset(minorTickX, 0), Offset(minorTickX, headerHeight / minorTicksCount), minorTickPaint);
       }
       // big line
       canvas.drawLine(Offset(x, headerHeight), Offset(x, size.height), majorBigTickPaint);
