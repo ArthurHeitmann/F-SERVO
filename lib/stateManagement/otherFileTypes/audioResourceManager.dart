@@ -89,9 +89,9 @@ class AudioResourcesManager {
   Future<void> _disposeAudioResource(AudioResource resource) async {
     resource._refCount--;
     if (resource._refCount <= 0) {
+      _resources.removeWhere((key, value) => value == resource);
       if (resource._deleteOnDispose)
         File(resource.wavPath).delete();
-      _resources.removeWhere((key, value) => value == resource);
     }
   }
 

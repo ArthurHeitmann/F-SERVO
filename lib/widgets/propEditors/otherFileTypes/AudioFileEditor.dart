@@ -88,6 +88,7 @@ class _AudioFileEditorState extends State<AudioFileEditor> {
                         children: [
                           IconButton(
                             icon: const Icon(Icons.first_page),
+                            splashRadius: 25,
                             onPressed: () => _player?.seek(Duration.zero),
                           ),
                           StreamBuilder(
@@ -96,6 +97,7 @@ class _AudioFileEditorState extends State<AudioFileEditor> {
                               icon: _player?.state == PlayerState.playing
                                 ? const Icon(Icons.pause)
                                 : const Icon(Icons.play_arrow),
+                                splashRadius: 25,
                               onPressed: _player?.state == PlayerState.playing
                                 ? _player?.pause
                                 : _player?.resume,
@@ -103,10 +105,12 @@ class _AudioFileEditorState extends State<AudioFileEditor> {
                           ),
                           IconButton(
                             icon: const Icon(Icons.last_page),
+                            splashRadius: 25,
                             onPressed: () => _player?.seek(Duration(milliseconds: widget.file.resource!.totalSamples ~/ widget.file.resource!.sampleRate - 200)),
                           ),
                           IconButton(
                             icon: const Icon(Icons.repeat),
+                            splashRadius: 25,
                             color: _player?.releaseMode == ReleaseMode.loop ? Theme.of(context).colorScheme.secondary : null,
                             onPressed: () => _player?.setReleaseMode(_player?.releaseMode == ReleaseMode.loop ? ReleaseMode.stop : ReleaseMode.loop)
                                                     .then((_) => setState(() {})),

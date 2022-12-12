@@ -52,16 +52,6 @@ class NierNierThemeExtension extends NierThemeExtension {
       actionTypeEntityAccent: _ncCyan2,
       actionTypeBlockingAccent: _ncRed,
       actionBorderRadius: 10,
-      // dialogPrimaryButtonStyle: ButtonStyle(
-      //   backgroundColor: MaterialStateProperty.all(_ncDark),
-      //   foregroundColor: MaterialStateProperty.all(_ncLight),
-      // ),
-      // dialogSecondaryButtonStyle: ButtonStyle(
-      //   backgroundColor: MaterialStateProperty.all(_ncLight),
-      //   foregroundColor: MaterialStateProperty.all(_ncDark),
-      //   side: MaterialStateProperty.all(const BorderSide(color: _ncDark)),
-      //   shadowColor: MaterialStateProperty.all(Colors.transparent),
-      // ),
       dialogPrimaryButtonStyle: ButtonStyle(
         animationDuration: const Duration(milliseconds: 200),
         backgroundColor: MaterialStateProperty.all(_ncDark),

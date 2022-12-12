@@ -59,7 +59,7 @@ Future<void> wavToWem(String wavPath, String wemSavePath, bool patchForBgm) asyn
     var xmlStr = wSourcesXml.toXmlString(pretty: true, indent: "\t");
     await File(wSourcesXmlPath).writeAsString(xmlStr);
 
-    messageLog.add("Converting WAV to WEM${patchForBgm ? " (with BGM patch)" : ""}");
+    messageLog.add("Converting WAV to WEM");
     String wwiseCliPath = prefs.wwiseCliPath!.value;
     String wwiseProjectPath = join(projectPath, "wavToWemTemplate.wproj");
     List<String> args = [
