@@ -160,6 +160,40 @@ class WaiFile {
     return wspNames.indexWhere((n) => n.name == name);
   }
 
+  int getIndexFromId(int wemId) {
+    var index = _getIndexFromIdBinarySearch(wemId);
+    if (index != -1)
+      return index;
+    return wemStructs.indexWhere((wem) => wem.wemID == wemId);
+  }
+
+  int _getIndexFromIdBinarySearch(int wemId) {
+    int min = 0;
+    int max = wemStructs.length - 1;
+    while (min <= max) {
+      int mid = (min + max) ~/ 2;
+      int midVal = wemStructs[mid].wemID;
+      if (midVal < wemId)
+        min = mid + 1;
+      else if (midVal > wemId)
+        max = mid - 1;
+      else
+        return mid;
+    }
+    return -1;
+  }
+
+  String? getWemDirectory(int wemIndex) {
+    for (WspDirectory wspDirectory in wspDirectories) {
+      if (wspDirectory.startStructIndex <= wemIndex && wemIndex < wspDirectory.endStructIndex) {
+        if (wspDirectory.name.isEmpty)
+          return null;
+        return wspDirectory.name;
+      }
+    }
+    throw Exception("Wem index $wemIndex not found in WAI file");
+  }
+
   Future<void> patchWems(List<WemPatch> patches, String exportDir) async {
     if (patches.isEmpty)
       return;

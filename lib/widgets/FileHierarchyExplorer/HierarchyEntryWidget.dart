@@ -3,6 +3,8 @@ import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 
+import '../../fileTypeUtils/audio/audioModPacker.dart';
+import '../../fileTypeUtils/audio/audioModsChangesUndo.dart';
 import '../../fileTypeUtils/ruby/pythonRuby.dart';
 import '../../stateManagement/HierarchyEntryTypes.dart';
 import '../../widgets/theme/customTheme.dart';
@@ -198,6 +200,18 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
                 var rbPath = (widget.entry as RubyScriptHierarchyEntry).path;
                 rubyFileToBin(rbPath);
               },
+            ),
+          ],
+          if (widget.entry is WaiHierarchyEntry) ...[
+            ContextMenuButtonConfig(
+              "Package Mod",
+              icon: const Icon(Icons.file_upload, size: 15,),
+              onPressed: () => packAudioMod((widget.entry as WaiHierarchyEntry).path),
+            ),
+            ContextMenuButtonConfig(
+              "Revert all changes",
+              icon: const Icon(Icons.undo, size: 15,),
+              onPressed: () => revertAllAudioMods((widget.entry as WaiHierarchyEntry).path),
             ),
           ],
           if (widget.entry is WemHierarchyEntry)
