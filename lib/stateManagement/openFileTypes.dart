@@ -991,6 +991,12 @@ class BnkTrackClip with HasUuid, Undoable {
     return newClip;
   }
 
+  void clearRtpcPoints() {
+    rtpcPoints.clear();
+    _onPropChanged();
+    undoHistoryManager.onUndoableEvent();
+  }
+
   Future<void> loadResource() async {
     var wemPath = wemFilesLookup.lookup[sourceId];
     if (wemPath == null)
@@ -1020,6 +1026,18 @@ class BnkTrackClip with HasUuid, Undoable {
     beginTrim.restoreWith(content.beginTrim);
     endTrim.restoreWith(content.endTrim);
     srcDuration.restoreWith(content.srcDuration);
+    
+    // remove and dispose all current points and replace with new ones
+    for (var points in rtpcPoints.values) {
+      for (var point in points)
+        point.dispose();
+    }
+    rtpcPoints.clear();
+    for (var key in content.rtpcPoints.keys) {
+      rtpcPoints[key] = [];
+      for (var point in content.rtpcPoints[key]!)
+        rtpcPoints[key]!.add(point.duplicate());
+    }
   }
 }
 class BnkTrackData with HasUuid, Undoable {
@@ -1059,6 +1077,31 @@ class BnkTrackData with HasUuid, Undoable {
     newTrack.playlists.removeRange(minLen, newTrack.playlists.length);
     
     newTrack.numPlaylistItem = clips.length;
+    
+    // rebuild clip automation (assuming no changes, not supported yet)
+    List<BnkClipAutomation> newAutomations = [];
+    for (int i = 0; i < clips.length; i++) {
+      var clip = clips[i];
+      for (var rtpc in clip.rtpcPoints.entries) {
+        var type = rtpc.key;
+        var points = rtpc.value;
+        var newAutomation = BnkClipAutomation(
+          i,
+          type,
+          points.length,
+          points.map((p) => p.srcAutomation).toList(),
+        );
+        newAutomations.add(newAutomation);
+      }
+    }
+    // sort by clip index (asc), then by type (desc)
+    newAutomations.sort((a, b) {
+      if (a.uClipIndex != b.uClipIndex)
+        return a.uClipIndex.compareTo(b.uClipIndex);
+      return b.eAutoType.compareTo(a.eAutoType);
+    });
+    newTrack.clipAutomations = newAutomations;
+    newTrack.numClipAutomationItem = newAutomations.length;
   }
 
   @override

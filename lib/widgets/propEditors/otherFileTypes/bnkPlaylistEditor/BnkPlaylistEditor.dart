@@ -1102,7 +1102,7 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> with Audi
   }
 
   void _clearRtpcPoints(BnkTrackClip clip) {
-    clip.rtpcPoints.clear();
+    clip.clearRtpcPoints();
     setState(() {});
   }
 
