@@ -398,7 +398,10 @@ class _BnkPlaylistChildEditorState extends State<BnkPlaylistChildEditor> with Au
       var newController = MultiSegmentPlaybackController(plSegment);
       playbackController = newController;
       newController.currentSegmentStream.listen(_onSegmentChange);
-      audioPlaybackScope.playbackMarker.segmentUuid.value = plSegment.children.first.segment!.uuid;
+      if (plSegment.children.isNotEmpty)
+        audioPlaybackScope.playbackMarker.segmentUuid.value = plSegment.children.first.segment!.uuid;
+      else
+        audioPlaybackScope.playbackMarker.segmentUuid.value = null;
     } else {
       throw Exception("Can't play this segment");
     }
@@ -591,7 +594,7 @@ class _BnkSegmentEditorState extends ChangeNotifierState<BnkSegmentEditor> {
                       top: 0,
                       bottom: 0,
                       child: PlaybackMarkerWidget(
-                        onDragUpdate: (details) => onPlayMarkerDragUpdate(_SnapPointsData.of(context), details),
+                        onDragUpdate: () => onPlayMarkerDragUpdate(_SnapPointsData.of(context)),
                       ),
                     );
                   }
@@ -676,7 +679,7 @@ class _BnkSegmentEditorState extends ChangeNotifierState<BnkSegmentEditor> {
     }
   }
 
-  void onPlayMarkerDragUpdate(_SnapPointsData snap, DragUpdateDetails details) {
+  void onPlayMarkerDragUpdate(_SnapPointsData snap) {
     var player = AudioPlaybackScope.of(context);
     if (player.currentPlaybackItem == null)
       return;
@@ -690,7 +693,7 @@ class _BnkSegmentEditorState extends ChangeNotifierState<BnkSegmentEditor> {
 }
 
 class PlaybackMarkerWidget extends StatefulWidget {
-  final void Function(DragUpdateDetails details) onDragUpdate;
+  final void Function() onDragUpdate;
 
   const PlaybackMarkerWidget({ super.key, required this.onDragUpdate });
 
@@ -699,6 +702,14 @@ class PlaybackMarkerWidget extends StatefulWidget {
 }
 
 class _PlaybackMarkerWidgetState extends State<PlaybackMarkerWidget> {
+  late final void Function() throttledOnDragUpdate;
+
+  @override
+  void initState() {
+    super.initState();
+    throttledOnDragUpdate = throttle(widget.onDragUpdate, 25);
+  }
+
   @override
   Widget build(BuildContext context) {
     const iconSize = 12.5;
@@ -724,7 +735,7 @@ class _PlaybackMarkerWidgetState extends State<PlaybackMarkerWidget> {
               cursor: SystemMouseCursors.resizeColumn,
               hitTestBehavior: HitTestBehavior.translucent,
               child: GestureDetector(
-                onHorizontalDragUpdate: widget.onDragUpdate,
+                onHorizontalDragUpdate: (_) => throttledOnDragUpdate(),
               ),
             ),
           ),
@@ -861,7 +872,7 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> with Audi
   List<Widget> _makeClipWidgets(int i, BnkTrackClip clip, _AudioEditorData viewData, double viewWidth) {
     var srcId = widget.track.srcTrack.sources.first.sourceID;
     return [
-      if (clip == widget.track.clips.first)
+      if (widget.track.clips.isNotEmpty && clip == widget.track.clips.first)
         ChangeNotifierBuilder(
           key: Key("${clip.uuid}_left"),
           notifiers: _getClipNotifiers(clip),
@@ -1033,7 +1044,7 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> with Audi
           );
         }
       ),
-      if (clip == widget.track.clips.last)
+      if (widget.track.clips.isNotEmpty && clip == widget.track.clips.last)
         ChangeNotifierBuilder(
           key: Key("${clip.uuid}_right"),
           notifiers: _getClipNotifiers(clip),

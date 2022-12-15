@@ -691,7 +691,6 @@ class WspFileData extends OpenFileData {
 }
 
 class WaiFileData extends OpenFileData {
-  WaiFile? wai;
   Set<WemPatch> pendingPatches = {};
   String? bgmBnkPath;
   Map<int, Set<int>> wemIdsToBnkPlaylists = {};
@@ -703,9 +702,6 @@ class WaiFileData extends OpenFileData {
     if (_loadingState != LoadingState.notLoaded)
       return;
     _loadingState = LoadingState.loading;
-    
-    var bytes = await ByteDataWrapper.fromFile(path);
-    wai = WaiFile.read(bytes);
 
     var bnkPath = join(dirname(path), "bgm", "BGM.bnk");
     if (await File(bnkPath).exists()) {
@@ -745,19 +741,9 @@ class WaiFileData extends OpenFileData {
     await super.load();
   }
 
-  @override
-  void dispose() {
-    wai = null;
-    super.dispose();
-  }
-
-  @override
-  Future<void> save() async {
-    var fileSize = wai!.size;
-    var bytes = ByteDataWrapper.allocate(fileSize);
-    wai!.write(bytes);
-    await backupFile(path);
-    await File(path).writeAsBytes(bytes.buffer.asUint8List());
+  Future<WaiFile> loadWai() async {
+    var bytes = await ByteDataWrapper.fromFile(path);
+    return WaiFile.read(bytes);
   }
 
   Future<void> processPendingPatches() async {
@@ -766,7 +752,14 @@ class WaiFileData extends OpenFileData {
 
     var exportDir = join(dirname(path), "stream");
     // update WSPs & wai data
-    await wai!.patchWems(pendingPatches.toList(), exportDir);
+    var wai = await loadWai();
+    await wai.patchWems(pendingPatches.toList(), exportDir);
+    // save wai
+    var fileSize = wai.size;
+    var bytes = ByteDataWrapper.allocate(fileSize);
+    wai.write(bytes);
+    await backupFile(path);
+    await File(path).writeAsBytes(bytes.buffer.asUint8List());
 
     // update metadata
     await AudioModsMetadata.lock();
@@ -789,7 +782,6 @@ class WaiFileData extends OpenFileData {
   @override
   Undoable takeSnapshot() {
     var snapshot = WaiFileData(_name, _path);
-    snapshot.wai = wai;
     snapshot._unsavedChanges = _unsavedChanges;
     snapshot._loadingState = _loadingState;
     snapshot.overrideUuid(uuid);
@@ -802,7 +794,6 @@ class WaiFileData extends OpenFileData {
     name = content._name;
     path = content._path;
     hasUnsavedChanges = content._unsavedChanges;
-    // wai = content.wai;
   }
 }
 
@@ -1102,6 +1093,9 @@ class BnkTrackData with HasUuid, Undoable {
     });
     newTrack.clipAutomations = newAutomations;
     newTrack.numClipAutomationItem = newAutomations.length;
+    
+    // update chunk size
+    newTrack.size = newTrack.calcChunkSize();
   }
 
   @override
@@ -1436,8 +1430,12 @@ class BnkFilePlaylistData extends OpenFileData {
           hirc.uid: hirc
       };
       var newPlaylist = hircMap[playlistId] as BnkMusicPlaylist;
+      var prevSize = hircChunk.chunkSize;
       rootChild!.applyTo(newPlaylist.playlistItems, hircMap, modsMetaData);
-      bytes = ByteDataWrapper.allocate(bytes.length);
+      var newHircSize = hircChunk.chunks.fold<int>(0, (prev, chunk) => prev + chunk.size + 5) + 4;
+      hircChunk.chunkSize = newHircSize;
+      var sizeDiff = newHircSize - prevSize;
+      bytes = ByteDataWrapper.allocate(bytes.length + sizeDiff);
       bnk.write(bytes);
       await backupFile(bnkPath);
       await File(bnkPath).writeAsBytes(bytes.buffer.asUint8List());

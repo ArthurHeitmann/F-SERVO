@@ -26,6 +26,8 @@ Future<void> wemToWav(String wemPath, String wavPath) async {
     throw Exception("WemToWav: Process exited with code ${process.exitCode}");
   }
   if (!await File(wavPath).exists()) {
+    print("stdout: ${process.stdout}");
+    print("stderr: ${process.stderr}");
     throw Exception("WemToWav: File not found ($wavPath)");
   }
 }

@@ -71,7 +71,7 @@ class BnkUnknownChunk extends BnkChunkBase {
 }
 
 class BnkHircChunk extends BnkChunkBase {
-  late List<ChunkBase> chunks;
+  late List<BnkHircChunkBase> chunks;
 
   BnkHircChunk(super.chunkId, super.chunkSize, this.chunks);
 
@@ -119,7 +119,7 @@ abstract class BnkHircChunkBase extends ChunkBase {
   }
 }
 
-ChunkBase _makeNextHircChunk(ByteDataWrapper bytes) {
+BnkHircChunkBase _makeNextHircChunk(ByteDataWrapper bytes) {
   var type = bytes.readUint8();
   bytes.position -= 1;
   switch (type) {
@@ -239,6 +239,24 @@ class BnkMusicTrack extends BnkHircChunkBase with SimpleComp<BnkMusicTrack> {
       sources.every((s1) => other.sources.any((s2) => s1.isSame(s2, hircObjects))) &&
       numPlaylistItem == other.numPlaylistItem &&
       playlists.every((p1) => other.playlists.any((p2) => p1.isSame(p2, hircObjects)))
+    );
+  }
+
+  int calcChunkSize() {
+    return (
+      4 + // header uid
+      1 + // uFlags
+      4 + // numSources
+      sources.fold<int>(0, (sum, s) => sum + s.calcChunkSize()) +  // sources
+      4 + // numPlaylistItem
+      playlists.fold<int>(0, (sum, p) => sum + p.calcChunkSize()) +  // playlists
+      (numPlaylistItem > 0 ? 4 : 0) + // numSubTrack
+      4 + // numClipAutomationItem
+      clipAutomations.fold<int>(0, (sum, c) => sum + c.calcChunkSize()) +  // clipAutomations
+      baseParams.calcChunkSize() +  // baseParams
+      1 + // eTrackType
+      (eTrackType == 3 ? switchParam!.calcChunkSize() + transParam!.calcChunkSize() : 0) +  // switchParam, transParam
+      4 // iLookAheadTime
     );
   }
 }
@@ -786,6 +804,10 @@ class BnkSource with SimpleComp<BnkSource> {
   bool isSame(BnkSource other, Map<int, BnkHircChunkBase> hircObjects) {
     return sourceID == other.sourceID;
   }
+  
+  int calcChunkSize() {
+    return 14;
+  }
 }
 
 class BnkPlaylist with SimpleComp<BnkPlaylist> {
@@ -826,6 +848,10 @@ bool isSame(BnkPlaylist other, Map<int, BnkHircChunkBase> hircObjects) {
       fSrcDuration == other.fSrcDuration
     );
   }
+  
+  int calcChunkSize() {
+    return 40;
+  }
 }
 
 class BnkSwitchParams {
@@ -853,6 +879,10 @@ class BnkSwitchParams {
     for (var i = 0; i < numSwitchAssoc; i++)
       bytes.writeUint32(ulSwitchAssoc[i]);
   }
+  
+  int calcChunkSize() {
+    return 13 + numSwitchAssoc * 4;
+  }
 }
 
 class BnkTransParams {
@@ -875,6 +905,10 @@ class BnkTransParams {
     bytes.writeUint32(eSyncType);
     bytes.writeUint32(uCueHashFilter);
     destFadeParams.write(bytes);
+  }
+  
+  int calcChunkSize() {
+    return 12 + 4 + 4 + 12;
   }
 }
 
@@ -916,6 +950,10 @@ class BnkRtpcGraphPoint {
     bytes.writeFloat32(from);
     bytes.writeUint32(interpolation);
   }
+  
+  int calcChunkSize() {
+    return 4 + 4 + 4;
+  }
 }
 
 
@@ -941,6 +979,10 @@ class BnkClipAutomation {
     for (var i = 0; i < uNumPoints; i++)
       rtpcGraphPoint[i].write(bytes);
   }
+  
+  int calcChunkSize() {
+    return 12 + uNumPoints * 12;
+  }
 }
 
 class BnkPropValue {
@@ -962,6 +1004,10 @@ class BnkPropValue {
       bytes.writeUint8(pID[i]);
     for (var b in pValueBytes)
       bytes.writeUint8(b);
+  }
+  
+  int calcChunkSize() {
+    return 1 + cProps + cProps * 4;
   }
 }
 
@@ -992,6 +1038,10 @@ class BnkPropRangedValue {
     for (var b in pValueBytes)
       bytes.writeUint8(b);
   }
+  
+  int calcChunkSize() {
+    return 1 + cProps + pValueBytes.length;
+  }
 }
 
 
@@ -1009,6 +1059,10 @@ class BnkNodeInitialParams {
   void write(ByteDataWrapper bytes) {
     propValues.write(bytes);
     rangedPropValues.write(bytes);
+  }
+  
+  int calcChunkSize() {
+    return propValues.calcChunkSize() + rangedPropValues.calcChunkSize();
   }
 }
 
@@ -1059,6 +1113,10 @@ class BnkNodeInitialFXParams {
     for (var i = 0; i < uNumFX; i++)
       effect[i].write(bytes);
   }
+  
+  int calcChunkSize() {
+    return 2 + (uNumFX > 0 ? 1 : 0) + uNumFX * 7;
+  }
 }
 
 class BnkPositioningParams {
@@ -1084,6 +1142,10 @@ class BnkPositioningParams {
       bytes.writeUint8(uBits3D!);
       bytes.writeUint32(attenuationID!);
     }
+  }
+  
+  int calcChunkSize() {
+    return 1 + (uBits3D != null && attenuationID != null ? 5 : 0);
   }
 }
 
@@ -1116,6 +1178,10 @@ class BnkAuxParams {
       bytes.writeUint32(auxID4!);
     }
   }
+  
+  int calcChunkSize() {
+    return 1 + (auxID1 != null && auxID2 != null && auxID3 != null && auxID4 != null ? 16 : 0);
+  }
 }
 
 class BnkAdvSettingsParams {
@@ -1142,6 +1208,10 @@ class BnkAdvSettingsParams {
     bytes.writeUint8(eBelowThresholdBehavior);
     bytes.writeUint8(byBitVector2);
   }
+  
+  int calcChunkSize() {
+    return 6;
+  }
 }
 
 class BnkStateChunk {
@@ -1159,6 +1229,10 @@ class BnkStateChunk {
     bytes.writeUint32(ulNumStateGroups);
     for (var i = 0; i < ulNumStateGroups; i++)
       stateGroup[i].write(bytes);
+  }
+  
+  int calcChunkSize() {
+    return 4 + stateGroup.fold<int>(0, (previousValue, element) => previousValue + element.calcChunkSize());
   }
 }
 class BnkStateGroup {
@@ -1183,6 +1257,10 @@ class BnkStateGroup {
     for (var i = 0; i < ulNumStates; i++)
       state[i].write(bytes);
   }
+  
+  int calcChunkSize() {
+    return 7 + state.fold<int>(0, (previousValue, element) => previousValue + element.calcChunkSize());
+  }
 }
 class BnkState {
   late int ulStateID;
@@ -1198,6 +1276,10 @@ class BnkState {
   void write(ByteDataWrapper bytes) {
     bytes.writeUint32(ulStateID);
     bytes.writeUint32(ulStateInstanceID);
+  }
+  
+  int calcChunkSize() {
+    return 8;
   }
 }
 
@@ -1216,6 +1298,10 @@ class BnkInitialRTPC {
     bytes.writeUint16(ulInitialRTPC);
     for (var i = 0; i < ulInitialRTPC; i++)
       rtpc[i].write(bytes);
+  }
+  
+  int calcChunkSize() {
+    return 2 + rtpc.fold<int>(0, (previousValue, element) => previousValue + element.calcChunkSize());
   }
 }
 class BnkRtpc {
@@ -1251,6 +1337,10 @@ class BnkRtpc {
     bytes.writeUint16(ulSize);
     for (var i = 0; i < ulSize; i++)
       rtpcGraphPoint[i].write(bytes);
+  }
+  
+  int calcChunkSize() {
+    return 14 + rtpcGraphPoint.fold<int>(0, (previousValue, element) => previousValue + element.calcChunkSize());
   }
 }
 
@@ -1295,5 +1385,21 @@ class BnkNodeBaseParams {
     advSettings.write(bytes);
     states.write(bytes);
     rtpc.write(bytes);
+  }
+  
+  int calcChunkSize() {
+    return (
+      fxParams.calcChunkSize() +
+      1 +
+      4 +
+      4 +
+      1 +
+      iniParams.calcChunkSize() +
+      positioning.calcChunkSize() +
+      auxParam.calcChunkSize() +
+      advSettings.calcChunkSize() +
+      states.calcChunkSize() +
+      rtpc.calcChunkSize()
+    );
   }
 }

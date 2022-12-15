@@ -146,7 +146,7 @@ class GapPlaybackController extends PlaybackController {
       _onEnd?.call();
     });
     _positionTimer?.cancel();
-    _positionTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
+    _positionTimer = Timer.periodic(const Duration(milliseconds: 25), (timer) {
       var pos = DateTime.now().difference(_playStartTime).inMicroseconds / 1000;
       pos += _position;
       _positionStream.add(pos);
@@ -208,7 +208,11 @@ class BnkTrackPlaybackController extends PlaybackController {
       var bStart = b.xOff.value + b.beginTrim.value;
       return aStart.compareTo(bStart);
     });
-    var firstClipStart = clips.first.xOff.value + clips.first.beginTrim.value;
+    num firstClipStart;
+    if (clips.isNotEmpty)
+      firstClipStart = clips.first.xOff.value + clips.first.beginTrim.value;
+    else
+      firstClipStart = 0;
     if (firstClipStart > 0) {
       var gapController = GapPlaybackController(firstClipStart.toDouble(), _onClipEnd);
       _setupControllerEvents(gapController);
@@ -231,7 +235,9 @@ class BnkTrackPlaybackController extends PlaybackController {
       _setupControllerEvents(gapController);
       _controllers.add(gapController);
     }
-    _duration = _controllers.map((e) => e.duration).reduce((value, element) => value + element);
+    _duration = _controllers
+      .map((e) => e.duration)
+      .fold(0, (value, element) => value + element);
     seekTo(0);
   }
 
@@ -262,14 +268,16 @@ class BnkTrackPlaybackController extends PlaybackController {
   @override
   void play() {
     // print("${DateTime.now()} track play");
-    _controllers[_currentControllerIndex].play();
+    if (_controllers.isNotEmpty)
+      _controllers[_currentControllerIndex].play();
     _isPlayingStream.add(true);
   }
 
   @override
   void pause() {
     // print("${DateTime.now()} track pause");
-    _controllers[_currentControllerIndex].pause();
+    if (_controllers.isNotEmpty)
+      _controllers[_currentControllerIndex].pause();
     _isPlayingStream.add(false);
   }
 
@@ -298,7 +306,7 @@ class BnkTrackPlaybackController extends PlaybackController {
   }
 
   @override
-  bool get isPlaying => _controllers[_currentControllerIndex].isPlaying;
+  bool get isPlaying => _controllers.isNotEmpty && _controllers[_currentControllerIndex].isPlaying;
 
   @override
   Future<double> get position async {
@@ -306,7 +314,8 @@ class BnkTrackPlaybackController extends PlaybackController {
     for (int i = 0; i < _currentControllerIndex; i++) {
       position += _controllers[i].duration;
     }
-    position += await _controllers[_currentControllerIndex].position;
+    if (_controllers.isNotEmpty)
+      position += await _controllers[_currentControllerIndex].position;
     return position;
   }
 
@@ -347,10 +356,10 @@ class BnkSegmentPlaybackController extends PlaybackController {
     super(onEnd) {
     var trackDurations = segment.tracks.map((track) {
       var clipEnds = track.clips.map((e) => e.xOff.value + e.srcDuration.value + e.endTrim.value);
-      var maxEnd = clipEnds.reduce(max);
+      var maxEnd = clipEnds.fold(0.0, max);
       return maxEnd;
     });
-    _duration = trackDurations.reduce(max).toDouble();
+    _duration = trackDurations.fold<num>(0.0, max).toDouble();
     loop = plChild.srcItem.loop == 0;
     var markers = segment.markers;
     if (markers.length >= 2) {
@@ -391,7 +400,7 @@ class BnkSegmentPlaybackController extends PlaybackController {
 
   void _updatePlayTimers() {
     _positionUpdateTimer?.cancel();
-    _positionUpdateTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
+    _positionUpdateTimer = Timer.periodic(const Duration(milliseconds: 25), (timer) {
       var diff = DateTime.now().difference(_playStartTime).inMicroseconds / 1000;
       var position = _positionBeforePlay + diff;
       _positionStream.add(position);
@@ -517,11 +526,13 @@ class MultiSegmentPlaybackController extends PlaybackController {
   @override
   void pause() {
     _segments[_currentSegment].pause();
+    _isPlayingStream.add(false);
   }
 
   @override
   void play() {
     _segments[_currentSegment].play();
+    _isPlayingStream.add(true);
   }
 
   @override

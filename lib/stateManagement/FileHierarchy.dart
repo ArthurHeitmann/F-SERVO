@@ -333,7 +333,7 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
     var extractedFile = File(path.join(waiExtractDir, "EXTRACTION_COMPLETED"));
     if (!await extractedFile.exists())
       noExtract = false;
-    var wai = waiData.wai!;
+    var wai = await waiData.loadWai();
     var structure = await extractWaiWsps(wai, waiPath, waiExtractDir, noExtract);
     if (!noExtract)
       await extractedFile.writeAsString("Delete this file to re-extract files");
