@@ -4,6 +4,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
+import 'package:tuple/tuple.dart';
 import 'package:xml/xml.dart';
 
 import '../background/wemFilesIndexer.dart';
@@ -43,6 +44,8 @@ enum LoadingState {
 }
 
 abstract class OpenFileData extends ChangeNotifier with HasUuid, Undoable {
+  final IconData? icon;
+  final Color? iconColor;
   late final FileType type;
   String _name;
   String? _secondaryName;
@@ -54,7 +57,7 @@ abstract class OpenFileData extends ChangeNotifier with HasUuid, Undoable {
   final ChangeNotifier contentNotifier = ChangeNotifier();
   final ScrollController scrollController = ScrollController();
 
-  OpenFileData(this._name, this._path, { String? secondaryName })
+  OpenFileData(this._name, this._path, { String? secondaryName, this.icon, this.iconColor })
     : type = OpenFileData.getFileType(_path),
     _secondaryName = secondaryName;
 
@@ -154,7 +157,8 @@ abstract class OpenFileData extends ChangeNotifier with HasUuid, Undoable {
 class TextFileData extends OpenFileData {
   String _text = "Loading...";
 
-  TextFileData(super.name, super.path, { super.secondaryName });
+  TextFileData(super.name, super.path, { super.secondaryName, IconData? icon, Color? iconColor })
+    : super(icon: icon ?? Icons.text_fields, iconColor: iconColor);
   
   String get text => _text;
 
@@ -169,7 +173,12 @@ class TextFileData extends OpenFileData {
     if (_loadingState != LoadingState.notLoaded)
       return;
     _loadingState = LoadingState.loading;
-    _text = await File(path).readAsString();
+    try {
+      _text = await File(path).readAsString();
+    } catch (e) {
+      _text = "[Error loading file]";
+      print(e);
+    }
     await super.load();
   }
 
@@ -204,7 +213,8 @@ class XmlFileData extends OpenFileData {
   XmlProp? get root => _root;
   NumberProp? pakType;
 
-  XmlFileData(super.name, super.path, { super.secondaryName });
+  XmlFileData(super.name, super.path, { super.secondaryName })
+    : super(icon: Icons.description);
 
   void _onNameChange() {
     var xmlName = _root!.get("name")!.value.toString();
@@ -296,7 +306,8 @@ class XmlFileData extends OpenFileData {
 }
 
 class RubyFileData extends TextFileData {
-  RubyFileData(super.name, super.path, { super.secondaryName });
+  RubyFileData(super.name, super.path, { super.secondaryName })
+    : super(icon: Icons.code);
 
   @override
   Future<void> save() async {
@@ -308,7 +319,8 @@ class RubyFileData extends TextFileData {
 class TmdFileData extends OpenFileData {
   TmdData? tmdData;
 
-  TmdFileData(super.name, super.path, { super.secondaryName });
+  TmdFileData(super.name, super.path, { super.secondaryName })
+    : super(icon: Icons.subtitles);
 
   @override
   Future<void> load() async {
@@ -366,7 +378,8 @@ class TmdFileData extends OpenFileData {
 class SmdFileData extends OpenFileData {
   SmdData? smdData;
 
-  SmdFileData(super.name, super.path, { super.secondaryName });
+  SmdFileData(super.name, super.path, { super.secondaryName })
+    : super(icon: Icons.subtitles);
 
   @override
   Future<void> load() async {
@@ -424,7 +437,8 @@ class SmdFileData extends OpenFileData {
 class McdFileData extends OpenFileData {
   McdData? mcdData;
 
-  McdFileData(super.name, super.path, { super.secondaryName });
+  McdFileData(super.name, super.path, { super.secondaryName })
+    : super(icon: Icons.subtitles);
 
   @override
   Future<void> load() async {
@@ -476,7 +490,8 @@ class McdFileData extends OpenFileData {
 class FtbFileData extends OpenFileData {
   FtbData? ftbData;
 
-  FtbFileData(super.name, super.path, { super.secondaryName });
+  FtbFileData(super.name, super.path, { super.secondaryName })
+    : super(icon: Icons.subtitles);
 
   @override
   Future<void> load() async {
@@ -542,7 +557,8 @@ class WemFileData extends OpenFileData with AudioFileData {
   Set<int> relatedBnkPlaylistIds = {};
   String? bgmBnkPath;
   
-  WemFileData(super.name, super.path, { super.secondaryName });
+  WemFileData(super.name, super.path, { super.secondaryName })
+    : super(icon: Icons.music_note);
 
   @override
   Future<void> load() async {
@@ -895,9 +911,11 @@ class BnkTrackClip with HasUuid, Undoable {
   final NumberProp beginTrim;
   final NumberProp endTrim;
   final NumberProp srcDuration;
-  final Map<int, List<BnkClipRtpcPoint>> rtpcPoints;  // TODO listeners, save
+  late final XmlProp combinedProps;
+  final Map<int, List<BnkClipRtpcPoint>> rtpcPoints;
   AudioResource? resource;
   BnkTrackClip(this.file, this.srcPlaylist, this.sourceId, this.xOff, this.beginTrim, this.endTrim, this.srcDuration, this.rtpcPoints) {
+    _initCombinedProps();
     _setupListeners();
   }
   BnkTrackClip.fromPlaylist(this.file, this.srcPlaylist, List<BnkClipAutomation> automations) :
@@ -915,7 +933,30 @@ class BnkTrackClip with HasUuid, Undoable {
         rtpcPoints[type]!.add(BnkClipRtpcPoint.fromAutomation(file, point));
       }
     }
+    _initCombinedProps();
     _setupListeners();
+  }
+
+  void _initCombinedProps() {
+    combinedProps = XmlProp(
+      file: null,
+      tagId: 0,
+      tagName: "Clip",
+      parentTags: [],
+      children: [
+        Tuple2("Offset", xOff),
+        Tuple2("Begin trim", beginTrim),
+        Tuple2("End trim", endTrim),
+        Tuple2("Duration", srcDuration),
+      ].map((v) => XmlProp(
+        file: null,
+        tagId: 0,
+        tagName: v.item1,
+        parentTags: [],
+        value: v.item2,
+      )).toList()
+    );
+    combinedProps.overrideUuid(uuid);
   }
 
   void _setupListeners() {
@@ -929,10 +970,11 @@ class BnkTrackClip with HasUuid, Undoable {
   }
   
   void dispose() {
-    xOff.dispose();
-    beginTrim.dispose();
-    endTrim.dispose();
-    srcDuration.dispose();
+    // xOff.dispose();
+    // beginTrim.dispose();
+    // endTrim.dispose();
+    // srcDuration.dispose();
+    combinedProps.dispose();
     resource?.dispose();
     resource = null;
     for (var points in rtpcPoints.values) {
@@ -993,6 +1035,7 @@ class BnkTrackClip with HasUuid, Undoable {
     if (wemPath == null)
       return;
     resource = await audioResourcesManager.getAudioResource(wemPath);
+    undoHistoryManager.onUndoableEvent();
   }
 
   @override
@@ -1007,6 +1050,7 @@ class BnkTrackClip with HasUuid, Undoable {
       srcDuration.takeSnapshot() as NumberProp,
       rtpcPoints.map((key, value) => MapEntry(key, value.map((e) => e.takeSnapshot() as BnkClipRtpcPoint).toList()))
     );
+    snapshot.resource = resource;
     snapshot.overrideUuid(uuid);
     return snapshot;
   }
@@ -1036,7 +1080,9 @@ class BnkTrackData with HasUuid, Undoable {
   final BnkMusicTrack srcTrack;
   final ValueNestedNotifier<BnkTrackClip> clips;
   final ValueNotifier<bool> hasSourceChanged = ValueNotifier(false);
-  BnkTrackData(this.file, this.srcTrack, this.clips);
+  BnkTrackData(this.file, this.srcTrack, this.clips) {
+    _setupListeners();
+  }
   BnkTrackData.fromTrack(this.file, this.srcTrack) :
     clips = ValueNestedNotifier(
       List.generate(srcTrack.playlists.length, (i) => BnkTrackClip.fromPlaylist(
@@ -1044,7 +1090,17 @@ class BnkTrackData with HasUuid, Undoable {
         srcTrack.playlists[i],
         srcTrack.clipAutomations.where((ca) => ca.uClipIndex == i).toList()
       ))
-    );
+    ) {
+    _setupListeners();
+  }
+
+  void _setupListeners() {
+    clips.addListener(_onPropChanged);
+  }
+  void _onPropChanged() {
+    areasManager.fromId(file)!.hasUnsavedChanges = true;
+    undoHistoryManager.onUndoableEvent();
+  }
   
   void dispose() {
     for (var clip in clips)
@@ -1388,7 +1444,7 @@ class BnkFilePlaylistData extends OpenFileData {
 
   BnkFilePlaylistData(String name, String path, { super.secondaryName }) :
     playlistId = int.parse(RegExp(r"\.bnk#p=(\d+)$").firstMatch(name)!.group(1)!),
-    super(name, path);
+    super(name, path, icon: Icons.queue_music);
 
   @override
   Future<void> load() async {

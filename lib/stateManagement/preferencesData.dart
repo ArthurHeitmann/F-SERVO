@@ -78,7 +78,7 @@ class PreferencesData extends OpenFileData {
 
   PreferencesData._() 
     : prefsFuture = SharedPreferences.getInstance(),
-    super("Preferences", "preferences")
+    super("Preferences", "preferences", icon: Icons.settings)
   {
     prefsFuture.then((prefs) {
       _prefs = prefs;

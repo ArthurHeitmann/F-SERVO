@@ -8,11 +8,13 @@ import 'package:tuple/tuple.dart';
 
 import '../../../../background/wemFilesIndexer.dart';
 import '../../../../fileTypeUtils/audio/wemIdsToNames.dart';
+import '../../../../keyboardEvents/intents.dart';
 import '../../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../../stateManagement/Property.dart';
 import '../../../../stateManagement/openFileTypes.dart';
 import '../../../../stateManagement/openFilesManager.dart';
 import '../../../../utils/utils.dart';
+import '../../../misc/Selectable.dart';
 import '../../../misc/mousePosition.dart';
 import '../../../misc/nestedContextMenu.dart';
 import '../../../misc/onHoverBuilder.dart';
@@ -66,7 +68,10 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> with Audi
     return SizedBox(
       height: 60,
       child: GestureDetector(
-        onTap: () => setState(() => viewData.selectedClipUuids.clear()),
+        onTap: () => setState(() {
+          viewData.selectedClipUuids.clear();
+          selectable.deselectFile(widget.track.file);
+        }),
         behavior: HitTestBehavior.translucent,
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -119,6 +124,7 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> with Audi
   List<Widget> _makeClipWidgets(int i, BnkTrackClip clip, AudioEditorData viewData, double viewWidth) {
     var srcId = widget.track.srcTrack.sources.first.sourceID;
     return [
+      // left trimmed off area
       if (widget.track.clips.isNotEmpty && clip == widget.track.clips.first)
         ChangeNotifierBuilder(
           key: Key("${clip.uuid}_left"),
@@ -134,6 +140,7 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> with Audi
             );
           }
         ),
+      // main clip
       ChangeNotifierBuilder(
         key: Key("${clip.uuid}_main"),
         notifiers: _getClipNotifiers(clip),
@@ -143,50 +150,7 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> with Audi
             width: (clip.srcDuration.value - clip.beginTrim.value + clip.endTrim.value) / viewData.msPerPix.value,
             height: 60,
             child: NestedContextMenu(
-              buttons: [
-                ContextMenuButtonConfig(
-                  "Duplicate",
-                  icon: const Icon(Icons.copy_all, size: 16),
-                  onPressed: () => _duplicateClip(clip),
-                ),
-                ContextMenuButtonConfig(
-                  "Delete",
-                  icon: const Icon(Icons.delete, size: 16),
-                  onPressed: () => _deleteClip(clip),
-                ),
-                ContextMenuButtonConfig(
-                  "Copy offsets",
-                  icon: const Icon(Icons.copy, size: 16),
-                  onPressed: () => _copyOffsets(clip),
-                ),
-                ContextMenuButtonConfig(
-                  "Paste offsets",
-                  icon: const Icon(Icons.paste, size: 16),
-                  onPressed: () => _pasteOffsets(clip),
-                ),
-                if (viewData.selectedClipUuids.length >= 2)
-                  ContextMenuButtonConfig(
-                    "Trim start to other selection",
-                    icon: const Icon(Icons.cut, size: 16),
-                    onPressed: () => _trimToOtherSelection(clip),
-                  ),
-                if (clip.rtpcPoints.isNotEmpty)
-                  ContextMenuButtonConfig(
-                    "Clear Graph Points",
-                    icon: const Icon(Icons.clear, size: 16),
-                    onPressed: () => _clearRtpcPoints(clip),
-                  ),
-                ContextMenuButtonConfig(
-                  "Replace WEM",
-                  icon: const Icon(Icons.edit, size: 16),
-                  onPressed: () => _replaceWem(clip),
-                ),
-                ContextMenuButtonConfig(
-                  "Open WEM in explorer",
-                  icon: const Icon(Icons.folder_open, size: 16),
-                  onPressed: () => _openWemInExplorer(clip),
-                ),
-              ],
+              buttons: _getClipContextMenuButtons(clip, viewData),
               child: GestureDetector(
                 onTap: () => _selectClip(clip),
                 onHorizontalDragStart: (_) {
@@ -202,6 +166,7 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> with Audi
                   : null,
                 child: Stack(
                   children: [
+                    // main clip
                     Positioned.fill(
                       child: CustomPaint(
                         foregroundPainter: _ClipRtpcPainter(
@@ -227,6 +192,7 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> with Audi
                         ),
                       )
                     ),
+                    // left trim handle
                     Positioned(
                       left: 0,
                       top: 0,
@@ -242,6 +208,7 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> with Audi
                         ),
                       ),
                     ),
+                    // right trim handle
                     Positioned(
                       right: 0,
                       top: 0,
@@ -257,6 +224,7 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> with Audi
                         ),
                       ),
                     ),
+                    // label
                     Positioned(
                       bottom: 0,
                       left: 0,
@@ -291,6 +259,7 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> with Audi
           );
         }
       ),
+      // right trimmed off area
       if (widget.track.clips.isNotEmpty && clip == widget.track.clips.last)
         ChangeNotifierBuilder(
           key: Key("${clip.uuid}_right"),
@@ -306,6 +275,53 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> with Audi
             );
           }
         ),
+    ];
+  }
+
+  List<ContextMenuButtonConfig> _getClipContextMenuButtons(BnkTrackClip clip, AudioEditorData viewData) {
+    return [
+      ContextMenuButtonConfig(
+        "Duplicate",
+        icon: const Icon(Icons.copy_all, size: 16),
+        onPressed: () => _duplicateClip(clip),
+      ),
+      ContextMenuButtonConfig(
+        "Delete",
+        icon: const Icon(Icons.delete, size: 16),
+        onPressed: () => _deleteClip(clip),
+      ),
+      ContextMenuButtonConfig(
+        "Copy offsets",
+        icon: const Icon(Icons.copy, size: 16),
+        onPressed: () => _copyOffsets(clip),
+      ),
+      ContextMenuButtonConfig(
+        "Paste offsets",
+        icon: const Icon(Icons.paste, size: 16),
+        onPressed: () => _pasteOffsets(clip),
+      ),
+      if (viewData.selectedClipUuids.length >= 2)
+        ContextMenuButtonConfig(
+          "Trim start to other selection",
+          icon: const Icon(Icons.cut, size: 16),
+          onPressed: () => _trimToOtherSelection(clip),
+        ),
+      if (clip.rtpcPoints.isNotEmpty)
+        ContextMenuButtonConfig(
+          "Clear Graph Points",
+          icon: const Icon(Icons.clear, size: 16),
+          onPressed: () => _clearRtpcPoints(clip),
+        ),
+      ContextMenuButtonConfig(
+        "Replace WEM",
+        icon: const Icon(Icons.edit, size: 16),
+        onPressed: () => _replaceWem(clip),
+      ),
+      ContextMenuButtonConfig(
+        "Open WEM in explorer",
+        icon: const Icon(Icons.folder_open, size: 16),
+        onPressed: () => _openWemInExplorer(clip),
+      ),
     ];
   }
 
@@ -387,13 +403,17 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> with Audi
   void _selectClip(BnkTrackClip clip) {
     var viewData = AudioEditorData.of(context);
     if (isCtrlPressed() || isShiftPressed()) {
-      if (viewData.selectedClipUuids.contains(clip.uuid))
+      if (viewData.selectedClipUuids.contains(clip.uuid)) {
         viewData.selectedClipUuids.remove(clip.uuid);
-      else
+        selectable.deselect(clip.uuid);
+      } else {
         viewData.selectedClipUuids.add(clip.uuid);
+        selectable.select(clip.file, clip.combinedProps, (type) => onClipKeyEvent(type, clip));
+      }
     } else {
       viewData.selectedClipUuids.clear();
       viewData.selectedClipUuids.add(clip.uuid);
+      selectable.select(clip.file, clip.combinedProps, (type) => onClipKeyEvent(type, clip));
     }
   }
 
@@ -458,15 +478,39 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> with Audi
     var viewData = AudioEditorData.of(context);
     viewData.selectedClipUuids.clear();
     viewData.selectedClipUuids.add(newClip.uuid);
+    selectable.select(newClip.file, newClip.combinedProps, (type) => onClipKeyEvent(type, clip));
     AudioPlaybackScope.of(context).cancelCurrentPlayback();
   }
 
   void _deleteClip(BnkTrackClip clip) {
     var viewData = AudioEditorData.of(context);
     viewData.selectedClipUuids.remove(clip.uuid);
+    selectable.deselect(clip.uuid);
     widget.track.clips.remove(clip);
     clip.dispose();
     AudioPlaybackScope.of(context).cancelCurrentPlayback();
+  }
+
+  void onClipKeyEvent(ChildKeyboardActionType actionType, BnkTrackClip clip) {
+    switch (actionType) {
+      case ChildKeyboardActionType.copy:
+        _copyOffsets(clip);
+        break;
+      case ChildKeyboardActionType.cut:
+        _copyOffsets(clip);
+        _deleteClip(clip);
+        break;
+      case ChildKeyboardActionType.paste:
+        _pasteOffsets(clip);
+        break;
+      case ChildKeyboardActionType.delete:
+        _deleteClip(clip);
+        break;
+      case ChildKeyboardActionType.duplicate:
+        _duplicateClip(clip);
+        break;
+      default:
+    }
   }
 }
 

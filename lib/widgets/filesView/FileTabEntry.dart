@@ -28,7 +28,7 @@ class _FileTabEntryState extends ChangeNotifierState<FileTabEntry> {
     var file = areasManager.fromId(widget.file)!;
     return logicWrapper(
       SizedBox(
-        width: 150,
+        width: 175,
         child: Padding(
           padding: const EdgeInsets.only(left: 2.5, right: 2.5, bottom: 3),
           child: Container(
@@ -60,6 +60,11 @@ class _FileTabEntryState extends ChangeNotifierState<FileTabEntry> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
+                    if (file.icon != null)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 5),
+                        child: Icon(file.icon, size: 15, color: file.iconColor),
+                      ),
                     Expanded(child: 
                       Tooltip(
                         message: "${file.displayName}\n${file.path}",

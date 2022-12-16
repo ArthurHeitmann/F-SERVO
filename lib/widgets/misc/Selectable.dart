@@ -135,14 +135,14 @@ class _SelectableWidgetState<T> extends ChangeNotifierState<SelectableWidget> {
           ),
         ),
         GestureDetector(
-            onTap: () {
-              if ((isCtrlPressed() || isShiftPressed()) && selectable.isSelected(widget.prop.uuid))
-                selectable.deselect(widget.prop.uuid);
-              else
-                selectable.select(widget.id, widget.prop, widget.onKeyboardAction);
-            },
-            child: widget.child,
-          ),
+          onTap: () {
+            if ((isCtrlPressed() || isShiftPressed()) && selectable.isSelected(widget.prop.uuid))
+              selectable.deselect(widget.prop.uuid);
+            else
+              selectable.select(widget.id, widget.prop, widget.onKeyboardAction);
+          },
+          child: widget.child,
+        ),
       ],
     );
   }
