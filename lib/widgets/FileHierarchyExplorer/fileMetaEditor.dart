@@ -12,6 +12,7 @@ import '../../utils/utils.dart';
 import '../misc/SmoothScrollBuilder.dart';
 import '../misc/smallButton.dart';
 import '../propEditors/simpleProps/XmlPropEditorFactory.dart';
+import '../propEditors/simpleProps/optionalPropEditor.dart';
 import '../propEditors/simpleProps/propEditorFactory.dart';
 import '../propEditors/xmlActions/xmlArrayEditor.dart';
 
@@ -111,6 +112,7 @@ class _FileMetaEditorState extends ChangeNotifierState<FileMetaEditor> {
       notifier: groupEntry.prop,
       builder: (context) {
         var tokens = groupEntry.prop.get("tokens");
+        var attribute = groupEntry.prop.get("attribute");
         return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -133,19 +135,43 @@ class _FileMetaEditorState extends ChangeNotifierState<FileMetaEditor> {
           else
             SmallButton(
               onPressed: () {
-                groupEntry.prop.add(XmlProp.fromXml(makeXmlElement(
-                  name: "tokens",
-                  children: [
-                    makeXmlElement(name: "size", text: "1"),
-                    makeXmlElement(name: "value", children: [
-                      makeXmlElement(name: "code", text: "0x0"),
-                      makeXmlElement(name: "id", text: "0x0"),
-                    ])
-                  ]
-                ), parentTags: groupEntry.prop.nextParents()));
+                groupEntry.prop.add(XmlProp.fromXml(
+                  makeXmlElement(
+                    name: "tokens",
+                    children: [
+                      makeXmlElement(name: "size", text: "1"),
+                      makeXmlElement(name: "value", children: [
+                        makeXmlElement(name: "code", text: "0x0"),
+                        makeXmlElement(name: "id", text: "0x0"),
+                      ])
+                    ]
+                  ),
+                  parentTags: groupEntry.prop.nextParents(),
+                  file: groupEntry.prop.file
+                ));
               },
               constraints: const BoxConstraints(maxWidth: 60),
               child: const Icon(Icons.add, size: 20,),
+            ),
+            const SizedBox(height: 5),
+            Row(
+              children: [
+                const Text("Attribute:"),
+                const SizedBox(width: 10),
+                Flexible(
+                  child: OptionalPropEditor(
+                    parent: groupEntry.prop,
+                    prop: attribute,
+                    onAdd: () {
+                      groupEntry.prop.add(XmlProp.fromXml(
+                        makeXmlElement(name: "attribute", text: "0x2"),
+                        parentTags: groupEntry.prop.nextParents(),
+                        file: groupEntry.prop.file
+                      ));
+                    },
+                  ),
+                ),
+              ],
             ),
         ]
       );
