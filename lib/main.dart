@@ -4,12 +4,14 @@ import 'dart:async';
 import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_window_close/flutter_window_close.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'background/IdLookup.dart';
 import 'background/wemFilesIndexer.dart';
 import 'stateManagement/ChangeNotifierWidget.dart';
+import 'stateManagement/otherFileTypes/beforeExitCleanup.dart';
 import 'utils/loggingWrapper.dart';
 import 'utils/utils.dart';
 import 'utils/assetDirFinder.dart';
@@ -54,6 +56,7 @@ void init() async {
   idLookup.init();
   await PreferencesData().load();
   wemFilesLookup.updateIndex();
+  FlutterWindowClose.setWindowShouldCloseHandler(beforeExitConfirmation);
 
   runApp(const MyApp());
 }

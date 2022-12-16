@@ -24,6 +24,7 @@ dependencies:
 
   flutter_highlight: ^0.7.0
   flutter_launcher_icons: ^0.10.0
+  flutter_window_close: ^0.2.2
   fluttertoast: ^8.0.9
   highlight: ^0.7.0
   image: ^3.2.2

@@ -54,6 +54,8 @@ class FilesAreaManager extends NestedNotifier<OpenFileData> implements Undoable 
         getGlobalContext(),
         title: "Save changes?",
         body: "${file.name} has unsaved changes",
+        yesText: "Save",
+        noText: "Discard",
       );
       if (answer == true)
         await file.save();

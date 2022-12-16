@@ -84,6 +84,19 @@ class AudioResourcesManager {
     resource.previewSampleRate = previewData?.item2 ?? 1;
   }
 
+  Future<void> disposeAll() async {
+    var allDeletableFiles = _resources.values
+      .where((resource) => resource._deleteOnDispose)
+      .map((resource) => resource.wavPath);
+    
+    await Future.wait(_resources.values.map((resource) => resource.dispose()));
+
+    await Future.wait(allDeletableFiles.map((path) async {
+      if (await File(path).exists())
+        await File(path).delete();
+    }));
+  }
+
   /// Disposes the reference to the audio file at the given path.
   /// If the reference count reaches 0, the file will be unloaded.
   Future<void> _disposeAudioResource(AudioResource resource) async {
@@ -91,7 +104,7 @@ class AudioResourcesManager {
     if (resource._refCount <= 0) {
       _resources.removeWhere((key, value) => value == resource);
       if (resource._deleteOnDispose)
-        File(resource.wavPath).delete();
+        await File(resource.wavPath).delete();
     }
   }
 

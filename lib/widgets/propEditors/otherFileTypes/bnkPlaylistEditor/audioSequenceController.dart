@@ -105,10 +105,10 @@ class ClipPlaybackController extends PlaybackController {
   void dispose() {
     super.dispose();
     // print("${DateTime.now()} clip dispose");
-    for (var sub in _subs)
-      sub.cancel();
     _player.dispose();
     _endTimer?.cancel();
+    for (var sub in _subs)
+      sub.cancel();
 
   }
 }

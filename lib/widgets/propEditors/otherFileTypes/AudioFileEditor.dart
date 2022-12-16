@@ -43,7 +43,7 @@ class _AudioFileEditorState extends State<AudioFileEditor> {
 
   @override
   void dispose() {
-    _player!.dispose();
+    _player?.dispose();
     _viewStart.dispose();
     _viewEnd.dispose();
     super.dispose();

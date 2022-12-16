@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import '../../widgets/theme/customTheme.dart';
 import 'RowSeparated.dart';
 
-Future<bool?> confirmOrCancelDialog(BuildContext context, { required String title, String? body }) {
+Future<bool?> confirmOrCancelDialog(BuildContext context, { required String title, String? body, String yesText = "Yes", String noText = "No" }) {
   var result = Completer<bool?>();
 
   showDialog(
@@ -43,7 +43,7 @@ Future<bool?> confirmOrCancelDialog(BuildContext context, { required String titl
                         Navigator.of(context).pop();
                       },
                       style: getTheme(context).dialogPrimaryButtonStyle,
-                      child: const Text("Save"),
+                      child: Text(yesText),
                     ),
                     ElevatedButton(
                       onPressed: () {
@@ -51,7 +51,7 @@ Future<bool?> confirmOrCancelDialog(BuildContext context, { required String titl
                         Navigator.of(context).pop();
                       },
                       style: getTheme(context).dialogSecondaryButtonStyle,
-                      child: const Text("Don't save"),
+                      child: Text(noText),
                     ),
                     ElevatedButton(
                       onPressed: () {
