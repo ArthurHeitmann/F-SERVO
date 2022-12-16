@@ -153,9 +153,10 @@ class _TextFileEditorState extends ChangeNotifierState<TextFileEditor> {
       extentOffset: charStartPos + currentLine.length,
     );
 
-    var globalContext = getGlobalContext();
     
     // select the line
+    var globalContext = getGlobalContext();
+    // ignore: use_build_context_synchronously
     FocusScope.of(globalContext).requestFocus(focus);
     setState(() {});
     controller!.value = controller!.value.copyWith(

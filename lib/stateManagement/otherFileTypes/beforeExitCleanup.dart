@@ -22,7 +22,11 @@ Future<bool> beforeExitConfirmation() async {
       return false;
   }
 
-  await beforeExitCleanup();
+  try {
+    await beforeExitCleanup();
+  } catch (e) {
+    print(e);
+  }
 
   return true;
 }

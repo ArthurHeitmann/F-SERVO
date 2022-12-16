@@ -184,6 +184,8 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
               scrollController: tabBarScrollController,
               scrollDirection: Axis.horizontal,
               onReorder: (int oldIndex, int newIndex) {
+                if (newIndex - 1 > oldIndex)
+                  newIndex--;
                 if (oldIndex < 0 || oldIndex >= widget.viewArea.length || newIndex < 0 || newIndex >= widget.viewArea.length) {
                   print("Invalid reorder: $oldIndex -> $newIndex (length: ${widget.viewArea.length})");
                   return;

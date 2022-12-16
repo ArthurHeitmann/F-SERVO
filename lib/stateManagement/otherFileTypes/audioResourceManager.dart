@@ -87,9 +87,8 @@ class AudioResourcesManager {
   Future<void> disposeAll() async {
     var allDeletableFiles = _resources.values
       .where((resource) => resource._deleteOnDispose)
-      .map((resource) => resource.wavPath);
-    
-    await Future.wait(_resources.values.map((resource) => resource.dispose()));
+      .map((resource) => resource.wavPath)
+      .toList();
 
     await Future.wait(allDeletableFiles.map((path) async {
       if (await File(path).exists())
@@ -103,8 +102,12 @@ class AudioResourcesManager {
     resource._refCount--;
     if (resource._refCount <= 0) {
       _resources.removeWhere((key, value) => value == resource);
-      if (resource._deleteOnDispose)
-        await File(resource.wavPath).delete();
+      if (resource._deleteOnDispose) {
+        if (await File(resource.wavPath).exists())
+          await File(resource.wavPath).delete();
+        else
+          print("Warning: Tried to delete file ${resource.wavPath} but it doesn't exist.");
+      }
     }
   }
 
