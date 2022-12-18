@@ -546,8 +546,14 @@ class WavFileData with ChangeNotifier, HasUuid, AudioFileData {
 
   @override
   Future<void> load() async {
-    resource = await audioResourcesManager.getAudioResource(path);
+    resource = await audioResourcesManager.getAudioResource(path, makeCopy: true);
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    resource?.dispose();
+    super.dispose();
   }
 }
 class WemFileData extends OpenFileData with AudioFileData {
@@ -616,6 +622,7 @@ class WemFileData extends OpenFileData with AudioFileData {
     await backupFile(path);
     var wav = overrideData.value!;
     await wavToWem(wav.path, path, basename(path).contains("BGM"));
+    overrideData.value!.dispose();
     overrideData.value = null;
 
     // reload
@@ -627,6 +634,15 @@ class WemFileData extends OpenFileData with AudioFileData {
     isReplacing = false;
     notifyListeners();
     onOverrideApplied.notifyListeners();
+  }
+
+  Future<void> removeOverride() async {
+    if (overrideData.value == null)
+      return;
+
+    overrideData.value!.dispose();
+    overrideData.value = null;
+    notifyListeners();
   }
 
   @override

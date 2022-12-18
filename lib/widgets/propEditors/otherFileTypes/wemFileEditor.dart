@@ -58,7 +58,6 @@ class _WemFileEditorState extends ChangeNotifierState<WemFileEditor> {
       return;
     }
     var wavFile = WavFileData(file.path!);
-    await wavFile.load();
     widget.wem.overrideData.value = wavFile;
   }
 
@@ -80,7 +79,7 @@ class _WemFileEditorState extends ChangeNotifierState<WemFileEditor> {
               const SizedBox(width: 10),
               if (widget.wem.overrideData.value != null)
                 ElevatedButton(
-                  onPressed: () => widget.wem.overrideData.value = null,
+                  onPressed: () => widget.wem.removeOverride(),
                   style: getTheme(context).dialogSecondaryButtonStyle,
                   child: const Text("Remove"),
                 ),

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:mutex/mutex.dart';
+import 'package:path/path.dart';
 import 'package:tuple/tuple.dart';
 
 import '../../fileTypeUtils/audio/riffParser.dart';
@@ -28,11 +29,12 @@ class AudioResource {
 class AudioResourcesManager {
   final Map<String, AudioResource> _resources = {};
   final Map<String, Mutex> _loadingMutexes = {};
+  String? _tmpDir;
 
   /// Returns a reference to the audio file at the given path.
   /// If the file is already loaded, it will return the same reference.
   /// If the file is not loaded, it will load it.
-  Future<AudioResource> getAudioResource(String path) async {
+  Future<AudioResource> getAudioResource(String path, { bool makeCopy = false }) async {
     if (!_loadingMutexes.containsKey(path))
       _loadingMutexes[path] = Mutex();
     await _loadingMutexes[path]!.acquire();
@@ -47,6 +49,9 @@ class AudioResourcesManager {
     bool deleteOnDispose = false;
     if (path.endsWith(".wem")) {
       wavPath = await wemToWavTmp(path);
+      deleteOnDispose = true;
+    } else if (makeCopy) {
+      wavPath = await _copyToTmp(path);
       deleteOnDispose = true;
     }
 
@@ -69,6 +74,13 @@ class AudioResourcesManager {
     _loadingMutexes[path]!.release();
 
     return resource;
+  }
+
+  Future<String> _copyToTmp(String path) async {
+    _tmpDir ??= (await Directory.systemTemp.createTemp("tmpWav")).path;
+    var tmpPath = join(_tmpDir!, basename(path));
+    await File(path).copy(tmpPath);
+    return tmpPath;
   }
 
   Future<void> reloadAudioResource(AudioResource resource) async {
@@ -94,6 +106,9 @@ class AudioResourcesManager {
       if (await File(path).exists())
         await File(path).delete();
     }));
+
+    if (_tmpDir != null && await Directory(_tmpDir!).exists())
+      await Directory(_tmpDir!).delete(recursive: true);
   }
 
   /// Disposes the reference to the audio file at the given path.
