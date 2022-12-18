@@ -44,6 +44,8 @@ class BnkTrackEditor extends ChangeNotifierWidget {
 class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> with AudioPlayingWidget {
   double? dragStartPos;
   Map<String, double>? initialXOff;
+  @override
+  OpenFileId get fileId => widget.track.file;
 
   @override
   void initState() {

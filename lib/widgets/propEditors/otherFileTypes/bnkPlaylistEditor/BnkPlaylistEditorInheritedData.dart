@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import '../../../../stateManagement/Property.dart';
 import '../../../../stateManagement/nestedNotifier.dart';
 import '../../../../stateManagement/openFileTypes.dart';
+import '../../../../stateManagement/openFilesManager.dart';
 import '../../../misc/mousePosition.dart';
 import 'audioSequenceController.dart';
 
@@ -150,6 +151,7 @@ mixin AudioPlayingWidget<T extends StatefulWidget> on State<T> {
   }
 
   PlaybackController makePlaybackController();
+  OpenFileId get fileId;
 
   void togglePlayback() {
     var audioPlaybackScope = AudioPlaybackScope.of(context);
@@ -194,6 +196,8 @@ mixin AudioPlayingWidget<T extends StatefulWidget> on State<T> {
     if (event is! KeyDownEvent)
       return false;
     if (event.logicalKey != LogicalKeyboardKey.space)
+      return false;
+    if (fileId != areasManager.activeArea?.currentFile?.uuid)
       return false;
 
     togglePlayback();

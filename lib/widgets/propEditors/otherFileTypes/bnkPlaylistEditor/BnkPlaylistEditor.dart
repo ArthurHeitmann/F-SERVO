@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import '../../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../../stateManagement/nestedNotifier.dart';
 import '../../../../stateManagement/openFileTypes.dart';
+import '../../../../stateManagement/openFilesManager.dart';
 import '../../../../utils/utils.dart';
 import '../../../theme/customTheme.dart';
 import 'BnkPlaylistEditorInheritedData.dart';
@@ -186,6 +187,8 @@ class _BnkPlaylistChildEditorState extends State<BnkPlaylistChildEditor> with Au
   bool isCollapsed = false;
   BnkPlaylistChild get plSegment => widget.plSegment;
   BnkSegmentData? get segment => widget.plSegment.segment;
+  @override
+  OpenFileId get fileId => widget.plSegment.file;
 
   @override
   void initState() {
