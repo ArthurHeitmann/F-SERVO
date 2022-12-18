@@ -4,6 +4,7 @@ import 'dart:math';
 
 import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:tuple/tuple.dart';
 
 import '../../../../background/wemFilesIndexer.dart';
@@ -46,12 +47,20 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> with Audi
 
   @override
   void initState() {
+    HardwareKeyboard.instance.addHandler(onKey);
     Future.wait(widget.track.clips.map((c) => c.loadResource()))
       .then((_) {
         if (mounted)
           setState(() {});
       });
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    HardwareKeyboard.instance.removeHandler(onKey);
+    onDispose();
+    super.dispose();
   }
 
   @override

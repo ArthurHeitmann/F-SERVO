@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../../stateManagement/nestedNotifier.dart';
@@ -187,7 +188,14 @@ class _BnkPlaylistChildEditorState extends State<BnkPlaylistChildEditor> with Au
   BnkSegmentData? get segment => widget.plSegment.segment;
 
   @override
+  void initState() {
+    HardwareKeyboard.instance.addHandler(onKey);
+    super.initState();
+  }
+
+  @override
   void dispose() {
+    HardwareKeyboard.instance.removeHandler(onKey);
     onDispose();
     super.dispose();
   }

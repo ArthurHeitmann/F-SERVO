@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../../stateManagement/Property.dart';
 import '../../../../stateManagement/nestedNotifier.dart';
@@ -185,6 +186,18 @@ mixin AudioPlayingWidget<T extends StatefulWidget> on State<T> {
       return;
     var audioPlaybackScope = AudioPlaybackScope.of(context);
     audioPlaybackScope.playbackMarker.pos.value = pos;
+  }
+
+  bool onKey(KeyEvent event) {
+    if (currentPlaybackItem == null)
+      return false;
+    if (event is! KeyDownEvent)
+      return false;
+    if (event.logicalKey != LogicalKeyboardKey.space)
+      return false;
+
+    togglePlayback();
+    return true;
   }
 }
 
