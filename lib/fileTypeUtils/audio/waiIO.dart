@@ -125,6 +125,10 @@ class WemStruct {
     return "${index}_${lookupName}_$wemID.wem";
   }
 
+  WemStruct copy() {
+    return WemStruct(wemID, wemEntrySize, wemOffset, wspNameIndex, wspIndex);
+  }
+
   static const int size = 16;
 }
 
@@ -161,10 +165,17 @@ class WaiFile {
   }
 
   int getIndexFromId(int wemId) {
-    var index = _getIndexFromIdBinarySearch(wemId);
-    if (index != -1)
-      return index;
+    // var index = _getIndexFromIdBinarySearch(wemId);
+    // if (index != -1)
+    //   return index;
     return wemStructs.indexWhere((wem) => wem.wemID == wemId);
+  }
+
+  WemStruct getWemFromId(int wemId) {
+    var index = getIndexFromId(wemId);
+    if (index == -1)
+      throw Exception("Wem ID $wemId not found");
+    return wemStructs[index];
   }
 
   int _getIndexFromIdBinarySearch(int wemId) {

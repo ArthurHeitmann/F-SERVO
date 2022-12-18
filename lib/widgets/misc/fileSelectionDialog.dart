@@ -53,6 +53,7 @@ Future<String?> fileSelectionDialog(BuildContext context, { required bool isFile
 
                         if (path != null) {
                           result.complete(path);
+                          // ignore: use_build_context_synchronously
                           Navigator.of(context).pop();
                         }
                       },

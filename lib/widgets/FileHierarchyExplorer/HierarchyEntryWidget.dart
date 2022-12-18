@@ -5,6 +5,7 @@ import 'package:path/path.dart';
 
 import '../../fileTypeUtils/audio/audioModPacker.dart';
 import '../../fileTypeUtils/audio/audioModsChangesUndo.dart';
+import '../../fileTypeUtils/audio/modInstaller.dart';
 import '../../fileTypeUtils/ruby/pythonRuby.dart';
 import '../../stateManagement/HierarchyEntryTypes.dart';
 import '../../widgets/theme/customTheme.dart';
@@ -207,6 +208,11 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
               "Package Mod",
               icon: const Icon(Icons.file_upload, size: 15,),
               onPressed: () => packAudioMod((widget.entry as WaiHierarchyEntry).path),
+            ),
+            ContextMenuButtonConfig(
+              "Install Packaged Mod",
+              icon: const Icon(Icons.add, size: 15,),
+              onPressed: () => installMod((widget.entry as WaiHierarchyEntry).path),
             ),
             ContextMenuButtonConfig(
               "Revert all changes",
