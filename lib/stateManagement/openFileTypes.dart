@@ -612,7 +612,7 @@ class WemFileData extends OpenFileData with AudioFileData {
     super.dispose();
   }
 
-  Future<void> applyOverride() async {
+  Future<void> applyOverride(bool enableVolumeNormalization) async {
     if (overrideData.value == null)
       throw Exception("No override data");
     
@@ -621,7 +621,7 @@ class WemFileData extends OpenFileData with AudioFileData {
 
     await backupFile(path);
     var wav = overrideData.value!;
-    await wavToWem(wav.path, path, basename(path).contains("BGM"));
+    await wavToWem(wav.path, path, enableVolumeNormalization);
     overrideData.value!.dispose();
     overrideData.value = null;
 

@@ -1,13 +1,17 @@
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:path/path.dart';
 
+import '../../../fileTypeUtils/audio/wemToWavConverter.dart';
 import '../../../stateManagement/ChangeNotifierWidget.dart';
+import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/openFileTypes.dart';
 import '../../../stateManagement/openFilesManager.dart';
 import '../../../utils/utils.dart';
 import '../../misc/ColumnSeparated.dart';
 import '../../theme/customTheme.dart';
+import '../simpleProps/boolPropSwitch.dart';
 import 'AudioFileEditor.dart';
 
 class WemFileEditor extends ChangeNotifierWidget {
@@ -25,11 +29,13 @@ class WemFileEditor extends ChangeNotifierWidget {
 
 class _WemFileEditorState extends ChangeNotifierState<WemFileEditor> {
   Key refreshKey = UniqueKey();
+  BoolProp enableVolumeNormalization = BoolProp(false);
 
   @override
   void initState() {
     widget.wem.overrideData.addListener(_onOverrideChanged);
     widget.wem.onOverrideApplied.addListener(_onOverrideApplied);
+    enableVolumeNormalization.changesUndoable = false;
     super.initState();
   }
 
@@ -37,6 +43,7 @@ class _WemFileEditorState extends ChangeNotifierState<WemFileEditor> {
   void dispose() {
     widget.wem.overrideData.removeListener(_onOverrideChanged);
     widget.wem.onOverrideApplied.removeListener(_onOverrideApplied);
+    enableVolumeNormalization.dispose();
     super.dispose();
   }
 
@@ -61,6 +68,18 @@ class _WemFileEditorState extends ChangeNotifierState<WemFileEditor> {
     widget.wem.overrideData.value = wavFile;
   }
 
+  Future<void> _exportAsWav({ String? wavPath, bool displayToast = true }) async {
+    wavPath ??= await FilePicker.platform.saveFile(
+      fileName: "${basenameWithoutExtension(widget.wem.path)}.wav",
+      allowedExtensions: ["wav"],
+    );
+    if (wavPath == null)
+      return;
+    await wemToWav(widget.wem.path, wavPath);
+    if (displayToast)
+      showToast("Saved as ${basename(wavPath)}");
+  }
+
   @override
   Widget build(BuildContext context) {
     var audioEditor = Column(
@@ -83,6 +102,12 @@ class _WemFileEditorState extends ChangeNotifierState<WemFileEditor> {
                   style: getTheme(context).dialogSecondaryButtonStyle,
                   child: const Text("Remove"),
                 ),
+              const SizedBox(width: 40),
+              ElevatedButton(
+                onPressed: _exportAsWav,
+                style: getTheme(context).dialogSecondaryButtonStyle,
+                child: const Text("Export as WAV"),
+              ),
             ],
           ) : null,
           rightSide: widget.wem.relatedBnkPlaylistIds.isNotEmpty ? Align(
@@ -140,10 +165,13 @@ class _WemFileEditorState extends ChangeNotifierState<WemFileEditor> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 ElevatedButton(
-                  onPressed: () => widget.wem.applyOverride(),
+                  onPressed: () => widget.wem.applyOverride(enableVolumeNormalization.value),
                   style: getTheme(context).dialogPrimaryButtonStyle,
                   child: const Text("Replace WEM"),
                 ),
+                const SizedBox(width: 20),
+                BoolPropSwitch(prop: enableVolumeNormalization),
+                const Text("Volume normalization"),
               ],
             ),
           ),

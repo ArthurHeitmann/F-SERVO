@@ -22,7 +22,7 @@ Future<String> _makeWwiseProject() async {
   return tempProjectDir;
 }
 
-XmlDocument _getWwiseSourcesXml(String wavPath) {
+XmlDocument _getWwiseSourcesXml(String wavPath, bool enableVolumeNormalization) {
   return XmlDocument([
     XmlProcessing("xml", "version=\"1.0\" encoding=\"UTF-8\""),
     XmlElement(XmlName("ExternalSourcesList"), [
@@ -31,14 +31,15 @@ XmlDocument _getWwiseSourcesXml(String wavPath) {
     ], [
       XmlElement(XmlName("Source"), [
         XmlAttribute(XmlName("Path"), wavPath),
-        // XmlAttribute(XmlName("AnalysisTypes"), "2"),
+        if (enableVolumeNormalization)
+          XmlAttribute(XmlName("AnalysisTypes"), "2"),
         XmlAttribute(XmlName("Conversion"), "External_HighQuality"),
       ]),
     ]),
   ]);
 }
 
-Future<void> wavToWem(String wavPath, String wemSavePath, bool patchForBgm) async {
+Future<void> wavToWem(String wavPath, String wemSavePath, bool enableVolumeNormalization) async {
   var prefs = PreferencesData();
   if (assetsDir == null) {
     showToast("Assets directory not found");
@@ -54,7 +55,7 @@ Future<void> wavToWem(String wavPath, String wemSavePath, bool patchForBgm) asyn
 
   try {
     String wavSrcDir = join(projectPath, "wavSrc");
-    XmlDocument wSourcesXml = _getWwiseSourcesXml(wavPath);
+    XmlDocument wSourcesXml = _getWwiseSourcesXml(wavPath, enableVolumeNormalization);
     String wSourcesXmlPath = join(wavSrcDir, "ExtSourceList.wsources");
     var xmlStr = wSourcesXml.toXmlString(pretty: true, indent: "\t");
     await File(wSourcesXmlPath).writeAsString(xmlStr);
