@@ -553,7 +553,7 @@ class WspHierarchyEntry extends GenericFileHierarchyEntry {
       return;
     _isCollapsed = value;
     notifyListeners();
-    if (!_isCollapsed && !_hasLoadedChildren) {
+    if (!_isCollapsed && !_hasLoadedChildren && isEmpty) {
       _hasLoadedChildren = true;
       addAll(_childWems.map((child) => makeWaiChildEntry(child)));
     }

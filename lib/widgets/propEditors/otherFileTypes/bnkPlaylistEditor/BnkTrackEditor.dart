@@ -324,7 +324,7 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> with Audi
           onPressed: () => _clearRtpcPoints(clip),
         ),
       ContextMenuButtonConfig(
-        "Replace WEM",
+        "Edit WEM",
         icon: const Icon(Icons.edit, size: 16),
         onPressed: () => _replaceWem(clip),
       ),
@@ -382,7 +382,10 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> with Audi
       showToast("Clip not found");
       return;
     }
+    var prevBeginTrim = clip.beginTrim.value;
     clip.beginTrim.value = otherClip.srcDuration.value + otherClip.endTrim.value;
+    var diff = clip.beginTrim.value - prevBeginTrim;
+    clip.xOff.value -= diff;
     AudioPlaybackScope.of(context).cancelCurrentPlayback();
   }
 

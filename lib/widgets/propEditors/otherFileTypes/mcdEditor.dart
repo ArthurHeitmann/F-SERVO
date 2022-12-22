@@ -211,6 +211,7 @@ class _McdEditorBodyState extends ChangeNotifierState<_McdEditorBody> {
                     itemCount: eventPages[currentPage].length,
                     itemBuilder: (context, i) {
                       return _McdEventEditor(
+                        key: Key(eventPages[currentPage][i].item2.uuid),
                         file: widget.file,
                         event: eventPages[currentPage][i].item2,
                         events: widget.mcd.events,
@@ -334,7 +335,7 @@ class _McdEventEditor extends ChangeNotifierWidget {
   final bool altColor;
   final int index;
 
-  _McdEventEditor({ required this.file, required this.event, required this.events, required this.altColor, required this.index })
+  _McdEventEditor({ super.key, required this.file, required this.event, required this.events, required this.altColor, required this.index })
     : super(notifiers: [event.paragraphs, event.name]);
 
   @override
@@ -393,6 +394,7 @@ class _McdEventEditorState extends ChangeNotifierState<_McdEventEditor> {
                 const SizedBox(height: 5,),
                 for (int i = 0; i < widget.event.paragraphs.length; i++)
                   Padding(
+                    key: Key(widget.event.paragraphs[i].uuid),
                     padding: const EdgeInsets.only(left: 10),
                     child: _McdParagraphEditor(
                       paragraph: widget.event.paragraphs[i],
