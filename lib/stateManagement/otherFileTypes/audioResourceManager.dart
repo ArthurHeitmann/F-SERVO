@@ -1,6 +1,7 @@
 
 import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:mutex/mutex.dart';
 import 'package:path/path.dart';
@@ -130,10 +131,20 @@ class AudioResourcesManager {
     if (riff.format.formatTag != 1 && riff.format.formatTag != 3)
       return null;
     const previewSampleRate = 200;
-    var rawSamples = riff.data.samples;
-    int previewSampleCount = rawSamples.length ~/ riff.format.blockAlign ~/ previewSampleRate;
+    List<num> rawSamples = riff.data.samples;
+    var samplesCount = rawSamples.length;
     int bitsPerSample = riff.format.bitsPerSample;
     var scaleFactor = pow(2, bitsPerSample - 1);
+    if (riff.format.formatTag == 3 && bitsPerSample == 32) {
+      // convert int bytes to float
+      var t1 = DateTime.now();
+      var intList = Int32List.fromList(rawSamples as List<int>);
+      rawSamples = Float32List.view(intList.buffer);
+      scaleFactor = 1;
+      var t2 = DateTime.now();
+      print("Converted ${samplesCount ~/ 1000}k samples in ${t2.difference(t1).inMilliseconds}ms");
+    }
+    int previewSampleCount = samplesCount ~/ riff.format.blockAlign ~/ previewSampleRate;
     var wavSamples = List.generate(previewSampleCount, (i) => rawSamples[i * previewSampleRate * riff.format.blockAlign] / scaleFactor);
     return Tuple2(wavSamples, previewSampleRate);
   }
