@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:path/path.dart' as path;
+import 'package:tuple/tuple.dart';
 import 'package:xml/xml.dart';
 
 import '../fileTypeUtils/audio/waiExtractor.dart';
@@ -38,87 +39,79 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
   Future<HierarchyEntry> openFile(String filePath, { HierarchyEntry? parent }) async {
     isLoadingStatus.pushIsLoading();
 
-    HierarchyEntry entry;
-    // TODO clean this up
+    HierarchyEntry? entry;
     try {
-      if (strEndsWithDat(filePath)) {
-        if (await File(filePath).exists())
-          entry = await openDat(filePath, parent: parent);
-        else if (await Directory(filePath).exists())
-          entry = await openExtractedDat(filePath, parent: parent);
-        else
-          throw FileSystemException("File not found: $filePath");
+      List<Tuple2<Iterable<String>, Future<HierarchyEntry> Function()>> hierarchyPresets = [
+        Tuple2(datExtensions, () async {
+          if (await File(filePath).exists())
+            return await openDat(filePath, parent: parent);
+          else if (await Directory(filePath).exists())
+            return await openExtractedDat(filePath, parent: parent);
+          else
+            throw FileSystemException("File not found: $filePath");
+        }),
+        Tuple2([".pak"], () async {
+          if (await File(filePath).exists())
+            return await openPak(filePath, parent: parent);
+          else if (await Directory(filePath).exists())
+            return await openExtractedPak(filePath, parent: parent);
+          else
+            throw FileSystemException("File not found: $filePath");
+        }),
+        Tuple2(
+          [".xml"],
+          () async => openGenericFile<XmlScriptHierarchyEntry>(filePath, parent, (n, p) => XmlScriptHierarchyEntry(n, p))
+        ),
+        Tuple2(
+          [".yax"],
+          () async => await openYaxXmlScript(filePath, parent: parent)
+        ),
+        Tuple2(
+          [".rb"],
+          () async => openGenericFile<RubyScriptHierarchyEntry>(filePath, parent, ((n, p) => RubyScriptHierarchyEntry(n, p)))
+        ),
+        Tuple2(
+          [".bin", ".mrb"], () async => await openBinMrbScript(filePath, parent: parent)
+        ),
+        Tuple2(
+          [".tmd"],
+          () async => openGenericFile<TmdHierarchyEntry>(filePath, parent, (n, p) => TmdHierarchyEntry(n, p))
+        ),
+        Tuple2(
+          [".smd"],
+          () async => openGenericFile<SmdHierarchyEntry>(filePath, parent, (n ,p) => SmdHierarchyEntry(n, p))
+        ),
+        Tuple2(
+          [".mcd"],
+          () async => openGenericFile<McdHierarchyEntry>(filePath, parent, (n ,p) => McdHierarchyEntry(n, p))
+        ),
+        Tuple2(
+          [".ftb"],
+          () async => openGenericFile<FtbHierarchyEntry>(filePath, parent, (n ,p) => FtbHierarchyEntry(n, p))
+        ),
+        Tuple2(
+          [".wai"],
+          () async => await openWaiFile(filePath)
+        ),
+        Tuple2(
+          [".wsp"],
+          () async => openWspFile(filePath)
+        ),
+        Tuple2(
+          [".bxm", ".gad", ".sar"], () async => openGenericFile<BxmHierarchyEntry>(filePath, parent, (n, p) => BxmHierarchyEntry(n, p))
+        ),
+      ];
+
+      for (var preset in hierarchyPresets) {
+        if (preset.item1.any((ext) => filePath.endsWith(ext))) {
+          entry = await preset.item2();
+          break;
+        }
       }
-      else if (filePath.endsWith(".pak")) {
-        if (await File(filePath).exists())
-          entry = await openPak(filePath, parent: parent);
-        else if (await Directory(filePath).exists())
-          entry = await openExtractedPak(filePath, parent: parent);
-        else
-          throw FileSystemException("File not found: $filePath");
-      }
-      else if (filePath.endsWith(".xml")) {
-        if (await File(filePath).exists())
-          entry = openGenericFile<XmlScriptHierarchyEntry>(filePath, parent, (n, p) => XmlScriptHierarchyEntry(n, p));
-        else
-          throw FileSystemException("File not found: $filePath");
-      }
-      else if (filePath.endsWith(".yax")) {
-        if (await File(filePath).exists())
-          entry = await openYaxXmlScript(filePath, parent: parent);
-        else
-          throw FileSystemException("File not found: $filePath");
-      }
-      else if (filePath.endsWith(".rb")) {
-        if (await File(filePath).exists())
-          entry = openGenericFile<RubyScriptHierarchyEntry>(filePath, parent, ((n, p) => RubyScriptHierarchyEntry(n, p)));
-        else
-          throw FileSystemException("File not found: $filePath");
-      }
-      else if (filePath.endsWith(".bin") || filePath.endsWith(".mrb")) {
-        if (await File(filePath).exists())
-          entry = await openBinMrbScript(filePath, parent: parent);
-        else
-          throw FileSystemException("File not found: $filePath");
-      }
-      else if (filePath.endsWith(".tmd")) {
-        if (await File(filePath).exists())
-          entry = openGenericFile<TmdHierarchyEntry>(filePath, parent, (n, p) => TmdHierarchyEntry(n, p),);
-        else
-          throw FileSystemException("File not found: $filePath");
-      }
-      else if (filePath.endsWith(".smd")) {
-        if (await File(filePath).exists())
-          entry = openGenericFile<SmdHierarchyEntry>(filePath, parent, (n ,p) => SmdHierarchyEntry(n, p));
-        else
-          throw FileSystemException("File not found: $filePath");
-      }
-      else if (filePath.endsWith(".mcd")) {
-        if (await File(filePath).exists())
-          entry = openGenericFile<McdHierarchyEntry>(filePath, parent, (n ,p) => McdHierarchyEntry(n, p));
-        else
-          throw FileSystemException("File not found: $filePath");
-      }
-      else if (filePath.endsWith(".ftb")) {
-        if (await File(filePath).exists())
-          entry = openGenericFile<FtbHierarchyEntry>(filePath, parent, (n ,p) => FtbHierarchyEntry(n, p));
-        else
-          throw FileSystemException("File not found: $filePath");
-      }
-      else if (filePath.endsWith(".wai")) {
-        if (await File(filePath).exists())
-          entry = await openWaiFile(filePath);
-        else
-          throw FileSystemException("File not found: $filePath");
-      }
-      else if (filePath.endsWith(".wsp")) {
-        entry = openWspFile(filePath);
-      }
-      else if ([".bxm", ".gad", ".sar"].any((ext) => filePath.endsWith(ext))) {
-        entry = openGenericFile<BxmHierarchyEntry>(filePath, parent, (n, p) => BxmHierarchyEntry(n, p));
-      }
-      else
+      if (entry == null) {
+        showToast("Unsupported file type: $filePath");
         throw FileSystemException("Unsupported file type: $filePath");
+      }
       
       undoHistoryManager.onUndoableEvent();
     } finally {
