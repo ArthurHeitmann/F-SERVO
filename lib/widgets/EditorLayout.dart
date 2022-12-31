@@ -15,48 +15,48 @@ class EditorLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ResizableWidget(
-      axis: Axis.horizontal,
-      percentages: const [0.22, 0.53, 0.25],
-      draggableThickness: 4,
-      lineThickness: 4,
+    return Row(
       children: [
-        Material(
-          color: getTheme(context).sidebarBackgroundColor,
-          child: Sidebar(
-            entries: [
-              SidebarEntryConfig(
-                name: "Files",
-                icon: Icons.folder,
-                child: ResizableWidget(
-                  axis: Axis.vertical,
-                  percentages: const [0.6, 0.4],
-                  draggableThickness: 5,
-                  children: [
-                    FileExplorer(),
-                    FileMetaEditor()
-                  ],
-                ),
+        Sidebar(
+          initialWidth: MediaQuery.of(context).size.width * 0.22,
+          entries: [
+            SidebarEntryConfig(
+              name: "Files",
+              icon: Icons.folder,
+              child: ResizableWidget(
+                axis: Axis.vertical,
+                percentages: const [0.6, 0.4],
+                draggableThickness: 5,
+                children: [
+                  FileExplorer(),
+                  FileMetaEditor()
+                ],
               ),
-              SidebarEntryConfig(
-                name: "Search",
-                icon: Icons.search,
-                child: const SearchPanel(),
-              )
-            ],
-          ),
+            ),
+            SidebarEntryConfig(
+              name: "Search",
+              icon: Icons.search,
+              child: const SearchPanel(),
+            )
+          ],
         ),
-        OpenFilesAreas(),
-        Material(
-          color: getTheme(context).sidebarBackgroundColor,
-          child: ResizableWidget(
-            axis: Axis.vertical,
-            percentages: const [0.4, 0.6],
-            children: [
-              Outliner(),
-              XmlPropDetailsEditor(),
-            ],
-          ),
+        Expanded(child: OpenFilesAreas()),
+        Sidebar(
+          initialWidth: MediaQuery.of(context).size.width * 0.25,
+          switcherPosition: SidebarSwitcherPosition.right,
+          entries: [
+            SidebarEntryConfig(
+              name: "Details",
+              child: ResizableWidget(
+                axis: Axis.vertical,
+                percentages: const [0.4, 0.6],
+                children: [
+                  Outliner(),
+                  XmlPropDetailsEditor(),
+                ],
+              ),
+            ),
+          ],
         ),
       ],
     );

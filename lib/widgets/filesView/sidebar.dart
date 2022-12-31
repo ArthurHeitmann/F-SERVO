@@ -1,6 +1,9 @@
 
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
+import '../../utils/utils.dart';
 import '../theme/customTheme.dart';
 
 class SidebarEntryConfig {
@@ -20,8 +23,9 @@ enum SidebarSwitcherPosition { left, right }
 class Sidebar extends StatefulWidget {
   final List<SidebarEntryConfig> entries;
   final SidebarSwitcherPosition switcherPosition;
+  final double initialWidth;
 
-  const Sidebar({ super.key, required this.entries, this.switcherPosition = SidebarSwitcherPosition.left });
+  const Sidebar({ super.key, required this.entries, required this.initialWidth, this.switcherPosition = SidebarSwitcherPosition.left });
 
   @override
   State<Sidebar> createState() => _SidebarState();
@@ -29,26 +33,72 @@ class Sidebar extends StatefulWidget {
 
 class _SidebarState extends State<Sidebar> {
   int _selectedIndex = 0;
+  double _width = 0;
+  bool _isExpanded = true;
+  OverlayEntry? _draggableOverlayEntry;
+  final _layerLink = LayerLink();
+
+  @override
+  void initState() {
+    super.initState();
+    _width = widget.initialWidth;
+
+    waitForNextFrame().then((_) {
+      _draggableOverlayEntry = OverlayEntry(
+        builder: (context) => _ResizeHandle(
+          layerLink: _layerLink,
+          switcherPosition: widget.switcherPosition,
+          onWidthChanged: (width) {
+            _width += width;
+            _width = max(_width, 100);
+            // rebuild self and handle
+            setState(() {});
+            context.findRenderObject()!.markNeedsLayout();
+          },
+        )
+      );
+      Overlay.of(context).insert(_draggableOverlayEntry!);
+      print("Sidebar: Draggable overlay entry inserted");
+    });
+  }
+
+  @override
+  void dispose() {
+    _draggableOverlayEntry?.remove();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        if (widget.switcherPosition == SidebarSwitcherPosition.left) ...[
-          _buildSwitcher(),
-          const VerticalDivider(width: 1,),
-        ],
-        Expanded(
-          child: IndexedStack(
-            index: _selectedIndex,
-            children: widget.entries.map((e) => e.child).toList(),
-          ),
+    return Material(
+      color: getTheme(context).sidebarBackgroundColor,
+      child: ConstrainedBox(
+        constraints: _isExpanded
+          ? BoxConstraints(maxWidth: _width)
+          : const BoxConstraints(),
+        child: Row(
+          children: [
+            if (widget.switcherPosition == SidebarSwitcherPosition.left) ...[
+              _buildSwitcher(),
+              const VerticalDivider(width: 1,),
+            ],
+            if (_isExpanded)
+              Expanded(
+                child: CompositedTransformTarget(
+                  link: _layerLink,
+                  child: IndexedStack(
+                    index: _selectedIndex,
+                    children: widget.entries.map((e) => e.child).toList(),
+                  ),
+                ),
+              ),
+            if (widget.switcherPosition == SidebarSwitcherPosition.right) ...[
+              const VerticalDivider(width: 1,),
+              _buildSwitcher(),
+            ],
+          ],
         ),
-        if (widget.switcherPosition == SidebarSwitcherPosition.right) ...[
-          const VerticalDivider(width: 1,),
-          _buildSwitcher(),
-        ],
-      ],
+      ),
     );
   }
 
@@ -83,7 +133,13 @@ class _SidebarState extends State<Sidebar> {
             : getTheme(context).textColor!.withOpacity(0.5),
         ),
       ),
-      onPressed: () => setState(() => _selectedIndex = index),
+      onPressed: () => setState(() {
+        if (_selectedIndex == index)
+          _isExpanded = !_isExpanded;
+        else
+          _isExpanded = true;
+        _selectedIndex = index;
+      }),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 10),
         child: RotatedBox(
@@ -99,6 +155,49 @@ class _SidebarState extends State<Sidebar> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _ResizeHandle extends StatelessWidget {
+  final void Function(double) onWidthChanged;
+  final SidebarSwitcherPosition switcherPosition;
+  final LayerLink layerLink;
+
+  const _ResizeHandle({ required this.onWidthChanged, required this.switcherPosition, required this.layerLink });
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        CompositedTransformFollower(
+          link: layerLink,
+          showWhenUnlinked: false,
+          targetAnchor: switcherPosition == SidebarSwitcherPosition.left
+            ? Alignment.topRight
+            : Alignment.topLeft,
+          followerAnchor: switcherPosition == SidebarSwitcherPosition.left
+            ? Alignment.topRight
+            : Alignment.topLeft,
+          child: SizedBox(
+            width: 5,
+            child: MouseRegion(
+              cursor: SystemMouseCursors.resizeColumn,
+              child: GestureDetector(
+                onHorizontalDragUpdate: (details) {
+                  if (switcherPosition == SidebarSwitcherPosition.left)
+                    onWidthChanged(details.delta.dx);
+                  else
+                    onWidthChanged(-details.delta.dx);
+                },
+                child: Container(
+                  color: Colors.transparent,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
