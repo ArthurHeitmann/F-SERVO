@@ -226,6 +226,18 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
               icon: const Icon(Icons.file_download, size: 15,),
               onPressed: (widget.entry as WemHierarchyEntry).exportAsWav,
             ),
+          if (widget.entry is BxmHierarchyEntry) ...[
+            ContextMenuButtonConfig(
+              "Convert to XML",
+              icon: const Icon(Icons.file_download, size: 15,),
+              onPressed: (widget.entry as BxmHierarchyEntry).toXml,
+            ),
+            ContextMenuButtonConfig(
+              "Convert to BXM",
+              icon: const Icon(Icons.file_upload, size: 15,),
+              onPressed: (widget.entry as BxmHierarchyEntry).toBxm,
+            ),
+          ],
           if (widget.entry is WspHierarchyEntry)
             ContextMenuButtonConfig(
               "Save all as WAV",

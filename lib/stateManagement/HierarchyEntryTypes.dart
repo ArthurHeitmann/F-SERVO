@@ -7,6 +7,8 @@ import 'package:xml/xml.dart';
 
 import '../fileTypeUtils/audio/waiExtractor.dart';
 import '../fileTypeUtils/audio/wemToWavConverter.dart';
+import '../fileTypeUtils/bxm/bxmReader.dart';
+import '../fileTypeUtils/bxm/bxmWriter.dart';
 import '../fileTypeUtils/yax/yaxToXml.dart';
 import '../utils/utils.dart';
 import 'FileHierarchy.dart';
@@ -493,6 +495,29 @@ class FtbHierarchyEntry extends GenericFileHierarchyEntry {
   @override
   HierarchyEntry clone() {
     return FtbHierarchyEntry(name.takeSnapshot() as StringProp, path);
+  }
+}
+
+class BxmHierarchyEntry extends GenericFileHierarchyEntry {
+  final String xmlPath;
+  
+  BxmHierarchyEntry(StringProp name, String path)
+    : xmlPath = "$path.xml",
+    super(name, path, false, false);
+  
+  @override
+  HierarchyEntry clone() {
+    return BxmHierarchyEntry(name.takeSnapshot() as StringProp, path);
+  }
+  
+  Future<void> toXml() async {
+    await convertBxmFileToXml(path, xmlPath);
+    showToast("Saved to ${basename(xmlPath)}");
+  }
+
+  Future<void> toBxm() async {
+    await convertXmlToBxmFile(xmlPath, path);
+    showToast("Updated ${basename(path)}");
   }
 }
 

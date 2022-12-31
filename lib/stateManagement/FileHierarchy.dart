@@ -114,6 +114,9 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
       else if (filePath.endsWith(".wsp")) {
         entry = openWspFile(filePath);
       }
+      else if ([".bxm", ".gad", ".sar"].any((ext) => filePath.endsWith(ext))) {
+        entry = openGenericFile<BxmHierarchyEntry>(filePath, parent, (n, p) => BxmHierarchyEntry(n, p));
+      }
       else
         throw FileSystemException("Unsupported file type: $filePath");
       
