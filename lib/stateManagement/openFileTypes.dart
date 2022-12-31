@@ -558,6 +558,8 @@ class WavFileData with ChangeNotifier, HasUuid, AudioFileData {
 }
 class WemFileData extends OpenFileData with AudioFileData {
   ValueNotifier<WavFileData?> overrideData = ValueNotifier(null);
+  bool usesSeekTable = false;
+  BoolProp usesLoudnessNormalization = BoolProp(false);
   ChangeNotifier onOverrideApplied = ChangeNotifier();
   bool isReplacing = false;
   Set<int> relatedBnkPlaylistIds = {};
@@ -587,6 +589,12 @@ class WemFileData extends OpenFileData with AudioFileData {
       }
     }
 
+    // set usesSeekTable and usesLoudnessNormalization from WEM RIFF format
+    var wemRiff = await RiffFile.fromFile(path);
+    usesLoudnessNormalization.value = wemRiff.chunks.any((chunk) => chunk.chunkId == "akd ");
+    if (wemRiff.format is WemFormatChunk)
+      usesSeekTable = (wemRiff.format as WemFormatChunk).setupPacketOffset != 0;
+
     await super.load();
   }
 
@@ -609,6 +617,7 @@ class WemFileData extends OpenFileData with AudioFileData {
       overrideData.value!.dispose();
       overrideData.value = null;
     }
+    usesLoudnessNormalization.dispose();
     super.dispose();
   }
 
@@ -619,21 +628,24 @@ class WemFileData extends OpenFileData with AudioFileData {
     isReplacing = true;
     notifyListeners();
 
-    await backupFile(path);
-    var wav = overrideData.value!;
-    await wavToWem(wav.path, path, enableVolumeNormalization);
-    overrideData.value!.dispose();
-    overrideData.value = null;
+    try {
+      await backupFile(path);
+      var wav = overrideData.value!;
+      await wavToWem(wav.path, path, usesSeekTable, enableVolumeNormalization);
+      overrideData.value!.dispose();
+      overrideData.value = null;
 
-    // reload
-    _loadingState = LoadingState.notLoaded;
-    await audioResourcesManager.reloadAudioResource(resource!);
-    // await load();
+      // reload
+      _loadingState = LoadingState.notLoaded;
+      await audioResourcesManager.reloadAudioResource(resource!);
+      // await load();
 
-    hasUnsavedChanges = true;
-    isReplacing = false;
-    notifyListeners();
-    onOverrideApplied.notifyListeners();
+      onOverrideApplied.notifyListeners();
+    } finally {
+      hasUnsavedChanges = true;
+      isReplacing = false;
+      notifyListeners();
+    }
   }
 
   Future<void> removeOverride() async {
@@ -652,6 +664,8 @@ class WemFileData extends OpenFileData with AudioFileData {
     );
     snapshot._unsavedChanges = _unsavedChanges;
     snapshot._loadingState = _loadingState;
+    snapshot.usesSeekTable = usesSeekTable;
+    snapshot.usesLoudnessNormalization.value = usesLoudnessNormalization.value;
     snapshot.overrideUuid(uuid);
     return snapshot;
   }
@@ -661,6 +675,8 @@ class WemFileData extends OpenFileData with AudioFileData {
     var content = snapshot as WemFileData;
     name = content._name;
     path = content._path;
+    usesSeekTable = content.usesSeekTable;
+    usesLoudnessNormalization.value = content.usesLoudnessNormalization.value;
     hasUnsavedChanges = content._unsavedChanges;
   }
 }

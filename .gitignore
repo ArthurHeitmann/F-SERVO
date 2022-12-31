@@ -50,6 +50,6 @@ app.*.map.json
 assets/bins
 assets/mcdFonts
 assets/entityThumbnails
-assets/wavToWemTemplate.zip
+assets/wavToWemTemplate_*.zip
 log.txt
 lib/randomScripts

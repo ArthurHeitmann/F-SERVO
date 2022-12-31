@@ -29,13 +29,11 @@ class WemFileEditor extends ChangeNotifierWidget {
 
 class _WemFileEditorState extends ChangeNotifierState<WemFileEditor> {
   Key refreshKey = UniqueKey();
-  BoolProp enableVolumeNormalization = BoolProp(false);
 
   @override
   void initState() {
     widget.wem.overrideData.addListener(_onOverrideChanged);
     widget.wem.onOverrideApplied.addListener(_onOverrideApplied);
-    enableVolumeNormalization.changesUndoable = false;
     super.initState();
   }
 
@@ -43,7 +41,6 @@ class _WemFileEditorState extends ChangeNotifierState<WemFileEditor> {
   void dispose() {
     widget.wem.overrideData.removeListener(_onOverrideChanged);
     widget.wem.onOverrideApplied.removeListener(_onOverrideApplied);
-    enableVolumeNormalization.dispose();
     super.dispose();
   }
 
@@ -165,12 +162,12 @@ class _WemFileEditorState extends ChangeNotifierState<WemFileEditor> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 ElevatedButton(
-                  onPressed: () => widget.wem.applyOverride(enableVolumeNormalization.value),
+                  onPressed: () => widget.wem.applyOverride(widget.wem.usesLoudnessNormalization.value),
                   style: getTheme(context).dialogPrimaryButtonStyle,
                   child: const Text("Replace WEM"),
                 ),
                 const SizedBox(width: 20),
-                BoolPropSwitch(prop: enableVolumeNormalization),
+                BoolPropSwitch(prop: widget.wem.usesLoudnessNormalization),
                 const Text("Volume normalization"),
               ],
             ),

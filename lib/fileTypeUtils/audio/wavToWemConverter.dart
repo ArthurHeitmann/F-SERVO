@@ -10,8 +10,11 @@ import '../../stateManagement/preferencesData.dart';
 import '../../utils/assetDirFinder.dart';
 import '../../utils/utils.dart';
 
-Future<String> _makeWwiseProject() async {
-  String wwiseProjectTemplate = join(assetsDir!, "wavToWemTemplate.zip");
+const _defaultTemplateFile = "wavToWemTemplate_default.zip";
+const _bgmTemplateFile = "wavToWemTemplate_BGM.zip";
+
+Future<String> _makeWwiseProject(bool isBgm) async {
+  String wwiseProjectTemplate = join(assetsDir!, isBgm ? _bgmTemplateFile : _defaultTemplateFile);
   String tempProjectDir = (await Directory.systemTemp.createTemp("wwiseProject")).path;
 
   var fs = InputFileStream(wwiseProjectTemplate);
@@ -39,7 +42,7 @@ XmlDocument _getWwiseSourcesXml(String wavPath, bool enableVolumeNormalization) 
   ]);
 }
 
-Future<void> wavToWem(String wavPath, String wemSavePath, bool enableVolumeNormalization) async {
+Future<void> wavToWem(String wavPath, String wemSavePath, bool isBgm, bool enableVolumeNormalization) async {
   var prefs = PreferencesData();
   if (assetsDir == null) {
     showToast("Assets directory not found");
@@ -51,7 +54,7 @@ Future<void> wavToWem(String wavPath, String wemSavePath, bool enableVolumeNorma
   }
 
   messageLog.add("Preparing Wwise project");
-  String projectPath = await _makeWwiseProject();
+  String projectPath = await _makeWwiseProject(isBgm);
 
   try {
     String wavSrcDir = join(projectPath, "wavSrc");
