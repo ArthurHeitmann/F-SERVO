@@ -10,6 +10,7 @@ import 'package:xml/xml.dart';
 import '../background/wemFilesIndexer.dart';
 import '../fileTypeUtils/audio/audioModsMetadata.dart';
 import '../fileTypeUtils/audio/bnkIO.dart';
+import '../fileTypeUtils/audio/bnkPatcher.dart';
 import '../fileTypeUtils/audio/riffParser.dart';
 import '../fileTypeUtils/audio/waiIO.dart';
 import '../fileTypeUtils/audio/wavToWemConverter.dart';
@@ -43,7 +44,12 @@ enum LoadingState {
   loaded,
 }
 
+abstract class OptionalFileInfo {
+  const OptionalFileInfo();
+}
+
 abstract class OpenFileData extends ChangeNotifier with HasUuid, Undoable {
+  OptionalFileInfo? optionalInfo;
   final IconData? icon;
   final Color? iconColor;
   late final FileType type;
@@ -61,7 +67,7 @@ abstract class OpenFileData extends ChangeNotifier with HasUuid, Undoable {
     : type = OpenFileData.getFileType(_path),
     _secondaryName = secondaryName;
 
-  factory OpenFileData.from(String name, String path, { String? secondaryName }) {
+  factory OpenFileData.from(String name, String path, { String? secondaryName, OptionalFileInfo? optionalInfo }) {
     if (path.endsWith(".xml"))
       return XmlFileData(name, path, secondaryName: secondaryName);
     else if (path.endsWith(".rb"))
@@ -75,9 +81,7 @@ abstract class OpenFileData extends ChangeNotifier with HasUuid, Undoable {
     else if (path.endsWith(".ftb"))
       return FtbFileData(name, path, secondaryName: secondaryName);
     else if (path.endsWith(".wem"))
-      return WemFileData(name, path, secondaryName: secondaryName);
-    else if (path.endsWith(".wsp"))
-      return WspFileData(name, path, secondaryName: secondaryName);
+      return WemFileData(name, path, secondaryName: secondaryName, wemInfo: optionalInfo as OptionalWemData?);
     else if (path.endsWith(".wai"))
       return WaiFileData(name, path, secondaryName: secondaryName);
     else if (RegExp(r"\.bnk#p=\d+").hasMatch(path))
@@ -191,6 +195,7 @@ class TextFileData extends OpenFileData {
   @override
   Undoable takeSnapshot() {
     var snapshot = TextFileData(_name, _path);
+    snapshot.optionalInfo = optionalInfo;
     snapshot._unsavedChanges = _unsavedChanges;
     snapshot._loadingState = _loadingState;
     snapshot._text = _text;
@@ -287,6 +292,7 @@ class XmlFileData extends OpenFileData {
   @override
   Undoable takeSnapshot() {
     var snapshot = XmlFileData(_name, _path);
+    snapshot.optionalInfo = optionalInfo;
     snapshot._unsavedChanges = _unsavedChanges;
     snapshot._loadingState = _loadingState;
     snapshot._root = _root != null ? _root!.takeSnapshot() as XmlProp : null;
@@ -351,6 +357,7 @@ class TmdFileData extends OpenFileData {
   @override
   Undoable takeSnapshot() {
     var snapshot = TmdFileData(_name, _path);
+    snapshot.optionalInfo = optionalInfo;
     snapshot._unsavedChanges = _unsavedChanges;
     snapshot._loadingState = _loadingState;
     snapshot.tmdData = tmdData?.takeSnapshot() as TmdData?;
@@ -417,6 +424,7 @@ class SmdFileData extends OpenFileData {
   Undoable takeSnapshot() {
     var snapshot = SmdFileData(_name, _path);
     snapshot._unsavedChanges = _unsavedChanges;
+    snapshot.optionalInfo = optionalInfo;
     snapshot._loadingState = _loadingState;
     snapshot.smdData = smdData?.takeSnapshot() as SmdData?;
     snapshot.overrideUuid(uuid);
@@ -469,6 +477,7 @@ class McdFileData extends OpenFileData {
   @override
   Undoable takeSnapshot() {
     var snapshot = McdFileData(_name, _path);
+    snapshot.optionalInfo = optionalInfo;
     snapshot._unsavedChanges = _unsavedChanges;
     snapshot._loadingState = _loadingState;
     snapshot.mcdData = mcdData?.takeSnapshot() as McdData?;
@@ -556,6 +565,17 @@ class WavFileData with ChangeNotifier, HasUuid, AudioFileData {
     super.dispose();
   }
 }
+
+enum WemSource {
+  wsp, bnk
+}
+class OptionalWemData extends OptionalFileInfo {
+  final String bnkPath;
+  final WemSource source;
+
+  const OptionalWemData(this.bnkPath, this.source);
+}
+
 class WemFileData extends OpenFileData with AudioFileData {
   ValueNotifier<WavFileData?> overrideData = ValueNotifier(null);
   bool usesSeekTable = false;
@@ -563,10 +583,13 @@ class WemFileData extends OpenFileData with AudioFileData {
   ChangeNotifier onOverrideApplied = ChangeNotifier();
   bool isReplacing = false;
   Set<int> relatedBnkPlaylistIds = {};
-  String? bgmBnkPath;
+
+  OptionalWemData? get wemInfo => super.optionalInfo as OptionalWemData?;
   
-  WemFileData(super.name, super.path, { super.secondaryName })
-    : super(icon: Icons.music_note);
+  WemFileData(super.name, super.path, { super.secondaryName, OptionalWemData? wemInfo }) :
+    super(icon: Icons.music_note) {
+    optionalInfo = wemInfo;
+  }
 
   @override
   Future<void> load() async {
@@ -580,13 +603,16 @@ class WemFileData extends OpenFileData with AudioFileData {
 
     // related bnk playlists
     var waiRes = areasManager.hiddenArea.whereType<WaiFileData>();
-    if (waiRes.isNotEmpty) {
+    if (waiRes.isNotEmpty && wemInfo?.source == WemSource.wsp) {
       var wai = waiRes.first;
-      bgmBnkPath = wai.bgmBnkPath;
       if (wai.wemIdsToBnkPlaylists.isNotEmpty) {
         var wemId = int.parse(RegExp(r"(\d+)\.wem").firstMatch(name)!.group(1)!);
         relatedBnkPlaylistIds.addAll(wai.wemIdsToBnkPlaylists[wemId] ?? []);
       }
+    } else if (wemInfo?.source == WemSource.bnk) {
+      var wemIdsToBnkPlaylists = await _getWemIdsToBnkPlaylists(wemInfo!.bnkPath);
+      var wemId = int.parse(RegExp(r"(\d+)\.wem").firstMatch(name)!.group(1)!);
+      relatedBnkPlaylistIds.addAll(wemIdsToBnkPlaylists[wemId] ?? []);
     }
 
     // set usesSeekTable and usesLoudnessNormalization from WEM RIFF format
@@ -600,9 +626,14 @@ class WemFileData extends OpenFileData with AudioFileData {
 
   @override
   Future<void> save() async {
-    var wai = areasManager.hiddenArea.whereType<WaiFileData>().first;
-    var wemId = RegExp(r"(\d+)\.wem").firstMatch(name)!.group(1)!;
-    wai.pendingPatches.add(WemPatch(path, int.parse(wemId)));
+    var wemIdStr = RegExp(r"(\d+)\.wem").firstMatch(name)!.group(1)!;
+    var wemId = int.parse(wemIdStr);
+    if (wemInfo?.source == WemSource.wsp) {
+      var wai = areasManager.hiddenArea.whereType<WaiFileData>().first;
+      wai.pendingPatches.add(WemPatch(path, wemId));
+    } else if (wemInfo?.source == WemSource.bnk) {
+      await patchBnk(wemInfo!.bnkPath, wemId, path);      
+    }
 
     await super.save();
   }
@@ -660,8 +691,9 @@ class WemFileData extends OpenFileData with AudioFileData {
   @override
   Undoable takeSnapshot() {
     var snapshot = WemFileData(
-      _name, _path, secondaryName: _secondaryName,
+      _name, _path, secondaryName: _secondaryName, wemInfo: wemInfo
     );
+    snapshot.optionalInfo = optionalInfo;
     snapshot._unsavedChanges = _unsavedChanges;
     snapshot._loadingState = _loadingState;
     snapshot.usesSeekTable = usesSeekTable;
@@ -683,8 +715,9 @@ class WemFileData extends OpenFileData with AudioFileData {
 
 class WspFileData extends OpenFileData {
   List<WemFileData> wems = [];
+  final String bgmBnkPath;
 
-  WspFileData(super.name, super.path, { super.secondaryName });
+  WspFileData(super.name, super.path, this.bgmBnkPath, { super.secondaryName });
 
   @override
   Future<void> load() async {
@@ -702,6 +735,7 @@ class WspFileData extends OpenFileData {
       .map((e) => WemFileData(
         e.name.value,
         e.path,
+        wemInfo: OptionalWemData(bgmBnkPath, WemSource.wsp)
       ))
       .toList();
 
@@ -719,7 +753,8 @@ class WspFileData extends OpenFileData {
 
   @override
   Undoable takeSnapshot() {
-    var snapshot = WspFileData(_name, _path);
+    var snapshot = WspFileData(_name, _path, bgmBnkPath);
+    snapshot.optionalInfo = optionalInfo;
     snapshot.wems = wems.map((w) => w.takeSnapshot() as WemFileData).toList();
     snapshot._unsavedChanges = _unsavedChanges;
     snapshot._loadingState = _loadingState;
@@ -738,6 +773,38 @@ class WspFileData extends OpenFileData {
   }
 }
 
+Future<Map<int, Set<int>>> _getWemIdsToBnkPlaylists(String bnkPath) async {
+  var bnk = BnkFile.read(await ByteDataWrapper.fromFile(bnkPath));
+  var hirc = bnk.chunks.whereType<BnkHircChunk>().first;
+  var hircData = hirc.chunks.whereType<BnkHircChunkBase>().toList();
+  Map<int, BnkHircChunkBase> hircMap = {
+    for (var hirc in hirc.chunks.whereType<BnkHircChunkBase>())
+      hirc.uid: hirc
+  };
+  var playlists = hircData.whereType<BnkMusicPlaylist>();
+  Map<int, Set<int>> playlistIdsToSources = {
+    for (var playlist in playlists)
+      playlist.uid: playlist.playlistItems
+        .map((e) => e.segmentId)
+        .where((e) => e != 0)
+        .map((e) => (hircMap[e] as BnkMusicSegment).musicParams.childrenList.ulChildIDs)
+        .expand((e) => e)
+        .map((e) => (hircMap[e] as BnkMusicTrack).playlists)
+        .expand((e) => e)
+        .map((e) => e.sourceID)
+        .toSet()
+  };
+  Map<int, Set<int>> wemIdsToBnkPlaylists = {};
+  for (var playlistKV in playlistIdsToSources.entries) {
+    for (var sourceId in playlistKV.value) {
+      if (!wemIdsToBnkPlaylists.containsKey(sourceId))
+        wemIdsToBnkPlaylists[sourceId] = {};
+      wemIdsToBnkPlaylists[sourceId]!.add(playlistKV.key);
+    }
+  }
+  return wemIdsToBnkPlaylists;
+}
+
 class WaiFileData extends OpenFileData {
   Set<WemPatch> pendingPatches = {};
   String? bgmBnkPath;
@@ -753,35 +820,7 @@ class WaiFileData extends OpenFileData {
 
     var bnkPath = join(dirname(path), "bgm", "BGM.bnk");
     if (await File(bnkPath).exists()) {
-      bgmBnkPath = bnkPath;
-      var bnk = BnkFile.read(await ByteDataWrapper.fromFile(bnkPath));
-      var hirc = bnk.chunks.whereType<BnkHircChunk>().first;
-      var hircData = hirc.chunks.whereType<BnkHircChunkBase>().toList();
-      Map<int, BnkHircChunkBase> hircMap = {
-        for (var hirc in hirc.chunks.whereType<BnkHircChunkBase>())
-          hirc.uid: hirc
-      };
-      var playlists = hircData.whereType<BnkMusicPlaylist>();
-      Map<int, Set<int>> playlistIdsToSources = {
-        for (var playlist in playlists)
-          playlist.uid: playlist.playlistItems
-            .map((e) => e.segmentId)
-            .where((e) => e != 0)
-            .map((e) => (hircMap[e] as BnkMusicSegment).musicParams.childrenList.ulChildIDs)
-            .expand((e) => e)
-            .map((e) => (hircMap[e] as BnkMusicTrack).playlists)
-            .expand((e) => e)
-            .map((e) => e.sourceID)
-            .toSet()
-      };
-      wemIdsToBnkPlaylists.clear();
-      for (var playlistKV in playlistIdsToSources.entries) {
-        for (var sourceId in playlistKV.value) {
-          if (!wemIdsToBnkPlaylists.containsKey(sourceId))
-            wemIdsToBnkPlaylists[sourceId] = {};
-          wemIdsToBnkPlaylists[sourceId]!.add(playlistKV.key);
-        }
-      }
+      wemIdsToBnkPlaylists.addAll(await _getWemIdsToBnkPlaylists(bnkPath));
     } else {
       showToast("BGM.bnk not found");
     }
@@ -830,6 +869,7 @@ class WaiFileData extends OpenFileData {
   @override
   Undoable takeSnapshot() {
     var snapshot = WaiFileData(_name, _path);
+    snapshot.optionalInfo = optionalInfo;
     snapshot._unsavedChanges = _unsavedChanges;
     snapshot._loadingState = _loadingState;
     snapshot.overrideUuid(uuid);
@@ -1544,6 +1584,7 @@ class BnkFilePlaylistData extends OpenFileData {
   @override
   Undoable takeSnapshot() {
     var snapshot = BnkFilePlaylistData(_name, _path);
+    snapshot.optionalInfo = optionalInfo;
     snapshot.rootChild = rootChild?.takeSnapshot() as BnkPlaylistChild?;
     snapshot._unsavedChanges = _unsavedChanges;
     snapshot._loadingState = _loadingState;

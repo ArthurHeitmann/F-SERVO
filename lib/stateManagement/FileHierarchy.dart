@@ -2,12 +2,16 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:path/path.dart' as path;
+import 'package:path/path.dart';
 import 'package:tuple/tuple.dart';
 import 'package:xml/xml.dart';
 
+import '../fileTypeUtils/audio/bnkExtractor.dart';
+import '../fileTypeUtils/audio/bnkIO.dart';
 import '../fileTypeUtils/audio/waiExtractor.dart';
 import '../fileTypeUtils/dat/datExtractor.dart';
 import '../fileTypeUtils/ruby/pythonRuby.dart';
+import '../fileTypeUtils/utils/ByteDataWrapper.dart';
 import '../fileTypeUtils/yax/xmlToYax.dart';
 import '../fileTypeUtils/yax/yaxToXml.dart';
 import '../main.dart';
@@ -98,6 +102,10 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
           () async => openWspFile(filePath)
         ),
         Tuple2(
+          [".bnk"],
+          () async => openBnkFile(filePath, parent: parent)
+        ),
+        Tuple2(
           [".bxm", ".gad", ".sar"], () async => openGenericFile<BxmHierarchyEntry>(filePath, parent, (n, p) => BxmHierarchyEntry(n, p))
         ),
       ];
@@ -159,7 +167,7 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
     List<Future<void>> futures = [];
     datFilePaths ??= await getDatFileList(datExtractDir);
     RubyScriptGroupHierarchyEntry? rubyScriptGroup;
-    const supportedFileEndings = { ".pak", "_scp.bin", ".tmd", ".smd", ".mcd", ".ftb" };
+    const supportedFileEndings = { ".pak", "_scp.bin", ".tmd", ".smd", ".mcd", ".ftb", ".bnk" };
     for (var file in datFilePaths) {
       if (supportedFileEndings.every((ending) => !file.endsWith(ending)))
         continue;
@@ -341,7 +349,8 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
     structure.removeWhere((child) => child is WaiChildDir);
     for (int i = 0; i < topLevelFolders.length; i++)
       structure.insert(i, topLevelFolders[i]);
-    waiEntry.addAll(structure.map((e) => makeWaiChildEntry(e)));
+    var bgmBnkPath = join(dirname(waiPath), "bgm", "BGM.bnk");
+    waiEntry.addAll(structure.map((e) => makeWaiChildEntry(e, bgmBnkPath)));
 
     undoHistoryManager.onUndoableEvent();
 
@@ -351,6 +360,41 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
   HierarchyEntry openWspFile(String wspPath) {
     showToast("Please open WwiseStreamInfo.wai instead", const Duration(seconds: 6));
     throw Exception("Can't open WSP file directly");
+  }
+
+  Future<HierarchyEntry> openBnkFile(String bnkPath, { HierarchyEntry? parent }) async {
+    var existing = findRecWhere((entry) => entry is BnkHierarchyEntry && entry.path == bnkPath);
+    if (existing != null)
+      return existing;
+    
+    // extract BNK WEMs
+    var bnk = BnkFile.read(await ByteDataWrapper.fromFile(bnkPath));
+    var bnkExtractDirName = "${basename(bnkPath)}_extracted";
+    var bnkExtractDir = join(dirname(bnkPath), bnkExtractDirName);
+    if (!await Directory(bnkExtractDir).exists())
+      await Directory(bnkExtractDir).create(recursive: true);
+    bool noExtract = false;
+    var extractedFile = File(join(bnkExtractDir, "EXTRACTION_COMPLETED"));
+    if (await extractedFile.exists())
+      noExtract = true;
+    var wemFiles = await extractBnkWems(bnk, bnkExtractDir, noExtract);
+
+    var bnkEntry = BnkHierarchyEntry(StringProp(basename(bnkPath)), bnkPath, bnkExtractDir);
+    bnkEntry.addAll(wemFiles.map((e) => WemHierarchyEntry(
+      StringProp(basename(e.item2)), 
+      e.item2,
+      e.item1,
+      OptionalWemData(bnkPath, WemSource.bnk)
+    )));
+
+    await extractedFile.writeAsString("Delete this file to re-extract files");
+
+    if (parent != null)
+      parent.add(bnkEntry);
+    else
+      add(bnkEntry);
+    
+    return bnkEntry;
   }
 
   @override

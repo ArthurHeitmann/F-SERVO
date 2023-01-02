@@ -46,6 +46,13 @@ class BnkFile {
     var type = bytes.readString(4);
     bytes.position -= 4;
     switch (type) {
+      case "BKHD": return BnkHeader.read(bytes);
+      case "DIDX": return BnkDidxChunk.read(bytes);
+      case "DATA":
+        if (!chunks.any((element) => element is BnkDidxChunk))
+          return BnkUnknownChunk.read(bytes);
+        var didxChunk = chunks.whereType<BnkDidxChunk>().first;
+        return BnkDataChunk.read(bytes, didxChunk);
       case "HIRC": return BnkHircChunk.read(bytes);
       default: return BnkUnknownChunk.read(bytes);
     }
@@ -67,6 +74,116 @@ class BnkUnknownChunk extends BnkChunkBase {
     super.write(bytes);
     for (var i = 0; i < data.length; i++)
       bytes.writeUint8(data[i]);
+  }
+}
+
+class BnkHeader extends BnkChunkBase {
+  late int version;
+  late int bnkId;
+  late int languageId;
+  late int isFeedbackInBnk;
+  late int projectId;
+  late List<int> padding;
+  List<int>? unknown;
+
+  BnkHeader(super.chunkId, super.chunkSize, this.version, this.bnkId, this.languageId, this.isFeedbackInBnk, this.projectId, this.padding, [this.unknown]);
+
+  BnkHeader.read(ByteDataWrapper bytes) : super.read(bytes) {
+    if (chunkSize < 20) {
+      print("Warning: BnkHeader chunk size is less than 20 ($chunkSize)");
+      unknown = bytes.readUint8List(chunkSize);
+      return;
+    }
+    version = bytes.readUint32();
+    bnkId = bytes.readUint32();
+    languageId = bytes.readUint32();
+    isFeedbackInBnk = bytes.readUint32();
+    projectId = bytes.readUint32();
+    padding = bytes.readUint8List(chunkSize - 20);
+  }
+
+  @override
+  void write(ByteDataWrapper bytes) {
+    super.write(bytes);
+    if (unknown != null) {
+      for (var i = 0; i < unknown!.length; i++)
+        bytes.writeUint8(unknown![i]);
+      return;
+    }
+    bytes.writeUint32(version);
+    bytes.writeUint32(bnkId);
+    bytes.writeUint32(languageId);
+    bytes.writeUint32(isFeedbackInBnk);
+    bytes.writeUint32(projectId);
+    for (var i = 0; i < padding.length; i++)
+      bytes.writeUint8(padding[i]);
+  }
+}
+
+class BnkDidxChunk extends BnkChunkBase {
+  late List<BnkWemFileInfo> files;
+
+  BnkDidxChunk(super.chunkId, super.chunkSize, this.files);
+
+  BnkDidxChunk.read(ByteDataWrapper bytes) : super.read(bytes) {
+    int childrenCount = chunkSize ~/ 12;
+    files = List.generate(childrenCount, (index) => BnkWemFileInfo.read(bytes));
+  }
+
+  @override
+  void write(ByteDataWrapper bytes) {
+    super.write(bytes);
+    for (var file in files) {
+      file.write(bytes);
+    }
+  }
+}
+
+class BnkWemFileInfo {
+  late int id;
+  late int offset;
+  late int size;
+
+  BnkWemFileInfo(this.id, this.offset, this.size);
+  
+  BnkWemFileInfo.read(ByteDataWrapper bytes) {
+    id = bytes.readUint32();
+    offset = bytes.readUint32();
+    size = bytes.readUint32();
+  }
+
+  void write(ByteDataWrapper bytes) {
+    bytes.writeUint32(id);
+    bytes.writeUint32(offset);
+    bytes.writeUint32(size);
+  }
+}
+
+class BnkDataChunk extends BnkChunkBase {
+  List<List<int>> wemFiles = [];
+
+  BnkDataChunk(super.chunkId, super.chunkSize, this.wemFiles);
+
+  BnkDataChunk.read(ByteDataWrapper bytes, BnkDidxChunk didx) : super.read(bytes) {
+    int initialPosition = bytes.position;
+    for (var file in didx.files) {
+      bytes.position = initialPosition + file.offset;
+      wemFiles.add(bytes.readUint8List(file.size));
+    }
+  }
+
+  @override
+  void write(ByteDataWrapper bytes) {
+    super.write(bytes);
+    int offset = 0;
+    int initialPosition = bytes.position;
+    for (var file in wemFiles) {
+      bytes.position = initialPosition + offset;
+      for (var i = 0; i < file.length; i++)
+        bytes.writeUint8(file[i]);
+      offset += file.length;
+      offset = (offset + 15) & ~15;
+    }
   }
 }
 

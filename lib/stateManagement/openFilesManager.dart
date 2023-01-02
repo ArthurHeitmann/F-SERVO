@@ -303,7 +303,13 @@ class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
       area.currentFile = file;
   }
 
-  OpenFileData openFile(String filePath, { FilesAreaManager? toArea, bool focusIfOpen = true, String? secondaryName }) {
+  OpenFileData openFile(
+    String filePath, {
+    FilesAreaManager? toArea,
+    bool focusIfOpen = true,
+    String? secondaryName,
+    OptionalFileInfo? optionalInfo,
+  }) {
     toArea ??= activeArea ?? this[0];
 
     if (isFileOpened(filePath)) {
@@ -317,7 +323,12 @@ class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
       return openFile;
     }
 
-    OpenFileData file = OpenFileData.from(path.basename(filePath), filePath, secondaryName: secondaryName);
+    OpenFileData file = OpenFileData.from(
+      path.basename(filePath),
+      filePath,
+      secondaryName: secondaryName,
+      optionalInfo: optionalInfo,
+    );
     toArea.add(file);
     toArea.currentFile = file;
     _filesMap[file.uuid] = file;
@@ -327,11 +338,16 @@ class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
     return file;
   }
 
-  OpenFileData openFileAsHidden(String filePath, { String? secondaryName }) {
+  OpenFileData openFileAsHidden(String filePath, { String? secondaryName, OptionalFileInfo? optionalInfo, }) {
     if (isFileOpened(filePath)) {
       return getFile(filePath)!;
     }
-    OpenFileData file = OpenFileData.from(path.basename(filePath), filePath, secondaryName: secondaryName);
+    OpenFileData file = OpenFileData.from(
+      path.basename(filePath),
+      filePath,
+      secondaryName: secondaryName,
+      optionalInfo: optionalInfo,
+    );
     file.keepOpenAsHidden = true;
     hiddenArea.add(file);
     _filesMap[file.uuid] = file;

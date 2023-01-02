@@ -2,6 +2,7 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
+import 'dart:io';
 
 import '../../../fileTypeUtils/audio/wemToWavConverter.dart';
 import '../../../stateManagement/ChangeNotifierWidget.dart';
@@ -69,9 +70,13 @@ class _WemFileEditorState extends ChangeNotifierState<WemFileEditor> {
     wavPath ??= await FilePicker.platform.saveFile(
       fileName: "${basenameWithoutExtension(widget.wem.path)}.wav",
       allowedExtensions: ["wav"],
+      type: FileType.custom,
     );
     if (wavPath == null)
       return;
+    // fix for weird bug with long file names
+    if (!await Directory(dirname(wavPath)).exists())
+      wavPath = dirname(wavPath); 
     await wemToWav(widget.wem.path, wavPath);
     if (displayToast)
       showToast("Saved as ${basename(wavPath)}");
@@ -85,7 +90,7 @@ class _WemFileEditorState extends ChangeNotifierState<WemFileEditor> {
           key: refreshKey,
           file: widget.wem,
           lockControls: widget.lockControls,
-          additionalControls: widget.showOverride ? Wrap(
+          additionalControls: widget.showOverride && widget.wem.optionalInfo != null ? Wrap(
             children: [
               ElevatedButton(
                 onPressed: _pickOverride,
@@ -107,7 +112,7 @@ class _WemFileEditorState extends ChangeNotifierState<WemFileEditor> {
               ),
             ],
           ) : null,
-          rightSide: widget.wem.relatedBnkPlaylistIds.isNotEmpty ? Align(
+          rightSide: widget.wem.relatedBnkPlaylistIds.isNotEmpty && widget.wem.wemInfo != null ? Align(
             alignment: Alignment.centerRight,
             child: Container(
               decoration: BoxDecoration(
@@ -127,7 +132,7 @@ class _WemFileEditorState extends ChangeNotifierState<WemFileEditor> {
                         style: getTheme(context).dialogSecondaryButtonStyle!.copyWith(
                           backgroundColor: MaterialStateProperty.all(getTheme(context).actionBgColor),
                         ),
-                        onPressed: () => areasManager.openFile("${widget.wem.bgmBnkPath!}#p=$playlistId"),
+                        onPressed: () => areasManager.openFile("${widget.wem.wemInfo!.bnkPath}#p=$playlistId"),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 4),
                           child: Row(

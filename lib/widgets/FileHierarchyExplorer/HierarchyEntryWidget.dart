@@ -128,7 +128,7 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
             ContextMenuButtonConfig(
               "Open",
               icon: const Icon(Icons.open_in_new, size: 15,),
-              onPressed: onOpenFile,
+              onPressed: widget.entry.onOpen,
             ),
             ContextMenuButtonConfig(
                 "Export YAX",
@@ -311,17 +311,9 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
     if (widget.entry.isCollapsible && (!widget.entry.isSelectable || isDoubleClick()))
       toggleCollapsed();
     if (widget.entry.isOpenable && (!widget.entry.isSelectable || isDoubleClick()))
-      onOpenFile();
+      widget.entry.onOpen();
 
     lastClickAt = DateTime.now().millisecondsSinceEpoch;
-  }
-
-  void onOpenFile() {
-    var entry = widget.entry as FileHierarchyEntry;
-    String? secondaryName = entry is XmlScriptHierarchyEntry
-      ? tryToTranslate(entry.hapName)
-      : null;
-    areasManager.openFile(entry.path, secondaryName: secondaryName);
   }
 
   void toggleCollapsed() {

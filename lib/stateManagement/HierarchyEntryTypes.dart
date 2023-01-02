@@ -23,6 +23,7 @@ import 'xmlProps/xmlProp.dart';
 final pakGroupIdMatcher = RegExp(r"^\w+_([a-f0-9]+)_grp\.pak$", caseSensitive: false);
 
 abstract class HierarchyEntry extends NestedNotifier<HierarchyEntry> with Undoable {
+  OptionalFileInfo? optionalFileInfo;
   StringProp name;
   final bool isSelectable;
   bool _isSelected = false;
@@ -111,6 +112,11 @@ abstract class FileHierarchyEntry extends HierarchyEntry {
 
   FileHierarchyEntry(StringProp name, this.path, bool isCollapsible, bool isOpenable)
     : super(name, true, isCollapsible, isOpenable);
+
+  @override
+  void onOpen() {
+    areasManager.openFile(path, secondaryName: null, optionalInfo: optionalFileInfo);
+  }
 }
 
 abstract class GenericFileHierarchyEntry extends FileHierarchyEntry {
@@ -183,7 +189,7 @@ class PakHierarchyEntry extends ExtractableHierarchyEntry {
       else
         return;
     }
-    var groupsFileData = areasManager.openFileAsHidden(groupsXmlPath) as XmlFileData;
+    var groupsFileData = areasManager.openFileAsHidden(groupsXmlPath, optionalInfo: optionalFileInfo) as XmlFileData;
     await groupsFileData.load();
     // var groupsXmlContents = await groupsFile.readAsString();
     // var xmlDoc = XmlDocument.parse(groupsXmlContents);
@@ -401,6 +407,12 @@ class XmlScriptHierarchyEntry extends FileHierarchyEntry {
     
     _hasReadMeta = true;
   }
+
+  @override
+  void onOpen() {
+    String? secondaryName = tryToTranslate(hapName);
+    areasManager.openFile(path, secondaryName: secondaryName, optionalInfo: optionalFileInfo);
+  }
   
   @override
   Undoable takeSnapshot() {
@@ -550,23 +562,27 @@ class WaiHierarchyEntry extends ExtractableHierarchyEntry {
 }
 
 class WaiFolderHierarchyEntry extends GenericFileHierarchyEntry {
+  final String bgmBnkPath;
+
   WaiFolderHierarchyEntry(StringProp name, String path, List<WaiChild> children)
-    : super(name, path, true, false) {
+    : bgmBnkPath = join(dirname(path), "bgm", "BGM.bnk"),
+      super(name, path, true, false) {
     _isCollapsed = true;
-    addAll(children.map((child) => makeWaiChildEntry(child)));
+    addAll(children.map((child) => makeWaiChildEntry(child, bgmBnkPath)));
   }
   
   @override
   HierarchyEntry clone() {
-    return WspHierarchyEntry(name.takeSnapshot() as StringProp, path, []);
+    return WspHierarchyEntry(name.takeSnapshot() as StringProp, path, [], bgmBnkPath);
   }
 }
 
 class WspHierarchyEntry extends GenericFileHierarchyEntry {
   final List<WaiChild> _childWems;
   bool _hasLoadedChildren = false;
+  final String bgmBnkPath;
 
-  WspHierarchyEntry(StringProp name, String path, List<WaiChild> childWems) :
+  WspHierarchyEntry(StringProp name, String path, List<WaiChild> childWems, this.bgmBnkPath) :
     _childWems = childWems,
     super(name, path, true, false) {
     _isCollapsed = true;
@@ -580,13 +596,13 @@ class WspHierarchyEntry extends GenericFileHierarchyEntry {
     notifyListeners();
     if (!_isCollapsed && !_hasLoadedChildren && isEmpty) {
       _hasLoadedChildren = true;
-      addAll(_childWems.map((child) => makeWaiChildEntry(child)));
+      addAll(_childWems.map((child) => makeWaiChildEntry(child, bgmBnkPath)));
     }
   }
   
   @override
   HierarchyEntry clone() {
-    return WspHierarchyEntry(name.takeSnapshot() as StringProp, path, _childWems);
+    return WspHierarchyEntry(name.takeSnapshot() as StringProp, path, _childWems, bgmBnkPath);
   }
 
   Future<void> exportAsWav() async {
@@ -609,18 +625,21 @@ class WspHierarchyEntry extends GenericFileHierarchyEntry {
 class WemHierarchyEntry extends GenericFileHierarchyEntry {
   final int wemId;
 
-  WemHierarchyEntry(StringProp name, String path, this.wemId)
-    : super(name, path, false, true);
+  WemHierarchyEntry(StringProp name, String path, this.wemId, OptionalWemData? optionalWemData)
+    : super(name, path, false, true) {
+    optionalFileInfo = optionalWemData; 
+  }
   
   @override
   HierarchyEntry clone() {
-    return WemHierarchyEntry(name.takeSnapshot() as StringProp, path, wemId);
+    return WemHierarchyEntry(name.takeSnapshot() as StringProp, path, wemId, optionalFileInfo as OptionalWemData?);
   }
 
   Future<void> exportAsWav({ String? wavPath, bool displayToast = true }) async {
     wavPath ??= await FilePicker.platform.saveFile(
       fileName: "${basenameWithoutExtension(path)}.wav",
       allowedExtensions: ["wav"],
+      type: FileType.custom,
     );
     if (wavPath == null)
       return;
@@ -630,15 +649,32 @@ class WemHierarchyEntry extends GenericFileHierarchyEntry {
   }
 }
 
-HierarchyEntry makeWaiChildEntry(WaiChild child) {
+HierarchyEntry makeWaiChildEntry(WaiChild child, String bgmBnkPath) {
   HierarchyEntry entry;
   if (child is WaiChildDir)
     entry = WaiFolderHierarchyEntry(StringProp(child.name), child.path, child.children);
   else if (child is WaiChildWsp)
-    entry = WspHierarchyEntry(StringProp(child.name), child.path, child.children);
+    entry = WspHierarchyEntry(StringProp(child.name), child.path, child.children, bgmBnkPath);
   else if (child is WaiChildWem)
-    entry = WemHierarchyEntry(StringProp(child.name), child.path, child.wemId);
+    entry = WemHierarchyEntry(
+      StringProp(child.name),
+      child.path,
+      child.wemId,
+      OptionalWemData(bgmBnkPath, WemSource.wsp)
+    );
   else
     throw Exception("Unknown WAI child type: ${child.runtimeType}");
   return entry;
+}
+
+class BnkHierarchyEntry extends GenericFileHierarchyEntry {
+  final String extractedPath;
+ 
+  BnkHierarchyEntry(StringProp name, String path, this.extractedPath)
+    : super(name, path, true, false);
+  
+  @override
+  HierarchyEntry clone() {
+    return BnkHierarchyEntry(name.takeSnapshot() as StringProp, path, extractedPath);
+  }
 }
