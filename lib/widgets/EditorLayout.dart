@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../widgets/theme/customTheme.dart';
 import 'FileHierarchyExplorer/fileMetaEditor.dart';
 import 'filesView/OpenFilesAreas.dart';
 import 'FileHierarchyExplorer/FileExplorer.dart';

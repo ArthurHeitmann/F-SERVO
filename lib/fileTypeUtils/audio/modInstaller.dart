@@ -18,6 +18,7 @@ Future<void> installMod(String waiPath) async {
   var selectedFiles = await FilePicker.platform.pickFiles(
     dialogTitle: "Select mod zip",
     allowedExtensions: ["zip"],
+    type: FileType.custom,
     allowMultiple: false,
   );
   if (selectedFiles == null || selectedFiles.files.isEmpty)

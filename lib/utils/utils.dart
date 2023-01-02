@@ -20,6 +20,7 @@ import '../fileTypeUtils/yax/hashToStringMap.dart';
 import '../fileTypeUtils/yax/japToEng.dart';
 import '../main.dart';
 import '../stateManagement/Property.dart';
+import '../stateManagement/events/statusInfo.dart';
 import '../stateManagement/miscValues.dart';
 import '../stateManagement/xmlProps/xmlProp.dart';
 import '../widgets/theme/customTheme.dart';
@@ -237,6 +238,7 @@ Future<void> waitForNextFrame() {
 
 void showToast(String msg, [Duration duration = const Duration(seconds: 4)]) {
   print("showToast: $msg");
+  messageLog.add(msg);
   FToast toast = FToast();
   var context = getGlobalContext();
   toast.init(context);

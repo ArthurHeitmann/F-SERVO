@@ -76,6 +76,7 @@ Future<void> packAudioMod(String waiPath) async {
     dialogTitle: "Save mod to zip",
     fileName: "$name.zip",
     allowedExtensions: ["zip"],
+    type: FileType.custom,
   );
   if (savePath == null) {
     showToast("Cancelled");

@@ -24,6 +24,7 @@ Future<void> saveTableAsJson(CustomTableConfig tableConfig) async {
   var savePath = await FilePicker.platform.saveFile(
     dialogTitle: "Save Table As JSON",
     allowedExtensions: ["json"],
+    type: FileType.custom,
   );
   if (savePath == null)
     return;
@@ -43,6 +44,7 @@ Future<void> saveTableAsCsv(CustomTableConfig tableConfig) async {
   var savePath = await FilePicker.platform.saveFile(
     dialogTitle: "Export Table As CSV",
     allowedExtensions: ["csv"],
+    type: FileType.custom,
   );
   if (savePath == null)
     return;
