@@ -439,6 +439,9 @@ class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
       ]);
       onSaveAll.notifyListeners();
       await processChangedFiles();
+    } catch (e) {
+      showToast("Error saving files");
+      rethrow;
     } finally {
       isLoadingStatus.popIsLoading();
       undoHistoryManager.onUndoableEvent();

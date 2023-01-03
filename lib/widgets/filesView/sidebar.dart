@@ -48,10 +48,10 @@ class _SidebarState extends State<Sidebar> {
         builder: (context) => _ResizeHandle(
           layerLink: _layerLink,
           switcherPosition: widget.switcherPosition,
-          onWidthChanged: _onDrag,
+          onWidthChanged: (w) => _onDrag(context, w),
         )
       );
-      Overlay.of(context).insert(_draggableOverlayEntry!);
+      Overlay.of(context)!.insert(_draggableOverlayEntry!);
       print("Sidebar: Draggable overlay entry inserted");
     });
   }
@@ -62,9 +62,9 @@ class _SidebarState extends State<Sidebar> {
     super.dispose();
   }
 
-  void _onDrag(width) {
+  void _onDrag(BuildContext context, double width) {
     _width += width;
-    if (_width < 100)
+    if (_width < 150)
       _isExpanded = false;
     else if (!_isExpanded)
       _isExpanded = true;
@@ -199,6 +199,7 @@ class _ResizeHandle extends StatelessWidget {
                   else
                     onWidthChanged(-details.delta.dx);
                 },
+                behavior: HitTestBehavior.translucent,
                 child: Container(
                   color: Colors.transparent,
                 ),

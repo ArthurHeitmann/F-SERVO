@@ -37,7 +37,7 @@ Future<void> packAudioMod(String waiPath) async {
   for (var wemId in metadata.moddedWaiChunks.keys) {
     var wemIndex = wai.getIndexFromId(wemId);
     var wem = wai.wemStructs[wemIndex];
-    var dir = wai.getWemDirectory(wemIndex);
+    var dir = wai.getWemDirectoryFromI(wemIndex);
     var wspName = wem.wemToWspName(wai.wspNames);
     // modded WSP
     var wspPath = join(dirname(waiPath), "stream");
