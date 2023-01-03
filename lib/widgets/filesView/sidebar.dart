@@ -48,13 +48,7 @@ class _SidebarState extends State<Sidebar> {
         builder: (context) => _ResizeHandle(
           layerLink: _layerLink,
           switcherPosition: widget.switcherPosition,
-          onWidthChanged: (width) {
-            _width += width;
-            _width = max(_width, 100);
-            // rebuild self and handle
-            setState(() {});
-            context.findRenderObject()!.markNeedsLayout();
-          },
+          onWidthChanged: _onDrag,
         )
       );
       Overlay.of(context).insert(_draggableOverlayEntry!);
@@ -66,6 +60,17 @@ class _SidebarState extends State<Sidebar> {
   void dispose() {
     _draggableOverlayEntry?.remove();
     super.dispose();
+  }
+
+  void _onDrag(width) {
+    _width += width;
+    if (_width < 100)
+      _isExpanded = false;
+    else if (!_isExpanded)
+      _isExpanded = true;
+    // rebuild self and handle
+    setState(() {});
+    context.findRenderObject()!.markNeedsLayout();
   }
 
   @override
@@ -104,7 +109,7 @@ class _SidebarState extends State<Sidebar> {
 
   Widget _buildSwitcher() {
     return SizedBox(
-      width: 25,
+      width: 22,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -148,9 +153,13 @@ class _SidebarState extends State<Sidebar> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               if (entry.icon != null)
-                Icon(entry.icon, size: 14,),
+                Icon(entry.icon, size: 13),
               const SizedBox(width: 5),
-              Text(entry.name),
+              Text(
+                entry.name,
+                textScaleFactor: 0.9,
+                style: const TextStyle(letterSpacing: 1),
+              ),
             ],
           ),
         ),
