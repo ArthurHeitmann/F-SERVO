@@ -89,11 +89,11 @@ class NierNierThemeExtension extends NierThemeExtension {
   static ThemeData makeTheme(BuildContext context) {
     return ThemeData(
       extensions: [NierNierThemeExtension()],
-      fontFamily: "FiraCode",
       textTheme: Theme.of(context).textTheme.apply(
+        fontFamily: "FiraCode",
+        fontSizeFactor: 0.95,
         bodyColor: _ncDark,
         displayColor: _ncDark,
-        fontSizeFactor: 0.9,
       ),
       scrollbarTheme: ScrollbarThemeData(
         radius: Radius.zero,

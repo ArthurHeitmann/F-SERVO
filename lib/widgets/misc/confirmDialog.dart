@@ -19,6 +19,7 @@ Future<bool?> confirmDialog(BuildContext context, { required String title, Strin
       },
       child: Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: getTheme(context).sidebarBackgroundColor,
         child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: ConstrainedBox(

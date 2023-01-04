@@ -29,6 +29,7 @@ Future<String?> textDialog(BuildContext context, { required String title, String
       },
       child: Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: getTheme(context).sidebarBackgroundColor,
         child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: Column(

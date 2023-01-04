@@ -19,6 +19,7 @@ Future<String?> fileSelectionDialog(BuildContext context, { required bool isFile
       },
       child: Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: getTheme(context).sidebarBackgroundColor,
         child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: Column(
