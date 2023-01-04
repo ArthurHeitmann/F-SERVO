@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../stateManagement/openFileTypes.dart';
 import '../../stateManagement/preferencesData.dart';
 import '../misc/preferencesEditor.dart';
+import '../propEditors/otherFileTypes/SaveSlotDataEditor.dart';
 import '../propEditors/otherFileTypes/bnkPlaylistEditor/BnkPlaylistEditor.dart';
 import '../propEditors/otherFileTypes/ftbEditor.dart';
 import '../propEditors/otherFileTypes/genericTable/TableFileEditor.dart';
@@ -23,6 +24,7 @@ enum FileType {
   wem,
   wsp,
   bnkPlaylist,
+  saveSlotData,
 }
 
 Widget makeFileEditor(OpenFileData content) {
@@ -45,7 +47,11 @@ Widget makeFileEditor(OpenFileData content) {
       return WspFileEditor(key: Key(content.uuid), wsp: content as WspFileData);
     case FileType.bnkPlaylist:
       return BnkPlaylistEditor(playlist: content as BnkFilePlaylistData);
-    default:
+    case FileType.saveSlotData:
+      return SaveSlotDataEditor(save: content as SaveSlotData);
+    case FileType.text:
       return TextFileEditor(key: Key(content.uuid), fileContent: content as TextFileData);
+    default:
+      return const Center(child: Text("No editor for this file type yet!"));
   }
 }

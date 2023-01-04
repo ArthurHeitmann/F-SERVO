@@ -46,6 +46,7 @@ class TmdData extends NestedNotifier<TmdEntryData> with CustomTableConfig, Undoa
     : super(entries) {
       name = fileName;
       columnNames = ["ID", "Text"];
+      columnFlex = [1, 2];
       rowCount = NumberProp(entries.length, true);
     }
 
@@ -63,6 +64,7 @@ class TmdData extends NestedNotifier<TmdEntryData> with CustomTableConfig, Undoa
     }));
     name = fileName;
     columnNames = ["ID", "Text"];
+    columnFlex = [1, 2];
     rowCount = NumberProp(rawEntries.length, true);
   }
 
@@ -96,8 +98,8 @@ class TmdData extends NestedNotifier<TmdEntryData> with CustomTableConfig, Undoa
     return RowConfig(
       key: Key(entry.uuid),
       cells: [
-        CellConfig(prop: entry.id),
-        CellConfig(prop: entry.text, allowMultiline: true),
+        PropCellConfig(prop: entry.id),
+        PropCellConfig(prop: entry.text, allowMultiline: true),
       ],
     );
   }

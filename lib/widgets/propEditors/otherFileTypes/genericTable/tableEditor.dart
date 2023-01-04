@@ -1,4 +1,6 @@
 
+import 'dart:async';
+
 import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 
@@ -10,14 +12,53 @@ import '../../../misc/nestedContextMenu.dart';
 import '../../simpleProps/UnderlinePropTextField.dart';
 import '../../simpleProps/propEditorFactory.dart';
 import '../../simpleProps/propTextField.dart';
+import '../../simpleProps/textFieldAutocomplete.dart';
 import '../../simpleProps/transparentPropTextField.dart';
 import 'tableExporter.dart';
 
-class CellConfig {
+abstract class CellConfig {
+  Widget makeWidget();
+  String toExportString();
+}
+
+class PropCellConfig extends CellConfig {
   final Prop prop;
   final bool allowMultiline;
+  final FutureOr<Iterable<AutocompleteConfig>> Function()? autocompleteOptions;
 
-  CellConfig({ required this.prop, this.allowMultiline = false });
+  PropCellConfig({ required this.prop, this.allowMultiline = false, this.autocompleteOptions });
+
+  @override
+  Widget makeWidget() => makePropEditor<TransparentPropTextField>(
+    prop,
+    PropTFOptions(
+      constraints: const BoxConstraints(minWidth: double.infinity, minHeight: 30),
+      isMultiline: allowMultiline,
+      useIntrinsicWidth: false,
+      autocompleteOptions: autocompleteOptions,
+    ),
+  );
+
+  @override
+  String toExportString() => prop.toString();
+}
+
+class TextCellConfig extends CellConfig {
+  final String text;
+
+  TextCellConfig(this.text);
+
+  @override
+  Widget makeWidget() => Align(
+    alignment: Alignment.centerLeft,
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Text(text),
+    )
+  );
+
+  @override
+  String toExportString() => text;
 }
 
 class RowConfig {
@@ -36,7 +77,9 @@ class _RowConfigIndexed {
 mixin CustomTableConfig {
   late final String name;
   late final List<String> columnNames;
+  late final List<int> columnFlex;
   late final NumberProp rowCount;
+  bool allowRowAddRemove = true;
 
   RowConfig rowPropsGenerator(int index);
   void onRowAdd();
@@ -102,7 +145,7 @@ class _TableEditorState extends ChangeNotifierState<TableEditor> {
             continue;
           }
           var searchStr = columnSearch[i].value.toLowerCase();
-          var cellValue = cell.prop.toString().toLowerCase();
+          var cellValue = cell.toExportString().toLowerCase();
           if (!cellValue.contains(searchStr))
             return false;
         }
@@ -120,13 +163,13 @@ class _TableEditorState extends ChangeNotifierState<TableEditor> {
           return columnSort!.ascending ? -1 : 1;
         if (bCell == null)
           return columnSort!.ascending ? 1 : -1;
-        final aProp = aCell.prop;
-        final bProp = bCell.prop;
-        if (aProp is NumberProp && bProp is NumberProp) {
-          return aProp.value.compareTo(bProp.value) * (columnSort!.ascending ? 1 : -1);
-        } else {
-          return aProp.toString().compareTo(bProp.toString()) * (columnSort!.ascending ? 1 : -1);
+        if (aCell is PropCellConfig && bCell is PropCellConfig) {
+          final aProp = aCell.prop;
+          final bProp = bCell.prop;
+          if (aProp is NumberProp && bProp is NumberProp)
+            return aProp.value.compareTo(bProp.value) * (columnSort!.ascending ? 1 : -1);
         }
+        return aCell.toExportString().compareTo(bCell.toExportString()) * (columnSort!.ascending ? 1 : -1);
       });
     }
   }
@@ -164,6 +207,8 @@ class _TableEditorState extends ChangeNotifierState<TableEditor> {
   Widget _makeExportDropdown() {
     return PopupMenuButton<String>(
       icon: const Icon(Icons.more_vert),
+      splashRadius: 26,
+      tooltip: "",
       onSelected: (String? newValue) {
         if (newValue == "E JSON")
           saveTableAsJson(widget.config);
@@ -222,7 +267,9 @@ class _TableEditorState extends ChangeNotifierState<TableEditor> {
       child: Row(
         children: [
           for (int i = 0; i < widget.config.columnNames.length; i++)
-            Expanded(
+            Flexible(
+              flex: widget.config.columnFlex[i],
+              fit: FlexFit.tight,
               child: Container(
                 decoration: BoxDecoration(
                   color: getTheme(context).tableBgColor,
@@ -237,38 +284,42 @@ class _TableEditorState extends ChangeNotifierState<TableEditor> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    TextButton(
-                      onPressed: () {
-                        setState(() {
-                          if (columnSort != null && columnSort!.index == i) {
-                            if (columnSort!.ascending)
-                              columnSort!.ascending = false;
-                            else
-                              columnSort = null;
-                          } else {
-                            columnSort = _ColumnSort(i, true);
-                          }
-                        });
-                      },
-                      child: Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              widget.config.columnNames[i],
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
+                    Tooltip(
+                      message: widget.config.columnNames[i],
+                      waitDuration: const Duration(seconds: 1),
+                      child: TextButton(
+                        onPressed: () {
+                          setState(() {
+                            if (columnSort != null && columnSort!.index == i) {
+                              if (columnSort!.ascending)
+                                columnSort!.ascending = false;
+                              else
+                                columnSort = null;
+                            } else {
+                              columnSort = _ColumnSort(i, true);
+                            }
+                          });
+                        },
+                        child: Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                widget.config.columnNames[i],
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                          const SizedBox(width: 6),
-                          columnSort == null || columnSort!.index != i
-                            ? Icon(Icons.swap_vert, size: 17, color: Theme.of(context).colorScheme.primary.withOpacity(0.5))
-                            : columnSort!.ascending
-                              ? const Icon(Icons.arrow_drop_up, size: 20)
-                              : const Icon(Icons.arrow_drop_down, size: 20),
-                        ],
+                            const SizedBox(width: 6),
+                            columnSort == null || columnSort!.index != i
+                              ? Icon(Icons.swap_vert, size: 17, color: Theme.of(context).colorScheme.primary.withOpacity(0.5))
+                              : columnSort!.ascending
+                                ? const Icon(Icons.arrow_drop_up, size: 20)
+                                : const Icon(Icons.arrow_drop_down, size: 20),
+                          ],
+                        ),
                       ),
                     ),
                     Padding(
@@ -315,7 +366,8 @@ class _TableEditorState extends ChangeNotifierState<TableEditor> {
                 );
               }
             ),
-            _makeAddRowButton()
+            if (widget.config.allowRowAddRemove)
+              _makeAddRowButton()
           ],
         ),
       ),
@@ -376,11 +428,12 @@ class _TableRowState extends State<_TableRow> {
     return NestedContextMenu(
       clearParent: true,
       buttons: [
-        ContextMenuButtonConfig(
-          "Remove Row",
-          icon: const Icon(Icons.remove, size: 15,),
-          onPressed: () => widget.config.onRowRemove(widget.index),
-        ),
+        if (widget.config.allowRowAddRemove)
+          ContextMenuButtonConfig(
+            "Remove Row",
+            icon: const Icon(Icons.remove, size: 15,),
+            onPressed: () => widget.config.onRowRemove(widget.index),
+          ),
       ],
       child: MouseRegion(
         onEnter: (_) => setState(() => isHovered = true),
@@ -390,7 +443,11 @@ class _TableRowState extends State<_TableRow> {
           child: Row(
             children: [
               for (int j = 0; j < widget.config.columnNames.length; j++)
-                makeCell(cell: widget.row.cells[j], drawBorder: j != widget.config.columnNames.length - 1),
+                makeCell(
+                  cell: widget.row.cells[j],
+                  drawBorder: j != widget.config.columnNames.length - 1,
+                  flex: widget.config.columnFlex[j],
+                ),
             ],
           ),
         ),
@@ -398,8 +455,10 @@ class _TableRowState extends State<_TableRow> {
     );
   }
 
-  Widget makeCell({ required CellConfig? cell, required bool drawBorder }) {
-    return Expanded(
+  Widget makeCell({ required CellConfig? cell, required bool drawBorder, required int flex }) {
+    return Flexible(
+      fit: FlexFit.tight,
+      flex: flex,
       child: ConstrainedBox(
         constraints: const BoxConstraints(minHeight: 40),
         child: Container(
@@ -411,14 +470,7 @@ class _TableRowState extends State<_TableRow> {
               ),
             ),
           ),
-          child: cell != null ? makePropEditor<TransparentPropTextField>(
-            cell.prop,
-            PropTFOptions(
-              constraints: const BoxConstraints(minWidth: double.infinity, minHeight: 30),
-              isMultiline: cell.allowMultiline,
-              useIntrinsicWidth: false,
-            ),
-          ) : null,
+          child: cell?.makeWidget(),
         ),
       ),
     );

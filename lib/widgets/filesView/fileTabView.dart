@@ -68,7 +68,8 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
     OpenFileData? firstFile;
     const fileExplorerExtensions = { ".pak", ".dat", ".yax", ".bin", ".wai", ".wsp", ".bxm", ".gad", ".sar", ".bnk" };
     for (var file in files) {
-      if (fileExplorerExtensions.contains(path.extension(file.name)) || await Directory(file.path).exists()) {
+      bool isSaveSlotData = file.name.startsWith("SlotData_") && file.name.endsWith(".dat");
+      if (fileExplorerExtensions.contains(path.extension(file.name)) && !isSaveSlotData || await Directory(file.path).exists()) {
         var entry = await openHierarchyManager.openFile(file.path);
         if (entry is XmlScriptHierarchyEntry)
           areasManager.openFile(entry.path);

@@ -102,8 +102,7 @@ Future<void> revertAllAudioMods(String waiPath) async {
   if (restoreCount == 0)
     showToast("No files to restore");
   else
-    showToast("Restored ${pluralStr(restoreCount, "file")}");
-  messageLog.add(
+    showToast(
     "Restored ${pluralStr(restoreCount, "file")}"
     "${warningCount > 0 ? ", ${pluralStr(warningCount, "warning")}" : ""}"
   );

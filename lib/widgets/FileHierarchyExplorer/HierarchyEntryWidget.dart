@@ -15,7 +15,6 @@ import '../../fileTypeUtils/yax/xmlToYax.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/FileHierarchy.dart';
 import '../../stateManagement/miscValues.dart';
-import '../../stateManagement/openFilesManager.dart';
 import '../../stateManagement/preferencesData.dart';
 import '../../utils/utils.dart';
 import 'wemPreviewButton.dart';
@@ -46,6 +45,8 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
       return null;
     else if (widget.entry is WemHierarchyEntry)
       return Icon(Icons.music_note, color: iconColor, size: 15);
+    else if (widget.entry is SaveSlotDataHierarchyEntry)
+      return Icon(Icons.save, color: iconColor, size: 15);
     else
       return Icon(Icons.description, color: iconColor, size: 15);
   }
@@ -85,7 +86,9 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
                           color: getTextColor(context)
                         ),
                       ),
-                    ),
+                    )
+                  else if (widget.depth == 0)
+                    const SizedBox(width: 4),
                   if (icon != null)
                     icon,
                   const SizedBox(width: 5),

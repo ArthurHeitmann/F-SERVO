@@ -15,6 +15,7 @@ class EditorLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Sidebar(
           initialWidth: MediaQuery.of(context).size.width * 0.22,

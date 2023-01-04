@@ -6,6 +6,7 @@ import '../../../stateManagement/Property.dart';
 import 'HexPropTextField.dart';
 import 'NumberPropTextField.dart';
 import 'VectorPropEditor.dart';
+import 'boolPropCheckbox.dart';
 import 'propTextField.dart';
 
 Widget makePropEditor<T extends PropTextField>(Prop prop, [PropTFOptions options = const PropTFOptions()]) {
@@ -16,6 +17,8 @@ Widget makePropEditor<T extends PropTextField>(Prop prop, [PropTFOptions options
       return NumberPropTextField<T>(prop: prop as NumberProp, options: options);
     case PropType.vector:
       return VectorPropEditor<T>(prop: prop as VectorProp);
+    case PropType.bool:
+      return BoolPropCheckbox(prop: prop as BoolProp);
     default:
       return PropTextField.make<T>(prop: prop, options: options);
   }

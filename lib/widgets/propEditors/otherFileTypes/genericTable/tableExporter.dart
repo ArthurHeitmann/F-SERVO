@@ -15,7 +15,7 @@ List<List<String?>> _tablePropsToStrings(CustomTableConfig tableConfig) {
   return rows.map((row) {
     return List.generate(
       row.cells.length,
-      (index) => row.cells[index]?.prop.toString()
+      (index) => row.cells[index]?.toExportString()
     );
   }).toList();
 }

@@ -82,6 +82,10 @@ class CharNamesXmlProp extends XmlProp with CustomTableConfig {
       "KEY",
       ..._nameKeys
     ];
+    columnFlex = [
+      1,
+      ...List.filled(_nameKeys.length, 1)
+    ];
     rowCount = NumberProp(0, true);
     rowCount.changesUndoable = false;
     
@@ -268,13 +272,13 @@ class CharNamesXmlProp extends XmlProp with CustomTableConfig {
     var name = names[index];
     RowConfig row = RowConfig(
       key: Key(name.uuid),
-      cells: [CellConfig(prop: name.key)]
+      cells: [PropCellConfig(prop: name.key)]
     );
     var cells = row.cells;
     int ti = 0;
     for (int i = 0; i < _nameKeys.length; i++) {
       if (name.translations[ti].key.value == _nameKeys[i]) {
-        cells.add(CellConfig(prop: name.translations[ti].val));
+        cells.add(PropCellConfig(prop: name.translations[ti].val));
         ti++;
       }
       else {

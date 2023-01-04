@@ -32,6 +32,7 @@ import 'nestedNotifier.dart';
 import 'openFilesManager.dart';
 import 'otherFileTypes/FtbFileData.dart';
 import 'otherFileTypes/McdData.dart';
+import 'otherFileTypes/SlotDataDat.dart';
 import 'otherFileTypes/SmdFileData.dart';
 import 'otherFileTypes/TmdFileData.dart';
 import 'otherFileTypes/audioResourceManager.dart';
@@ -86,6 +87,8 @@ abstract class OpenFileData extends ChangeNotifier with HasUuid, Undoable {
       return WaiFileData(name, path, secondaryName: secondaryName);
     else if (RegExp(r"\.bnk#p=\d+").hasMatch(path))
       return BnkFilePlaylistData(name, path, secondaryName: secondaryName);
+    else if (path.endsWith(".dat") && basename(path).startsWith("SlotData_"))
+      return SaveSlotData(name, path, secondaryName: secondaryName);
     else
       return TextFileData(name, path, secondaryName: secondaryName);
   }
@@ -109,6 +112,8 @@ abstract class OpenFileData extends ChangeNotifier with HasUuid, Undoable {
       return FileType.wsp;
     else if (RegExp(r"\.bnk#p=\d+").hasMatch(path))
       return FileType.bnkPlaylist;
+    else if (path.endsWith(".dat") && basename(path).startsWith("SlotData_"))
+      return FileType.saveSlotData;
     else
       return FileType.text;
   }
@@ -1596,6 +1601,71 @@ class BnkFilePlaylistData extends OpenFileData {
   void restoreWith(Undoable snapshot) {
     var content = snapshot as BnkFilePlaylistData;
     rootChild?.restoreWith(content.rootChild!);
+    name = content._name;
+    path = content._path;
+    hasUnsavedChanges = content._unsavedChanges;
+  }
+}
+
+class SaveSlotData extends OpenFileData {
+  SlotDataDat? slotData;
+
+  SaveSlotData(String name, String path, { super.secondaryName })
+    : super(name, path, icon: Icons.save);
+
+  @override
+  Future<void> load() async {
+    if (_loadingState != LoadingState.notLoaded)
+      return;
+    _loadingState = LoadingState.loading;
+
+    var bytes = await ByteDataWrapper.fromFile(path);
+    slotData = SlotDataDat.read(bytes);
+    for (var prop in slotData!.allProps())
+      prop.addListener(_onPropChanged);
+
+    await super.load();
+  }
+
+  void _onPropChanged() {
+    hasUnsavedChanges = true;
+  }
+
+  @override
+  Future<void> save() async {
+    if (_loadingState != LoadingState.loaded)
+      return;
+    
+    var bytes = await ByteDataWrapper.fromFile(path);
+    slotData!.write(bytes);
+    await backupFile(path);
+    await File(path).writeAsBytes(bytes.buffer.asUint8List());
+
+    await super.save();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    slotData?.dispose();
+  }
+
+  @override
+  Undoable takeSnapshot() {
+    var snapshot = SaveSlotData(_name, _path);
+    snapshot.optionalInfo = optionalInfo;
+    snapshot.slotData = slotData?.takeSnapshot() as SlotDataDat?;
+    snapshot._unsavedChanges = _unsavedChanges;
+    snapshot._loadingState = _loadingState;
+    snapshot.overrideUuid(uuid);
+    return snapshot;
+  }
+
+  @override
+  void restoreWith(Undoable snapshot) {
+    var content = snapshot as SaveSlotData;
+    if (content.slotData != null)
+      slotData?.restoreWith(content.slotData!);
     name = content._name;
     path = content._path;
     hasUnsavedChanges = content._unsavedChanges;

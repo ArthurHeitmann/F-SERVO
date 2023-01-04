@@ -441,6 +441,12 @@ class IdsIndexer {
       return;
     foundXmlFiles++;
 
+    var hapIdEl = root.getElement("id");
+    if (hapIdEl != null) {
+      var hapId = int.parse(hapIdEl.text);
+      _addIndexedData(hapId, IndexedIdData(hapId, "HAP", datPath, pakPath, xmlPath));
+    }
+
     var rootName = root.getElement("name");
     if (rootName?.text == "SceneState" && root.getElement("node") != null) {
       _indexSceneState(root);
@@ -449,12 +455,6 @@ class IdsIndexer {
     if (rootName?.text == "CharName" && root.getElement("text") != null) {
       _indexCharNames(root);
       return;
-    }
-
-    var hapIdEl = root.getElement("id");
-    if (hapIdEl != null) {
-      var hapId = int.parse(hapIdEl.text);
-      _addIndexedData(hapId, IndexedIdData(hapId, "HAP", datPath, pakPath, xmlPath));
     }
 
     for (var action in root.findElements("action")) {

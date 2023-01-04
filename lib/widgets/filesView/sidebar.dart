@@ -52,7 +52,6 @@ class _SidebarState extends State<Sidebar> {
         )
       );
       Overlay.of(context)!.insert(_draggableOverlayEntry!);
-      print("Sidebar: Draggable overlay entry inserted");
     });
   }
 
@@ -62,7 +61,7 @@ class _SidebarState extends State<Sidebar> {
     super.dispose();
   }
 
-  void _onDrag(BuildContext context, double width) {
+  void _onDrag(BuildContext overlayContext, double width) {
     _width += width;
     if (_width < 150)
       _isExpanded = false;
@@ -70,7 +69,7 @@ class _SidebarState extends State<Sidebar> {
       _isExpanded = true;
     // rebuild self and handle
     setState(() {});
-    context.findRenderObject()!.markNeedsLayout();
+    overlayContext.findRenderObject()!.markNeedsLayout();
   }
 
   @override

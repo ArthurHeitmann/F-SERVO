@@ -47,9 +47,11 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
     try {
       List<Tuple2<Iterable<String>, Future<HierarchyEntry> Function()>> hierarchyPresets = [
         Tuple2(datExtensions, () async {
-          if (await File(filePath).exists())
+          if (await File(filePath).exists()) {
+            if (basename(filePath).startsWith("SlotData"))  // special case for save data
+              return openGenericFile<SaveSlotDataHierarchyEntry>(filePath, parent, (n, p) => SaveSlotDataHierarchyEntry(n, p));
             return await openDat(filePath, parent: parent);
-          else if (await Directory(filePath).exists())
+          } else if (await Directory(filePath).exists())
             return await openExtractedDat(filePath, parent: parent);
           else
             throw FileSystemException("File not found: $filePath");

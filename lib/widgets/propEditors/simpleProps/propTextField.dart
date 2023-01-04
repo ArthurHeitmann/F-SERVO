@@ -28,6 +28,24 @@ class PropTFOptions {
     this.hintText,
     this.autocompleteOptions,
   });
+
+  PropTFOptions copyWith({
+    Key? key,
+    BoxConstraints? constraints,
+    bool? isMultiline,
+    bool? useIntrinsicWidth,
+    String? hintText,
+    FutureOr<Iterable<AutocompleteConfig>> Function()? autocompleteOptions,
+  }) {
+    return PropTFOptions(
+      key: key ?? this.key,
+      constraints: constraints ?? this.constraints,
+      isMultiline: isMultiline ?? this.isMultiline,
+      useIntrinsicWidth: useIntrinsicWidth ?? this.useIntrinsicWidth,
+      hintText: hintText ?? this.hintText,
+      autocompleteOptions: autocompleteOptions ?? this.autocompleteOptions,
+    );
+  }
 }
 
 abstract class PropTextField<P extends Prop> extends ChangeNotifierWidget {

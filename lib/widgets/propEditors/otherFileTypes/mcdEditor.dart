@@ -95,7 +95,7 @@ class _McdEditorState extends ChangeNotifierState<McdEditor> {
   Widget _makeTabButton(int index, String text) {
     return Flexible(
       child: SizedBox(
-        width: 150,
+        width: 175,
         height: 40,
         child: TextButton(
             onPressed: () {
