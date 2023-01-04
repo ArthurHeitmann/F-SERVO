@@ -524,7 +524,7 @@ Future<List<String>> _getDatFileListFromMetadata(String metadataPath) async {
   var nameLength = metadataBytes.readUint32();
   List<String> files = [];
   for (var i = 0; i < numFiles; i++)
-    files.add(metadataBytes.readString(nameLength).replaceAll("\x00", ""));
+    files.add(metadataBytes.readString(nameLength).trimNull());
   files = files.toSet().toList();
   files.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
   var dir = path.dirname(metadataPath);
@@ -640,4 +640,8 @@ String formatDuration(Duration duration, [bool showMs = false]) {
     return "$mins:$secs.$ms";
   }
   return "$mins:$secs";
+}
+
+extension StringNullTrim on String {
+  String trimNull() => replaceAll(RegExp("\x00+\$"), "");
 }

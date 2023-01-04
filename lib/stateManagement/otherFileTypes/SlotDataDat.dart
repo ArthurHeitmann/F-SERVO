@@ -1,5 +1,6 @@
 
 import '../../fileTypeUtils/utils/ByteDataWrapper.dart';
+import '../../utils/utils.dart';
 import '../Property.dart';
 import '../hasUuid.dart';
 import '../undoable.dart';
@@ -180,20 +181,20 @@ class SlotDataDat with HasUuid, Undoable {
     bytes.position = 4;
     steamId64 = NumberProp(bytes.readInt64(), true);
     bytes.position = 0x34;
-    name = StringProp(bytes.readString(35, encoding: StringEncoding.utf16).replaceAll("\x00", ""));
+    name = StringProp(bytes.readString(35, encoding: StringEncoding.utf16).trimNull());
     bytes.position = 0x3056C;
     money = NumberProp(bytes.readInt32(), true);
     bytes.position = 0x3871C;
     experience = NumberProp(bytes.readInt32(), true);
     bytes.position = 0x395F4;
-    phase = StringProp(bytes.readString(32).replaceAll("\x00", ""));
-    transporterFlag = StringProp(bytes.readString(32).replaceAll("\x00", ""));
+    phase = StringProp(bytes.readString(32).trimNull());
+    transporterFlag = StringProp(bytes.readString(32).trimNull());
     bytes.position = 0x3963C;
     position = SaveVector.read(bytes);
     rotation = SaveVector.read(bytes);
     bytes.position = 0x3884C;
-    corpseOnlineName = StringProp(bytes.readString(128).replaceAll("\x00", ""));
-    corpseName = StringProp(bytes.readString(22, encoding: StringEncoding.utf16).replaceAll("\x00", ""));
+    corpseOnlineName = StringProp(bytes.readString(128).trimNull());
+    corpseName = StringProp(bytes.readString(22, encoding: StringEncoding.utf16).trimNull());
     bytes.position = 0x388F8;
     corpsePosition = SaveVector.read(bytes);
     bytes.position = 0x30570;

@@ -1,6 +1,7 @@
 
 import 'dart:math';
 
+import '../../utils/utils.dart';
 import '../utils/ByteDataWrapper.dart';
 
 abstract class RiffChunk {
@@ -345,7 +346,7 @@ class RiffListLabelSubChunk extends RiffListSubChunk {
   RiffListLabelSubChunk.read(ByteDataWrapper bytes)
     : super(bytes.readString(4), bytes.readUint32()) {
     cuePointIndex = bytes.readUint32();
-    label = bytes.readString(size - 4).replaceAll("\x00", "");
+    label = bytes.readString(size - 4).trimNull();
     if (size & 1 == 1 && bytes.position < bytes.length) {
       bytes.readUint8();
     }

@@ -1,6 +1,7 @@
 
 import 'dart:io';
 
+import '../../utils/utils.dart';
 import '../utils/ByteDataWrapper.dart';
 
 class McdFileHeader {
@@ -345,7 +346,7 @@ class McdFileEvent {
   McdFileEvent.read(ByteDataWrapper bytes, Map<int, McdFileMessage> messages) :
     id = bytes.readUint32(),
     msgId = bytes.readUint32(),
-    name = bytes.readString(32).replaceAll("\x00", "") {
+    name = bytes.readString(32).trimNull() {
     message = messages[msgId]!;
   }
 

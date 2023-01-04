@@ -42,7 +42,7 @@ class WspDirectory {
   WspDirectory(this.name, this.u0, this.u1, this.startStructIndex, this.endStructIndex);
 
   WspDirectory.read(ByteDataWrapper bytes) :
-    name = bytes.readString(16).replaceAll("\x00", ""),
+    name = bytes.readString(16).trimNull(),
     u0 = bytes.readUint32(),
     u1 = bytes.readUint32(),
     startStructIndex = bytes.readUint32(),
@@ -71,7 +71,7 @@ class WspName {
   WspName(this.name, this.u0, this.u1, this.u2, this.u3);
 
   WspName.read(ByteDataWrapper bytes) :
-    name = bytes.readString(16).replaceAll("\x00", ""),
+    name = bytes.readString(16).trimNull(),
     u0 = bytes.readUint32(),
     u1 = bytes.readUint32(),
     u2 = bytes.readUint32(),
