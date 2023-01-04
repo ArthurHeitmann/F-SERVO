@@ -68,10 +68,16 @@ class NierDarkThemeExtension extends NierThemeExtension {
       customCueColor: const Color.fromARGB(255, 43, 129, 204),
     );
 
-  static ThemeData makeTheme() {
+  static ThemeData makeTheme(BuildContext context) {
     return ThemeData(
       brightness: Brightness.dark,
       extensions: [NierDarkThemeExtension()],
+      textTheme: Theme.of(context).textTheme.apply(
+        fontFamily: "FiraCode",
+        fontSizeFactor: 0.95,
+        bodyColor: Colors.white,
+        displayColor: Colors.white,
+      ),
       scrollbarTheme: ScrollbarThemeData(
         radius: Radius.zero,
         crossAxisMargin: 0,

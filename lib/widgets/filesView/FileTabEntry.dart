@@ -28,7 +28,7 @@ class _FileTabEntryState extends ChangeNotifierState<FileTabEntry> {
     var file = areasManager.fromId(widget.file)!;
     return logicWrapper(
       SizedBox(
-        width: 175,
+        width: 200,
         child: Padding(
           padding: const EdgeInsets.only(left: 2.5, right: 2.5, bottom: 3),
           child: Container(

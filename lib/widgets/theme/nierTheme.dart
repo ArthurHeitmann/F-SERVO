@@ -86,15 +86,14 @@ class NierNierThemeExtension extends NierThemeExtension {
       customCueColor: _ncRed,
     );
 
-  static ThemeData makeTheme() {
+  static ThemeData makeTheme(BuildContext context) {
     return ThemeData(
       extensions: [NierNierThemeExtension()],
-      textTheme: const TextTheme(
-        bodyText1: TextStyle(),
-        bodyText2: TextStyle(),
-      ).apply(
+      fontFamily: "FiraCode",
+      textTheme: Theme.of(context).textTheme.apply(
         bodyColor: _ncDark,
         displayColor: _ncDark,
+        fontSizeFactor: 0.9,
       ),
       scrollbarTheme: ScrollbarThemeData(
         radius: Radius.zero,

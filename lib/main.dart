@@ -104,7 +104,7 @@ class _MyAppState extends State<MyApp> {
         return MaterialApp(
           title: "Nier Scripts Editor",
           debugShowCheckedModeBanner: false,
-          theme: PreferencesData().makeTheme(),
+          theme: PreferencesData().makeTheme(context),
           home: MyAppBody(key: _rootKey)
         );
       }

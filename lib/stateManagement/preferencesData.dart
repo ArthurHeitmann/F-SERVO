@@ -120,14 +120,14 @@ class PreferencesData extends OpenFileData {
     _loadingState = LoadingState.loaded;
   }
 
-  ThemeData makeTheme() {
+  ThemeData makeTheme(BuildContext context) {
     switch (themeType!.value) {
       case ThemeType.light:
         throw UnimplementedError();
       case ThemeType.dark:
-        return NierDarkThemeExtension.makeTheme();
+        return NierDarkThemeExtension.makeTheme(context);
       case ThemeType.nier:
-        return NierNierThemeExtension.makeTheme();
+        return NierNierThemeExtension.makeTheme(context);
     }	
   }
 
