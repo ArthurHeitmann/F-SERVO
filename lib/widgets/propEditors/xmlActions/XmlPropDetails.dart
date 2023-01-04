@@ -18,7 +18,7 @@ class XmlPropDetails extends ChangeNotifierWidget {
 class _XmlPropDetailsState extends ChangeNotifierState<XmlPropDetails> {
   @override
   Widget build(BuildContext context) {
-    return FocusScope(
+    return FocusTraversalGroup(
       child: makeXmlPropEditor(widget.prop, true)
     );
   }

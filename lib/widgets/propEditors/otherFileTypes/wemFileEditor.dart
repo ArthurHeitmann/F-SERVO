@@ -6,7 +6,6 @@ import 'dart:io';
 
 import '../../../fileTypeUtils/audio/wemToWavConverter.dart';
 import '../../../stateManagement/ChangeNotifierWidget.dart';
-import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/openFileTypes.dart';
 import '../../../stateManagement/openFilesManager.dart';
 import '../../../utils/utils.dart';

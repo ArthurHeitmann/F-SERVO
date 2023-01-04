@@ -125,7 +125,7 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
         ConstrainedBox(
           key: Key(file.uuid),
           constraints: const BoxConstraints.expand(),
-          child: FocusScope(
+          child: FocusTraversalGroup(
             child: makeFileEditor(file),
           ),
         )

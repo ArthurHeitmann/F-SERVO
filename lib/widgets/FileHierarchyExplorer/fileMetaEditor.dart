@@ -63,7 +63,7 @@ class _FileMetaEditorState extends ChangeNotifierState<FileMetaEditor> {
   @override
   Widget build(BuildContext context) {
     var entry = openHierarchyManager.selectedEntry;
-    return FocusScope(
+    return FocusTraversalGroup(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

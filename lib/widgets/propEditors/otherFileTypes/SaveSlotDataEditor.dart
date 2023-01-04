@@ -5,8 +5,6 @@ import 'package:tuple/tuple.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/openFileTypes.dart';
 import '../../../stateManagement/otherFileTypes/SlotDataDat.dart';
-import '../../misc/ColumnSeparated.dart';
-import '../../misc/SmoothScrollBuilder.dart';
 import '../../theme/customTheme.dart';
 import '../simpleProps/UnderlinePropTextField.dart';
 import '../simpleProps/propEditorFactory.dart';
