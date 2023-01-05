@@ -9,6 +9,7 @@ import 'package:xml/xml.dart';
 import '../fileTypeUtils/audio/bnkExtractor.dart';
 import '../fileTypeUtils/audio/bnkIO.dart';
 import '../fileTypeUtils/audio/waiExtractor.dart';
+import '../fileTypeUtils/bxm/bxmReader.dart';
 import '../fileTypeUtils/dat/datExtractor.dart';
 import '../fileTypeUtils/ruby/pythonRuby.dart';
 import '../fileTypeUtils/utils/ByteDataWrapper.dart';
@@ -108,7 +109,7 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
           () async => openBnkFile(filePath, parent: parent)
         ),
         Tuple2(
-          [".bxm", ".gad", ".sar"], () async => openGenericFile<BxmHierarchyEntry>(filePath, parent, (n, p) => BxmHierarchyEntry(n, p))
+          [".bxm", ".gad", ".sar"], () async => openBxmFile(filePath, parent: parent)
         ),
       ];
 
@@ -169,7 +170,7 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
     List<Future<void>> futures = [];
     datFilePaths ??= await getDatFileList(datExtractDir);
     RubyScriptGroupHierarchyEntry? rubyScriptGroup;
-    const supportedFileEndings = { ".pak", "_scp.bin", ".tmd", ".smd", ".mcd", ".ftb", ".bnk" };
+    const supportedFileEndings = { ".pak", "_scp.bin", ".tmd", ".smd", ".mcd", ".ftb", ".bnk", ".bxm" };
     for (var file in datFilePaths) {
       if (supportedFileEndings.every((ending) => !file.endsWith(ending)))
         continue;
@@ -397,6 +398,22 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
       add(bnkEntry);
     
     return bnkEntry;
+  }
+
+  Future<HierarchyEntry> openBxmFile(String bxmPath, { HierarchyEntry? parent }) async {
+    var existing = findRecWhere((entry) => entry is BxmHierarchyEntry && entry.path == bxmPath);
+    if (existing != null)
+      return existing;
+    
+    var bxmEntry = BxmHierarchyEntry(StringProp(basename(bxmPath)), bxmPath);
+    if (parent != null)
+      parent.add(bxmEntry);
+    else
+      add(bxmEntry);
+
+    convertBxmFileToXml(bxmPath, bxmEntry.xmlPath);
+    
+    return bxmEntry;
   }
 
   @override

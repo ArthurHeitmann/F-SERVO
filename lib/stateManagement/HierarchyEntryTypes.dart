@@ -515,11 +515,16 @@ class BxmHierarchyEntry extends GenericFileHierarchyEntry {
   
   BxmHierarchyEntry(StringProp name, String path)
     : xmlPath = "$path.xml",
-    super(name, path, false, false);
+    super(name, path, false, true);
   
   @override
   HierarchyEntry clone() {
     return BxmHierarchyEntry(name.takeSnapshot() as StringProp, path);
+  }
+
+  @override
+  void onOpen() {
+    showToast("Can't open BXM files. Right click to convert");
   }
   
   Future<void> toXml() async {
