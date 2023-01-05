@@ -44,6 +44,18 @@ class XmlArrayEditorState<T extends XmlArrayEditor> extends ChangeNotifierState<
       : widget.parent.skip(firstOffset);
   }
 
+  void incrementChildCount() {
+    assert(widget.sizeIndicator.value is ValueProp);
+    assert((widget.sizeIndicator.value as ValueProp).value is num);
+    (widget.sizeIndicator.value as ValueProp).value += 1;
+  }
+
+  void decrementChildCount() {
+    assert(widget.sizeIndicator.value is ValueProp);
+    assert((widget.sizeIndicator.value as ValueProp).value is num);
+    (widget.sizeIndicator.value as ValueProp).value -= 1;
+  }
+
   void addChild([int relIndex = -1]) async {
     assert(widget.sizeIndicator.value is ValueProp);
     assert((widget.sizeIndicator.value as ValueProp).value is num);
@@ -54,7 +66,7 @@ class XmlArrayEditorState<T extends XmlArrayEditor> extends ChangeNotifierState<
       return;
     }
 
-    (widget.sizeIndicator.value as ValueProp).value += 1;
+    incrementChildCount();
     
     int absIndex;
     if (relIndex == -1)
@@ -68,7 +80,7 @@ class XmlArrayEditorState<T extends XmlArrayEditor> extends ChangeNotifierState<
     assert(widget.sizeIndicator.value is ValueProp);
     assert((widget.sizeIndicator.value as ValueProp).value is num);
 
-    (widget.sizeIndicator.value as ValueProp).value -= 1;
+    decrementChildCount();
     
     int absIndex = widget.parent.length - getChildProps().length + relIndex;
     var removed = widget.parent.removeAt(absIndex);
@@ -86,6 +98,8 @@ class XmlArrayEditorState<T extends XmlArrayEditor> extends ChangeNotifierState<
         file: widget.parent.file,
       )
     );
+
+    incrementChildCount();
   }
 
   void copyChild(int index) {
@@ -95,7 +109,6 @@ class XmlArrayEditorState<T extends XmlArrayEditor> extends ChangeNotifierState<
     var xml = widget.childrenPreset.duplicateAsXml(prop);
     copyToClipboard(xml.toXmlString(pretty: true, indent: "\t", level: prop.parentTags.length));
   }
-
 
   void cutChild(int index) {
     var offset = firstChildOffset;
@@ -121,6 +134,7 @@ class XmlArrayEditorState<T extends XmlArrayEditor> extends ChangeNotifierState<
         file: widget.parent.file,
       );
       widget.parent.insert(ownIndex + 1, prop);
+      incrementChildCount();
     } catch (e) {
       showToast("Couldn't parse XML");
     }
