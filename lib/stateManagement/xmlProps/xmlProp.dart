@@ -154,6 +154,9 @@ class XmlProp extends NestedNotifier<XmlProp> {
   }
 
   @override
+  String toString() => "<$tagName>${value.toString()}</$tagName>";
+
+  @override
   Undoable takeSnapshot() {
     var prop = XmlProp(
       tagId: tagId,

@@ -261,7 +261,7 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
       RowSeparated(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const Text("Wwise Path (2014 recommended):", overflow: TextOverflow.ellipsis,),
+          const Text("Wwise Path (2014):", overflow: TextOverflow.ellipsis,),
           Expanded(
             child: PrimaryPropTextField(
               prop: widget.prefs.wwiseCliPath!,
