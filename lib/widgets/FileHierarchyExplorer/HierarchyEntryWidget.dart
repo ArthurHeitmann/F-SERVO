@@ -197,6 +197,11 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
                 repackDat(dat.extractedPath, exportPath);
               },
             ),
+            ContextMenuButtonConfig(
+              "Add new Ruby script",
+              icon: const Icon(Icons.code, size: 15,),
+              onPressed: () => (widget.entry as DatHierarchyEntry).addNewRubyScript(),
+            ),
           ],
           if (widget.entry is RubyScriptHierarchyEntry) ...[
             ContextMenuButtonConfig(

@@ -1,4 +1,5 @@
 
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
@@ -9,6 +10,7 @@ import '../fileTypeUtils/audio/waiExtractor.dart';
 import '../fileTypeUtils/audio/wemToWavConverter.dart';
 import '../fileTypeUtils/bxm/bxmReader.dart';
 import '../fileTypeUtils/bxm/bxmWriter.dart';
+import '../fileTypeUtils/ruby/pythonRuby.dart';
 import '../fileTypeUtils/yax/yaxToXml.dart';
 import '../utils/utils.dart';
 import 'FileHierarchy.dart';
@@ -171,6 +173,17 @@ class DatHierarchyEntry extends ExtractableHierarchyEntry {
     _isSelected = entry._isSelected;
     _isCollapsed = entry._isCollapsed;
     replaceWith(entry.map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
+  }
+
+  Future<void> addNewRubyScript() async {
+    var scriptGroup = firstWhere(
+      (entry) => entry is RubyScriptGroupHierarchyEntry,
+      orElse: () => RubyScriptGroupHierarchyEntry()
+    ) as RubyScriptGroupHierarchyEntry;
+    scriptGroup.name.value = "Ruby Scripts (${scriptGroup.length + 1})";
+    if (!contains(scriptGroup))
+      add(scriptGroup);
+    await scriptGroup.addNewRubyScript(path, extractedPath);
   }
 }
 
@@ -457,6 +470,52 @@ class RubyScriptGroupHierarchyEntry extends HierarchyEntry {
     var entry = snapshot as RubyScriptGroupHierarchyEntry;
     _isCollapsed = entry._isCollapsed;
     updateOrReplaceWith(entry.toList(), (obj) => obj.takeSnapshot() as HierarchyEntry);
+  }
+  
+  Future<void> addNewRubyScript(String datPath, String datExtractedPath) async {
+     var datInfoPath = join(datExtractedPath, "dat_info.json");
+    Map datInfo;
+    if (await File(datInfoPath).exists()) {
+      datInfo = jsonDecode(await File(datInfoPath).readAsString());
+    } else {
+      datInfo = {
+        "version": 1,
+        "files": (await getDatFileList(datExtractedPath))
+          .map((path) => basename(path))
+          .toList(),
+        "basename": basenameWithoutExtension(datPath),
+        "ext": "dat",
+      };
+    }
+
+    var newScriptName = "${basenameWithoutExtension(datPath)}_${randomId().toRadixString(16).padLeft(8, "0")}_scp.bin.rb";
+    var datFiles = (datInfo["files"] as List).cast<String>();
+    datFiles.add(newScriptName);
+    datFiles.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+    datInfo["files"] = datFiles;
+
+    var newScriptPath = join(datExtractedPath, newScriptName);
+    const scriptTemplate = """
+proxy = ScriptProxy.new()
+class << proxy
+	# DIALOGUE
+
+	# EVENT CALLBACKS
+  
+	# EVENT TRIGGERS
+	def update()
+	end
+end
+
+Fiber.new() { proxy.update() }
+""";
+    await File(newScriptPath).writeAsString(scriptTemplate);
+    await rubyFileToBin(newScriptPath);
+    await File(datInfoPath).writeAsString(const JsonEncoder.withIndent("\t").convert(datInfo));
+
+    var newScriptEntry = RubyScriptHierarchyEntry(StringProp(newScriptName), newScriptPath);
+    add(newScriptEntry);
+    newScriptEntry.onOpen();
   }
 }
 
