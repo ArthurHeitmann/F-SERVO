@@ -118,6 +118,7 @@ class CommandEditorState extends ChangeNotifierState<CommandEditor> {
         var label = command.get("label")?.value;
         var value = command.get("value");
         var args = commParent.get("args");
+        var argsParent = commParent.get("command") != null ? commParent : widget.prop;
         return NestedContextMenu(
           buttons: [
             optionalValPropButtonConfig(
@@ -129,7 +130,7 @@ class CommandEditorState extends ChangeNotifierState<CommandEditor> {
               () => NumberProp(1, true)
             ),
             optionalValPropButtonConfig(
-              commParent, "args", () => commParent.length,
+              argsParent, "args", () => commParent.length,
               () => StringProp("arg")
             ),
           ],
