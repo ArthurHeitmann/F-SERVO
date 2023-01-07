@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:tuple/tuple.dart';
 
 import '../../../stateManagement/Property.dart';
+import '../../../stateManagement/nestedNotifier.dart';
 import '../../../stateManagement/openFileTypes.dart';
 import '../../../stateManagement/otherFileTypes/SlotDataDat.dart';
 import '../../theme/customTheme.dart';
@@ -54,6 +55,7 @@ class _SaveSlotDataEditorState extends State<SaveSlotDataEditor> {
             _makeTabButton(1, "Inventory"),
             _makeTabButton(2, "Corpse Inventory"),
             _makeTabButton(3, "Weapons"),
+            _makeTabButton(4, "Scene State"),
           ]
         ),
         const Divider(height: 1,),
@@ -75,6 +77,7 @@ class _SaveSlotDataEditorState extends State<SaveSlotDataEditor> {
                   ],
                 ),
                 _WeaponEditor(save: save),
+                _TogglesEditor(name: "Scene State", toggles: save.tree.where((e) => e.text.value == "SceneState").first.children),
               ],
             ),
           ),
@@ -345,6 +348,74 @@ Iterable<AutocompleteConfig> _getWeaponIdAutocomplete() {
     insertText: t.item1.toString(),
   ));
 }
+
+class _StringListTableConfig with CustomTableConfig {
+  final ValueNestedNotifier<TreeEntry> strings;
+
+  _StringListTableConfig(String name, this.strings) {
+    this.name = name;
+    columnNames = [name, ""];
+    columnFlex = [5, 1];
+    rowCount = NumberProp(strings.length, true);
+  }
+
+  @override
+  RowConfig rowPropsGenerator(int index) {
+    return RowConfig(
+      key: Key(strings[index].uuid),
+      cells: [
+        PropCellConfig(prop: strings[index].text),
+        CustomWidgetCellConfig(
+          IconButton(
+            icon: const Icon(Icons.delete),
+            onPressed: () => strings.removeAt(index),
+          ),
+        ),
+      ]
+    );
+  }
+  @override
+  void onRowAdd() {
+    strings.add(TreeEntry(StringProp("new $name entry"), ValueNestedNotifier([])));
+    rowCount.value++;
+  }
+
+  @override
+  void onRowRemove(int index) {
+    strings.removeAt(index);
+  }
+
+  @override
+  void updateRowWith(int index, List<String?> values) {
+    strings[index].text.updateWith(values[0]!);
+  }
+}
+
+class _TogglesEditor extends StatefulWidget {
+  final String name;
+  final ValueNestedNotifier<TreeEntry> toggles;
+
+  const _TogglesEditor({ super.key, required this.name, required this.toggles });
+
+  @override
+  State<_TogglesEditor> createState() => __TogglesEditorState();
+}
+
+class __TogglesEditorState extends State<_TogglesEditor> {
+  late _StringListTableConfig tableConfig;
+
+  @override
+  void initState() {
+    tableConfig = _StringListTableConfig(widget.name, widget.toggles);
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TableEditor(config: tableConfig);
+  }
+}
+
 
 const _weaponsByIndex = [
   Tuple2(0x000003EB, "Faith"),

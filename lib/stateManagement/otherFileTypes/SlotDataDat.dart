@@ -3,6 +3,7 @@ import '../../fileTypeUtils/utils/ByteDataWrapper.dart';
 import '../../utils/utils.dart';
 import '../Property.dart';
 import '../hasUuid.dart';
+import '../nestedNotifier.dart';
 import '../undoable.dart';
 
 class SaveInventoryItem with HasUuid, Undoable {
@@ -158,6 +159,80 @@ class SaveVector with HasUuid, Undoable {
   }
 }
 
+class TreeEntry with HasUuid, Undoable {
+  final StringProp text;
+  final ValueNestedNotifier<TreeEntry> children;
+
+  TreeEntry(this.text, this.children);
+
+  void dispose() {
+    text.dispose();
+    children.dispose();
+  }
+
+  @override
+  Undoable takeSnapshot() {
+    return TreeEntry(
+      text.takeSnapshot() as StringProp,
+      children.takeSnapshot() as ValueNestedNotifier<TreeEntry>
+    );
+  }
+
+  @override
+  void restoreWith(Undoable snapshot) {
+    var entry = snapshot as TreeEntry;
+    text.restoreWith(entry.text);
+    children.restoreWith(entry.children);
+  }
+}
+
+List<TreeEntry> _parseTree(String text) {
+  List<TreeEntry> rootEntries = [];
+
+  List<String> lines = text.split("\n");
+
+  for (String line in lines) {
+    if (line == lines.last && line.isEmpty)
+      break;
+    int indentationLevel = 0;
+    while (line.startsWith(" ", indentationLevel))
+      indentationLevel++;
+    line = line.substring(indentationLevel);
+
+    TreeEntry entry = TreeEntry(StringProp(line), ValueNestedNotifier([]));
+
+    if (indentationLevel == 0) {
+      rootEntries.add(entry);
+    } else {
+      TreeEntry parent = rootEntries.last;
+      for (int i = 1; i < indentationLevel; i++)
+        parent = parent.children.last;
+
+      parent.children.add(entry);
+    }    
+  }
+
+  return rootEntries;
+}
+
+String _stringifyTree(List<TreeEntry> tree) {
+  String text = "";
+
+  for (TreeEntry entry in tree)
+    text += _stringifyTreeEntry(entry, 0);
+
+  return text;
+}
+String _stringifyTreeEntry(TreeEntry entry, int indentationLevel) {
+  String text = " " * indentationLevel;
+  text += "${entry.text.value}\n";
+
+  for (TreeEntry child in entry.children)
+    text += _stringifyTreeEntry(child, indentationLevel + 1);
+
+  return text;
+}
+
 class SlotDataDat with HasUuid, Undoable {
   late final NumberProp steamId64;
   late final StringProp name;
@@ -174,6 +249,7 @@ class SlotDataDat with HasUuid, Undoable {
   late final List<SaveInventoryItem> corpseInventory;
   late final List<SaveWeapon> weapons;
   late final List<SaveWeaponSet> weaponSets;
+  late final List<TreeEntry> tree;
   
   SlotDataDat(this.steamId64, this.name, this.money, this.experience, this.phase, this.transporterFlag, this.position, this.rotation, this.corpseName, this.corpseOnlineName, this.corpsePosition, this.inventory, this.corpseInventory, this.weapons, this.weaponSets);
 
@@ -203,6 +279,9 @@ class SlotDataDat with HasUuid, Undoable {
     weapons = List.generate(80, (index) => SaveWeapon.read(index, bytes));
     bytes.position = 0x386F4;
     weaponSets = List.generate(2, (index) => SaveWeaponSet.read(bytes));
+    bytes.position = 0x7C;
+    var treeText = bytes.readString(196608).trimNull();
+    tree = _parseTree(treeText);
   }
 
   void write(ByteDataWrapper bytes) {
@@ -235,6 +314,8 @@ class SlotDataDat with HasUuid, Undoable {
     bytes.position = 0x386F4;
     for (var weaponSet in weaponSets)
       weaponSet.write(bytes);
+    bytes.position = 0x7C;
+    bytes.writeString(_stringifyTree(tree).padRight(196608, "\x00"));
   }
 
   Iterable<Prop> allProps() {
@@ -252,6 +333,8 @@ class SlotDataDat with HasUuid, Undoable {
   void dispose() {
     for (var prop in allProps())
       prop.dispose();
+    for (var entry in tree)
+      entry.dispose();
   }
 
   @override

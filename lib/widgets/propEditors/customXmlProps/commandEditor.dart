@@ -130,7 +130,7 @@ class CommandEditorState extends ChangeNotifierState<CommandEditor> {
               () => NumberProp(1, true)
             ),
             optionalValPropButtonConfig(
-              argsParent, "args", () => commParent.length,
+              argsParent, "args", () => argsParent.length,
               () => StringProp("arg")
             ),
           ],

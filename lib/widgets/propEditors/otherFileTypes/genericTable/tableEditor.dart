@@ -61,6 +61,18 @@ class TextCellConfig extends CellConfig {
   String toExportString() => text;
 }
 
+class CustomWidgetCellConfig extends CellConfig {
+  final Widget widget;
+
+  CustomWidgetCellConfig(this.widget);
+
+  @override
+  Widget makeWidget() => widget;
+
+  @override
+  String toExportString() => "";
+}
+
 class RowConfig {
   final Key key;
   final List<CellConfig?> cells;
