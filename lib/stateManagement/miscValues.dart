@@ -4,7 +4,7 @@ import 'dart:collection';
 import 'package:flutter/material.dart';
 
 
-const _windowTitleDefault = "Nier Scripts Editor";
+const _windowTitleDefault = "F-SERVO";
 class _WindowTitleVN extends ValueNotifier<String> {
   _WindowTitleVN() : super("");
 

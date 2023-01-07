@@ -102,7 +102,7 @@ class _MyAppState extends State<MyApp> {
       notifier: PreferencesData().themeType!,
       builder: (context) {
         return MaterialApp(
-          title: "Nier Scripts Editor",
+          title: "F-SERVO",
           debugShowCheckedModeBanner: false,
           theme: PreferencesData().makeTheme(context),
           home: MyAppBody(key: _rootKey)

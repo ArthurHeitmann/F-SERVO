@@ -32,7 +32,7 @@ class TitleBarState extends ChangeNotifierState<TitleBar> with WindowListener {
     isExpanded = isDesktop ? await windowManager.isMaximized() : true;
     if (isDesktop) {
       await windowManager.setTitle(windowTitle.value);
-      windowTitle.value = await windowManager.getTitle();
+      // windowTitle.value = await windowManager.getTitle();
     }
   }
 
