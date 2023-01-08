@@ -645,3 +645,16 @@ String formatDuration(Duration duration, [bool showMs = false]) {
 extension StringNullTrim on String {
   String trimNull() => replaceAll(RegExp("\x00+\$"), "");
 }
+
+Future<void> openInVsCode(String path) async {
+  showToast("Opening in VS Code...");
+  if (Platform.isWindows) {
+    Process.run("code", [path], runInShell: true);
+  } else if (Platform.isMacOS) {
+    Process.run("open", ["-a", "Visual Studio Code", path], runInShell: true);
+  } else if (Platform.isLinux) {
+    Process.run("code", [path], runInShell: true);
+  } else {
+    throw Exception("Unsupported platform");
+  }
+}

@@ -59,6 +59,7 @@ flutter:
     - assets/FontAtlasGenerator/
     - assets/bins/
     - assets/bins/vgmStream/
+    - assets/images/
     - assets/mcdFonts/
     - assets/mcdFonts/1/
     - assets/mcdFonts/2/

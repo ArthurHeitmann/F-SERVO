@@ -21,8 +21,10 @@ import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/events/jumpToEvents.dart';
 import '../../stateManagement/openFileTypes.dart';
 import '../../stateManagement/undoable.dart';
+import '../../utils/assetDirFinder.dart';
 import '../../utils/utils.dart';
 import '../misc/SmoothScrollBuilder.dart';
+import '../misc/onHoverBuilder.dart';
 
 class TextFileEditor extends ChangeNotifierWidget {
   late final TextFileData fileContent;
@@ -61,6 +63,7 @@ class _TextFileEditorState extends ChangeNotifierState<TextFileEditor> {
   bool usesTabs = false;
   bool isOwnUpdate = false;
   bool isExternalUpdate = false;
+  Future<bool>? supportVsCodeEditing;
 
   String tabsToSpaces(String text) => usesTabs
     ? text.replaceAll(RegExp("(?<=^\t*)\t", multiLine: true), "    ")
@@ -89,6 +92,8 @@ class _TextFileEditorState extends ChangeNotifierState<TextFileEditor> {
     super.initState();
 
     goToLineSubscription = jumpToEvents.listen(onGoToLineEvent);
+
+    supportVsCodeEditing = hasVsCode();
 
     var loadedCompleter = Completer<void>();
     fileLoaded = loadedCompleter.future;
@@ -177,30 +182,55 @@ class _TextFileEditorState extends ChangeNotifierState<TextFileEditor> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Stack(
       children: [
-        const SizedBox(height: 35),
-        controller != null
-          ? Expanded(
-            child: SmoothSingleChildScrollView(
-              controller: scrollController,
-              child: CodeField(
-                controller: controller!,
-                focusNode: focus,
-                lineNumberBuilder: (line, style) => TextSpan(
-                  text: line.toString(),
-                  style: style?.copyWith(
-                    fontSize: 12,
-                    overflow: TextOverflow.clip,
+        Column(
+          children: [
+            const SizedBox(height: 35),
+            controller != null
+              ? Expanded(
+                child: SmoothSingleChildScrollView(
+                  controller: scrollController,
+                  child: CodeField(
+                    controller: controller!,
+                    focusNode: focus,
+                    lineNumberBuilder: (line, style) => TextSpan(
+                      text: line.toString(),
+                      style: style?.copyWith(
+                        fontSize: 12,
+                        overflow: TextOverflow.clip,
+                      ),
+                    ),
                   ),
                 ),
+              )
+              : const SizedBox(
+                height: 2,
+                child: LinearProgressIndicator(backgroundColor: Colors.transparent,)
               ),
-            ),
-          )
-          : const SizedBox(
-            height: 2,
-            child: LinearProgressIndicator(backgroundColor: Colors.transparent,)
-          ),
+          ],
+        ),
+        FutureBuilder(
+          future: supportVsCodeEditing,
+          builder: (context, snapshot) {
+            if (snapshot.hasData && snapshot.data == true)
+              return Positioned(
+                top: 16,
+                right: 16,
+                child: OnHoverBuilder(
+                  builder: (context, isHovering) => AnimatedOpacity(
+                    duration: const Duration(milliseconds: 200),
+                    opacity: isHovering ? 1 : 0.5,
+                    child: IconButton(
+                      icon: Image.asset("assets/images/vscode.png", width: 32, height: 32),
+                      onPressed: () => openInVsCode(widget.fileContent.path),
+                    ),
+                  ),
+                ),
+              );
+            return const SizedBox();
+          },
+        ),
       ],
     );
   }

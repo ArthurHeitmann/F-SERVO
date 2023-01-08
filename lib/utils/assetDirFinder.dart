@@ -202,3 +202,20 @@ String? findWwiseCliExe(String path, [int depth = 0]) {
   }
   return null;
 }
+
+bool _hasVsCode = false;
+bool _hasVsCodeComplete = false;
+Future<bool> hasVsCode() async {
+  if (_hasVsCodeComplete)
+    return _hasVsCode;
+  if (!Platform.isWindows) {
+    _hasVsCodeComplete = true;
+    return false;
+  }
+  
+  var result = await Process.run("where", ["/q", "code"]);
+  _hasVsCode = result.exitCode == 0;
+  _hasVsCodeComplete = true;
+
+  return _hasVsCode;
+}

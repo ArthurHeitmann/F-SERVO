@@ -12,12 +12,14 @@ import '../fileTypeUtils/bxm/bxmReader.dart';
 import '../fileTypeUtils/bxm/bxmWriter.dart';
 import '../fileTypeUtils/ruby/pythonRuby.dart';
 import '../fileTypeUtils/yax/yaxToXml.dart';
+import '../utils/assetDirFinder.dart';
 import '../utils/utils.dart';
 import 'FileHierarchy.dart';
 import 'Property.dart';
 import 'hasUuid.dart';
 import 'openFileTypes.dart';
 import 'openFilesManager.dart';
+import 'preferencesData.dart';
 import 'undoable.dart';
 import 'nestedNotifier.dart';
 import 'xmlProps/xmlProp.dart';
@@ -111,13 +113,28 @@ abstract class HierarchyEntry extends NestedNotifier<HierarchyEntry> with Undoab
 
 abstract class FileHierarchyEntry extends HierarchyEntry {
   final String path;
+  bool supportsVsCodeEditing = false;
 
   FileHierarchyEntry(StringProp name, this.path, bool isCollapsible, bool isOpenable)
     : super(name, true, isCollapsible, isOpenable);
 
   @override
-  void onOpen() {
+  Future<void> onOpen() async {
+    if (await _tryOpenInVsCode())
+      return;
+    
     areasManager.openFile(path, secondaryName: null, optionalInfo: optionalFileInfo);
+  }
+
+  String get vsCodeEditingPath => path;
+
+  Future<bool> _tryOpenInVsCode() async {
+    var prefs = PreferencesData();
+    if (supportsVsCodeEditing && prefs.preferVsCode?.value == true && await hasVsCode()) {
+      await openInVsCode(vsCodeEditingPath);
+      return true;
+    }
+    return false;
   }
 }
 
@@ -384,7 +401,7 @@ class XmlScriptHierarchyEntry extends FileHierarchyEntry {
   bool _hasReadMeta = false;
   String _hapName = "";
 
-  XmlScriptHierarchyEntry(StringProp name, String path)
+  XmlScriptHierarchyEntry(StringProp name, String path, { bool? preferVsCode })
     : super(name, path, false, true)
   {
     this.name.transform = (str) {
@@ -392,6 +409,7 @@ class XmlScriptHierarchyEntry extends FileHierarchyEntry {
         return "$str - ${tryToTranslate(_hapName)}";
       return str;
     };
+    supportsVsCodeEditing = preferVsCode ?? basename(path) == "0.xml";
   }
   
   bool get hasReadMeta => _hasReadMeta;
@@ -422,7 +440,12 @@ class XmlScriptHierarchyEntry extends FileHierarchyEntry {
   }
 
   @override
-  void onOpen() {
+  Future<void> onOpen() async {
+    if (await _tryOpenInVsCode()) {
+      await openInVsCode(vsCodeEditingPath);
+      return;
+    }
+
     String? secondaryName = tryToTranslate(hapName);
     areasManager.openFile(path, secondaryName: secondaryName, optionalInfo: optionalFileInfo);
   }
@@ -453,7 +476,8 @@ class XmlScriptHierarchyEntry extends FileHierarchyEntry {
 }
 
 class RubyScriptGroupHierarchyEntry extends HierarchyEntry {
-  RubyScriptGroupHierarchyEntry() : super(StringProp("Ruby Scripts"), false, true, false);
+  RubyScriptGroupHierarchyEntry()
+    : super(StringProp("Ruby Scripts"), false, true, false);
   
   @override
   Undoable takeSnapshot() {
@@ -514,7 +538,7 @@ Fiber.new() { proxy.update() }
     await rubyFileToBin(newScriptPath);
     await File(datInfoPath).writeAsString(const JsonEncoder.withIndent("\t").convert(datInfo));
 
-    var newScriptEntry = RubyScriptHierarchyEntry(StringProp(newScriptBin), newScriptPath);
+    var newScriptEntry = RubyScriptHierarchyEntry(StringProp(newScriptRb), newScriptPath);
     add(newScriptEntry);
     newScriptEntry.onOpen();
   }
@@ -522,7 +546,9 @@ Fiber.new() { proxy.update() }
 
 class RubyScriptHierarchyEntry extends GenericFileHierarchyEntry {
   RubyScriptHierarchyEntry(StringProp name, String path)
-    : super(name, path, false, true);
+    : super(name, path, false, true) {
+    supportsVsCodeEditing = true;
+  }
   
   @override
   HierarchyEntry clone() {
@@ -575,7 +601,9 @@ class BxmHierarchyEntry extends GenericFileHierarchyEntry {
   
   BxmHierarchyEntry(StringProp name, String path)
     : xmlPath = "$path.xml",
-    super(name, path, false, true);
+    super(name, path, false, true) {
+    supportsVsCodeEditing = true;
+  }
   
   @override
   HierarchyEntry clone() {
@@ -583,7 +611,12 @@ class BxmHierarchyEntry extends GenericFileHierarchyEntry {
   }
 
   @override
-  void onOpen() {
+  Future<void> onOpen() async {
+    if (await _tryOpenInVsCode()) {
+      await openInVsCode(vsCodeEditingPath);
+      return;
+    }
+
     showToast("Can't open BXM files. Right click to convert");
   }
   
@@ -596,6 +629,9 @@ class BxmHierarchyEntry extends GenericFileHierarchyEntry {
     await convertXmlToBxmFile(xmlPath, path);
     showToast("Updated ${basename(path)}");
   }
+
+  @override
+  String get vsCodeEditingPath => xmlPath;
 }
 
 class WaiHierarchyEntry extends ExtractableHierarchyEntry {

@@ -67,7 +67,8 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
         }),
         Tuple2(
           [".xml"],
-          () async => openGenericFile<XmlScriptHierarchyEntry>(filePath, parent, (n, p) => XmlScriptHierarchyEntry(n, p))
+          () async => openGenericFile<XmlScriptHierarchyEntry>(filePath, parent, 
+            (n, p) => XmlScriptHierarchyEntry(n, p, preferVsCode: PreferencesData().preferVsCode?.value ?? false))
         ),
         Tuple2(
           [".yax"],

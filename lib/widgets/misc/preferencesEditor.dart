@@ -132,6 +132,13 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
         ],
       ),
       const SizedBox(height: 40,),
+      Row(
+        children: [
+          const Text("Prefer opening some files in VS Code:", overflow: TextOverflow.ellipsis,),
+          BoolPropSwitch(prop: widget.prefs.preferVsCode!),
+        ],
+      ),
+      const SizedBox(height: 40,),
     ];
   }
 
@@ -219,6 +226,7 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
 
   List<Widget> makeThemeEditor() {
     return [
+      const SizedBox(height: 20,),
       const Text("Theme:", style: sectionHeaderStyle,),
       const SizedBox(height: 10,),
       ChangeNotifierBuilder(
