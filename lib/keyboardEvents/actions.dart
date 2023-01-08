@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../main.dart';
 import '../stateManagement/openFilesManager.dart';
 import '../stateManagement/undoable.dart';
 import '../utils/utils.dart';
@@ -61,6 +62,11 @@ class ChildKeyboardAction extends Action<ChildKeyboardActionIntent> {
 
   @override
   void invoke(ChildKeyboardActionIntent intent) {
+    // abort if some text field is selected
+    var focusNode = FocusScope.of(getGlobalContext()).focusedChild;
+    if (focusNode?.hasFocus == true)
+      return;
+
     selectable.active.value?.onKeyboardAction?.call(intent.action);
   }
 }
