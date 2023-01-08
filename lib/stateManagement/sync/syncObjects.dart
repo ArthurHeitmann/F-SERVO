@@ -233,7 +233,7 @@ abstract class SyncedXmlObject extends SyncedObject {
     syncToClient();
   }
 
-  void updateXmlPropWithStr(XmlProp root, String tagName, XmlElement newRoot) {
+  void updateXmlPropWithStr(XmlProp root, String tagName, XmlElement newRoot, { int Function()? getInsertPos }) {
     var childProp = root.get(tagName);
     var childXml = newRoot.getElement(tagName);
     if (childProp != null && childXml != null)
@@ -246,7 +246,8 @@ abstract class SyncedXmlObject extends SyncedObject {
     } else if (childProp == null && childXml != null) {
       var newProp = XmlProp.fromXml(childXml, parentTags: root.nextParents());
       _addChangeListeners(newProp);
-      root.add(newProp);
+      var insertPos = getInsertPos?.call() ?? root.length;
+      root.insert(insertPos, newProp);
     }
   }
 }
@@ -492,7 +493,10 @@ class EntitySyncedObject extends SyncedXmlObject {
     updateXmlPropWithStr(locationCur, "position", locationNew);
     updateXmlPropWithStr(locationCur, "rotation", locationNew);
     
-    updateXmlPropWithStr(prop, "scale", propXml);
+    updateXmlPropWithStr(
+      prop, "scale", propXml,
+      getInsertPos: () => propXml.childElements.toList().indexWhere((e) => e.name.local == "location") + 1
+    );
     updateXmlPropWithStr(prop, "objId", propXml);
   }
 }

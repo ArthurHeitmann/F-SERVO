@@ -488,13 +488,14 @@ class RubyScriptGroupHierarchyEntry extends HierarchyEntry {
       };
     }
 
-    var newScriptName = "${basenameWithoutExtension(datPath)}_${randomId().toRadixString(16).padLeft(8, "0")}_scp.bin.rb";
+    var newScriptBin = "${basenameWithoutExtension(datPath)}_${randomId().toRadixString(16).padLeft(8, "0")}_scp.bin";
+    var newScriptRb = "$newScriptBin.rb";
     var datFiles = (datInfo["files"] as List).cast<String>();
-    datFiles.add(newScriptName);
+    datFiles.add(newScriptBin);
     datFiles.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
     datInfo["files"] = datFiles;
 
-    var newScriptPath = join(datExtractedPath, newScriptName);
+    var newScriptPath = join(datExtractedPath, newScriptRb);
     const scriptTemplate = """
 proxy = ScriptProxy.new()
 class << proxy
@@ -513,7 +514,7 @@ Fiber.new() { proxy.update() }
     await rubyFileToBin(newScriptPath);
     await File(datInfoPath).writeAsString(const JsonEncoder.withIndent("\t").convert(datInfo));
 
-    var newScriptEntry = RubyScriptHierarchyEntry(StringProp(newScriptName), newScriptPath);
+    var newScriptEntry = RubyScriptHierarchyEntry(StringProp(newScriptBin), newScriptPath);
     add(newScriptEntry);
     newScriptEntry.onOpen();
   }

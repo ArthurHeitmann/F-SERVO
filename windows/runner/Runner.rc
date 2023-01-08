@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "nier_scripts_editor" "\0"
+            VALUE "FileDescription", "File and Scripts Editor for Nier Automata" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "nier_scripts_editor" "\0"
+            VALUE "InternalName", "f_servo" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2022 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "nier_scripts_editor.exe" "\0"
-            VALUE "ProductName", "nier_scripts_editor" "\0"
+            VALUE "OriginalFilename", "F-SERVO.exe" "\0"
+            VALUE "ProductName", "F-SERVO" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

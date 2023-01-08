@@ -1,4 +1,6 @@
 
+import 'dart:math';
+
 import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 import 'package:xml/xml.dart';
@@ -53,7 +55,9 @@ class XmlArrayEditorState<T extends XmlArrayEditor> extends ChangeNotifierState<
   void decrementChildCount() {
     assert(widget.sizeIndicator.value is ValueProp);
     assert((widget.sizeIndicator.value as ValueProp).value is num);
-    (widget.sizeIndicator.value as ValueProp).value -= 1;
+    var prop = widget.sizeIndicator.value as ValueProp;
+    prop.value -= 1;
+    prop.value = max<num>(prop.value, 0);
   }
 
   void addChild([int relIndex = -1]) async {
@@ -137,6 +141,7 @@ class XmlArrayEditorState<T extends XmlArrayEditor> extends ChangeNotifierState<
       incrementChildCount();
     } catch (e) {
       showToast("Couldn't parse XML");
+      rethrow;
     }
   }
 
