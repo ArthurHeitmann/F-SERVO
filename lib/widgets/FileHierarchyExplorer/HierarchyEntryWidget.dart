@@ -8,6 +8,7 @@ import '../../fileTypeUtils/audio/audioModsChangesUndo.dart';
 import '../../fileTypeUtils/audio/modInstaller.dart';
 import '../../fileTypeUtils/ruby/pythonRuby.dart';
 import '../../stateManagement/HierarchyEntryTypes.dart';
+import '../../stateManagement/events/searchPanelEvents.dart';
 import '../../widgets/theme/customTheme.dart';
 import '../../fileTypeUtils/dat/datRepacker.dart';
 import '../../fileTypeUtils/pak/pakRepacker.dart';
@@ -266,6 +267,12 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
               onPressed: () => openHierarchyManager.clear(),
             ),
           ],
+          if (widget.entry is ExtractableHierarchyEntry)
+            ContextMenuButtonConfig(
+              "Set search path",
+              icon: const Icon(Icons.search, size: 15,),
+              onPressed: () => searchPathChangeStream.add((widget.entry as ExtractableHierarchyEntry).extractedPath),
+            ),
           if (widget.entry is FileHierarchyEntry)
             ContextMenuButtonConfig(
               "Show in Explorer",

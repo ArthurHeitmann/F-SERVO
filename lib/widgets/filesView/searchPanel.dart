@@ -1,4 +1,5 @@
 
+import 'dart:async';
 import 'dart:math';
 
 import 'package:context_menus/context_menus.dart';
@@ -13,6 +14,7 @@ import '../../stateManagement/FileHierarchy.dart';
 import '../../stateManagement/HierarchyEntryTypes.dart';
 import '../../stateManagement/Property.dart';
 import '../../stateManagement/events/jumpToEvents.dart';
+import '../../stateManagement/events/searchPanelEvents.dart';
 import '../../stateManagement/nestedNotifier.dart';
 import '../../stateManagement/openFilesManager.dart';
 import '../../utils/utils.dart';
@@ -44,6 +46,7 @@ class _SearchPanelState extends State<SearchPanel> {
   _SearchType searchType = _SearchType.text;
   SearchService? searchService;
   Stream<SearchResult>? searchStream;
+  StreamSubscription<String>? onSearchPathChangeSubscription;
   final ValueNestedNotifier<SearchResult> searchResults = ValueNestedNotifier([]);
   final BoolProp isSearching = BoolProp(false);
   final Mutex cancelMutex = Mutex();
@@ -66,6 +69,7 @@ class _SearchPanelState extends State<SearchPanel> {
   void initState() {
     updateSearchStream = debounce(_updateSearchStream, 750);
     openHierarchyManager.addListener(_onHierarchyChange);
+    onSearchPathChangeSubscription = onSearchPathChange.listen(_onSearchPathChange);
     prevOpenFileUuids = openHierarchyManager.map((e) => e.uuid).toSet();
     extensions.addListener(updateSearchStream);
     path.addListener(updateSearchStream);
@@ -87,6 +91,7 @@ class _SearchPanelState extends State<SearchPanel> {
   @override
   void dispose() {
     openHierarchyManager.removeListener(_onHierarchyChange);
+    onSearchPathChangeSubscription?.cancel();
     extensions.dispose();
     path.dispose();
     query.dispose();
@@ -397,6 +402,12 @@ class _SearchPanelState extends State<SearchPanel> {
       break;
     }
     prevOpenFileUuids = curOpenFileUuids;
+  }
+
+  void _onSearchPathChange(String newFolder) {
+    if (newFolder.isEmpty)
+      return;
+    path.value = newFolder;
   }
 }
 
