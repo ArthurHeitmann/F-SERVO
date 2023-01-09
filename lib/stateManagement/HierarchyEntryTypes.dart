@@ -131,7 +131,7 @@ abstract class FileHierarchyEntry extends HierarchyEntry {
   Future<bool> _tryOpenInVsCode() async {
     var prefs = PreferencesData();
     if (supportsVsCodeEditing && prefs.preferVsCode?.value == true && await hasVsCode()) {
-      await openInVsCode(vsCodeEditingPath);
+      openInVsCode(vsCodeEditingPath);
       return true;
     }
     return false;
@@ -442,7 +442,7 @@ class XmlScriptHierarchyEntry extends FileHierarchyEntry {
   @override
   Future<void> onOpen() async {
     if (await _tryOpenInVsCode()) {
-      await openInVsCode(vsCodeEditingPath);
+      openInVsCode(vsCodeEditingPath);
       return;
     }
 
@@ -613,7 +613,7 @@ class BxmHierarchyEntry extends GenericFileHierarchyEntry {
   @override
   Future<void> onOpen() async {
     if (await _tryOpenInVsCode()) {
-      await openInVsCode(vsCodeEditingPath);
+      openInVsCode(vsCodeEditingPath);
       return;
     }
 
@@ -787,5 +787,17 @@ class SaveSlotDataHierarchyEntry extends GenericFileHierarchyEntry {
   @override
   HierarchyEntry clone() {
     return SaveSlotDataHierarchyEntry(name.takeSnapshot() as StringProp, path);
+  }
+}
+
+class WtaHierarchyEntry extends GenericFileHierarchyEntry {
+  final String wtpPath;
+
+  WtaHierarchyEntry(StringProp name, String path, this.wtpPath)
+    : super(name, path, false, true);
+  
+  @override
+  HierarchyEntry clone() {
+    return WtaHierarchyEntry(name.takeSnapshot() as StringProp, path, wtpPath);
   }
 }

@@ -36,6 +36,7 @@ import 'otherFileTypes/SlotDataDat.dart';
 import 'otherFileTypes/SmdFileData.dart';
 import 'otherFileTypes/TmdFileData.dart';
 import 'otherFileTypes/audioResourceManager.dart';
+import 'otherFileTypes/wtaData.dart';
 import 'undoable.dart';
 import 'xmlProps/xmlProp.dart';
 
@@ -89,6 +90,8 @@ abstract class OpenFileData extends ChangeNotifier with HasUuid, Undoable {
       return BnkFilePlaylistData(name, path, secondaryName: secondaryName);
     else if (path.endsWith(".dat") && basename(path).startsWith("SlotData_"))
       return SaveSlotData(name, path, secondaryName: secondaryName);
+    else if (path.endsWith(".wta"))
+      return WtaWtpData(name, path, secondaryName: secondaryName);
     else
       return TextFileData(name, path, secondaryName: secondaryName);
   }
@@ -114,6 +117,8 @@ abstract class OpenFileData extends ChangeNotifier with HasUuid, Undoable {
       return FileType.bnkPlaylist;
     else if (path.endsWith(".dat") && basename(path).startsWith("SlotData_"))
       return FileType.saveSlotData;
+    else if (path.endsWith(".wta"))
+      return FileType.wta;
     else
       return FileType.text;
   }
@@ -1666,6 +1671,96 @@ class SaveSlotData extends OpenFileData {
     var content = snapshot as SaveSlotData;
     if (content.slotData != null)
       slotData?.restoreWith(content.slotData!);
+    name = content._name;
+    path = content._path;
+    hasUnsavedChanges = content._unsavedChanges;
+  }
+}
+
+class WtaWtpOptionalInfo extends OptionalFileInfo {
+  final String wtpPath;
+
+  WtaWtpOptionalInfo({ required this.wtpPath });
+}
+class WtaWtpData extends OpenFileData {
+  String? wtpPath;
+  WtaWtpTextures? textures;
+
+  WtaWtpData(String name, String path, { super.secondaryName, WtaWtpOptionalInfo? optionalInfo }) :
+    wtpPath = optionalInfo?.wtpPath,
+    super(name, path, icon: Icons.image);
+
+  @override
+  Future<void> load() async {
+    if (_loadingState != LoadingState.notLoaded)
+      return;
+    _loadingState = LoadingState.loading;
+
+    // find wtp
+    var datDir = dirname(path);
+    var dttDir = await findDttDirOfDat(datDir);
+    if (wtpPath == null) {
+      var wtaName = basenameWithoutExtension(path);
+      var wtpName = "$wtaName.wtp";
+      // wtpPath = join(dttDir, wtpName);
+      if (dttDir != null)
+        wtpPath = join(dttDir, wtpName);
+      else {
+        wtpPath = join(datDir, wtpName);
+        if (!await File(wtpPath!).exists()) {
+          showToast("Can't find corresponding WTP file");
+          throw Exception("Can't find corresponding WTP file");
+        }
+      }
+    }
+
+    String extractDir;
+    if (dttDir != null)
+      extractDir = join(dttDir, "textures");
+    else
+      extractDir = join(datDir, "nier2blender_extracted", basename(path));
+    await Directory(extractDir).create(recursive: true);
+    
+    textures = await WtaWtpTextures.fromWtaWtp(uuid, path, wtpPath!, extractDir);
+
+    await super.load();
+  }
+
+  @override
+  Future<void> save() async {
+    if (_loadingState != LoadingState.loaded)
+      return;
+    
+    await textures!.save();
+
+    await super.save();
+  }
+
+  void onPropChanged() {
+    hasUnsavedChanges = true;
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    textures?.dispose();
+  }
+
+  @override
+  Undoable takeSnapshot() {
+    var snapshot = WtaWtpData(_name, _path, optionalInfo: wtpPath != null ? WtaWtpOptionalInfo(wtpPath: wtpPath!) : null);
+    snapshot.optionalInfo = optionalInfo;
+    snapshot.textures = textures?.takeSnapshot() as WtaWtpTextures?;
+    snapshot._unsavedChanges = _unsavedChanges;
+    snapshot._loadingState = _loadingState;
+    snapshot.overrideUuid(uuid);
+    return snapshot;
+  }
+
+  @override
+  void restoreWith(Undoable snapshot) {
+    var content = snapshot as WtaWtpData;
+    textures?.restoreWith(content.textures!);
     name = content._name;
     path = content._path;
     hasUnsavedChanges = content._unsavedChanges;

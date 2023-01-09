@@ -112,6 +112,10 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
         Tuple2(
           [".bxm", ".gad", ".sar"], () async => openBxmFile(filePath, parent: parent)
         ),
+        Tuple2(
+          [".wta"],
+          () async => openWtaFile(filePath, parent: parent)
+        )
       ];
 
       for (var preset in hierarchyPresets) {
@@ -415,6 +419,35 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
     convertBxmFileToXml(bxmPath, bxmEntry.xmlPath);
     
     return bxmEntry;
+  }
+
+  Future<HierarchyEntry> openWtaFile(String wtaPath, { HierarchyEntry? parent }) async {
+    var existing = findRecWhere((entry) => entry is WtaHierarchyEntry && entry.path == wtaPath);
+    if (existing != null)
+      return existing;
+    
+    // find corresponding wtp file
+    var wtpName = "${basenameWithoutExtension(wtaPath)}.wtp";
+    var datDir = dirname(wtaPath);
+    var dttDir = await findDttDirOfDat(datDir);
+    String wtpPath;
+    if (dttDir != null)
+      wtpPath = join(dttDir, wtpName);
+    else {
+      wtpPath = join(datDir, wtpName);
+      if (!await File(wtpPath).exists()) {
+        showToast("Can't find corresponding WTP file");
+        throw Exception("Can't find corresponding WTP file");
+      }
+    }
+
+    var wtaEntry = WtaHierarchyEntry(StringProp(basename(wtaPath)), wtaPath, wtpPath);
+    if (parent != null)
+      parent.add(wtaEntry);
+    else
+      add(wtaEntry);
+
+    return wtaEntry;
   }
 
   @override

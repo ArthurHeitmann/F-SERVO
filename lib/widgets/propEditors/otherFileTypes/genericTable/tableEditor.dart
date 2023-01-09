@@ -450,7 +450,7 @@ class _TableRowState extends State<_TableRow> {
       child: MouseRegion(
         onEnter: (_) => setState(() => isHovered = true),
         onExit: (_) => setState(() => isHovered = false),
-        child: Container(
+        child: Material(
           color: rowColor,
           child: Row(
             children: [

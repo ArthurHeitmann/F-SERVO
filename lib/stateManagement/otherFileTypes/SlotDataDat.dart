@@ -191,8 +191,9 @@ List<TreeEntry> _parseTree(String text) {
 
   List<String> lines = text.split("\n");
 
-  for (String line in lines) {
-    if (line == lines.last && line.isEmpty)
+  for (int i = 0; i < lines.length; i++) {
+    String line = lines[i];
+    if (i + 1 == lines.length && line.isEmpty)
       break;
     int indentationLevel = 0;
     while (line.startsWith(" ", indentationLevel))
@@ -251,7 +252,7 @@ class SlotDataDat with HasUuid, Undoable {
   late final List<SaveWeaponSet> weaponSets;
   late final List<TreeEntry> tree;
   
-  SlotDataDat(this.steamId64, this.name, this.money, this.experience, this.phase, this.transporterFlag, this.position, this.rotation, this.corpseName, this.corpseOnlineName, this.corpsePosition, this.inventory, this.corpseInventory, this.weapons, this.weaponSets);
+  SlotDataDat(this.steamId64, this.name, this.money, this.experience, this.phase, this.transporterFlag, this.position, this.rotation, this.corpseName, this.corpseOnlineName, this.corpsePosition, this.inventory, this.corpseInventory, this.weapons, this.weaponSets, this.tree);
 
   SlotDataDat.read(ByteDataWrapper bytes) {
     bytes.position = 4;
@@ -354,7 +355,8 @@ class SlotDataDat with HasUuid, Undoable {
       inventory.map((e) => e.takeSnapshot() as SaveInventoryItem).toList(),
       corpseInventory.map((e) => e.takeSnapshot() as SaveInventoryItem).toList(),
       weapons.map((e) => e.takeSnapshot() as SaveWeapon).toList(),
-      weaponSets.map((e) => e.takeSnapshot() as SaveWeaponSet).toList()
+      weaponSets.map((e) => e.takeSnapshot() as SaveWeaponSet).toList(),
+      tree.map((e) => e.takeSnapshot() as TreeEntry).toList(),
     );
   }
 

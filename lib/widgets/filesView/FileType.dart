@@ -10,6 +10,7 @@ import '../propEditors/otherFileTypes/genericTable/TableFileEditor.dart';
 import '../propEditors/otherFileTypes/mcdEditor.dart';
 import '../propEditors/otherFileTypes/wemFileEditor.dart';
 import '../propEditors/otherFileTypes/wspFileEditor.dart';
+import '../propEditors/otherFileTypes/wtaWtpEditor.dart';
 import 'TextFileEditor.dart';
 import 'XmlFileEditor.dart';
 
@@ -25,6 +26,7 @@ enum FileType {
   wsp,
   bnkPlaylist,
   saveSlotData,
+  wta,
 }
 
 Widget makeFileEditor(OpenFileData content) {
@@ -49,6 +51,8 @@ Widget makeFileEditor(OpenFileData content) {
       return BnkPlaylistEditor(playlist: content as BnkFilePlaylistData);
     case FileType.saveSlotData:
       return SaveSlotDataEditor(save: content as SaveSlotData);
+    case FileType.wta:
+      return WtaWtpEditor(file: content as WtaWtpData,);
     case FileType.text:
       return TextFileEditor(key: Key(content.uuid), fileContent: content as TextFileData);
     default:

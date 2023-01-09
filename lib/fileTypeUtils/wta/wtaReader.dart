@@ -48,13 +48,42 @@ class WtaFileHeader {
 }
 
 class WtaFileTextureInfo {
-  int format;
-  List<int> data;
+  late int format;
+  late List<int> data;
+
+  WtaFileTextureInfo(this.format, this.data);
 
   WtaFileTextureInfo.read(ByteDataWrapper bytes) :
     format = bytes.readUint32(),
     data = bytes.readUint32List(4);
   
+  static Future<WtaFileTextureInfo> fromDds(String ddsPath) async {
+    var dds = await ByteDataWrapper.fromFile(ddsPath);
+    dds.position = 84;
+    var dxt = dds.readString(4);
+    dds.position = 112;
+    var cube = dds.readUint32();
+    if (!const ["DXT1", "DXT3", "DXT5"].contains(dxt))
+      throw Exception("Invalid DDS file");
+    var isCube = cube == 0xFE00;
+    
+    int format = 0;
+    List<int> data = [3, isCube ? 4 : 0, 1, 0];
+    switch (dxt) {
+      case "DXT1":
+        format = 71;
+        break;
+      case "DXT3":
+        format = 74;
+        break;
+      case "DXT5":
+        format = 77;
+        break;
+    }
+
+    return WtaFileTextureInfo(format, data);
+  }
+
   void write(ByteDataWrapper bytes) {
     bytes.writeUint32(format);
     for (var d in data)
@@ -69,6 +98,9 @@ class WtaFile {
   late List<int> textureFlags;
   late List<int> textureIdx;
   late List<WtaFileTextureInfo> textureInfo;
+
+  static const int albedoFlag = 0x26000020;
+  static const int noAlbedoFlag = 0x22000020;
   
   WtaFile.read(ByteDataWrapper bytes) {
     header = WtaFileHeader.read(bytes);

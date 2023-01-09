@@ -44,8 +44,7 @@ class AutoTranslateValueNotifier extends Listenable {
   
   @override
   void addListener(VoidCallback listener) {
-    if (_listeners.contains(listener))  // TODO remove after some time
-      throw Exception("Listener already added");
+    assert(!_listeners.contains(listener));
     _listeners.add(listener);
   }
   

@@ -15,6 +15,7 @@ import 'package:uuid/uuid.dart';
 import 'package:path/path.dart' as path;
 import 'package:xml/xml.dart';
 
+import '../fileTypeUtils/dat/datExtractor.dart';
 import '../fileTypeUtils/utils/ByteDataWrapper.dart';
 import '../fileTypeUtils/yax/hashToStringMap.dart';
 import '../fileTypeUtils/yax/japToEng.dart';
@@ -646,7 +647,7 @@ extension StringNullTrim on String {
   String trimNull() => replaceAll(RegExp("\x00+\$"), "");
 }
 
-Future<void> openInVsCode(String path) async {
+void openInVsCode(String path) {
   showToast("Opening in VS Code...");
   if (Platform.isWindows) {
     Process.run("code", [path], runInShell: true);
@@ -657,4 +658,20 @@ Future<void> openInVsCode(String path) async {
   } else {
     throw Exception("Unsupported platform");
   }
+}
+
+Future<String?> findDttDirOfDat(String extractedDatDir) async {
+  var datName = basenameWithoutExtension(extractedDatDir);
+  var parentDir = dirname(extractedDatDir);
+  var dttDir = join(parentDir, "$datName.dtt");
+  if (!await Directory(dttDir).exists()) {
+    // try finding DTT file and extract it
+    var dttPath = join(dirname(parentDir), "$datName.dtt");
+    if (!await File(dttPath).exists())
+      return null;
+    await extractDatFiles(dttPath);
+    if (!await Directory(dttDir).exists())
+      return null;
+  }
+  return dttDir;
 }
