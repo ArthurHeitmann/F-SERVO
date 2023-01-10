@@ -58,6 +58,30 @@ void init() async {
   wemFilesLookup.updateIndex();
   FlutterWindowClose.setWindowShouldCloseHandler(beforeExitConfirmation);
 
+  ErrorWidget.builder = (FlutterErrorDetails details) {
+    return Center(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          double padding = 16;
+          if (constraints.maxWidth < 400 || constraints.maxHeight < 200)
+            padding = 0;
+          else if (constraints.maxWidth < 600 || constraints.maxHeight < 300)
+            padding = 4;
+          return Container(
+            padding: EdgeInsets.all(padding),
+            color: Colors.red.shade800,
+            child: Column(
+              children: const [
+                Text(":(", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                Text("Something went wrong"),
+              ],
+            ),
+          );
+        }
+      ),
+    );
+  };
+
   runApp(const MyApp());
 }
 
