@@ -208,12 +208,18 @@ class BnkHircChunk extends BnkChunkBase {
 }
 
 enum BnkHircType {
+  sound(0x02),
+  action(0x03),
+  event(0x04),
   musicTrack(0x0B),
   musicSegment(0x0A),
-  musicPlaylist(0x0D);
+  musicPlaylist(0x0D),
+  unknown(-1);
 
-  const BnkHircType(this.value);
   final int value;
+  
+  const BnkHircType(this.value);
+  static from(int value) => BnkHircType.values.firstWhere((e) => e.value == value, orElse: () => BnkHircType.unknown);
 }
 
 abstract class BnkHircChunkBase extends ChunkBase {
@@ -239,10 +245,19 @@ abstract class BnkHircChunkBase extends ChunkBase {
 BnkHircChunkBase _makeNextHircChunk(ByteDataWrapper bytes) {
   var type = bytes.readUint8();
   bytes.position -= 1;
-  switch (type) {
-    case 0x0B: return BnkMusicTrack.read(bytes);
-    case 0x0A: return BnkMusicSegment.read(bytes);
-    case 0x0D: return BnkMusicPlaylist.read(bytes);
+  switch (BnkHircType.from(type)) {
+    case BnkHircType.sound:
+      return BnkSound.read(bytes);
+    case BnkHircType.event:
+      return BnkEvent.read(bytes);
+    case BnkHircType.action:
+      return BnkAction.read(bytes);
+    case BnkHircType.musicTrack:
+      return BnkMusicTrack.read(bytes);
+    case BnkHircType.musicSegment:
+      return BnkMusicSegment.read(bytes);
+    case BnkHircType.musicPlaylist:
+      return BnkMusicPlaylist.read(bytes);
     default: return BnkHircUnknownChunk.read(bytes);
   }
 }
@@ -560,7 +575,7 @@ class BnkMusicTransitionRule {
     srcRule = BnkMusicTransSrcRule.read(bytes);
     dstRule = BnkMusicTransDstRule.read(bytes);
     allocTransObjectFlag = bytes.readUint8();
-    if (allocTransObjectFlag == 1)
+    if (allocTransObjectFlag != 0)
       musicTransition = BnkMusicTransitionObject.read(bytes);
   }
 
@@ -574,7 +589,7 @@ class BnkMusicTransitionRule {
     srcRule.write(bytes);
     dstRule.write(bytes);
     bytes.writeUint8(allocTransObjectFlag);
-    if (allocTransObjectFlag == 1)
+    if (allocTransObjectFlag != 0)
       musicTransition!.write(bytes);
   }
 }
@@ -1277,7 +1292,7 @@ class BnkAuxParams {
 
   BnkAuxParams.read(ByteDataWrapper bytes) {
     byBitVector = bytes.readUint8();
-    var hasAux = byBitVector >> 2;
+    var hasAux = (byBitVector >> 3) & 1;
     if (hasAux == 1) {
       auxID1 = bytes.readUint32();
       auxID2 = bytes.readUint32();
@@ -1520,3 +1535,532 @@ class BnkNodeBaseParams {
     );
   }
 }
+
+/*
+typedef struct{
+    uint ulActionListSize;
+    for(i=0;i<ulActionListSize;i++){
+        uint ulActionID;
+    };
+}Event;
+*/
+class BnkEvent extends BnkHircChunkBase {
+  late int ulActionListSize;
+  late List<int> ids;
+
+  BnkEvent(super.chunkId, super.chunkSize, super.type, this.ulActionListSize, this.ids);
+
+  BnkEvent.read(ByteDataWrapper bytes) : super.read(bytes) {
+    ulActionListSize = bytes.readUint32();
+    ids = List.generate(ulActionListSize, (index) => bytes.readUint32());
+  }
+
+  void write(ByteDataWrapper bytes) {
+    super.write(bytes);
+    bytes.writeUint32(ulActionListSize);
+    for (var i = 0; i < ulActionListSize; i++)
+      bytes.writeUint32(ids[i]);
+  }
+  
+  int calcChunkSize() {
+    return 4 + ulActionListSize * 4;
+  }
+}
+
+/*
+typedef struct{
+    BankSourceData BankData;
+    NodeBaseParams BaseParams;
+}Sound;
+*/
+class BnkSound extends BnkHircChunkBase {
+  late BnkSourceData bankData;
+  late BnkNodeBaseParams baseParams;
+
+  BnkSound(super.chunkId, super.chunkSize, super.type, this.bankData, this.baseParams);
+
+  BnkSound.read(ByteDataWrapper bytes) : super.read(bytes) {
+    bankData = BnkSourceData.read(bytes);
+    baseParams = BnkNodeBaseParams.read(bytes);
+  }
+
+  void write(ByteDataWrapper bytes) {
+    super.write(bytes);
+    bankData.write(bytes);
+    baseParams.write(bytes);
+  }
+  
+  int calcChunkSize() {
+    return bankData.calcChunkSize() + baseParams.calcChunkSize();
+  }
+}
+
+/*
+typedef struct{
+    uint ulPluginID;
+    byte StreamType;
+    AkMediaInformation MediaInformation;
+    if((ulPluginID & 0x000000FF) == 2){
+        uint uSize;
+    };
+}BankSourceData;
+*/
+class BnkSourceData {
+  late int ulPluginID;
+  late int streamType;
+  late BnkMediaInformation mediaInformation;
+  late int uSize;
+
+  BnkSourceData(this.ulPluginID, this.streamType, this.mediaInformation, this.uSize);
+
+  BnkSourceData.read(ByteDataWrapper bytes) {
+    ulPluginID = bytes.readUint32();
+    streamType = bytes.readUint8();
+    mediaInformation = BnkMediaInformation.read(bytes);
+    if ((ulPluginID & 0x000000FF) == 2) {
+      uSize = bytes.readUint32();
+    }
+  }
+
+  void write(ByteDataWrapper bytes) {
+    bytes.writeUint32(ulPluginID);
+    bytes.writeUint8(streamType);
+    mediaInformation.write(bytes);
+    if ((ulPluginID & 0x000000FF) == 2) {
+      bytes.writeUint32(uSize);
+    }
+  }
+  
+  int calcChunkSize() {
+    return 5 + mediaInformation.calcChunkSize() + ((ulPluginID & 0x000000FF) == 2 ? 4 : 0);
+  }
+}
+
+/*
+typedef struct{
+    uint sourceID;
+    uint uInMemoryMediaSize;
+    byte uSourceBits;
+}AkMediaInformation;
+*/
+class BnkMediaInformation {
+  late int sourceID;
+  late int uInMemoryMediaSize;
+  late int uSourceBits;
+
+  BnkMediaInformation(this.sourceID, this.uInMemoryMediaSize, this.uSourceBits);
+
+  BnkMediaInformation.read(ByteDataWrapper bytes) {
+    sourceID = bytes.readUint32();
+    uInMemoryMediaSize = bytes.readUint32();
+    uSourceBits = bytes.readUint8();
+  }
+
+  void write(ByteDataWrapper bytes) {
+    bytes.writeUint32(sourceID);
+    bytes.writeUint32(uInMemoryMediaSize);
+    bytes.writeUint8(uSourceBits);
+  }
+  
+  int calcChunkSize() {
+    return 9;
+  }
+}
+
+/*
+typedef struct{
+    local int u;
+    uint ulExceptionListSize;
+    for(u=0;u<ulExceptionListSize;u++){
+        uint ulID;
+        byte bIsBus;
+    };
+}ExceptParams;
+*/
+class BnkExceptParams {
+  late int ulExceptionListSize;
+  late List<int> ids;
+  late List<int> isBus;
+
+  BnkExceptParams(this.ulExceptionListSize, this.ids, this.isBus);
+
+  BnkExceptParams.read(ByteDataWrapper bytes) {
+    ulExceptionListSize = bytes.readUint32();
+    ids = List.filled(ulExceptionListSize, 0);
+    isBus = List.filled(ulExceptionListSize, 0);
+    for (var i = 0; i < ulExceptionListSize; i++) {
+      ids[i] = bytes.readUint32();
+      isBus[i] = bytes.readUint8();
+    }
+  }
+
+  void write(ByteDataWrapper bytes) {
+    bytes.writeUint32(ulExceptionListSize);
+    for (var i = 0; i < ulExceptionListSize; i++) {
+      bytes.writeUint32(ids[i]);
+      bytes.writeUint8(isBus[i]);
+    }
+  }
+  
+  int calcChunkSize() {
+    return 4 + ulExceptionListSize * 5;
+  }
+}
+
+/*
+typedef struct{
+    uint ulStateGroupID;
+    uint ulTargetStateID;
+}StateActionParams;
+*/
+class BnkStateActionParams {
+  late int ulStateGroupID;
+  late int ulTargetStateID;
+
+  BnkStateActionParams(this.ulStateGroupID, this.ulTargetStateID);
+
+  BnkStateActionParams.read(ByteDataWrapper bytes) {
+    ulStateGroupID = bytes.readUint32();
+    ulTargetStateID = bytes.readUint32();
+  }
+
+  void write(ByteDataWrapper bytes) {
+    bytes.writeUint32(ulStateGroupID);
+    bytes.writeUint32(ulTargetStateID);
+  }
+  
+  int calcChunkSize() {
+    return 8;
+  }
+}
+
+/*
+typedef struct{
+    uint ulSwitchGroupID;
+    uint ulSwitchStateID;
+}SwitchActionParams;
+*/
+class BnkSwitchActionParams {
+  late int ulSwitchGroupID;
+  late int ulSwitchStateID;
+
+  BnkSwitchActionParams(this.ulSwitchGroupID, this.ulSwitchStateID);
+
+  BnkSwitchActionParams.read(ByteDataWrapper bytes) {
+    ulSwitchGroupID = bytes.readUint32();
+    ulSwitchStateID = bytes.readUint32();
+  }
+
+  void write(ByteDataWrapper bytes) {
+    bytes.writeUint32(ulSwitchGroupID);
+    bytes.writeUint32(ulSwitchStateID);
+  }
+  
+  int calcChunkSize() {
+    return 8;
+  }
+}
+
+/*
+typedef struct{
+    byte byBitVector;
+    ExceptParams exceptions;
+}ActiveActionParams;
+*/
+class BnkActiveActionParams {
+  late int byBitVector;
+  late BnkExceptParams exceptions;
+
+  BnkActiveActionParams(this.byBitVector, this.exceptions);
+
+  BnkActiveActionParams.read(ByteDataWrapper bytes) {
+    byBitVector = bytes.readUint8();
+    exceptions = BnkExceptParams.read(bytes);
+  }
+
+  void write(ByteDataWrapper bytes) {
+    bytes.writeUint8(byBitVector);
+    exceptions.write(bytes);
+  }
+  
+  int calcChunkSize() {
+    return 1 + exceptions.calcChunkSize();
+  }
+}
+
+/*
+typedef struct{
+    byte bBypassTransition;
+    byte eValueMeaning;
+    float base;
+    float min;
+    float max;
+}GameParameterParams;
+*/
+class BnkGameParameterParams {
+  late int bBypassTransition;
+  late int eValueMeaning;
+  late double base;
+  late double min;
+  late double max;
+
+  BnkGameParameterParams(this.bBypassTransition, this.eValueMeaning, this.base, this.min, this.max);
+
+  BnkGameParameterParams.read(ByteDataWrapper bytes) {
+    bBypassTransition = bytes.readUint8();
+    eValueMeaning = bytes.readUint8();
+    base = bytes.readFloat32();
+    min = bytes.readFloat32();
+    max = bytes.readFloat32();
+  }
+
+  void write(ByteDataWrapper bytes) {
+    bytes.writeUint8(bBypassTransition);
+    bytes.writeUint8(eValueMeaning);
+    bytes.writeFloat32(base);
+    bytes.writeFloat32(min);
+    bytes.writeFloat32(max);
+  }
+  
+  int calcChunkSize() {
+    return 1*2 + 3*4;
+  }
+}
+
+/*
+typedef struct{
+    byte eValueMeaning;
+    float base;
+    float min;
+    float max;
+}PropActionParams;
+*/
+class BnkPropActionParams {
+  late int eValueMeaning;
+  late double base;
+  late double min;
+  late double max;
+
+  BnkPropActionParams(this.eValueMeaning, this.base, this.min, this.max);
+
+  BnkPropActionParams.read(ByteDataWrapper bytes) {
+    eValueMeaning = bytes.readUint8();
+    base = bytes.readFloat32();
+    min = bytes.readFloat32();
+    max = bytes.readFloat32();
+  }
+
+  void write(ByteDataWrapper bytes) {
+    bytes.writeUint8(eValueMeaning);
+    bytes.writeFloat32(base);
+    bytes.writeFloat32(min);
+    bytes.writeFloat32(max);
+  }
+  
+  int calcChunkSize() {
+    return 1 + 3*4;
+  }
+}
+
+/*
+typedef struct(uint16 ulActionType){
+    byte byBitVector;
+    if(ulActionType==0x1302)GameParameterParams SpecificParams;
+    if(ulActionType==0x1303)GameParameterParams SpecificParams;
+    if(ulActionType==0x0A02)PropActionParams SpecificParams;
+    if(ulActionType==0x0B02)PropActionParams SpecificParams;
+    if(ulActionType==0x0C02)PropActionParams SpecificParams;
+    if(ulActionType==0x0D02)PropActionParams SpecificParams;
+    uint ulExceptionListSize;
+}ValueActionParams;
+*/
+class BnkValueActionParams {
+  late int byBitVector;
+  late Object? specificParams;
+  late int ulExceptionListSize;
+
+  BnkValueActionParams(this.byBitVector, this.specificParams, this.ulExceptionListSize);
+
+  BnkValueActionParams.read(ByteDataWrapper bytes, int ulActionType) {
+    byBitVector = bytes.readUint8();
+    if (const [0x1302, 0x1303].contains(ulActionType)) {
+      specificParams = BnkGameParameterParams.read(bytes);
+    } else if (const [0x0A02, 0x0B02, 0x0C02, 0x0D02].contains(ulActionType)) {
+      specificParams = BnkPropActionParams.read(bytes);
+    }
+    ulExceptionListSize = bytes.readUint32();
+  }
+
+  void write(ByteDataWrapper bytes, int ulActionType) {
+    bytes.writeUint8(byBitVector);
+    if (const [0x1302, 0x1303].contains(ulActionType)) {
+      (specificParams! as BnkGameParameterParams).write(bytes);
+    } else if (const [0x0A02, 0x0B02, 0x0C02, 0x0D02].contains(ulActionType)) {
+      (specificParams! as BnkPropActionParams).write(bytes);
+    }
+    bytes.writeUint32(ulExceptionListSize);
+  }
+  
+  // int calcChunkSize(int ulActionType) {
+  //   return 1 + (specificParams! as dynamic).calcChunkSize() + 4;
+  // }
+}
+
+/*
+typedef struct{
+    byte eFadeCurve;
+    uint fileID;
+}PlayActionParams;
+*/
+class BnkPlayActionParams {
+  late int eFadeCurve;
+  late int fileID;
+
+  BnkPlayActionParams(this.eFadeCurve, this.fileID);
+
+  BnkPlayActionParams.read(ByteDataWrapper bytes) {
+    eFadeCurve = bytes.readUint8();
+    fileID = bytes.readUint32();
+  }
+
+  void write(ByteDataWrapper bytes) {
+    bytes.writeUint8(eFadeCurve);
+    bytes.writeUint32(fileID);
+  }
+  
+  int calcChunkSize() {
+    return 1 + 4;
+  }
+}
+
+/*
+typedef struct{
+    byte bIsBypass;
+    byte uTargetMask;
+    ExceptParams exceptions;
+}BypassFXActionParams;
+*/
+class BnkBypassFXActionParams {
+  late int bIsBypass;
+  late int uTargetMask;
+  late BnkExceptParams exceptions;
+
+  BnkBypassFXActionParams(this.bIsBypass, this.uTargetMask, this.exceptions);
+
+  BnkBypassFXActionParams.read(ByteDataWrapper bytes) {
+    bIsBypass = bytes.readUint8();
+    uTargetMask = bytes.readUint8();
+    exceptions = BnkExceptParams.read(bytes);
+  }
+
+  void write(ByteDataWrapper bytes) {
+    bytes.writeUint8(bIsBypass);
+    bytes.writeUint8(uTargetMask);
+    exceptions.write(bytes);
+  }
+  
+  int calcChunkSize() {
+    return 1*2 + exceptions.calcChunkSize();
+  }
+}
+
+/*
+typedef struct{
+    uint idExt;
+    byte idExt_4;
+    AkPropValue PropValues;
+    AkPropRangedValue RangedPropValues;
+}ActionInitialParams;
+*/
+class BnkActionInitialParams {
+  late int idExt;
+  late int idExt_4;
+  late BnkPropValue propValues;
+  late BnkPropRangedValue rangedPropValues;
+
+  BnkActionInitialParams(this.idExt, this.idExt_4, this.propValues, this.rangedPropValues);
+
+  BnkActionInitialParams.read(ByteDataWrapper bytes) {
+    idExt = bytes.readUint32();
+    idExt_4 = bytes.readUint8();
+    propValues = BnkPropValue.read(bytes);
+    rangedPropValues = BnkPropRangedValue.read(bytes);
+  }
+
+  void write(ByteDataWrapper bytes) {
+    bytes.writeUint32(idExt);
+    bytes.writeUint8(idExt_4);
+    propValues.write(bytes);
+    rangedPropValues.write(bytes);
+  }
+  
+  int calcChunkSize() {
+    return 4 + 1 + propValues.calcChunkSize() + rangedPropValues.calcChunkSize();
+  }
+}
+
+/*
+typedef struct{
+    uint16 ulActionType;
+    ActionInitialParams InitialParams;
+    if(ulActionType == 0x1204)StateActionParams StateAction;
+    if(ulActionType == 0x0102)ActiveActionParams ActiveAction;
+    if(ulActionType == 0x0103)ActiveActionParams ActiveAction;
+    if(ulActionType == 0x0302)ActiveActionParams ActiveAction;
+    if(ulActionType == 0x0305)ActiveActionParams ActiveAction;
+    if(ulActionType == 0x0403)PlayActionParams PlayAction;
+    if(ulActionType == 0x1A02)BypassFXActionParams BypassFXAction;
+    if(ulActionType == 0x1302)ValueActionParams ValueAction(ulActionType);
+    if(ulActionType == 0x1303)ValueActionParams ValueAction(ulActionType);
+    if(ulActionType == 0x0A02)ValueActionParams ValueAction(ulActionType);
+    if(ulActionType == 0x0B02)ValueActionParams ValueAction(ulActionType);
+    if(ulActionType == 0x0C02)ValueActionParams ValueAction(ulActionType);
+    if(ulActionType == 0x0D02)ValueActionParams ValueAction(ulActionType);
+}Action;
+*/
+class BnkAction extends BnkHircChunkBase {
+  late int ulActionType;
+  late BnkActionInitialParams initialParams;
+  late dynamic specificParams;
+
+  BnkAction(super.chunkId, super.chunkSize, super.type, this.ulActionType, this.initialParams, this.specificParams);
+
+  BnkAction.read(ByteDataWrapper bytes) : super.read(bytes) {
+    ulActionType = bytes.readUint16();
+    initialParams = BnkActionInitialParams.read(bytes);
+    if (ulActionType == 0x1204) {
+      specificParams = BnkStateActionParams.read(bytes);
+    } else if (const [0x0102, 0x0103, 0x0302, 0x0305].contains(ulActionType)) {
+      specificParams = BnkActiveActionParams.read(bytes);
+    } else if (ulActionType == 0x0403) {
+      specificParams = BnkPlayActionParams.read(bytes);
+    } else if (ulActionType == 0x1A02) {
+      specificParams = BnkBypassFXActionParams.read(bytes);
+    } else if (const [0x1302, 0x1303, 0x0A02, 0x0B02, 0x0C02, 0x0D02].contains(ulActionType)) {
+      specificParams = BnkValueActionParams.read(bytes, ulActionType);
+    }
+  }
+
+  @override
+  void write(ByteDataWrapper bytes) {
+    super.write(bytes);
+    bytes.writeUint16(ulActionType);
+    initialParams.write(bytes);
+    if (ulActionType == 0x1204) {
+      (specificParams as BnkStateActionParams).write(bytes);
+    } else if (const [0x0102, 0x0103, 0x0302, 0x0305].contains(ulActionType)) {
+      (specificParams as BnkActiveActionParams).write(bytes);
+    } else if (ulActionType == 0x0403) {
+      (specificParams as BnkPlayActionParams).write(bytes);
+    } else if (ulActionType == 0x1A02) {
+      (specificParams as BnkBypassFXActionParams).write(bytes);
+    } else if (const [0x1302, 0x1303, 0x0A02, 0x0B02, 0x0C02, 0x0D02].contains(ulActionType)) {
+      (specificParams as BnkValueActionParams).write(bytes, ulActionType);
+    }
+  }
+
+  int calcChunkSize() {
+    return 2 + initialParams.calcChunkSize();
+  }
+}
+
