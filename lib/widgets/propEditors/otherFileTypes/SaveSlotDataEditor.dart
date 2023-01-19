@@ -8,6 +8,7 @@ import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/nestedNotifier.dart';
 import '../../../stateManagement/openFileTypes.dart';
 import '../../../stateManagement/otherFileTypes/SlotDataDat.dart';
+import '../../../stateManagement/otherFileTypes/itemIdsToNames.dart';
 import '../../theme/customTheme.dart';
 import '../simpleProps/UnderlinePropTextField.dart';
 import '../simpleProps/propEditorFactory.dart';
@@ -191,7 +192,7 @@ class _InventoryTableConfig with CustomTableConfig {
     key: Key(items[i].uuid),
     cells: [
       TextCellConfig(i.toString()),
-      PropCellConfig(prop: items[i].id),
+      PropCellConfig(prop: items[i].id, autocompleteOptions: _getItemIdAutocomplete),
       PropCellConfig(prop: items[i].count),
       PropCellConfig(prop: items[i].isActive),
     ]
@@ -348,6 +349,16 @@ Iterable<AutocompleteConfig> _getWeaponIdAutocomplete() {
   ].map((t) => AutocompleteConfig(
     "${t.item1} (${t.item2})",
     insertText: t.item1.toString(),
+  ));
+}
+
+Iterable<AutocompleteConfig> _getItemIdAutocomplete() {
+  return {
+    -1: "Not owned",
+    ...itemIdsToNames
+  }.entries.map((t) => AutocompleteConfig(
+    "${t.key} (${t.value})",
+    insertText: t.key.toString(),
   ));
 }
 
