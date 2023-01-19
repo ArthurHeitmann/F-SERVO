@@ -3,14 +3,12 @@
 A tool for modding a variety of files in Nier:Automata. Primarily for editing quest scripting files.
 
 Supported file types:
-- DAT
-- PAK
-- YAX
-- XML
-- TMD
-- SMD
-- MCD
-- BIN
+- DAT, DTT
+- PAK, YAX, XML (xml quest scripts)
+- BIN (ruby quest scripts)
+- TMD (translations)
+- SMD (localized subtitles)
+- MCD (localized UI text)
 
 ## Building
 

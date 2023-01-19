@@ -416,7 +416,8 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
     else
       add(bxmEntry);
 
-    convertBxmFileToXml(bxmPath, bxmEntry.xmlPath);
+    if (!await File(bxmEntry.xmlPath).exists())
+      convertBxmFileToXml(bxmPath, bxmEntry.xmlPath);
     
     return bxmEntry;
   }

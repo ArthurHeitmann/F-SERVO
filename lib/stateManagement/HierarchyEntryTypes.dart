@@ -12,8 +12,10 @@ import '../fileTypeUtils/bxm/bxmReader.dart';
 import '../fileTypeUtils/bxm/bxmWriter.dart';
 import '../fileTypeUtils/ruby/pythonRuby.dart';
 import '../fileTypeUtils/yax/yaxToXml.dart';
+import '../main.dart';
 import '../utils/assetDirFinder.dart';
 import '../utils/utils.dart';
+import '../widgets/misc/confirmDialog.dart';
 import 'FileHierarchy.dart';
 import 'Property.dart';
 import 'hasUuid.dart';
@@ -193,6 +195,8 @@ class DatHierarchyEntry extends ExtractableHierarchyEntry {
   }
 
   Future<void> addNewRubyScript() async {
+    if (await confirmDialog(getGlobalContext(), title: "Add new Ruby Script?") != true)
+      return;
     var scriptGroup = firstWhere(
       (entry) => entry is RubyScriptGroupHierarchyEntry,
       orElse: () => RubyScriptGroupHierarchyEntry()

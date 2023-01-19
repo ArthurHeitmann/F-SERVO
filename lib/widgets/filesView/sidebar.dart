@@ -1,4 +1,6 @@
 
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 import '../../utils/utils.dart';
@@ -76,7 +78,7 @@ class _SidebarState extends State<Sidebar> {
       color: getTheme(context).sidebarBackgroundColor,
       child: ConstrainedBox(
         constraints: _isExpanded
-          ? BoxConstraints(maxWidth: _width)
+          ? BoxConstraints(maxWidth: max(_width, 150))
           : const BoxConstraints(),
         child: Row(
           children: [
