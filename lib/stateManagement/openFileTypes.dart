@@ -1233,7 +1233,7 @@ class BnkTrackData with HasUuid, Undoable {
     newTrack.numClipAutomationItem = newAutomations.length;
     
     // update chunk size
-    newTrack.size = newTrack.calcChunkSize();
+    newTrack.size = newTrack.calculateSize() - 5;
   }
 
   @override

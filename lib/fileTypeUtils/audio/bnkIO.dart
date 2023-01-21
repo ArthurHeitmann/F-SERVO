@@ -1,11 +1,10 @@
 
 import '../utils/ByteDataWrapper.dart';
 
-mixin SimpleComp<T> {
-  bool isSame(T other, Map<int, BnkHircChunkBase> hircObjects);
+abstract class ChunkWithSize {
+  int calculateSize();
 }
-
-abstract class ChunkBase {
+abstract class ChunkBase with ChunkWithSize {
   void write(ByteDataWrapper bytes);
 }
 abstract class BnkChunkBase extends ChunkBase {
@@ -25,7 +24,7 @@ abstract class BnkChunkBase extends ChunkBase {
   }
 }
 
-class BnkFile {
+class BnkFile with ChunkWithSize {
   List<BnkChunkBase> chunks = [];
 
   BnkFile(this.chunks);
@@ -57,6 +56,11 @@ class BnkFile {
       default: return BnkUnknownChunk.read(bytes);
     }
   }
+
+  @override
+  int calculateSize() {
+    return chunks.fold(0, (prev, chunk) => prev + chunk.calculateSize());
+  }
 }
 
 class BnkUnknownChunk extends BnkChunkBase {
@@ -74,6 +78,11 @@ class BnkUnknownChunk extends BnkChunkBase {
     super.write(bytes);
     for (var i = 0; i < data.length; i++)
       bytes.writeUint8(data[i]);
+  }
+
+  @override
+  int calculateSize() {
+    return chunkSize + 8;
   }
 }
 
@@ -118,6 +127,11 @@ class BnkHeader extends BnkChunkBase {
     for (var i = 0; i < padding.length; i++)
       bytes.writeUint8(padding[i]);
   }
+
+  @override
+  int calculateSize() {
+    return 8 + (unknown?.length ?? 5*4 + padding.length);
+  }
 }
 
 class BnkDidxChunk extends BnkChunkBase {
@@ -136,6 +150,11 @@ class BnkDidxChunk extends BnkChunkBase {
     for (var file in files) {
       file.write(bytes);
     }
+  }
+
+  @override
+  int calculateSize() {
+    return 8 + files.length * 12;
   }
 }
 
@@ -185,6 +204,16 @@ class BnkDataChunk extends BnkChunkBase {
       offset = (offset + 15) & ~15;
     }
   }
+
+  @override
+  int calculateSize() {
+    int size = 0;
+    for (var file in wemFiles) {
+      size = (size + 15) & ~15;
+      size += file.length;
+    }
+    return 8 + size;
+  }
 }
 
 class BnkHircChunk extends BnkChunkBase {
@@ -204,6 +233,15 @@ class BnkHircChunk extends BnkChunkBase {
     for (var chunk in chunks) {
       chunk.write(bytes);
     }
+  }
+
+  @override
+  int calculateSize() {
+    return (
+      8 + // chunk header
+      4 + // children count
+      chunks.fold(0, (prev, chunk) => prev + chunk.calculateSize() + 9)
+    );
   }
 }
 
@@ -277,9 +315,12 @@ class BnkHircUnknownChunk extends BnkHircChunkBase {
     for (var i = 0; i < data.length; i++)
       bytes.writeUint8(data[i]);
   }
+
+  @override
+  int calculateSize() => data.length;
 }
 
-class BnkMusicTrack extends BnkHircChunkBase with SimpleComp<BnkMusicTrack> {
+class BnkMusicTrack extends BnkHircChunkBase {
   late int uFlags;
   late int numSources;
   late List<BnkSource> sources;
@@ -340,18 +381,8 @@ class BnkMusicTrack extends BnkHircChunkBase with SimpleComp<BnkMusicTrack> {
   }
 
   @override
-  bool isSame(BnkMusicTrack other, Map<int, BnkHircChunkBase> hircObjects) {
+  int calculateSize() {
     return (
-      numSources == other.numSources &&
-      sources.every((s1) => other.sources.any((s2) => s1.isSame(s2, hircObjects))) &&
-      numPlaylistItem == other.numPlaylistItem &&
-      playlists.every((p1) => other.playlists.any((p2) => p1.isSame(p2, hircObjects)))
-    );
-  }
-
-  int calcChunkSize() {
-    return (
-      4 + // header uid
       1 + // uFlags
       4 + // numSources
       sources.fold<int>(0, (sum, s) => sum + s.calcChunkSize()) +  // sources
@@ -368,7 +399,7 @@ class BnkMusicTrack extends BnkHircChunkBase with SimpleComp<BnkMusicTrack> {
   }
 }
 
-class BnkMusicSegment extends BnkHircChunkBase with SimpleComp<BnkMusicSegment> {
+class BnkMusicSegment extends BnkHircChunkBase {
   late BnkMusicNodeParams musicParams;
   late double fDuration;
   late int ulNumMarkers;
@@ -394,17 +425,17 @@ class BnkMusicSegment extends BnkHircChunkBase with SimpleComp<BnkMusicSegment> 
   }
 
   @override
-  bool isSame(BnkMusicSegment other, Map<int, BnkHircChunkBase> hircObjects) {
+  int calculateSize() {
     return (
-      musicParams.isSame(other.musicParams, hircObjects) &&
-      fDuration == other.fDuration &&
-      ulNumMarkers == other.ulNumMarkers &&
-      wwiseMarkers.every((m1) => other.wwiseMarkers.any((m2) => m1.isSame(m2, hircObjects)))
+      musicParams.calcChunkSize() +  // musicParams
+      8 + // fDuration
+      4 + // ulNumMarkers
+      wwiseMarkers.fold<int>(0, (sum, m) => sum + m.calcChunkSize())  // wwiseMarkers
     );
   }
 }
 
-class BnkMusicPlaylist extends BnkHircChunkBase with SimpleComp<BnkMusicPlaylist> {
+class BnkMusicPlaylist extends BnkHircChunkBase {
   late BnkMusicTransNodeParams musicTransParams;
   late int numPlaylistItems;
   late List<BnkPlaylistItem> playlistItems;
@@ -427,15 +458,16 @@ class BnkMusicPlaylist extends BnkHircChunkBase with SimpleComp<BnkMusicPlaylist
   }
 
   @override
-  bool isSame(BnkMusicPlaylist other, Map<int, BnkHircChunkBase> hircObjects) {
+  int calculateSize() {
     return (
-      numPlaylistItems == other.numPlaylistItems &&
-      playlistItems.every((p1) => other.playlistItems.any((p2) => p1.isSame(p2, hircObjects)))
+      musicTransParams.calcChunkSize() +  // musicTransParams
+      4 + // numPlaylistItems
+      playlistItems.fold<int>(0, (sum, p) => sum + p.calcChunkSize())  // playlistItems
     );
   }
 }
 
-class BnkPlaylistItem with SimpleComp<BnkPlaylistItem> {
+class BnkPlaylistItem {
   late int segmentId;
   late int playlistItemId;
   late int numChildren;
@@ -477,16 +509,20 @@ class BnkPlaylistItem with SimpleComp<BnkPlaylistItem> {
     bytes.writeUint8(bIsUsingWeight);
     bytes.writeUint8(bIsShuffle);
   }
-
-  @override
-  bool isSame(BnkPlaylistItem other, Map<int, BnkHircChunkBase> hircObjects) {
+  
+  int calcChunkSize() {
     return (
-      segmentId == 0 && other.segmentId == 0 || (
-        hircObjects.containsKey(segmentId) &&
-        hircObjects.containsKey(other.segmentId) &&
-        (hircObjects[segmentId]! as BnkMusicSegment).isSame((hircObjects[other.segmentId]! as BnkMusicSegment), hircObjects)
-      ) &&
-      numChildren == other.numChildren
+      4 + // segmentId
+      4 + // playlistItemId
+      4 + // numChildren
+      4 + // eRSType
+      2 + // loop
+      2 + // loopMin
+      2 + // loopMax
+      4 + // weight
+      2 + // wAvoidRepeatCount
+      1 + // bIsUsingWeight
+      1   // bIsShuffle
     );
   }
 }
@@ -509,6 +545,14 @@ class BnkMusicTransNodeParams {
     bytes.writeUint32(numRules);
     for (var i = 0; i < numRules; i++)
       rules[i].write(bytes);
+  }
+  
+  int calcChunkSize() {
+    return (
+      musicParams.calcChunkSize() +  // musicParams
+      4 + // numRules
+      rules.fold<int>(0, (sum, r) => sum + r.calcChunkSize())  // rules
+    );
   }  
 }
 
@@ -549,6 +593,19 @@ class BnkMusicTransitionRule {
     if (allocTransObjectFlag != 0)
       musicTransition!.write(bytes);
   }
+  
+  int calcChunkSize() {
+    return (
+      4 + // uNumSrc
+      uNumSrc * 4 + // srcNumIDs
+      4 + // uNumDst
+      uNumDst * 4 + // dstNumIDs
+      srcRule.calcChunkSize() + // srcRule
+      dstRule.calcChunkSize() + // dstRule
+      1 + // allocTransObjectFlag
+      (allocTransObjectFlag != 0 ? musicTransition!.calcChunkSize() : 0) // musicTransition
+    );
+  }
 }
 
 class BnkMusicTransSrcRule {
@@ -578,6 +635,17 @@ class BnkMusicTransSrcRule {
     bytes.writeUint8(bPlayPreEntry);
     bytes.writeUint8(bDestMatchSourceCueName);
   }
+  
+  int calcChunkSize() {
+    return (
+      fadeParam.calcChunkSize() + // fadeParam
+      4 + // uCueFilterHash
+      4 + // uJumpToID
+      2 + // eEntryType
+      1 + // bPlayPreEntry
+      1 // bDestMatchSourceCueName
+    );
+  }
 }
 
 class BnkMusicTransDstRule {
@@ -600,6 +668,15 @@ class BnkMusicTransDstRule {
     bytes.writeUint32(eSyncType);
     bytes.writeUint32(uCueFilterHash);
     bytes.writeUint8(bPlayPostExit);
+  }
+
+  int calcChunkSize() {
+    return (
+      fadeParam.calcChunkSize() + // fadeParam
+      4 + // eSyncType
+      4 + // uCueFilterHash
+      1 // bPlayPostExit
+    );
   }
 }
 
@@ -627,9 +704,19 @@ class BnkMusicTransitionObject {
     bytes.writeUint8(playPreEntry);
     bytes.writeUint8(playPostExit);
   }
+  
+  int calcChunkSize() {
+    return (
+      4 + // segmentID
+      fadeInParams.calcChunkSize() + // fadeInParams
+      fadeOutParams.calcChunkSize() + // fadeOutParams
+      1 + // playPreEntry
+      1 // playPostExit
+    );
+  }
 }
 
-class BnkMusicMarker with SimpleComp<BnkMusicMarker> {
+class BnkMusicMarker {
   late int id;
   late double fPosition;
   late int uStringSize;
@@ -652,18 +739,13 @@ class BnkMusicMarker with SimpleComp<BnkMusicMarker> {
     if (uStringSize > 0)
       bytes.writeString(pMarkerName!);
   }
-
-  @override
-  bool isSame(BnkMusicMarker other, Map<int, BnkHircChunkBase> hircObjects) {
-    return (
-      fPosition == other.fPosition &&
-      uStringSize == other.uStringSize &&
-      pMarkerName == other.pMarkerName
-    );
+  
+  int calcChunkSize() {
+    return 4 + 8 + 4 + uStringSize;
   }
 }
 
-class BnkMusicNodeParams with SimpleComp<BnkMusicNodeParams> {
+class BnkMusicNodeParams {
   late int uFlags;
   late BnkNodeBaseParams baseParams;
   late BnkChildren childrenList;
@@ -694,16 +776,21 @@ class BnkMusicNodeParams with SimpleComp<BnkMusicNodeParams> {
     for (var i = 0; i < uNumStingers; i++)
       stingers[i].write(bytes);
   }
-
-  @override
-  bool isSame(BnkMusicNodeParams other, Map<int, BnkHircChunkBase> hircObjects) {
+  
+  int calcChunkSize() {
     return (
-      childrenList.isSame(other.childrenList, hircObjects)
+      1 + // uFlags
+      baseParams.calcChunkSize() +
+      childrenList.calcChunkSize() +
+      meterInfo.calcChunkSize() +
+      1 + // bMeterInfoFlag
+      4 + // uNumStingers
+      stingers.fold(0, (prev, s) => prev + s.calcChunkSize())
     );
   }
 }
 
-class BnkChildren with SimpleComp<BnkChildren> {
+class BnkChildren {
   late int uNumChildren;
   late List<int> ulChildIDs;
 
@@ -719,17 +806,9 @@ class BnkChildren with SimpleComp<BnkChildren> {
     for (var i = 0; i < uNumChildren; i++)
       bytes.writeUint32(ulChildIDs[i]);
   }
-
-  @override
-  bool isSame(BnkChildren other, Map<int, BnkHircChunkBase> hircObjects) {
-    return (
-      uNumChildren == other.uNumChildren &&
-      (
-        uNumChildren == 0 ||
-        hircObjects[ulChildIDs[0]] is SimpleComp &&
-        (hircObjects[ulChildIDs[0]]! as SimpleComp).isSame(hircObjects[other.ulChildIDs[0]]!, hircObjects)
-      )
-    );
+  
+  int calcChunkSize() {
+    return 4 + uNumChildren * 4;
   }
 }
 
@@ -756,6 +835,10 @@ class BnkAkMeterInfo {
     bytes.writeFloat32(fTempo);
     bytes.writeUint8(uNumBeatsPerBar);
     bytes.writeUint8(uBeatValue);
+  }
+  
+  int calcChunkSize() {
+    return 8 + 8 + 4 + 1 + 1;
   }
 }
 
@@ -786,9 +869,13 @@ class BnkAkStinger {
     bytes.writeInt32(noRepeatTime);
     bytes.writeUint32(numSegmentLookAhead);
   }
+  
+  int calcChunkSize() {
+    return 4 + 4 + 4 + 4 + 4 + 4;
+  }
 }
 
-class BnkSource with SimpleComp<BnkSource> {
+class BnkSource {
   late int ulPluginID;
   late int streamType;
   late int sourceID;
@@ -812,18 +899,13 @@ class BnkSource with SimpleComp<BnkSource> {
     bytes.writeUint32(uInMemorySize);
     bytes.writeUint8(uSourceBits);
   }
-
-  @override
-  bool isSame(BnkSource other, Map<int, BnkHircChunkBase> hircObjects) {
-    return sourceID == other.sourceID;
-  }
   
   int calcChunkSize() {
     return 14;
   }
 }
 
-class BnkPlaylist with SimpleComp<BnkPlaylist> {
+class BnkPlaylist {
   late int trackID;
   late int sourceID;
   late double fPlayAt;
@@ -849,17 +931,6 @@ class BnkPlaylist with SimpleComp<BnkPlaylist> {
     bytes.writeFloat64(fBeginTrimOffset);
     bytes.writeFloat64(fEndTrimOffset);
     bytes.writeFloat64(fSrcDuration);
-  }
-
-@override
-bool isSame(BnkPlaylist other, Map<int, BnkHircChunkBase> hircObjects) {
-    return (
-      sourceID == other.sourceID &&
-      fPlayAt == other.fPlayAt &&
-      fBeginTrimOffset == other.fBeginTrimOffset &&
-      fEndTrimOffset == other.fEndTrimOffset &&
-      fSrcDuration == other.fSrcDuration
-    );
   }
   
   int calcChunkSize() {
@@ -942,6 +1013,10 @@ class BnkFadeParams {
     bytes.writeInt32(transitionTime);
     bytes.writeUint32(eFadeCurve);
     bytes.writeInt32(iFadeOffset);
+  }
+  
+  int calcChunkSize() {
+    return 4 + 4 + 4;
   }
 }
 
@@ -1346,7 +1421,7 @@ class BnkStateChunk {
   }
   
   int calcChunkSize() {
-    return 4 + stateGroup.fold<int>(0, (previousValue, element) => previousValue + element.calcChunkSize());
+    return 4 + stateGroup.fold<int>(0, (prev, group) => prev + group.calcChunkSize());
   }
 }
 class BnkStateGroup {
@@ -1373,7 +1448,7 @@ class BnkStateGroup {
   }
   
   int calcChunkSize() {
-    return 7 + state.fold<int>(0, (previousValue, element) => previousValue + element.calcChunkSize());
+    return 7 + state.fold<int>(0, (prev, group) => prev + group.calcChunkSize());
   }
 }
 class BnkState {
@@ -1415,7 +1490,7 @@ class BnkInitialRTPC {
   }
   
   int calcChunkSize() {
-    return 2 + rtpc.fold<int>(0, (previousValue, element) => previousValue + element.calcChunkSize());
+    return 2 + rtpc.fold<int>(0, (prev, r) => prev + r.calcChunkSize());
   }
 }
 class BnkRtpc {
@@ -1454,7 +1529,7 @@ class BnkRtpc {
   }
   
   int calcChunkSize() {
-    return 14 + rtpcGraphPoint.fold<int>(0, (previousValue, element) => previousValue + element.calcChunkSize());
+    return 14 + rtpcGraphPoint.fold<int>(0, (prev, p) => prev + p.calcChunkSize());
   }
 }
 
@@ -1536,7 +1611,7 @@ class BnkEvent extends BnkHircChunkBase {
       bytes.writeUint32(ids[i]);
   }
   
-  int calcChunkSize() {
+  int calculateSize() {
     return 4 + ulActionListSize * 4;
   }
 }
@@ -1558,7 +1633,7 @@ class BnkSound extends BnkHircChunkBase {
     baseParams.write(bytes);
   }
   
-  int calcChunkSize() {
+  int calculateSize() {
     return bankData.calcChunkSize() + baseParams.calcChunkSize();
   }
 }
@@ -1648,7 +1723,12 @@ class BnkExceptParams {
   }
 }
 
-class BnkStateActionParams {
+abstract class ActionSpecificParams {
+  void write(ByteDataWrapper bytes);
+  int calcChunkSize();
+}
+
+class BnkStateActionParams implements ActionSpecificParams {
   late int ulStateGroupID;
   late int ulTargetStateID;
 
@@ -1659,17 +1739,19 @@ class BnkStateActionParams {
     ulTargetStateID = bytes.readUint32();
   }
 
+  @override
   void write(ByteDataWrapper bytes) {
     bytes.writeUint32(ulStateGroupID);
     bytes.writeUint32(ulTargetStateID);
   }
   
+  @override
   int calcChunkSize() {
     return 8;
   }
 }
 
-class BnkSwitchActionParams {
+class BnkSwitchActionParams implements ActionSpecificParams {
   late int ulSwitchGroupID;
   late int ulSwitchStateID;
 
@@ -1680,18 +1762,20 @@ class BnkSwitchActionParams {
     ulSwitchStateID = bytes.readUint32();
   }
 
+  @override
   void write(ByteDataWrapper bytes) {
     bytes.writeUint32(ulSwitchGroupID);
     bytes.writeUint32(ulSwitchStateID);
   }
   
+  @override
   int calcChunkSize() {
     return 8;
   }
 }
 
 const _activeActionAdditionalActionTypes = {0x403, 0x503, 0x202, 0x203, 0x204, 0x205, 0x208, 0x209, 0x302, 0x303, 0x304, 0x305, 0x308, 0x309};
-class BnkActiveActionParams {
+class BnkActiveActionParams implements ActionSpecificParams {
   late int byBitVector;
   int? byBitVector2;
   late BnkExceptParams exceptions;
@@ -1705,6 +1789,7 @@ class BnkActiveActionParams {
     exceptions = BnkExceptParams.read(bytes);
   }
 
+  @override
   void write(ByteDataWrapper bytes) {
     bytes.writeUint8(byBitVector);
     if (byBitVector2 != null)
@@ -1712,12 +1797,13 @@ class BnkActiveActionParams {
     exceptions.write(bytes);
   }
   
+  @override
   int calcChunkSize() {
-    return 1 + exceptions.calcChunkSize();
+    return 1 + (byBitVector2 != null ? 1 : 0) + exceptions.calcChunkSize();
   }
 }
 
-class BnkGameParameterParams {
+class BnkGameParameterParams implements ActionSpecificParams {
   late int bBypassTransition;
   late int eValueMeaning;
   late double base;
@@ -1734,6 +1820,7 @@ class BnkGameParameterParams {
     max = bytes.readFloat32();
   }
 
+  @override
   void write(ByteDataWrapper bytes) {
     bytes.writeUint8(bBypassTransition);
     bytes.writeUint8(eValueMeaning);
@@ -1742,12 +1829,13 @@ class BnkGameParameterParams {
     bytes.writeFloat32(max);
   }
   
+  @override
   int calcChunkSize() {
     return 1*2 + 3*4;
   }
 }
 
-class BnkPropActionParams {
+class BnkPropActionParams implements ActionSpecificParams {
   late int eValueMeaning;
   late double base;
   late double min;
@@ -1762,6 +1850,7 @@ class BnkPropActionParams {
     max = bytes.readFloat32();
   }
 
+  @override
   void write(ByteDataWrapper bytes) {
     bytes.writeUint8(eValueMeaning);
     bytes.writeFloat32(base);
@@ -1769,6 +1858,7 @@ class BnkPropActionParams {
     bytes.writeFloat32(max);
   }
   
+  @override
   int calcChunkSize() {
     return 1 + 3*4;
   }
@@ -1776,39 +1866,39 @@ class BnkPropActionParams {
 
 const _gameParamActionTypes = {0x1302, 0x1303, 0x1402, 0x1403};
 const _propActionActionTypes = {0x0A02, 0x0A03, 0x0A04, 0x0A05, 0x0B02, 0x0B03, 0x0B04, 0x0B05, 0x0C02, 0x0C03, 0x0C04, 0x0C05, 0x0D02, 0x0D03, 0x0D04, 0x0D05, 0x0802, 0x0803, 0x0804, 0x0805, 0x0902, 0x0903, 0x0904, 0x0905, 0x0F02, 0x0F03, 0x0F04, 0x0F05, 0x0E02, 0x0E03, 0x0E04, 0x0E05, 0x2002, 0x2003, 0x2004, 0x2005, 0x3002, 0x3003, 0x3004, 0x3005};
-class BnkValueActionParams {
+class BnkValueActionParams implements ActionSpecificParams {
+  final int actionType;
   late int byBitVector;
-  late Object? specificParams;
+  ActionSpecificParams? specificParams;
   late int ulExceptionListSize;
 
-  BnkValueActionParams(this.byBitVector, this.specificParams, this.ulExceptionListSize);
+  BnkValueActionParams(this.actionType, this.byBitVector, this.specificParams, this.ulExceptionListSize);
 
-  BnkValueActionParams.read(ByteDataWrapper bytes, int ulActionType) {
+  BnkValueActionParams.read(ByteDataWrapper bytes, this.actionType) {
     byBitVector = bytes.readUint8();
-    if (_gameParamActionTypes.contains(ulActionType)) {
+    if (_gameParamActionTypes.contains(actionType)) {
       specificParams = BnkGameParameterParams.read(bytes);
-    } else if (_propActionActionTypes.contains(ulActionType)) {
+    } else if (_propActionActionTypes.contains(actionType)) {
       specificParams = BnkPropActionParams.read(bytes);
     }
     ulExceptionListSize = bytes.readUint32();
   }
 
-  void write(ByteDataWrapper bytes, int ulActionType) {
+  @override
+  void write(ByteDataWrapper bytes) {
     bytes.writeUint8(byBitVector);
-    if (_gameParamActionTypes.contains(ulActionType)) {
-      (specificParams! as BnkGameParameterParams).write(bytes);
-    } else if (_propActionActionTypes.contains(ulActionType)) {
-      (specificParams! as BnkPropActionParams).write(bytes);
-    }
+    if (specificParams != null)
+      specificParams!.write(bytes);
     bytes.writeUint32(ulExceptionListSize);
   }
   
-  // int calcChunkSize(int ulActionType) {
-  //   return 1 + (specificParams! as dynamic).calcChunkSize() + 4;
-  // }
+  @override
+  int calcChunkSize() {
+    return 1 + (specificParams?.calcChunkSize() ?? 0) + 4;
+  }
 }
 
-class BnkPlayActionParams {
+class BnkPlayActionParams implements ActionSpecificParams {
   late int eFadeCurve;
   late int fileID;
 
@@ -1819,17 +1909,19 @@ class BnkPlayActionParams {
     fileID = bytes.readUint32();
   }
 
+  @override
   void write(ByteDataWrapper bytes) {
     bytes.writeUint8(eFadeCurve);
     bytes.writeUint32(fileID);
   }
   
+  @override
   int calcChunkSize() {
     return 1 + 4;
   }
 }
 
-class BnkBypassFXActionParams {
+class BnkBypassFXActionParams implements ActionSpecificParams {
   late int bIsBypass;
   late int uTargetMask;
   late BnkExceptParams exceptions;
@@ -1842,18 +1934,20 @@ class BnkBypassFXActionParams {
     exceptions = BnkExceptParams.read(bytes);
   }
 
+  @override
   void write(ByteDataWrapper bytes) {
     bytes.writeUint8(bIsBypass);
     bytes.writeUint8(uTargetMask);
     exceptions.write(bytes);
   }
   
+  @override
   int calcChunkSize() {
     return 1*2 + exceptions.calcChunkSize();
   }
 }
 
-class BnkActionInitialParams {
+class BnkActionInitialParams implements ActionSpecificParams {
   late int idExt;
   late int idExt_4;
   late BnkPropValue propValues;
@@ -1868,6 +1962,7 @@ class BnkActionInitialParams {
     rangedPropValues = BnkPropRangedValue.read(bytes);
   }
 
+  @override
   void write(ByteDataWrapper bytes) {
     bytes.writeUint32(idExt);
     bytes.writeUint8(idExt_4);
@@ -1875,6 +1970,7 @@ class BnkActionInitialParams {
     rangedPropValues.write(bytes);
   }
   
+  @override
   int calcChunkSize() {
     return 4 + 1 + propValues.calcChunkSize() + rangedPropValues.calcChunkSize();
   }
@@ -1886,7 +1982,7 @@ const _valueActionParamsActionsTypes = {0x1302, 0x1303, 0x1402, 0x1403, 0x0602, 
 class BnkAction extends BnkHircChunkBase {
   late int ulActionType;
   late BnkActionInitialParams initialParams;
-  late dynamic specificParams;
+  ActionSpecificParams? specificParams;
 
   BnkAction(super.chunkId, super.chunkSize, super.type, this.ulActionType, this.initialParams, this.specificParams);
 
@@ -1911,21 +2007,13 @@ class BnkAction extends BnkHircChunkBase {
     super.write(bytes);
     bytes.writeUint16(ulActionType);
     initialParams.write(bytes);
-    if (ulActionType == 0x1204) {
-      (specificParams as BnkStateActionParams).write(bytes);
-    } else if (_activeActionParamsActionsTypes.contains(ulActionType)) {
-      (specificParams as BnkActiveActionParams).write(bytes);
-    } else if (ulActionType == 0x0403) {
-      (specificParams as BnkPlayActionParams).write(bytes);
-    } else if (_bypassFXActionParamsActionsTypes.contains(ulActionType)) {
-      (specificParams as BnkBypassFXActionParams).write(bytes);
-    } else if (_valueActionParamsActionsTypes.contains(ulActionType)) {
-      (specificParams as BnkValueActionParams).write(bytes, ulActionType);
-    }
+    if (specificParams != null)
+      specificParams!.write(bytes);
   }
 
-  int calcChunkSize() {
-    return 2 + initialParams.calcChunkSize();
+  @override
+  int calculateSize() {
+    return 2 + initialParams.calcChunkSize() + (specificParams?.calcChunkSize() ?? 0);
   }
 }
 
