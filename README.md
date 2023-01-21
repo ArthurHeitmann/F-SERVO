@@ -18,6 +18,6 @@ Supported file types:
 
 3. Get all assets
    1. `git submodule update --init`
-   2. Download additional assets from [here](https://github.com/ArthurHeitmann/NierScriptsEditor/releases/tag/assetsV0.4.0) and extract the folders inside into the `assets` folder. (This is so that the raw git repo isn't 100+ MB large)
+   2. Download additional assets from [here](https://github.com/ArthurHeitmann/NierScriptsEditor/releases/tag/assetsV0.5.0) and extract the folders inside into the `assets` folder. (This is so that the raw git repo isn't 100+ MB large)
 
 4. Run with your IDE of choice or for release build `flutter build windows --release`
