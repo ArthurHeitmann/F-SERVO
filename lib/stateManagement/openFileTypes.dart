@@ -1625,7 +1625,7 @@ class SaveSlotData extends OpenFileData {
     _loadingState = LoadingState.loading;
 
     var bytes = await ByteDataWrapper.fromFile(path);
-    slotData = SlotDataDat.read(bytes);
+    slotData = SlotDataDat.read(bytes, uuid);
     for (var prop in slotData!.allProps())
       prop.addListener(_onPropChanged);
 

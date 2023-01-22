@@ -97,6 +97,10 @@ mixin CustomTableConfig {
   void onRowAdd();
   void onRowRemove(int index);
   void updateRowWith(int index, List<String?> values);
+  @mustCallSuper
+  void disposeConfig() {
+    rowCount.dispose();
+  }
 }
 
 class _ColumnSort {
@@ -135,6 +139,7 @@ class _TableEditorState extends ChangeNotifierState<TableEditor> {
   void dispose() {
     for (var prop in columnSearch)
       prop.dispose();
+    widget.config.disposeConfig();
     super.dispose();
   }
 

@@ -1,9 +1,12 @@
 
+import 'package:flutter/material.dart';
+
 import '../../fileTypeUtils/utils/ByteDataWrapper.dart';
 import '../../utils/utils.dart';
 import '../Property.dart';
 import '../hasUuid.dart';
 import '../nestedNotifier.dart';
+import '../openFilesManager.dart';
 import '../undoable.dart';
 
 class SaveInventoryItem with HasUuid, Undoable {
@@ -159,22 +162,28 @@ class SaveVector with HasUuid, Undoable {
   }
 }
 
-class TreeEntry with HasUuid, Undoable {
+class TreeEntry extends NestedNotifier<TreeEntry> {
   final StringProp text;
-  final ValueNestedNotifier<TreeEntry> children;
+  final OpenFileId file;
 
-  TreeEntry(this.text, this.children);
+  TreeEntry(this.text, super.children, this.file) {
+    text.addListener(() {
+      areasManager.fromId(file)?.hasUnsavedChanges = true;
+    });
+  }
 
+  @override
   void dispose() {
     text.dispose();
-    children.dispose();
+    super.dispose();
   }
 
   @override
   Undoable takeSnapshot() {
     return TreeEntry(
       text.takeSnapshot() as StringProp,
-      children.takeSnapshot() as ValueNestedNotifier<TreeEntry>
+      map((e) => e.takeSnapshot() as TreeEntry).toList(),
+      file
     );
   }
 
@@ -182,11 +191,11 @@ class TreeEntry with HasUuid, Undoable {
   void restoreWith(Undoable snapshot) {
     var entry = snapshot as TreeEntry;
     text.restoreWith(entry.text);
-    children.restoreWith(entry.children);
+    updateOrReplaceWith(entry.toList(), (obj) => obj.takeSnapshot() as TreeEntry);
   }
 }
 
-List<TreeEntry> _parseTree(String text) {
+List<TreeEntry> _parseTree(String text, OpenFileId file) {
   List<TreeEntry> rootEntries = [];
 
   List<String> lines = text.split("\n");
@@ -200,16 +209,16 @@ List<TreeEntry> _parseTree(String text) {
       indentationLevel++;
     line = line.substring(indentationLevel);
 
-    TreeEntry entry = TreeEntry(StringProp(line), ValueNestedNotifier([]));
+    TreeEntry entry = TreeEntry(StringProp(line), [], file);
 
     if (indentationLevel == 0) {
       rootEntries.add(entry);
     } else {
       TreeEntry parent = rootEntries.last;
       for (int i = 1; i < indentationLevel; i++)
-        parent = parent.children.last;
+        parent = parent.last;
 
-      parent.children.add(entry);
+      parent.add(entry);
     }    
   }
 
@@ -228,7 +237,7 @@ String _stringifyTreeEntry(TreeEntry entry, int indentationLevel) {
   String text = " " * indentationLevel;
   text += "${entry.text.value}\n";
 
-  for (TreeEntry child in entry.children)
+  for (TreeEntry child in entry)
     text += _stringifyTreeEntry(child, indentationLevel + 1);
 
   return text;
@@ -254,7 +263,7 @@ class SlotDataDat with HasUuid, Undoable {
   
   SlotDataDat(this.steamId64, this.name, this.money, this.experience, this.phase, this.transporterFlag, this.position, this.rotation, this.corpseName, this.corpseOnlineName, this.corpsePosition, this.inventory, this.corpseInventory, this.weapons, this.weaponSets, this.tree);
 
-  SlotDataDat.read(ByteDataWrapper bytes) {
+  SlotDataDat.read(ByteDataWrapper bytes, OpenFileId file) {
     bytes.position = 4;
     steamId64 = NumberProp(bytes.readInt64(), true);
     bytes.position = 0x34;
@@ -281,8 +290,8 @@ class SlotDataDat with HasUuid, Undoable {
     bytes.position = 0x386F4;
     weaponSets = List.generate(2, (index) => SaveWeaponSet.read(bytes));
     bytes.position = 0x7C;
-    var treeText = bytes.readString(196608).trimNull();
-    tree = _parseTree(treeText);
+    var treeText = bytes.readString(0x30000).trimNull();
+    tree = _parseTree(treeText, file);
   }
 
   void write(ByteDataWrapper bytes) {
@@ -316,10 +325,10 @@ class SlotDataDat with HasUuid, Undoable {
     for (var weaponSet in weaponSets)
       weaponSet.write(bytes);
     bytes.position = 0x7C;
-    bytes.writeString(_stringifyTree(tree).padRight(196608, "\x00"));
+    bytes.writeString(_stringifyTree(tree).padRight(0x30000, "\x00"));
   }
 
-  Iterable<Prop> allProps() {
+  Iterable<ChangeNotifier> allProps() {
     return [
       steamId64, name, money, experience, phase, transporterFlag,
       position.vec, rotation.vec,
@@ -327,15 +336,14 @@ class SlotDataDat with HasUuid, Undoable {
       ...inventory.expand((e) => [e.id, e.count, e.isActive]),
       ...corpseInventory.expand((e) => [e.id, e.count, e.isActive]),
       ...weapons.expand((e) => [e.id, e.level, e.isNew, e.hasNewStory, e.enemiesDefeated]),
-      ...weaponSets.expand((e) => [e.weaponIdLightAttack, e.weaponIdHeavyAttack])
+      ...weaponSets.expand((e) => [e.weaponIdLightAttack, e.weaponIdHeavyAttack]),
+      ...tree.map((e) => <ChangeNotifier>[e.text, e]).expand((e) => e),
     ];
   }
 
   void dispose() {
     for (var prop in allProps())
       prop.dispose();
-    for (var entry in tree)
-      entry.dispose();
   }
 
   @override
@@ -382,5 +390,7 @@ class SlotDataDat with HasUuid, Undoable {
       weapons[i].restoreWith(slotData.weapons[i]);
     for (var i = 0; i < weaponSets.length; i++)
       weaponSets[i].restoreWith(slotData.weaponSets[i]);
+    for (var i = 0; i < tree.length; i++)
+      tree[i].restoreWith(slotData.tree[i]);
   }
 }

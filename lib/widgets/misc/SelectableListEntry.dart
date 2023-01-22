@@ -48,11 +48,16 @@ class SelectableListEntry extends StatelessWidget {
           height: height * 0.9,
           child: Row(
             children: [
-              Expanded(child: Text(
-                text,
-                textScaleFactor: scale,
-                overflow: TextOverflow.ellipsis,
-              )),
+              Expanded(
+                child: Tooltip(
+                  message: text.length > 36 ? text : "",
+                  child: Text(
+                    text,
+                    textScaleFactor: scale,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
             ],
           ),
         ),

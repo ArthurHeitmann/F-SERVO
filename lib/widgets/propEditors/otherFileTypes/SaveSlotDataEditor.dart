@@ -1,9 +1,12 @@
 
 // ignore_for_file: unused_element
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:tuple/tuple.dart';
 
+import '../../../background/IdLookup.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/nestedNotifier.dart';
 import '../../../stateManagement/openFileTypes.dart';
@@ -80,7 +83,7 @@ class _SaveSlotDataEditorState extends State<SaveSlotDataEditor> {
                   ],
                 ),
                 _WeaponEditor(save: save),
-                _TogglesEditor(name: "Scene State", toggles: save.tree.where((e) => e.text.value == "SceneState").first.children),
+                _TogglesEditor(name: "Scene State", toggles: save.tree.where((e) => e.text.value == "SceneState").first),
               ],
             ),
           ),
@@ -363,13 +366,19 @@ Iterable<AutocompleteConfig> _getItemIdAutocomplete() {
 }
 
 class _StringListTableConfig with CustomTableConfig {
-  final ValueNestedNotifier<TreeEntry> strings;
+  final NestedNotifier<TreeEntry> strings;
+  final FutureOr<Iterable<AutocompleteConfig>> Function()? autocompleteOptions;
 
-  _StringListTableConfig(String name, this.strings) {
+  _StringListTableConfig(String name, this.strings, [this.autocompleteOptions]) {
     this.name = name;
     columnNames = [name, ""];
     columnFlex = [5, 1];
     rowCount = NumberProp(strings.length, true);
+    strings.addListener(_updateRowCount);
+  }
+
+  void _updateRowCount() {
+    rowCount.value = strings.length;
   }
 
   @override
@@ -377,7 +386,10 @@ class _StringListTableConfig with CustomTableConfig {
     return RowConfig(
       key: Key(strings[index].uuid),
       cells: [
-        PropCellConfig(prop: strings[index].text),
+        PropCellConfig(
+          prop: strings[index].text,
+          autocompleteOptions: autocompleteOptions,
+        ),
         CustomWidgetCellConfig(
           IconButton(
             icon: const Icon(Icons.delete),
@@ -387,10 +399,10 @@ class _StringListTableConfig with CustomTableConfig {
       ]
     );
   }
+  
   @override
   void onRowAdd() {
-    strings.add(TreeEntry(StringProp("new $name entry"), ValueNestedNotifier([])));
-    rowCount.value++;
+    strings.add(TreeEntry(StringProp("new $name entry"), [], strings.first.file));
   }
 
   @override
@@ -402,11 +414,17 @@ class _StringListTableConfig with CustomTableConfig {
   void updateRowWith(int index, List<String?> values) {
     strings[index].text.updateWith(values[0]!);
   }
+
+  @override
+  void disposeConfig() {
+    strings.removeListener(_updateRowCount);
+    super.disposeConfig();
+  }
 }
 
 class _TogglesEditor extends StatefulWidget {
   final String name;
-  final ValueNestedNotifier<TreeEntry> toggles;
+  final NestedNotifier<TreeEntry> toggles;
 
   const _TogglesEditor({ super.key, required this.name, required this.toggles });
 
@@ -417,9 +435,17 @@ class _TogglesEditor extends StatefulWidget {
 class __TogglesEditorState extends State<_TogglesEditor> {
   late _StringListTableConfig tableConfig;
 
+  Future<Iterable<AutocompleteConfig>> getAutocompleteOptions() async {
+    var sceneStates = await idLookup.getAllSceneStates();
+    return sceneStates.map((s) => AutocompleteConfig(
+      "${s.key}${s.commentEng.isNotEmpty ? " (${s.commentEng})" : ""}",
+      insertText: s.key,
+    ));
+  }
+
   @override
   void initState() {
-    tableConfig = _StringListTableConfig(widget.name, widget.toggles);
+    tableConfig = _StringListTableConfig(widget.name, widget.toggles, getAutocompleteOptions);
     super.initState();
   }
 
