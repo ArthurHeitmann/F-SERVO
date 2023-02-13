@@ -36,7 +36,6 @@ void init() async {
     const WindowOptions windowOptions = WindowOptions(
       minimumSize: Size(400, 200),
       titleBarStyle: TitleBarStyle.hidden,
-      backgroundColor: Color.fromRGBO(18, 18, 18, 1),
     );
     windowManager.waitUntilReadyToShow(windowOptions, () async {
       await windowManager.show();

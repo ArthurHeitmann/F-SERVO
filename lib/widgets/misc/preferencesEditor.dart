@@ -105,7 +105,7 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
       const SizedBox(height: 10,),
       Row(
         children: [
-          const Text("ON EXPORT:", overflow: TextOverflow.ellipsis,),
+          const Text("ON SAVE:", overflow: TextOverflow.ellipsis,),
           Expanded(
             child: RowSeparated(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
