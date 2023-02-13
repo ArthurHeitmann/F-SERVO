@@ -17,6 +17,7 @@ dependencies:
   crclib: ^3.0.0
   cross_file: ^0.3.3+1
   desktop_drop: ^0.3.3
+  dyn_mouse_scroll: ^1.0.7
   euc: ^1.0.6+8
   file_picker: ^5.2.0
   flutter:
