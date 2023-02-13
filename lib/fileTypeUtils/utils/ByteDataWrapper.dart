@@ -116,13 +116,11 @@ class ByteDataWrapper {
 
   List<double> readFloat32List(int length) {
     var list = List<double>.generate(length, (_) => readFloat32());
-    _position += length * 4;
     return list;
   }
 
   List<double> readFloat64List(int length) {
     var list = List<double>.generate(length, (_) => readFloat64());
-    _position += length * 8;
     return list;
   }
 

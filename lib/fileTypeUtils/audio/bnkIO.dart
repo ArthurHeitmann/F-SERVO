@@ -249,6 +249,7 @@ enum BnkHircType {
   sound(0x02),
   action(0x03),
   event(0x04),
+  actorMixer(0x07),
   musicTrack(0x0B),
   musicSegment(0x0A),
   musicPlaylist(0x0D),
@@ -288,6 +289,8 @@ BnkHircChunkBase _makeNextHircChunk(ByteDataWrapper bytes) {
       return BnkSound.read(bytes);
     case BnkHircType.event:
       return BnkEvent.read(bytes);
+    case BnkHircType.actorMixer:
+      return BnkActorMixer.read(bytes);
     case BnkHircType.action:
       return BnkAction.read(bytes);
     case BnkHircType.musicTrack:
@@ -335,7 +338,7 @@ class BnkMusicTrack extends BnkHircChunkBase {
   BnkTransParams? transParam;
   late int iLookAheadTime;
 
-  BnkMusicTrack(super.chunkId, super.chunkSize, super.type, this.uFlags, this.numSources, this.sources, this.numPlaylistItem, this.playlists, this.numSubTrack, this.numClipAutomationItem, this.clipAutomations, this.baseParams, this.eTrackType, this.switchParam, this.transParam, this.iLookAheadTime);
+  BnkMusicTrack(super.type, super.size, super.uid, this.uFlags, this.numSources, this.sources, this.numPlaylistItem, this.playlists, this.numSubTrack, this.numClipAutomationItem, this.clipAutomations, this.baseParams, this.eTrackType, this.switchParam, this.transParam, this.iLookAheadTime);
 
   BnkMusicTrack.read(ByteDataWrapper bytes) : super.read(bytes) {
     uFlags = bytes.readUint8();
@@ -405,7 +408,7 @@ class BnkMusicSegment extends BnkHircChunkBase {
   late int ulNumMarkers;
   late List<BnkMusicMarker> wwiseMarkers;
 
-  BnkMusicSegment(super.chunkId, super.chunkSize, super.type, this.musicParams, this.fDuration, this.ulNumMarkers, this.wwiseMarkers);
+  BnkMusicSegment(super.type, super.size, super.uid, this.musicParams, this.fDuration, this.ulNumMarkers, this.wwiseMarkers);
 
   BnkMusicSegment.read(ByteDataWrapper bytes) : super.read(bytes) {
     musicParams = BnkMusicNodeParams.read(bytes);
@@ -440,7 +443,7 @@ class BnkMusicPlaylist extends BnkHircChunkBase {
   late int numPlaylistItems;
   late List<BnkPlaylistItem> playlistItems;
 
-  BnkMusicPlaylist(super.chunkId, super.chunkSize, super.type, this.musicTransParams, this.numPlaylistItems, this.playlistItems);
+  BnkMusicPlaylist(super.type, super.size, super.uid, this.musicTransParams, this.numPlaylistItems, this.playlistItems);
 
   BnkMusicPlaylist.read(ByteDataWrapper bytes) : super.read(bytes) {
     musicTransParams = BnkMusicTransNodeParams.read(bytes);
@@ -1270,6 +1273,8 @@ class BnkPositioningParams {
   List<PathListItemOffset>? playListItems;
   List<Bnk3DAutomationParams>? params;
 
+  BnkPositioningParams(this.uBitsPositioning, [this.uBits3D, this.attenuationID, this.pathMode, this.transitionTime, this.numVertices, this.vertices, this.numPlayListItem, this.playListItems, this.params]);
+
   BnkPositioningParams.read(ByteDataWrapper bytes) {
     uBitsPositioning = bytes.readUint8();
     var hasPositioning = (uBitsPositioning >> 0) & 1;
@@ -1345,7 +1350,7 @@ class BnkAuxParams {
   int? auxID3;
   int? auxID4;
 
-  BnkAuxParams(this.byBitVector, this.auxID1, this.auxID2, this.auxID3, this.auxID4);
+  BnkAuxParams(this.byBitVector, [this.auxID1, this.auxID2, this.auxID3, this.auxID4]);
 
   BnkAuxParams.read(ByteDataWrapper bytes) {
     byBitVector = bytes.readUint8();
@@ -1597,13 +1602,14 @@ class BnkEvent extends BnkHircChunkBase {
   late int ulActionListSize;
   late List<int> ids;
 
-  BnkEvent(super.chunkId, super.chunkSize, super.type, this.ulActionListSize, this.ids);
+  BnkEvent(super.type, super.size, super.uid, this.ulActionListSize, this.ids);
 
   BnkEvent.read(ByteDataWrapper bytes) : super.read(bytes) {
     ulActionListSize = bytes.readUint32();
     ids = List.generate(ulActionListSize, (index) => bytes.readUint32());
   }
 
+  @override
   void write(ByteDataWrapper bytes) {
     super.write(bytes);
     bytes.writeUint32(ulActionListSize);
@@ -1611,8 +1617,36 @@ class BnkEvent extends BnkHircChunkBase {
       bytes.writeUint32(ids[i]);
   }
   
+  @override
   int calculateSize() {
     return 4 + ulActionListSize * 4;
+  }
+}
+
+class BnkActorMixer extends BnkHircChunkBase {
+  late BnkNodeBaseParams baseParams;
+  late List<int> childIDs;
+
+  BnkActorMixer(super.type, super.size, super.uid, this.baseParams, this.childIDs);
+
+  BnkActorMixer.read(ByteDataWrapper bytes) : super.read(bytes) {
+    baseParams = BnkNodeBaseParams.read(bytes);
+    int ulNumChildren = bytes.readUint32();
+    childIDs = List.generate(ulNumChildren, (index) => bytes.readUint32());
+  }
+
+  @override
+  void write(ByteDataWrapper bytes) {
+    super.write(bytes);
+    baseParams.write(bytes);
+    bytes.writeUint32(childIDs.length);
+    for (var i = 0; i < childIDs.length; i++)
+      bytes.writeUint32(childIDs[i]);
+  }
+  
+  @override
+  int calculateSize() {
+    return baseParams.calcChunkSize() + 4 + childIDs.length * 4;
   }
 }
 
@@ -1620,19 +1654,21 @@ class BnkSound extends BnkHircChunkBase {
   late BnkSourceData bankData;
   late BnkNodeBaseParams baseParams;
 
-  BnkSound(super.chunkId, super.chunkSize, super.type, this.bankData, this.baseParams);
+  BnkSound(super.type, super.size, super.uid, this.bankData, this.baseParams);
 
   BnkSound.read(ByteDataWrapper bytes) : super.read(bytes) {
     bankData = BnkSourceData.read(bytes);
     baseParams = BnkNodeBaseParams.read(bytes);
   }
 
+  @override
   void write(ByteDataWrapper bytes) {
     super.write(bytes);
     bankData.write(bytes);
     baseParams.write(bytes);
   }
   
+  @override
   int calculateSize() {
     return bankData.calcChunkSize() + baseParams.calcChunkSize();
   }
@@ -1642,9 +1678,9 @@ class BnkSourceData {
   late int ulPluginID;
   late int streamType;
   late BnkMediaInformation mediaInformation;
-  late int uSize;
+  int? uSize;
 
-  BnkSourceData(this.ulPluginID, this.streamType, this.mediaInformation, this.uSize);
+  BnkSourceData(this.ulPluginID, this.streamType, this.mediaInformation, [this.uSize]);
 
   BnkSourceData.read(ByteDataWrapper bytes) {
     ulPluginID = bytes.readUint32();
@@ -1660,7 +1696,7 @@ class BnkSourceData {
     bytes.writeUint8(streamType);
     mediaInformation.write(bytes);
     if ((ulPluginID & 0x000000FF) == 2) {
-      bytes.writeUint32(uSize);
+      bytes.writeUint32(uSize!);
     }
   }
   
@@ -1984,7 +2020,7 @@ class BnkAction extends BnkHircChunkBase {
   late BnkActionInitialParams initialParams;
   ActionSpecificParams? specificParams;
 
-  BnkAction(super.chunkId, super.chunkSize, super.type, this.ulActionType, this.initialParams, this.specificParams);
+  BnkAction(super.type, super.size, super.uid, this.ulActionType, this.initialParams, this.specificParams);
 
   BnkAction.read(ByteDataWrapper bytes) : super.read(bytes) {
     ulActionType = bytes.readUint16();

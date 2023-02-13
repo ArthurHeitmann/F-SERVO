@@ -20,17 +20,25 @@ Future<bool> _processFile(String filePath) async {
   }
   var pyToolPath = join(assetsDir!, "MrubyDecompiler", "__init__.py");
   var result = await Process.run(pythonCmd!, [pyToolPath, filePath]);
-  return result.exitCode == 0;
+  var isSuccessful = result.exitCode == 0 && result.stderr.isEmpty;
+  if (isSuccessful)
+    showToast("Success");
+  else {
+    for (String line in result.stderr.split("\n"))
+      messageLog.add(line.replaceAll("\r", "").trim());
+    showToast("Failed to process ${basename(filePath)}");
+    print(result.stdout);
+    print(result.stderr);
+  }
+  return isSuccessful;
 }
 
 Future<bool> binFileToRuby(String filePath) {
-  print("Decompiling $filePath");
   messageLog.add("Decompiling ${basename(filePath)}");
   return _processFile(filePath);
 }
 
 Future<bool> rubyFileToBin(String filePath) async {
-  print("Compiling $filePath");
   messageLog.add("Compiling ${basename(filePath)}");
   var result = await _processFile(filePath);
   if (!result)

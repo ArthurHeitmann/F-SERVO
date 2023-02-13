@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:path/path.dart' as path;
+import 'package:path/path.dart';
 
 import '../../stateManagement/events/statusInfo.dart';
 import '../../utils/utils.dart';
@@ -14,6 +15,19 @@ Future<void> repackDat(String datDir, String exportPath) async {
   
   var fileList = await getDatFileList(datDir);
   var fileNames = fileList.map((e) => path.basename(e)).toList();
+  var allFilesExists = (await Future.wait(fileList.map((e) => File(e).exists())));
+  var missingFiles = <String>[];
+  for (var i = 0; i < allFilesExists.length; i++) {
+    if (!allFilesExists[i]) {
+      missingFiles.add(fileNames[i]);
+    }
+  }
+  if (missingFiles.isNotEmpty) {
+    for (var f in missingFiles)
+      messageLog.add("Missing file: ${basename(f)}");
+    showToast("DAT is missing ${pluralStr(missingFiles.length, "file")}. Check log for details");
+    return;
+  }
   var fileSizes = (await Future.wait(fileList.map((e) => File(e).length()))).toList();
   var fileNumber = fileList.length;
   var hashData = HashInfo(fileNames);
