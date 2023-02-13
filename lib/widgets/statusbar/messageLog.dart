@@ -146,38 +146,77 @@ class _MessageLogDialogState extends ChangeNotifierState<_MessageLogDialog> {
                 ),
               ],
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(
-                  height: 25,
-                  child: Align(
-                    alignment: Alignment.centerLeft,
+            child: Material(
+              color: Colors.transparent,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SizedBox(
+                    height: 25,
                     child: Padding(
-                      padding: EdgeInsets.only(left: 10, top: 8),
-                      child: Text(
-                        "Messages:",
-                        style: TextStyle(fontSize: 14),
+                      padding: const EdgeInsets.only(left: 10, top: 8),
+                      child: Row(
+                        children: [
+                          const Text(
+                            "Messages:",
+                            style: TextStyle(fontSize: 14),
+                          ),
+                          const Spacer(),
+                          Tooltip(
+                            message: "Clear all messages",
+                            waitDuration: const Duration(milliseconds: 500),
+                            child: IconButton(
+                              icon: const Icon(Icons.clear_all, size: 18,),
+                              padding: EdgeInsets.zero,
+                              splashRadius: 15,
+                              onPressed: () => messageLog.clear(),
+                            ),
+                          ),
+                          Tooltip(
+                            message: "Copy all messages to clipboard",
+                            waitDuration: const Duration(milliseconds: 500),
+                            child: IconButton(
+                              icon: const Icon(Icons.copy, size: 15,),
+                              padding: EdgeInsets.zero,
+                              splashRadius: 15,
+                              onPressed: () => copyToClipboard(messageLog.join("\n"))
+                                .then((_) => showToast("Copied ${pluralStr(messageLog.length, "message")} to clipboard")),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                ),
-                const Divider(),
-                Expanded(
-                  child: ListView.builder(
-                    controller: controller,
-                    itemCount: messageLog.length,
-                    itemBuilder: (context, index) => Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      child: Text(messageLog[index]),
+                  const Divider(),
+                  Expanded(
+                    child: SelectionArea(
+                      child: ListView.builder(
+                        controller: controller,
+                        itemCount: messageLog.length,
+                        itemBuilder: (context, index) => _LogEntry(message: messageLog[index]),
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
       ],
+    );
+  }
+}
+
+class _LogEntry extends StatelessWidget {
+  final String message;
+
+  const _LogEntry({ super.key, required this.message });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      child: Text(message),
     );
   }
 }
