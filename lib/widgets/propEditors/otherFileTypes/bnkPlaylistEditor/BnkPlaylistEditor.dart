@@ -96,18 +96,18 @@ class _BnkPlaylistEditorState extends State<BnkPlaylistEditor> {
               if (event is! PointerScrollEvent)
                 return;
               // zoom
-              var scale = event.scrollDelta.dy / 100;
-              msPerPix.value *= scale + 1;
+              var scale = pow(1.25, event.scrollDelta.dy / 100);
+              msPerPix.value *= scale;
               // offset
               var renderBox = context.findRenderObject() as RenderBox;
               var x = renderBox.globalToLocal(event.position).dx;
               var xOffDist = x - xOff.value;
-              var xChange = xOffDist * -scale;
-              if (scale < 0)  // magic numbers :)
+              var xChange = xOffDist * (scale - 1);
+              if (scale < 1)
                 xChange *= 1.25;
               else
-                xChange /= 1.2;
-              xOff.value -= xChange;
+                xChange /= 1.25;
+              xOff.value += xChange;
             },
             behavior: HitTestBehavior.translucent,
             child: SingleChildScrollView(
