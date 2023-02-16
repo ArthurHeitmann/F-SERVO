@@ -501,7 +501,7 @@ class RubyScriptGroupHierarchyEntry extends HierarchyEntry {
   }
   
   Future<void> addNewRubyScript(String datPath, String datExtractedPath) async {
-     var datInfoPath = join(datExtractedPath, "dat_info.json");
+    var datInfoPath = join(datExtractedPath, "dat_info.json");
     Map datInfo;
     if (await File(datInfoPath).exists()) {
       datInfo = jsonDecode(await File(datInfoPath).readAsString());
@@ -516,7 +516,7 @@ class RubyScriptGroupHierarchyEntry extends HierarchyEntry {
       };
     }
 
-    var newScriptBin = "${basenameWithoutExtension(datPath)}_${randomId().toRadixString(16).padLeft(8, "0")}_scp.bin";
+    var newScriptBin = "${basenameWithoutExtension(datPath)}_${randomId().toRadixString(16)}_scp.bin";
     var newScriptRb = "$newScriptBin.rb";
     var datFiles = (datInfo["files"] as List).cast<String>();
     datFiles.add(newScriptBin);
