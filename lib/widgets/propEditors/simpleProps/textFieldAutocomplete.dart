@@ -91,7 +91,7 @@ class _TextFieldAutocompleteState extends State<TextFieldAutocomplete> {
         child: widget.child,
       ),
     );
-    Overlay.of(context)!.insert(overlayEntry!);
+    Overlay.of(context).insert(overlayEntry!);
   }
 
   void _hideOverlay() {

@@ -119,15 +119,11 @@ Future<void> scrollIntoView(BuildContext context, {
   ScrollPositionAlignmentPolicy alignment = ScrollPositionAlignmentPolicy.keepVisibleAtStart,
 }) async {
   assert(alignment != ScrollPositionAlignmentPolicy.explicit, "ScrollPositionAlignmentPolicy.explicit is not supported");
-  final ScrollableState? scrollState = Scrollable.of(context);
+  final ScrollableState scrollState = Scrollable.of(context);
   final RenderObject? renderObject = context.findRenderObject();
-  if (scrollState == null)
-    return;
   if (renderObject == null)
     return;
-  final RenderAbstractViewport? viewport = RenderAbstractViewport.of(renderObject);
-  if (viewport == null)
-    return;
+  final RenderAbstractViewport viewport = RenderAbstractViewport.of(renderObject);
   final position = scrollState.position;
   double target;
   if (alignment == ScrollPositionAlignmentPolicy.keepVisibleAtStart) {
@@ -153,8 +149,6 @@ void scrollIntoViewOptionally(BuildContext context, {
   bool smallStep = true,
 }) {
   var scrollState = Scrollable.of(context);
-  if (scrollState == null)
-    return;
   var scrollViewStart = 0;
   var scrollEnd = scrollViewStart + scrollState.position.viewportDimension;
   var renderObject = context.findRenderObject() as RenderBox;

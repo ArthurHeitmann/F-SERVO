@@ -51,7 +51,7 @@ class _SidebarState extends State<Sidebar> {
           onWidthChanged: (w) => _onDrag(context, w),
         )
       );
-      Overlay.of(context)!.insert(_draggableOverlayEntry!);
+      Overlay.of(context).insert(_draggableOverlayEntry!);
     });
   }
 

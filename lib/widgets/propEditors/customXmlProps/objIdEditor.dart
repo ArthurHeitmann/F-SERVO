@@ -79,7 +79,7 @@ class _ObjIdIconState extends ChangeNotifierState<ObjIdIcon> {
 
   void _expand() {
     // add overlay with expanded image
-    var overlayState = Overlay.of(context)!;
+    var overlayState = Overlay.of(context);
     var renderBox = imgContext!.findRenderObject() as RenderBox;
     var offset = renderBox.localToGlobal(Offset.zero);
     var size = renderBox.size;
