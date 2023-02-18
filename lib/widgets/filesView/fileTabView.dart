@@ -46,12 +46,13 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
   }
 
   void scrollTabIntoView(String uuid) {
+    const tabWidth = 200.0;
     var viewWidth = (context.findRenderObject() as RenderBox).size.width;
     
     var fileData = widget.viewArea.firstWhere((f) => f.uuid == uuid);
     var index = widget.viewArea.indexOf(fileData);
-    var tabPos = max(0.0, index * 150.0 - 15);
-    var tabEnd = tabPos + 150.0 + 30;
+    var tabPos = max(0.0, index * tabWidth - 15);
+    var tabEnd = tabPos + tabWidth + 30;
 
     var scrollAreaStart = tabBarScrollController.offset;
     var scrollAreaEnd = tabBarScrollController.offset + viewWidth;
