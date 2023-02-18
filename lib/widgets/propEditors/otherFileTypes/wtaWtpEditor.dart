@@ -1,4 +1,6 @@
 
+import 'dart:io';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
@@ -9,6 +11,7 @@ import '../../../stateManagement/openFileTypes.dart';
 import '../../../stateManagement/otherFileTypes/wtaData.dart';
 import '../../../stateManagement/undoable.dart';
 import '../../../utils/utils.dart';
+import '../../theme/customTheme.dart';
 import 'genericTable/tableEditor.dart';
 
 class WtaWtpEditor extends StatefulWidget {
@@ -108,6 +111,43 @@ class _TexturesTableConfig with CustomTableConfig {
     textures.removeAt(index);
     undoHistoryManager.onUndoableEvent();
   }
+
+  Future<void> patchImportFolder() async {
+    var folderSel = await FilePicker.platform.getDirectoryPath(
+      dialogTitle: "Select folder with DDS files",
+    );
+    if (folderSel == null)
+      return;
+    var allDdsFiles = await Directory(folderSel).list()
+      .where((e) => e is File && e.path.endsWith(".dds"))
+      .map((e) => e.path)
+      .toList();
+    List<String> ddsFilesOrdered = List.generate(allDdsFiles.length, (index) => "");
+    for (var dds in allDdsFiles) {
+      var indexRes = RegExp(r"^\d+").firstMatch(basename(dds));
+      if (indexRes == null)
+        continue;
+      int index = int.parse(indexRes.group(0)!);
+      if (index >= ddsFilesOrdered.length) {
+        showToast("Index $index is out of range (${ddsFilesOrdered.length})");
+        return;
+      }
+      ddsFilesOrdered[index] = dds;
+    }
+    if (ddsFilesOrdered.any((e) => e.isEmpty)) {
+      showToast("Some DDS files are missing");
+      return;
+    }
+    textures.addAll(ddsFilesOrdered.map((file) => WtaTextureEntry(
+      texData.file,
+      HexProp(randomId()),
+      StringProp(file),
+      isAlbedo: texData.useFlagsSimpleMode ? BoolProp(false) : null,
+      flag: texData.useFlagsSimpleMode ? null : HexProp(textures.isNotEmpty ? textures.last.flag!.value : 0),
+    )));
+    undoHistoryManager.onUndoableEvent();
+    showToast("Added ${ddsFilesOrdered.length} DDS files");
+  }
 }
 
 class _WtaWtpEditorState extends State<WtaWtpEditor> {
@@ -145,6 +185,22 @@ class _WtaWtpEditorState extends State<WtaWtpEditor> {
       );
     }
 
-    return TableEditor(config: _texturesTableConfig!);
+    // return TableEditor(config: _texturesTableConfig!);
+    return Stack(
+      children: [
+        TableEditor(config: _texturesTableConfig!),
+        Positioned(
+          bottom: 8,
+          left: 8,
+          width: 40,
+          height: 40,
+          child: FloatingActionButton(
+          onPressed: _texturesTableConfig!.patchImportFolder,
+          foregroundColor: getTheme(context).textColor,
+          child: const Icon(Icons.create_new_folder),
+        ),
+        )
+      ],
+    );
   }
 }
