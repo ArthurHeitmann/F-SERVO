@@ -1,4 +1,8 @@
 
+// ignore_for_file: constant_identifier_names
+
+import 'dart:typed_data';
+
 import '../utils/ByteDataWrapper.dart';
 
 abstract class ChunkWithSize {
@@ -1076,12 +1080,79 @@ class BnkClipAutomation {
   }
 }
 
+enum BnkPropId {
+  Volume(0x00),
+  LFE(0x01),
+  Pitch(0x02),
+  LPF(0x03),
+  BusVolume(0x04),
+  Priority(0x05),
+  PriorityDistanceOffset(0x06),
+  Loop(0x07),
+  FeedbackVolume(0x08),
+  FeedbackLPF(0x09),
+  MuteRatio(0x0A),
+  PAN_LR(0x0B),
+  PAN_FR(0x0C),
+  CenterPCT(0x0D),
+  DelayTime(0x0E),
+  TransitionTime(0x0F),
+  Probability(0x10),
+  DialogueMode(0x11),
+  UserAuxSendVolume0(0x12),
+  UserAuxSendVolume1(0x13),
+  UserAuxSendVolume2(0x14),
+  UserAuxSendVolume3(0x15),
+  GameAuxSendVolume(0x16),
+  OutputBusVolume(0x17),
+  OutputBusLPF(0x18),
+  InitialDelay(0x19),
+  HDRBusThreshold(0x1A),
+  HDRBusRatio(0x1B),
+  HDRBusReleaseTime(0x1C),
+  HDRBusGameParam(0x1D),
+  HDRBusGameParamMin(0x1E),
+  HDRBusGameParamMax(0x1F),
+  HDRActiveRange(0x20),
+  MakeUpGain(0x21),
+  LoopStart(0x22),
+  LoopEnd(0x23),
+  TrimInTime(0x24),
+  TrimOutTime(0x25),
+  FadeInTime(0x26),
+  FadeOutTime(0x27),
+  FadeInCurve(0x28),
+  FadeOutCurve(0x29),
+  LoopCrossfadeDuration(0x2A),
+  CrossfadeUpCurve(0x2B),
+  CrossfadeDownCurve(0x2C);
+
+  final int id;
+  const BnkPropId(this.id);
+}
+
 class BnkPropValue {
   late int cProps;
   late List<int> pID;
   late List<int> pValueBytes;
 
   BnkPropValue(this.cProps, this.pID, this.pValueBytes);
+
+  void addPropBundle(int id, int value) {
+    var bytes = ByteData(4);
+    bytes.setInt32(0, value, Endian.little);
+    pID.add(id);
+    pValueBytes.addAll(bytes.buffer.asUint8List());
+    cProps++;
+  }
+
+  void addPropBundleF(int id, double value) {
+    var bytes = ByteData(4);
+    bytes.setFloat32(0, value, Endian.little);
+    pID.add(id);
+    pValueBytes.addAll(bytes.buffer.asUint8List());
+    cProps++;
+  }
 
   BnkPropValue.read(ByteDataWrapper bytes) {
     cProps = bytes.readUint8();

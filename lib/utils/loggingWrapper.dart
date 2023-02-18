@@ -14,7 +14,7 @@ void loggingWrapper(void Function() run) {
   runZonedGuarded(
     () {
       FlutterError.presentError = (details) {
-        _logErrorToFile(details.exceptionAsString());
+        _logErrorToFile(details);
         FlutterError.dumpErrorToConsole(details);
       };
       run();
@@ -44,10 +44,12 @@ void _logToFile(String line) {
   _saveLogBufferThrottled();
 }
 
-void _logErrorToFile(String err) {
+void _logErrorToFile(FlutterErrorDetails err) {
   var now = DateTime.now();
   var time = "${now.hour}:${now.minute}:${now.second}.${now.millisecond}";
-  var logLine = "$time: ERROR: $err";
+  var logLine = "$time: ERROR: ${err.exceptionAsString()}"
+      "\n"
+      "${err.stack.toString()}";
   _logBuffer.add(logLine);
   _saveLogBufferThrottled();
 }

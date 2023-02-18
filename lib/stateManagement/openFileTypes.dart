@@ -1233,7 +1233,7 @@ class BnkTrackData with HasUuid, Undoable {
     newTrack.numClipAutomationItem = newAutomations.length;
     
     // update chunk size
-    newTrack.size = newTrack.calculateSize() - 5;
+    newTrack.size = newTrack.calculateSize() + 4;
   }
 
   @override
@@ -1568,12 +1568,9 @@ class BnkFilePlaylistData extends OpenFileData {
           hirc.uid: hirc
       };
       var newPlaylist = hircMap[playlistId] as BnkMusicPlaylist;
-      var prevSize = hircChunk.chunkSize;
       rootChild!.applyTo(newPlaylist.playlistItems, hircMap, modsMetaData);
-      var newHircSize = hircChunk.chunks.fold<int>(0, (prev, chunk) => prev + chunk.size + 5) + 4;
-      hircChunk.chunkSize = newHircSize;
-      var sizeDiff = newHircSize - prevSize;
-      bytes = ByteDataWrapper.allocate(bytes.length + sizeDiff);
+      hircChunk.chunkSize = hircChunk.calculateSize() - 8;
+      bytes = ByteDataWrapper.allocate(bnk.calculateSize());
       bnk.write(bytes);
       await backupFile(bnkPath);
       await File(bnkPath).writeAsBytes(bytes.buffer.asUint8List());

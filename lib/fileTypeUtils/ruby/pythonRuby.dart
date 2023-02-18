@@ -9,7 +9,6 @@ import '../../utils/utils.dart';
 import '../../utils/assetDirFinder.dart';
 
 Future<bool> _processFile(String filePath) async {
-  await assetDirDone;
   if (assetsDir == null) {
     showToast("Assets directory not found");
     return false;
