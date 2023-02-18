@@ -49,6 +49,36 @@ class IndexedIdData {
   int get hashCode => Object.hash(id, type, datPath, pakPath, xmlPath);
 }
 
+class IndexedHapIdData extends IndexedIdData {
+  final String name;
+
+  IndexedHapIdData(int id, this.name, String datPath, String pakPath, String xmlPath)
+    : super(id, "HAP", datPath, pakPath, xmlPath);
+  
+  @override
+  String toString() {
+    return "IndexedHapIdData(\n"
+      "  id: $id,\n"
+      "  type: $type,\n"
+      "  datPath: $datPath,\n"
+      "  pakPath: $pakPath,\n"
+      "  xmlPath: $xmlPath,\n"
+      "  name: $name,\n"
+      ")";
+  }
+
+  @override
+  bool operator==(Object other) {
+    if (other is! IndexedHapIdData)
+      return false;
+    return super==(other) &&
+      name == other.name;
+  }
+
+  @override
+  int get hashCode => Object.hash(super.hashCode, name);
+}
+
 class IndexedActionIdData extends IndexedIdData {
   final String actionName;
 
@@ -442,12 +472,13 @@ class IdsIndexer {
     foundXmlFiles++;
 
     var hapIdEl = root.getElement("id");
+    var rootName = root.getElement("name");
     if (hapIdEl != null) {
       var hapId = int.parse(hapIdEl.text);
-      _addIndexedData(hapId, IndexedIdData(hapId, "HAP", datPath, pakPath, xmlPath));
+      var hapName = rootName?.text ?? "";
+      _addIndexedData(hapId, IndexedHapIdData(hapId, hapName, datPath, pakPath, xmlPath));
     }
 
-    var rootName = root.getElement("name");
     if (rootName?.text == "SceneState" && root.getElement("node") != null) {
       _indexSceneState(root);
       return;

@@ -152,8 +152,10 @@ class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor>
               ),
               const SizedBox(height: 4,),
               if (puidRef is IndexedActionIdData)
-                Text(puidRef.actionName, overflow: TextOverflow.ellipsis,),
-              if (puidRef is IndexedEntityIdData)
+                Text(puidRef.actionName, overflow: TextOverflow.ellipsis,)
+              else if (puidRef is IndexedHapIdData)
+                Text(puidRef.name, overflow: TextOverflow.ellipsis,)
+              else if (puidRef is IndexedEntityIdData)
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -164,8 +166,8 @@ class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor>
                     if (puidRef.level != null)
                       Text(" (lvl ${puidRef.level})"),
                   ],
-                ),
-              if (puidRef is! IndexedActionIdData && puidRef is! IndexedEntityIdData)
+                )
+              else
                 Text(idProp.isHashed ? idProp.strVal! : idProp.toString()),
             ],
           ),
