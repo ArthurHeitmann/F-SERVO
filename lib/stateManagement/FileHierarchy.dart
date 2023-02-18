@@ -17,6 +17,7 @@ import '../fileTypeUtils/yax/xmlToYax.dart';
 import '../fileTypeUtils/yax/yaxToXml.dart';
 import '../main.dart';
 import '../utils/utils.dart';
+import '../widgets/misc/confirmCancelDialog.dart';
 import '../widgets/misc/confirmDialog.dart';
 import '../widgets/misc/fileSelectionDialog.dart';
 import '../widgets/propEditors/xmlActions/XmlActionPresets.dart';
@@ -481,7 +482,9 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
     }
   }
 
-  Future<XmlScriptHierarchyEntry> addScript(HierarchyEntry parent, { String? filePath, String? parentPath }) async {
+  Future<void> addScript(HierarchyEntry parent, { String? filePath, String? parentPath }) async {
+    if (await confirmOrCancelDialog(getGlobalContext(), title: "Add new XML script?") != true)
+      return;
     if (filePath == null) {
       assert(parentPath != null);
       var pakFiles = await getPakInfoData(parentPath!);
@@ -520,8 +523,6 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
     parent.add(entry);
 
     showToast("Remember to check the \"pak file type\"");
-
-    return entry;
   }
 
   Future<void> unlinkScript(XmlScriptHierarchyEntry script, { bool requireConfirmation = true }) async {

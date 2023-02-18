@@ -3,21 +3,30 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 import 'package:xml/xml.dart';
 
+import '../fileTypeUtils/audio/audioModPacker.dart';
+import '../fileTypeUtils/audio/audioModsChangesUndo.dart';
+import '../fileTypeUtils/audio/modInstaller.dart';
 import '../fileTypeUtils/audio/waiExtractor.dart';
 import '../fileTypeUtils/audio/wemToWavConverter.dart';
 import '../fileTypeUtils/bxm/bxmReader.dart';
 import '../fileTypeUtils/bxm/bxmWriter.dart';
+import '../fileTypeUtils/dat/datRepacker.dart';
+import '../fileTypeUtils/pak/pakRepacker.dart';
 import '../fileTypeUtils/ruby/pythonRuby.dart';
+import '../fileTypeUtils/yax/xmlToYax.dart';
 import '../fileTypeUtils/yax/yaxToXml.dart';
 import '../main.dart';
 import '../utils/assetDirFinder.dart';
 import '../utils/utils.dart';
+import '../widgets/misc/confirmCancelDialog.dart';
 import '../widgets/misc/confirmDialog.dart';
 import 'FileHierarchy.dart';
 import 'Property.dart';
+import 'events/searchPanelEvents.dart';
 import 'hasUuid.dart';
 import 'openFileTypes.dart';
 import 'openFilesManager.dart';
@@ -27,6 +36,15 @@ import 'nestedNotifier.dart';
 import 'xmlProps/xmlProp.dart';
 
 final pakGroupIdMatcher = RegExp(r"^\w+_([a-f0-9]+)_grp\.pak$", caseSensitive: false);
+
+class HierarchyEntryAction {
+  final String name;
+  final IconData? icon;
+  final double iconScale;
+  final void Function() action;
+
+  const HierarchyEntryAction({ required this.name, this.icon, this.iconScale = 1.0, required this.action });
+}
 
 abstract class HierarchyEntry extends NestedNotifier<HierarchyEntry> with Undoable {
   OptionalFileInfo? optionalFileInfo;
@@ -64,6 +82,43 @@ abstract class HierarchyEntry extends NestedNotifier<HierarchyEntry> with Undoab
 
   void onOpen() {
     print("Not implemented!");
+  }
+
+  List<HierarchyEntryAction> getActions() {
+    return [];
+  }
+
+  List<HierarchyEntryAction> getContextMenuActions() {
+    return [
+      if (isNotEmpty) ...[
+        HierarchyEntryAction(
+          name: "Collapse all",
+          icon: Icons.unfold_less,
+          iconScale: 1.1,
+          action: () => setCollapsedRecursive(true)
+        ),
+        HierarchyEntryAction(
+          name: "Expand all",
+          icon: Icons.unfold_more,
+          iconScale: 1.1,
+          action: () => setCollapsedRecursive(false)
+        ),
+      ],
+      if (openHierarchyManager.contains(this)) ...[
+        HierarchyEntryAction(
+          name: "Close",
+          icon: Icons.close,
+          iconScale: 0.9,
+          action: () => openHierarchyManager.remove(this),
+        ),
+        HierarchyEntryAction(
+          name: "Close All",
+          icon: Icons.close,
+          iconScale: 0.9,
+          action: () => openHierarchyManager.clear(),
+        ),
+      ],
+    ];
   }
   
   void setCollapsedRecursive(bool value, [bool setSelf = false]) {
@@ -138,6 +193,18 @@ abstract class FileHierarchyEntry extends HierarchyEntry {
     }
     return false;
   }
+
+  @override
+  List<HierarchyEntryAction> getContextMenuActions() {
+    return [
+      HierarchyEntryAction(
+        name: "Show in Explorer",
+        icon: Icons.open_in_new,
+        action: () => revealFileInExplorer(path)
+      ),
+      ...super.getContextMenuActions(),
+    ];
+  }
 }
 
 abstract class GenericFileHierarchyEntry extends FileHierarchyEntry {
@@ -169,6 +236,18 @@ abstract class ExtractableHierarchyEntry extends FileHierarchyEntry {
 
   ExtractableHierarchyEntry(StringProp name, String filePath, this.extractedPath, bool isCollapsible, bool isOpenable)
     : super(name, filePath, isCollapsible, isOpenable);
+
+  @override
+  List<HierarchyEntryAction> getContextMenuActions() {
+    return [
+      HierarchyEntryAction(
+        name: "Set search path",
+        icon: Icons.search,
+        action: () => searchPathChangeStream.add(extractedPath)
+      ),
+      ...super.getContextMenuActions(),
+    ];
+  }
 }
 
 class DatHierarchyEntry extends ExtractableHierarchyEntry {
@@ -205,6 +284,40 @@ class DatHierarchyEntry extends ExtractableHierarchyEntry {
     if (!contains(scriptGroup))
       add(scriptGroup);
     await scriptGroup.addNewRubyScript(path, extractedPath);
+  }
+
+  @override
+  List<HierarchyEntryAction> getActions() {
+    return [
+      HierarchyEntryAction(
+        name: "Repack DAT",
+        icon: Icons.file_upload,
+        action: () async {
+          var prefs = PreferencesData();
+          if (prefs.dataExportPath?.value == null) {
+            showToast("No export path set; go to Settings to set an export path");
+            return;
+          }
+          var datBaseName = basename(extractedPath);
+          var exportPath = join(prefs.dataExportPath!.value, getDatFolder(datBaseName), datBaseName);
+          await repackDat(extractedPath, exportPath);
+        },
+      ),
+      HierarchyEntryAction(
+        name: "Add new Ruby script",
+        icon: Icons.code,
+        action: () => addNewRubyScript(),
+      ),
+      ...super.getActions(),
+    ];
+  }
+
+  @override
+  List<HierarchyEntryAction> getContextMenuActions() {
+    return [
+      ...getActions(),
+      ...super.getContextMenuActions()
+    ];
   }
 }
 
@@ -299,6 +412,26 @@ class PakHierarchyEntry extends ExtractableHierarchyEntry {
     _isCollapsed = entry._isCollapsed;
     updateOrReplaceWith(entry.toList(), (obj) => obj.takeSnapshot() as HierarchyEntry);
   }
+
+  @override
+  List<HierarchyEntryAction> getActions() {
+    return [
+      HierarchyEntryAction(
+        name: "Repack PAK",
+        icon: Icons.file_upload,
+        action: () => repackPak(extractedPath),
+      ),
+      ...super.getActions(),
+    ];
+  }
+
+  @override
+  List<HierarchyEntryAction> getContextMenuActions() {
+    return [
+      ...getActions(),
+      ...super.getContextMenuActions()
+    ];
+  }
 }
 
 class GroupToken with HasUuid, Undoable {
@@ -329,7 +462,9 @@ class HapGroupHierarchyEntry extends FileHierarchyEntry {
     : id = (prop.get("id")!.value as HexProp).value,
     super(name, dirname(areasManager.fromId(prop.file)?.path ?? ""), true, false);
   
-  HapGroupHierarchyEntry addChild({ String name = "New Group" }) {
+  Future<void> addChild({ String name = "New Group" }) async {
+    if (await confirmOrCancelDialog(getGlobalContext(), title: "Add new group?") != true)
+      return; 
     var newGroupProp = XmlProp.fromXml(
       makeXmlElement(name: "group", children: [
         makeXmlElement(name: "id", text: "0x${randomId().toRadixString(16)}"),
@@ -364,7 +499,7 @@ class HapGroupHierarchyEntry extends FileHierarchyEntry {
     var newGroup = HapGroupHierarchyEntry(newGroupProp.get("name")!.value as StringProp, newGroupProp);
     insert(ownInsertIndex, newGroup);
 
-    return newGroup;
+    return;
   }
 
   void removeSelf() {
@@ -397,6 +532,37 @@ class HapGroupHierarchyEntry extends FileHierarchyEntry {
     _isCollapsed = entry._isCollapsed;
     prop.restoreWith(entry.prop);
     updateOrReplaceWith(entry.toList(), (obj) => obj.takeSnapshot() as HierarchyEntry);
+  }
+
+  @override
+  List<HierarchyEntryAction> getActions() {
+    return [
+      HierarchyEntryAction(
+        name: "New Script",
+        icon: Icons.description,
+        action: () => openHierarchyManager.addScript(this, parentPath: path),
+      ),
+      HierarchyEntryAction(
+        name: "New Group",
+        icon: Icons.workspaces,
+        action: addChild,
+      ),
+      if (isEmpty)
+        HierarchyEntryAction(
+          name: "Remove",
+          icon: Icons.remove,
+          action: removeSelf,
+        ),
+      ...super.getActions()
+    ];
+  }
+
+  @override
+  List<HierarchyEntryAction> getContextMenuActions() {
+    return [
+      ...getActions(),
+      ...super.getContextMenuActions()
+    ];
   }
 }
 
@@ -476,6 +642,28 @@ class XmlScriptHierarchyEntry extends FileHierarchyEntry {
     _hasReadMeta = entry._hasReadMeta;
     hapName = entry.hapName;
     updateOrReplaceWith(entry.toList(), (obj) => obj.takeSnapshot() as HierarchyEntry);
+  }
+
+  @override
+  List<HierarchyEntryAction> getContextMenuActions() {
+    return [
+      HierarchyEntryAction(
+        name: "Export YAX",
+        icon: Icons.file_upload,
+        action: () => xmlFileToYaxFile(path),
+      ),
+      HierarchyEntryAction(
+        name: "Unlink",
+        icon: Icons.close,
+        action: () => openHierarchyManager.unlinkScript(this),
+      ),
+      HierarchyEntryAction(
+        name: "Delete",
+        icon: Icons.delete,
+        action: () => openHierarchyManager.deleteScript(this),
+      ),
+      ...super.getContextMenuActions()
+    ];
   }
 }
 
@@ -558,6 +746,25 @@ class RubyScriptHierarchyEntry extends GenericFileHierarchyEntry {
   HierarchyEntry clone() {
     return RubyScriptHierarchyEntry(name.takeSnapshot() as StringProp, path);
   }
+
+  @override
+  List<HierarchyEntryAction> getActions() {
+    return [
+      HierarchyEntryAction(
+        name: "Compile to .bin",
+        icon: Icons.file_upload,
+        action: () => rubyFileToBin(path),
+      ),
+    ];
+  }
+
+  @override
+  List<HierarchyEntryAction> getContextMenuActions() {
+    return [
+      ...getActions(),
+      ...super.getContextMenuActions(),
+    ];
+  }
 }
 
 class TmdHierarchyEntry extends GenericFileHierarchyEntry {
@@ -636,6 +843,31 @@ class BxmHierarchyEntry extends GenericFileHierarchyEntry {
 
   @override
   String get vsCodeEditingPath => xmlPath;
+
+  @override
+  List<HierarchyEntryAction> getActions() {
+    return [
+      HierarchyEntryAction(
+        name: "Convert to XML",
+        icon: Icons.file_download,
+        action: toXml,
+      ),
+      HierarchyEntryAction(
+        name: "Convert to BXM",
+        icon: Icons.file_upload,
+        action: toBxm,
+      ),
+      ...super.getActions(),
+    ];
+  }
+
+  @override
+  List<HierarchyEntryAction> getContextMenuActions() {
+    return [
+      ...getActions(),
+      ...super.getContextMenuActions(),
+    ];
+  }
 }
 
 class WaiHierarchyEntry extends ExtractableHierarchyEntry {
@@ -664,6 +896,36 @@ class WaiHierarchyEntry extends ExtractableHierarchyEntry {
     _isCollapsed = entry._isCollapsed;
     replaceWith(entry.map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
   }
+
+  @override
+  List<HierarchyEntryAction> getActions() {
+    return [
+      HierarchyEntryAction(
+        name: "Package Mod",
+        icon: Icons.file_upload,
+        action: () => packAudioMod(path),
+      ),
+      HierarchyEntryAction(
+        name: "Install Packaged Mod",
+        icon: Icons.add,
+        action: () => installMod(path),
+      ),
+      HierarchyEntryAction(
+        name: "Revert all changes",
+        icon: Icons.undo,
+        action: () => revertAllAudioMods(path),
+      ),
+      ...super.getActions(),
+    ];
+  }
+
+  @override
+  List<HierarchyEntryAction> getContextMenuActions() {
+    return [
+      ...getActions(),
+      ...super.getContextMenuActions(),
+    ];
+  }
 }
 
 class WaiFolderHierarchyEntry extends GenericFileHierarchyEntry {
@@ -675,10 +937,16 @@ class WaiFolderHierarchyEntry extends GenericFileHierarchyEntry {
     _isCollapsed = true;
     addAll(children.map((child) => makeWaiChildEntry(child, bgmBnkPath)));
   }
+  WaiFolderHierarchyEntry.clone(WaiFolderHierarchyEntry other)
+    : bgmBnkPath = other.bgmBnkPath,
+      super(other.name.takeSnapshot() as StringProp, other.path, true, false) {
+    _isCollapsed = other._isCollapsed;
+    addAll(other.map((entry) => (entry as GenericFileHierarchyEntry).clone()));
+  }
   
   @override
   HierarchyEntry clone() {
-    return WspHierarchyEntry(name.takeSnapshot() as StringProp, path, [], bgmBnkPath);
+    return WaiFolderHierarchyEntry.clone(this);
   }
 }
 
@@ -725,6 +993,26 @@ class WspHierarchyEntry extends GenericFileHierarchyEntry {
     );
     showToast("Saved $length WEMs");
   }
+
+  @override
+  List<HierarchyEntryAction> getActions() {
+    return [
+      HierarchyEntryAction(
+        name: "Save all as WAV",
+        icon: Icons.file_download,
+        action: exportAsWav,
+      ),
+      ...super.getActions(),
+    ];
+  }
+
+  @override
+  List<HierarchyEntryAction> getContextMenuActions() {
+    return [
+      ...getActions(),
+      ...super.getContextMenuActions(),
+    ];
+  }
 }
 
 class WemHierarchyEntry extends GenericFileHierarchyEntry {
@@ -751,6 +1039,26 @@ class WemHierarchyEntry extends GenericFileHierarchyEntry {
     await wemToWav(path, wavPath);
     if (displayToast)
       showToast("Saved as ${basename(wavPath)}");
+  }
+
+  @override
+  List<HierarchyEntryAction> getActions() {
+    return [
+      HierarchyEntryAction(
+        name: "Save as WAV",
+        icon: Icons.file_download,
+        action: exportAsWav,
+      ),
+      ...super.getActions(),
+    ];
+  }
+
+  @override
+  List<HierarchyEntryAction> getContextMenuActions() {
+    return [
+      ...getActions(),
+      ...super.getContextMenuActions(),
+    ];
   }
 }
 

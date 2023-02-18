@@ -105,6 +105,34 @@ class _FileMetaEditorState extends ChangeNotifierState<FileMetaEditor> {
     );
   }
 
+  List<Widget> makeActionsBar(HierarchyEntry entry) {
+    var actions = entry.getActions();
+    if (actions.isEmpty)
+      return [];
+    return [
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: actions.map((e) => Flexible(
+          child: TextButton.icon(
+            onPressed: e.action,
+            icon: Icon(e.icon, size: 20),
+            label: Text(e.name, overflow: TextOverflow.ellipsis),
+            style: TextButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                borderRadius: const BorderRadius.all(Radius.circular(4)),
+                side: BorderSide(
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.25),
+                  width: 2,
+                ),
+              ),
+            )
+          ),
+        )).toList(),
+      ),
+      const SizedBox(height: 16),
+    ];
+  }
+
   Widget makeGroupEditor(HierarchyEntry groupEntry) {
     if (groupEntry is! HapGroupHierarchyEntry)
       throw Exception(":/");
@@ -114,67 +142,68 @@ class _FileMetaEditorState extends ChangeNotifierState<FileMetaEditor> {
         var tokens = groupEntry.prop.get("tokens");
         var attribute = groupEntry.prop.get("attribute");
         return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Expanded(flex: 1, child: Text("Name:")),
-              Expanded(flex: 3, child: makePropEditor(groupEntry.name)),
-            ],
-          ),
-          const SizedBox(height: 5),
-          const Text("Tokens:"),
-          const SizedBox(height: 5),
-          if (tokens != null)
-            XmlArrayEditor(
-              tokens,
-              XmlPresets.codeAndId.withCxtV(groupEntry.prop),
-              tokens[0], "value", true
-            )
-          else
-            SmallButton(
-              onPressed: () {
-                groupEntry.prop.add(XmlProp.fromXml(
-                  makeXmlElement(
-                    name: "tokens",
-                    children: [
-                      makeXmlElement(name: "size", text: "1"),
-                      makeXmlElement(name: "value", children: [
-                        makeXmlElement(name: "code", text: "0x0"),
-                        makeXmlElement(name: "id", text: "0x0"),
-                      ])
-                    ]
-                  ),
-                  parentTags: groupEntry.prop.nextParents(),
-                  file: groupEntry.prop.file
-                ));
-              },
-              constraints: const BoxConstraints(maxWidth: 60),
-              child: const Icon(Icons.add, size: 20,),
-            ),
-            const SizedBox(height: 5),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ...makeActionsBar(groupEntry),
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text("Attribute:"),
-                const SizedBox(width: 10),
-                Flexible(
-                  child: OptionalPropEditor(
-                    parent: groupEntry.prop,
-                    prop: attribute,
-                    onAdd: () {
-                      groupEntry.prop.add(XmlProp.fromXml(
-                        makeXmlElement(name: "attribute", text: "0x2"),
-                        parentTags: groupEntry.prop.nextParents(),
-                        file: groupEntry.prop.file
-                      ));
-                    },
-                  ),
-                ),
+                const Expanded(flex: 1, child: Text("Name:")),
+                Expanded(flex: 3, child: makePropEditor(groupEntry.name)),
               ],
             ),
-        ]
-      );
+            const SizedBox(height: 5),
+            const Text("Tokens:"),
+            const SizedBox(height: 5),
+            if (tokens != null)
+              XmlArrayEditor(
+                tokens,
+                XmlPresets.codeAndId.withCxtV(groupEntry.prop),
+                tokens[0], "value", true
+              )
+            else
+              SmallButton(
+                onPressed: () {
+                  groupEntry.prop.add(XmlProp.fromXml(
+                    makeXmlElement(
+                      name: "tokens",
+                      children: [
+                        makeXmlElement(name: "size", text: "1"),
+                        makeXmlElement(name: "value", children: [
+                          makeXmlElement(name: "code", text: "0x0"),
+                          makeXmlElement(name: "id", text: "0x0"),
+                        ])
+                      ]
+                    ),
+                    parentTags: groupEntry.prop.nextParents(),
+                    file: groupEntry.prop.file
+                  ));
+                },
+                constraints: const BoxConstraints(maxWidth: 60),
+                child: const Icon(Icons.add, size: 20,),
+              ),
+              const SizedBox(height: 5),
+              Row(
+                children: [
+                  const Text("Attribute:"),
+                  const SizedBox(width: 10),
+                  Flexible(
+                    child: OptionalPropEditor(
+                      parent: groupEntry.prop,
+                      prop: attribute,
+                      onAdd: () {
+                        groupEntry.prop.add(XmlProp.fromXml(
+                          makeXmlElement(name: "attribute", text: "0x2"),
+                          parentTags: groupEntry.prop.nextParents(),
+                          file: groupEntry.prop.file
+                        ));
+                      },
+                    ),
+                  ),
+                ],
+              ),
+          ]
+        );
       },
     );
   }
@@ -201,6 +230,7 @@ class _FileMetaEditorState extends ChangeNotifierState<FileMetaEditor> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            ...makeActionsBar(scriptEntry),
             if (name != null)
               makeXmlPropEditor(name, true),
             if (id != null)
@@ -221,7 +251,15 @@ class _FileMetaEditorState extends ChangeNotifierState<FileMetaEditor> {
     );
   }
 
-  Widget makeFallback(_) {
-    return Container();
+  Widget makeFallback(HierarchyEntry? entry) {
+    if (entry == null)
+      return const SizedBox();
+    var actions = makeActionsBar(entry);
+    if (actions.isEmpty)
+      return const SizedBox();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: actions,
+    );
   }
 }

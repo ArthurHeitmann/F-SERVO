@@ -1,22 +1,12 @@
 
 import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
-import 'package:path/path.dart';
 
-import '../../fileTypeUtils/audio/audioModPacker.dart';
-import '../../fileTypeUtils/audio/audioModsChangesUndo.dart';
-import '../../fileTypeUtils/audio/modInstaller.dart';
-import '../../fileTypeUtils/ruby/pythonRuby.dart';
 import '../../stateManagement/HierarchyEntryTypes.dart';
-import '../../stateManagement/events/searchPanelEvents.dart';
 import '../../widgets/theme/customTheme.dart';
-import '../../fileTypeUtils/dat/datRepacker.dart';
-import '../../fileTypeUtils/pak/pakRepacker.dart';
-import '../../fileTypeUtils/yax/xmlToYax.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/FileHierarchy.dart';
 import '../../stateManagement/miscValues.dart';
-import '../../stateManagement/preferencesData.dart';
 import '../../utils/utils.dart';
 import 'wemPreviewButton.dart';
 
@@ -125,173 +115,16 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
   }
 
   Widget setupContextMenu({ required Widget child }) {
-    var prefs = PreferencesData();
     return ContextMenuRegion(
       enableLongPress: isMobile,
       contextMenu: GenericContextMenu(
-        buttonConfigs: [
-          if (widget.entry is XmlScriptHierarchyEntry) ...[ 
-            ContextMenuButtonConfig(
-              "Open",
-              icon: const Icon(Icons.open_in_new, size: 15,),
-              onPressed: widget.entry.onOpen,
-            ),
-            ContextMenuButtonConfig(
-                "Export YAX",
-              icon: const Icon(Icons.file_upload, size: 15,),
-              onPressed: () {
-                var xml = widget.entry as XmlScriptHierarchyEntry;
-                xmlFileToYaxFile(xml.path);
-              },
-            ),
-            ContextMenuButtonConfig(
-              "Unlink",
-              icon: const Icon(Icons.close, size: 15,),
-              onPressed: () => openHierarchyManager.unlinkScript(widget.entry as XmlScriptHierarchyEntry),
-            ),
-            ContextMenuButtonConfig(
-              "Delete",
-              icon: const Icon(Icons.delete, size: 15,),
-              onPressed: () => openHierarchyManager.deleteScript(widget.entry as XmlScriptHierarchyEntry),
-            ),
-          ],
-          if (widget.entry is HapGroupHierarchyEntry) ...[
-            ContextMenuButtonConfig(
-              "New Script",
-              icon: const Icon(Icons.description, size: 15,),
-              onPressed: () => openHierarchyManager.addScript(widget.entry, parentPath: (widget.entry as FileHierarchyEntry).path),
-            ),
-            ContextMenuButtonConfig(
-              "New Group",
-              icon: const Icon(Icons.workspaces, size: 15,),
-              onPressed: () => (widget.entry as HapGroupHierarchyEntry).addChild(),
-            ),
-            if (widget.entry.isEmpty)
-              ContextMenuButtonConfig(
-                "Remove",
-                icon: const Icon(Icons.remove, size: 16,),
-                onPressed: () => (widget.entry as HapGroupHierarchyEntry).removeSelf(),
-              ),
-          ],
-          if (widget.entry is PakHierarchyEntry) ...[
-            ContextMenuButtonConfig(
-              "Repack PAK",
-              icon: const Icon(Icons.file_upload, size: 15,),
-              onPressed: () {
-                var pak = widget.entry as PakHierarchyEntry;
-                repackPak(pak.extractedPath);
-              },
-            ),
-          ],
-          if (widget.entry is DatHierarchyEntry) ...[
-            ContextMenuButtonConfig(
-              "Repack DAT",
-              icon: const Icon(Icons.file_upload, size: 15,),
-              onPressed: () {
-                if (prefs.dataExportPath?.value == null) {
-                  showToast("No export path set; go to Settings to set an export path");
-                  return;
-                }
-                var dat = widget.entry as DatHierarchyEntry;
-                var datBaseName = basename(dat.extractedPath);
-                var exportPath = join(prefs.dataExportPath!.value, getDatFolder(datBaseName), datBaseName);
-                repackDat(dat.extractedPath, exportPath);
-              },
-            ),
-            ContextMenuButtonConfig(
-              "Add new Ruby script",
-              icon: const Icon(Icons.code, size: 15,),
-              onPressed: () => (widget.entry as DatHierarchyEntry).addNewRubyScript(),
-            ),
-          ],
-          if (widget.entry is RubyScriptHierarchyEntry) ...[
-            ContextMenuButtonConfig(
-              "Compile to .bin",
-              icon: const Icon(Icons.file_upload, size: 15,),
-              onPressed: () {
-                var rbPath = (widget.entry as RubyScriptHierarchyEntry).path;
-                rubyFileToBin(rbPath);
-              },
-            ),
-          ],
-          if (widget.entry is WaiHierarchyEntry) ...[
-            ContextMenuButtonConfig(
-              "Package Mod",
-              icon: const Icon(Icons.file_upload, size: 15,),
-              onPressed: () => packAudioMod((widget.entry as WaiHierarchyEntry).path),
-            ),
-            ContextMenuButtonConfig(
-              "Install Packaged Mod",
-              icon: const Icon(Icons.add, size: 15,),
-              onPressed: () => installMod((widget.entry as WaiHierarchyEntry).path),
-            ),
-            ContextMenuButtonConfig(
-              "Revert all changes",
-              icon: const Icon(Icons.undo, size: 15,),
-              onPressed: () => revertAllAudioMods((widget.entry as WaiHierarchyEntry).path),
-            ),
-          ],
-          if (widget.entry is WemHierarchyEntry)
-            ContextMenuButtonConfig(
-              "Save as WAV",
-              icon: const Icon(Icons.file_download, size: 15,),
-              onPressed: (widget.entry as WemHierarchyEntry).exportAsWav,
-            ),
-          if (widget.entry is BxmHierarchyEntry) ...[
-            ContextMenuButtonConfig(
-              "Convert to XML",
-              icon: const Icon(Icons.file_download, size: 15,),
-              onPressed: (widget.entry as BxmHierarchyEntry).toXml,
-            ),
-            ContextMenuButtonConfig(
-              "Convert to BXM",
-              icon: const Icon(Icons.file_upload, size: 15,),
-              onPressed: (widget.entry as BxmHierarchyEntry).toBxm,
-            ),
-          ],
-          if (widget.entry is WspHierarchyEntry)
-            ContextMenuButtonConfig(
-              "Save all as WAV",
-              icon: const Icon(Icons.file_download, size: 15,),
-              onPressed: (widget.entry as WspHierarchyEntry).exportAsWav,
-            ),
-          if (openHierarchyManager.contains(widget.entry)) ...[
-            ContextMenuButtonConfig(
-              "Close",
-              icon: const Icon(Icons.close, size: 14,),
-              onPressed: () => openHierarchyManager.remove(widget.entry),
-            ),
-            ContextMenuButtonConfig(
-              "Close All",
-              icon: const Icon(Icons.close, size: 14,),
-              onPressed: () => openHierarchyManager.clear(),
-            ),
-          ],
-          if (widget.entry is ExtractableHierarchyEntry)
-            ContextMenuButtonConfig(
-              "Set search path",
-              icon: const Icon(Icons.search, size: 15,),
-              onPressed: () => searchPathChangeStream.add((widget.entry as ExtractableHierarchyEntry).extractedPath),
-            ),
-          if (widget.entry is FileHierarchyEntry)
-            ContextMenuButtonConfig(
-              "Show in Explorer",
-              icon: const Icon(Icons.open_in_new, size: 15,),
-              onPressed: () => revealFileInExplorer((widget.entry as FileHierarchyEntry).path),
-            ),
-          if (widget.entry.isNotEmpty)
-            ContextMenuButtonConfig(
-              "Collapse all",
-              icon: const Icon(Icons.unfold_less, size: 15,),
-              onPressed: () => widget.entry.setCollapsedRecursive(true),
-            ),
-          if (widget.entry.isNotEmpty)
-            ContextMenuButtonConfig(
-              "Expand all",
-              icon: const Icon(Icons.unfold_more, size: 15,),
-              onPressed: () => widget.entry.setCollapsedRecursive(false, true),
-            ),
-        ],
+        buttonConfigs: widget.entry.getContextMenuActions()
+          .map((action) => ContextMenuButtonConfig(
+            action.name,
+            icon: Icon(action.icon, size: 15 * action.iconScale,),
+            onPressed: () => action.action(),
+          ))
+          .toList(),
       ),
       child: child,
     );
