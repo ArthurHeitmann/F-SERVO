@@ -20,6 +20,7 @@ Future<void> revertAllAudioMods(String waiPath) async {
   }
   var metadata = await AudioModsMetadata.fromFile(metadataPath);
   var wai = WaiFile.read(await ByteDataWrapper.fromFile(waiPath));
+  var wwiseInfoPath = join(dirname(waiPath), "WwiseInfo.wai");
   var bgmBankPath = join(dirname(waiPath), "bgm", "BGM.bnk");
   var prefs = PreferencesData();
   var extractDir = prefs.waiExtractDir!.value;
@@ -27,6 +28,8 @@ Future<void> revertAllAudioMods(String waiPath) async {
   List<String> changedFiles = [
     if (metadata.moddedWaiChunks.isNotEmpty)
       waiPath,
+    if (metadata.moddedWaiEventChunks.isNotEmpty)
+      wwiseInfoPath,
     if (metadata.moddedBnkChunks.isNotEmpty)
       bgmBankPath,
   ];
@@ -96,6 +99,7 @@ Future<void> revertAllAudioMods(String waiPath) async {
 
   metadata.name = null;
   metadata.moddedWaiChunks.clear();
+  metadata.moddedWaiEventChunks.clear();
   metadata.moddedBnkChunks.clear();
   await metadata.toFile(metadataPath);
 

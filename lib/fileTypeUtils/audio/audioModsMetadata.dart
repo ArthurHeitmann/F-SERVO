@@ -4,6 +4,9 @@ import 'dart:io';
 
 import 'package:mutex/mutex.dart';
 
+import '../../utils/version.dart';
+
+
 class AudioModChunkInfo {
   final int id;
   final String? name;
@@ -27,18 +30,26 @@ class AudioModChunkInfo {
 
 class AudioModsMetadata {
   static final Mutex _mutex = Mutex();
+  static const Version currentVersion = Version(1, 1, 0);
+  final Version version;
   String? name;
   final Map<int, AudioModChunkInfo> moddedWaiChunks;
+  final Map<int, AudioModChunkInfo> moddedWaiEventChunks;
   final Map<int, AudioModChunkInfo> moddedBnkChunks;
 
-  AudioModsMetadata(this.name, this.moddedWaiChunks, this.moddedBnkChunks);
+  AudioModsMetadata(this.version, this.name, this.moddedWaiChunks, this.moddedWaiEventChunks, this.moddedBnkChunks);
 
   AudioModsMetadata.fromJSON(Map<String, dynamic> json) :
+    version = Version.parse(json["version"] ?? "") ?? currentVersion,
     name = json["name"],
     moddedWaiChunks = {
       for (var e in (json["moddedWaiChunks"] as Map).values)
         e["id"] : AudioModChunkInfo.fromJSON(e)
     },
+    moddedWaiEventChunks = json.containsKey("moddedWaiEventChunks") ? {
+      for (var e in (json["moddedWaiEventChunks"] as Map).values)
+        e["id"] : AudioModChunkInfo.fromJSON(e)
+    } : {},
     moddedBnkChunks = {
       for (var e in (json["moddedBnkChunks"] as Map).values)
         e["id"] : AudioModChunkInfo.fromJSON(e)
@@ -46,15 +57,20 @@ class AudioModsMetadata {
   
   static Future<AudioModsMetadata> fromFile(String path) async {
     if (!await File(path).exists())
-      return AudioModsMetadata(null, {}, {});
+      return AudioModsMetadata(currentVersion, null, {}, {}, {});
     var json = jsonDecode(await File(path).readAsString());
     return AudioModsMetadata.fromJSON(json);
   }
   
   Map<String, dynamic> toJSON() => {
+    "version": version.toString(),
     "name": name,
     "moddedWaiChunks": {
       for (var e in moddedWaiChunks.values)
+        e.id.toString() : e.toJSON()
+    },
+    "moddedWaiEventChunks": {
+      for (var e in moddedWaiEventChunks.values)
         e.id.toString() : e.toJSON()
     },
     "moddedBnkChunks": {

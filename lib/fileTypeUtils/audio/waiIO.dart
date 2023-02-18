@@ -1,5 +1,6 @@
 
 import 'dart:io';
+import 'dart:math';
 
 import 'package:path/path.dart';
 
@@ -132,25 +133,63 @@ class WemStruct {
   static const int size = 16;
 }
 
+class WaiEventStruct {
+  final int eventId;
+  final double unknown1;
+  final int unknown2;
+  final int unknown3_0;
+  final int unknown3_1;
+  final int unknown4;
+
+  WaiEventStruct(this.eventId, this.unknown1, this.unknown2, this.unknown3_0, this.unknown3_1, this.unknown4);
+
+  WaiEventStruct.read(ByteDataWrapper bytes) :
+    eventId = bytes.readUint32(),
+    unknown1 = bytes.readFloat32(),
+    unknown2 = bytes.readUint32(),
+    unknown3_0 = bytes.readUint16(),
+    unknown3_1 = bytes.readUint16(),
+    unknown4 = bytes.readUint32();
+
+  void write(ByteDataWrapper bytes) {
+    bytes.writeUint32(eventId);
+    bytes.writeFloat32(unknown1);
+    bytes.writeUint32(unknown2);
+    bytes.writeUint16(unknown3_0);
+    bytes.writeUint16(unknown3_1);
+    bytes.writeUint32(unknown4);
+  }
+
+  static const int size = 20;
+}
+
 class WaiFile {
   late final WaiHeader header;
   late final List<WspDirectory> wspDirectories;
   late final List<WspName> wspNames;
   late final List<WemStruct> wemStructs;
+  late final List<WaiEventStruct> waiEventStructs;
 
-  WaiFile(this.header, this.wspDirectories, this.wspNames, this.wemStructs);
+  WaiFile(this.header, this.wspDirectories, this.wspNames, this.wemStructs, this.waiEventStructs);
 
   WaiFile.read(ByteDataWrapper bytes) {
     header = WaiHeader.read(bytes);
     wspDirectories = List.generate(header.wspDirectoryCount, (i) => WspDirectory.read(bytes));
     wspNames = List.generate(header.wspNameCount, (i) => WspName.read(bytes));
     wemStructs = List.generate(header.structCount, (i) => WemStruct.read(bytes));
+    waiEventStructs = [];
+  }
+
+  WaiFile.readEvents(ByteDataWrapper bytes) {
+    header = WaiHeader.read(bytes);
+    waiEventStructs = List.generate(header.structCount, (i) => WaiEventStruct.read(bytes));
+    wspDirectories = [];
+    wspNames = [];
+    wemStructs = [];
   }
 
   void write(ByteDataWrapper bytes) {
-    header.wspDirectoryCount = wspDirectories.length;
-    header.wspNameCount = wspNames.length;
-    header.structCount = wemStructs.length;
+    header.structCount = max(wemStructs.length, waiEventStructs.length);
     header.write(bytes);
     for (WspDirectory wspDirectory in wspDirectories)
       wspDirectory.write(bytes);
@@ -158,6 +197,8 @@ class WaiFile {
       wspName.write(bytes);
     for (WemStruct wemStruct in wemStructs)
       wemStruct.write(bytes);
+    for (WaiEventStruct waiEventStruct in waiEventStructs)
+      waiEventStruct.write(bytes);
   }
 
   int getNameIndex(String name) {
@@ -215,6 +256,47 @@ class WaiFile {
       return wspDirectory.name;
     }
     throw Exception("Wem ID $wemID not found in WAI file");
+  }
+
+  int getEventIndexFromId(int wemId) {
+    // binary search
+    int min = 0;
+    int max = waiEventStructs.length - 1;
+    while (min <= max) {
+      int mid = (min + max) ~/ 2;
+      int midVal = waiEventStructs[mid].eventId;
+      if (midVal < wemId)
+        min = mid + 1;
+      else if (midVal > wemId)
+        max = mid - 1;
+      else
+        return mid;
+    }
+    return -1;
+  }
+
+  WaiEventStruct getEventFromId(int wemId) {
+    var index = getEventIndexFromId(wemId);
+    if (index == -1)
+      throw Exception("Wem ID $wemId not found");
+    return waiEventStructs[index];
+  }
+
+  int getEventInsertIndex(int eventId) {
+    // binary search
+    int min = 0;
+    int max = waiEventStructs.length - 1;
+    while (min <= max) {
+      int mid = (min + max) ~/ 2;
+      if (waiEventStructs[mid].eventId > eventId) {
+        max = mid - 1;
+      } else if (waiEventStructs[mid].eventId < eventId) {
+        min = mid + 1;
+      } else {
+        return mid;
+      }
+    }
+    return min;
   }
 
   Future<void> patchWems(List<WemPatch> patches, String exportDir) async {

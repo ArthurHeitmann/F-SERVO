@@ -20,17 +20,20 @@ Future<void> packAudioMod(String waiPath) async {
     return;
   }
   var metadata = await AudioModsMetadata.fromFile(metadataPath);
-  if (metadata.moddedBnkChunks.isEmpty && metadata.moddedWaiChunks.isEmpty) {
+  if (metadata.moddedBnkChunks.isEmpty && metadata.moddedWaiEventChunks.isEmpty && metadata.moddedWaiChunks.isEmpty) {
     showToast("No audio mods found");
     return;
   }
   var bgmBankPath = join(dirname(waiPath), "bgm", "BGM.bnk");
+  var wwiseInfoPath = join(dirname(waiPath), "WwiseInfo.wai");
   var wai = WaiFile.read(await ByteDataWrapper.fromFile(waiPath));
 
   // collect all relevant files
   Set<String> changedFiles = {
     metadataPath,
     waiPath,
+    if (metadata.moddedWaiEventChunks.isNotEmpty)
+      wwiseInfoPath,
     if (metadata.moddedBnkChunks.isNotEmpty)
       bgmBankPath,
   };

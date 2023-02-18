@@ -47,10 +47,12 @@ Future<void> installMod(String waiPath) async {
 
     // apply patches
     await _patchWaiAndWspsAndWems(modMetadata.moddedWaiChunks, tmpDir.path, waiPath, changedFiles);
+    await _patchWaiEvents(metadata.moddedWaiEventChunks, tmpDir.path, waiPath, changedFiles);
     await _patchBgmBnk(modMetadata.moddedBnkChunks, tmpDir.path, waiPath, changedFiles);
     
     // update metadata
     metadata.moddedWaiChunks.addAll(modMetadata.moddedWaiChunks);
+    metadata.moddedWaiEventChunks.addAll(modMetadata.moddedWaiEventChunks);
     metadata.moddedBnkChunks.addAll(modMetadata.moddedBnkChunks);
     metadata.name = modMetadata.name;
     await metadata.toFile(metadataFile);
@@ -210,6 +212,33 @@ Future<void> _patchWaiAndWspsAndWems(Map<int, AudioModChunkInfo> moddedWaiChunks
   // save new WAI
   var newWaiBytes = ByteDataWrapper.allocate(originalWai.size);
   originalWai.write(newWaiBytes);
+  await File(waiPath).writeAsBytes(newWaiBytes.buffer.asUint8List());
+}
+
+Future<void> _patchWaiEvents(Map<int, AudioModChunkInfo> moddedWaiEvents, String tmpDir, String waiStreamPath, List<String> changedFiles) async {
+  if (moddedWaiEvents.isEmpty)
+    return;
+  
+  var waiPath = join(dirname(waiStreamPath), "WwiseInfo.wai");
+  var newWaiPath = join(tmpDir, "WwiseInfo.wai");
+  var originalWai = WaiFile.readEvents(await ByteDataWrapper.fromFile(waiPath));
+  var newWai = WaiFile.readEvents(await ByteDataWrapper.fromFile(newWaiPath));
+
+  for (int eventId in moddedWaiEvents.keys) {
+    var event = newWai.getEventFromId(eventId);
+    int insertIndex = originalWai.getEventInsertIndex(eventId);
+    originalWai.waiEventStructs.insert(insertIndex, event);
+  }
+  originalWai.header.structCount = originalWai.waiEventStructs.length;
+
+  // backup original WAI
+  await backupFile(waiPath);
+  var originalBackupPath = "$waiPath.original";
+  await File(waiPath).copy(originalBackupPath);
+  changedFiles.add(waiPath);
+  // save new WAI
+  var newWaiBytes = ByteDataWrapper.allocate(newWai.size);
+  newWai.write(newWaiBytes);
   await File(waiPath).writeAsBytes(newWaiBytes.buffer.asUint8List());
 }
 
