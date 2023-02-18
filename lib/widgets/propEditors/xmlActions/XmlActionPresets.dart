@@ -344,7 +344,11 @@ class XmlActionPresets {
     XmlActionPresets.action.editor,
     (cxt) => XmlProp.fromXml(
       _makeAction("ScriptAction", [
-        makeXmlElement(name: "curve", children: [
+        makeXmlElement(name: "script", children: [
+          makeXmlElement(name: "id", text: "0x0"),
+        ]),
+        makeXmlElement(name: "variables", children: [
+          makeXmlElement(name: "size", text: "0"),
         ]),
       ]),
       file: cxt.file,

@@ -22,6 +22,7 @@ import '../customXmlProps/layoutsEditor.dart';
 import '../customXmlProps/minMaxPropEditor.dart';
 import '../customXmlProps/paramEditor.dart';
 import '../customXmlProps/puidReferenceEditor.dart';
+import '../customXmlProps/scriptIdEditor.dart';
 import '../customXmlProps/scriptVariableEditor.dart';
 import '../customXmlProps/transformsEditor.dart';
 import '../xmlActions/xmlArrayEditor.dart';
@@ -326,6 +327,11 @@ class XmlPresets {
     ),
     XmlRawPreset.defaultDuplicateWithRandIdAsXml,
   );
+  static XmlRawPreset scriptId = XmlRawPreset(
+    "Child",
+    <T extends PropTextField>(prop, showDetails) => ScriptIdEditor<T>(prop: prop),
+    (cxt) => throw UnimplementedError(),
+  );
 
   static XmlRawPreset fallback = XmlRawPreset(
     "Child",
@@ -385,6 +391,10 @@ XmlRawPreset getXmlPropPreset(XmlProp prop) {
   // code and id
   if (prop.length == 2 && prop[0].tagName == "code" && prop[1].tagName == "id") {
     return XmlPresets.codeAndId;
+  }
+  // script id
+  if (prop.tagName == "script" && prop.length == 1 && prop[0].tagName == "id") {
+    return XmlPresets.scriptId;
   }
   // fallback
   return XmlPresets.fallback;
