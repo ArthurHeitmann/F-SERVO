@@ -23,7 +23,8 @@ enum SyncedObjectsType {
   bezier,
   enemyGeneratorNode,
   enemyGeneratorDist,
-  camTargetLocation
+  camTargetLocation,
+  camera,
 }
 
 enum SyncUpdateType {
@@ -601,7 +602,7 @@ class CameraTargetLocationSyncedObject extends SyncedXmlObject {
   // syncable props: position?, rotation?
 
   CameraTargetLocationSyncedObject(XmlProp prop, { required super.parentUuid })
-    : super(prop: prop, type: SyncedObjectsType.camTargetLocation, nameHint: "dist");
+    : super(prop: prop, type: SyncedObjectsType.camTargetLocation, nameHint: "camTarget");
   
   @override
   void updateInternal(SyncMessage message) {
@@ -612,4 +613,38 @@ class CameraTargetLocationSyncedObject extends SyncedXmlObject {
     updateXmlPropWithStr(prop, "position", propXml);
     updateXmlPropWithStr(prop, "rotation", propXml);
   }
+}
+
+class CameraSyncedObject extends SyncedXmlObject {
+  // syncable props: pos.position?, tar.position?, Rotation_X/Y/Z (rotateOnly == 1), Fovy
+
+  CameraSyncedObject(XmlProp prop, { required super.parentUuid })
+    : super(prop: prop, type: SyncedObjectsType.camera, nameHint: "camera");
+  
+  @override
+  void updateInternal(SyncMessage message) {
+    print("updating camera $uuid");
+    var propXmlString = message.args["propXml"] as String;
+    var propXml = XmlDocument.parse(propXmlString).rootElement;
+
+    var posCur = prop.get("pos")!;
+    var posNew = propXml.getElement("pos")!;
+    if (posCur.get("position") != null)
+      updateXmlPropWithStr(posCur, "position", posNew);
+
+    var tarCur = prop.get("tar")!;
+    var tarNew = propXml.getElement("tar")!;
+    if (tarCur.get("position") != null)
+      updateXmlPropWithStr(tarCur, "position", tarNew);
+
+    if (rotateOnly) {
+      updateXmlPropWithStr(prop, "Rotation_X", propXml);
+      updateXmlPropWithStr(prop, "Rotation_Y", propXml);
+      updateXmlPropWithStr(prop, "Rotation_Z", propXml);
+    }
+
+    updateXmlPropWithStr(prop, "Fovy", propXml);
+  }
+
+  bool get rotateOnly => (prop.get("rotateOnly")!.value as NumberProp).value == 1;
 }

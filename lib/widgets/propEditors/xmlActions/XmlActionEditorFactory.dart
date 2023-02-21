@@ -7,6 +7,7 @@ import 'DelayAction.dart';
 import 'XmlActionEditor.dart';
 import 'XmlActionWithAreaEditor.dart';
 import 'XmlBezierActionEditor.dart';
+import 'XmlCameraActionEditor.dart';
 import 'XmlCameraTargetActionEditor.dart';
 import 'XmlEnemyGeneratorActionEditor.dart';
 import 'XmlEntityActionEditor.dart';
@@ -23,6 +24,7 @@ final Map<int, Widget Function(XmlActionProp, bool)> actionsFactories = {
   crc32("AirBezierAction"): (action, showDetails) => XmlBezierActionEditor(action: action, showDetails: showDetails,),
   crc32("EnemyGenerator"): (action, showDetails) => XmlEnemyGeneratorActionEditor(action: action, showDetails: showDetails,),
   crc32("CameraTargetAction"): (action, showDetails) => XmlCameraTargetActionEditor(action: action, showDetails: showDetails,),
+  crc32("CameraAction"): (action, showDetails) => XmlCameraActionEditor(action: action, showDetails: showDetails,),
 };
 
 Widget makeXmlActionEditor({ required XmlActionProp action, required bool showDetails}) {
