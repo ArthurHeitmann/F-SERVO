@@ -45,7 +45,10 @@ class _EntityEditorState extends ChangeNotifierState<EntityEditor> {
                 children: [
                   if (widget.showDetails && isLayoutEntity)
                     makeXmlPropEditor<UnderlinePropTextField>(widget.prop.get("id")!, true),
-                  ObjIdEditor(objId: widget.prop.get("objId")!),
+                  ObjIdEditor(
+                    objId: widget.prop.get("objId")!,
+                    entityId: widget.prop.get("id")?.value as HexProp?,
+                  ),
                   if (paramProp != null && !widget.showDetails)
                     XmlArrayEditor(paramProp, XmlPresets.params, paramProp[0], "value", widget.showDetails),
                   if (widget.showDetails && widget.prop.get("location") != null)

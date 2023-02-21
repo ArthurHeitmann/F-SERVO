@@ -8,13 +8,15 @@ import '../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
 import '../../../utils/utils.dart';
+import '../../misc/puidDraggable.dart';
 import '../../theme/customTheme.dart';
 import '../simpleProps/UnderlinePropTextField.dart';
 
 class ObjIdEditor extends ChangeNotifierWidget {
   final StringProp objId;
+  final HexProp? entityId;
 
-  ObjIdEditor({ super.key, required XmlProp objId })
+  ObjIdEditor({ super.key, required XmlProp objId, this.entityId })
     : objId = objId.value as StringProp,
     super(notifier: objId);
 
@@ -28,15 +30,25 @@ String _getAssetPath(String modeName) {
 
 class _ObjIdEditorState extends ChangeNotifierState<ObjIdEditor> { @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      // height: ,
-      child: Row(
-        children: [
-          ObjIdIcon(objId: widget.objId),
-          const SizedBox(width: 8),
-          UnderlinePropTextField(prop: widget.objId),
-        ],
-      ),
+    return Row(
+      children: [
+        optionalPuidDraggable(
+          child: ObjIdIcon(objId: widget.objId)
+        ),
+        const SizedBox(width: 8),
+        UnderlinePropTextField(prop: widget.objId),
+      ],
+    );
+  }
+
+  Widget optionalPuidDraggable({ required Widget child }) {
+    if (widget.entityId == null)
+      return child;
+    return PuidDraggable(
+      code: "app::EntityLayout",
+      id: widget.entityId!.value,
+      name: widget.objId.value,
+      child: child,
     );
   }
 }

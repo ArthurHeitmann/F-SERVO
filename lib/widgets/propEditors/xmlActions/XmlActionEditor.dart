@@ -10,6 +10,7 @@ import '../../../utils/utils.dart';
 import '../../filesView/xmlJumpToLineEventWrapper.dart';
 import '../../misc/FlexReorderable.dart';
 import '../../misc/nestedContextMenu.dart';
+import '../../misc/puidDraggable.dart';
 import '../simpleProps/DoubleClickablePropTextField.dart';
 import '../simpleProps/XmlPropEditorFactory.dart';
 import '../simpleProps/propTextField.dart';
@@ -96,20 +97,25 @@ class XmlActionEditorState<T extends XmlActionEditor> extends ChangeNotifierStat
             children: [
               ...getLeftHeaderButtons(context),
               Expanded(
-                child: Column(
-                  children: [
-                    RichText(
-                      text: TextSpan(
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14
-                        ),
-                        text: widget.action.code.strVal ?? "UNKNOWN ${widget.action.code.value}"
-                      )
-                    ),
-                    const SizedBox(height: 2),
-                    PropTextField.make<DoubleClickablePropTextField>(prop: widget.action.name),
-                  ],
+                child: PuidDraggable(
+                code: "hap::Action",
+                id: widget.action.id.value,
+                name: widget.action.name.value,
+                  child: Column(
+                    children: [
+                      RichText(
+                        text: TextSpan(
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14
+                          ),
+                          text: widget.action.code.strVal ?? "UNKNOWN ${widget.action.code.value}"
+                        )
+                      ),
+                      const SizedBox(height: 2),
+                      PropTextField.make<DoubleClickablePropTextField>(prop: widget.action.name),
+                    ],
+                  ),
                 ),
               ),
               ...getRightHeaderButtons(context),

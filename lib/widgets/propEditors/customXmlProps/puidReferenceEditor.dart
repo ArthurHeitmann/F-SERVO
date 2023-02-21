@@ -14,6 +14,7 @@ import '../../../stateManagement/openFilesManager.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
 import '../../../utils/utils.dart';
 import '../../misc/nestedContextMenu.dart';
+import '../../misc/puidDraggable.dart';
 import '../simpleProps/UnderlinePropTextField.dart';
 import '../simpleProps/XmlPropEditorFactory.dart';
 import '../simpleProps/propEditorFactory.dart';
@@ -37,6 +38,7 @@ class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor>
   late bool showLookup;
   Future<List<IndexedIdData>>? lookupFuture;
   StringProp objIdProp = StringProp("");
+  bool isDragging = false;
 
   @override
   void initState() {
@@ -92,17 +94,20 @@ class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor>
         child: Material(
           color: getTheme(context).formElementBgColor,
           borderRadius: BorderRadius.circular(5),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.link, size: 25,),
-                const SizedBox(width: 4,),
-                showLookup && idProp is HexProp
-                  ? makeLookup(codeProp, idProp)
-                  : makeEditor(code, id),
-              ],
+          child: puidDraggableWrapper(
+            codeProp, idProp,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.link, size: 25,),
+                  const SizedBox(width: 4,),
+                  showLookup && idProp is HexProp
+                    ? makeLookup(codeProp, idProp)
+                    : makeEditor(code, id),
+                ],
+              ),
             ),
           ),
         ),
@@ -130,6 +135,47 @@ class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor>
   }
 
   Widget makeLookup(HexProp codeProp, HexProp idProp) {
+    return lookupBuilder(
+      codeProp, idProp,
+      builder: (context, IndexedIdData lookup) => Expanded(
+        child: Column(
+          children: [
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 25),
+              child: Text(
+                lookup.type,
+                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(height: 4,),
+            if (lookup is IndexedActionIdData)
+              Text(lookup.actionName, overflow: TextOverflow.ellipsis,)
+            else if (lookup is IndexedHapIdData)
+              Text(lookup.name, overflow: TextOverflow.ellipsis,)
+            else if (lookup is IndexedEntityIdData)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ObjIdIcon(key: Key(lookup.objId), objId: objIdProp, size: 28,),
+                  Text(lookup.objId),
+                  if (lookup.name != null)
+                    Flexible(child: Text(" (${lookup.name})", overflow: TextOverflow.ellipsis,)),
+                  if (lookup.level != null)
+                    Text(" (lvl ${lookup.level})"),
+                ],
+              )
+            else
+              Text(idProp.isHashed ? idProp.strVal! : idProp.toString()),
+          ],
+        ),
+      )
+    );
+  }
+
+  Widget lookupBuilder(HexProp codeProp, HexProp idProp, 
+    { required Widget Function(BuildContext, IndexedIdData) builder }
+  ) {
     return FutureBuilder(
       future: lookupFuture,
       builder: (context, AsyncSnapshot<List<IndexedIdData>> snapshot) {
@@ -139,38 +185,41 @@ class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor>
         var puidRef = lookup.first;
         if (puidRef is IndexedEntityIdData)
           objIdProp.value = puidRef.objId;
-        return Expanded(
-          child: Column(
-            children: [
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: 25),
-                child: Text(
-                  puidRef.type,
-                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              const SizedBox(height: 4,),
-              if (puidRef is IndexedActionIdData)
-                Text(puidRef.actionName, overflow: TextOverflow.ellipsis,)
-              else if (puidRef is IndexedHapIdData)
-                Text(puidRef.name, overflow: TextOverflow.ellipsis,)
-              else if (puidRef is IndexedEntityIdData)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    ObjIdIcon(key: Key(puidRef.objId), objId: objIdProp, size: 28,),
-                    Text(puidRef.objId),
-                    if (puidRef.name != null)
-                      Flexible(child: Text(" (${puidRef.name})", overflow: TextOverflow.ellipsis,)),
-                    if (puidRef.level != null)
-                      Text(" (lvl ${puidRef.level})"),
-                  ],
-                )
-              else
-                Text(idProp.isHashed ? idProp.strVal! : idProp.toString()),
-            ],
+        return builder(context, puidRef);
+      },
+    );
+  }
+
+  Widget puidDraggableWrapper(HexProp code, HexProp? id, { required Widget child }) {
+    if (id != null) {
+      child = PuidDraggable(
+        code: code.strVal ?? "",
+        id: id.value,
+        onDragStarted: () => isDragging = false,
+        onDragEnd: () => isDragging = false,
+        child: child,
+      );
+    }
+    return DragTarget<PuidRefData>(
+      onAccept: (data) {
+        if (isDragging)
+          return;
+        code.setValueAndStr(crc32(data.code), data.code);
+        if (id != null)
+          id.value = data.id;
+      },
+      builder: (context, candidateData, rejectedData) {
+        return Container(
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: candidateData.isNotEmpty
+                ? getTheme(context).textColor!.withOpacity(0.25)
+                : Colors.transparent,
+              width: 2,
+            ),
+            borderRadius: BorderRadius.circular(5),
           ),
+          child: child,
         );
       }
     );
