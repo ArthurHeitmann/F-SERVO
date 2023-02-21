@@ -247,9 +247,9 @@ void showToast(String msg, [Duration duration = const Duration(seconds: 4)]) {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: Text(
         msg,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 17,
-          color: Colors.white
+          color: getTheme(context).textColor!,
         ),
       ),
     )

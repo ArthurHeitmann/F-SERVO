@@ -29,11 +29,11 @@ class SmoothScrollBuilder extends StatefulWidget {
 
 class _SmoothScrollBuilderState extends State<SmoothScrollBuilder> {
   static const ScrollPhysics desktopPhysics = NeverScrollableScrollPhysics();
-  static const ScrollPhysics mobilePhysics = BouncingScrollPhysics();
+  static const ScrollPhysics? mobilePhysics = null;
   double targetOffset = 0;
   bool isScrolling = false;
   Timer? isScrollingTimer;
-  ScrollPhysics? physics = desktopPhysics;
+  static ScrollPhysics? physics = desktopPhysics;
 
   @override
   void initState() {

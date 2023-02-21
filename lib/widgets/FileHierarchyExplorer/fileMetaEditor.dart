@@ -222,9 +222,9 @@ class _FileMetaEditorState extends ChangeNotifierState<FileMetaEditor> {
           return Container();
         }
 
-        var xml = fileData.root!;
-        var id = xml.get("id");
-        var name = xml.get("name");
+        var xml = fileData.root;
+        var id = xml?.get("id");
+        var name = xml?.get("name");
         var pakType = fileData.pakType;
 
         return Column(

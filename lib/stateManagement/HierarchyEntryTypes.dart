@@ -108,13 +108,12 @@ abstract class HierarchyEntry extends NestedNotifier<HierarchyEntry> with Undoab
         HierarchyEntryAction(
           name: "Close",
           icon: Icons.close,
-          iconScale: 0.9,
+          iconScale: 0.85,
           action: () => openHierarchyManager.remove(this),
         ),
         HierarchyEntryAction(
           name: "Close All",
           icon: Icons.close,
-          iconScale: 0.9,
           action: () => openHierarchyManager.clear(),
         ),
       ],
