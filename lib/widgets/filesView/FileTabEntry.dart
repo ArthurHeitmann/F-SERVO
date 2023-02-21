@@ -113,21 +113,33 @@ class _FileTabEntryState extends ChangeNotifierState<FileTabEntry> {
             },
           ),
           ContextMenuButtonConfig(
+            "Reload",
+            icon: const Icon(Icons.refresh, size: 15),
+            onPressed: () => areasManager.fromId(widget.file)!.reload(),
+          ),
+          ContextMenuButtonConfig(
+            "Copy path",
+            icon: const Icon(Icons.link, size: 15),
+            onPressed: () => copyToClipboard(areasManager.fromId(widget.file)!.path),
+          ),
+          ContextMenuButtonConfig(
             "Show in Explorer",
             icon: const Icon(Icons.folder_open, size: 14),
             onPressed: () => revealFileInExplorer(areasManager.fromId(widget.file)!.path),
           ),
           ContextMenuButtonConfig(
             "Close",
-            icon: const Icon(Icons.close, size: 14),
+            icon: const Icon(Icons.close, size: 11),
             onPressed: () => widget.area.closeFile(areasManager.fromId(widget.file)!),
           ),
           ContextMenuButtonConfig(
             "Close others",
+            icon: const Icon(Icons.close, size: 13),
             onPressed: () => widget.area.closeOthers(areasManager.fromId(widget.file)!),
           ),
           ContextMenuButtonConfig(
             "Close all",
+            icon: const Icon(Icons.close, size: 15),
             onPressed: () => widget.area.closeAll(),
           ),
           ContextMenuButtonConfig(

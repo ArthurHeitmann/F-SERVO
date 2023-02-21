@@ -152,8 +152,14 @@ abstract class OpenFileData extends ChangeNotifier with HasUuid, Undoable {
 
   Future<void> load() async {
     _loadingState = LoadingState.loaded;
+    hasUnsavedChanges = false;
     undoHistoryManager.onUndoableEvent();
     notifyListeners();
+  }
+
+  Future<void> reload() async {
+    _loadingState = LoadingState.notLoaded;
+    await load();
   }
 
   Future<void> save() async {
@@ -249,6 +255,7 @@ class XmlFileData extends OpenFileData {
     _loadingState = LoadingState.loading;
     var text = await File(path).readAsString();
     var doc = XmlDocument.parse(text);
+    _root?.dispose();
     _root = XmlProp.fromXml(doc.firstElementChild!, file: uuid, parentTags: []);
     _root!.addListener(notifyListeners);
     var nameProp = _root!.get("name");
@@ -258,7 +265,9 @@ class XmlFileData extends OpenFileData {
     }
     
     var pakInfoFileData = await getPakInfoFileData(path);
+    pakType = null;
     if (pakInfoFileData != null) {
+      pakType?.dispose();
       pakType = NumberProp(pakInfoFileData["type"], true);
       pakType!.addListener(updatePakType);
     }
@@ -518,6 +527,7 @@ class FtbFileData extends OpenFileData {
       return;
     _loadingState = LoadingState.loading;
 
+    ftbData?.dispose();
     ftbData = await FtbData.fromFtbFile(path);
     await ftbData!.extractTextures();
 
@@ -1622,6 +1632,7 @@ class SaveSlotData extends OpenFileData {
     _loadingState = LoadingState.loading;
 
     var bytes = await ByteDataWrapper.fromFile(path);
+    slotData?.dispose();
     slotData = SlotDataDat.read(bytes, uuid);
     for (var prop in slotData!.allProps())
       prop.addListener(_onPropChanged);
@@ -1718,6 +1729,7 @@ class WtaWtpData extends OpenFileData {
       extractDir = join(datDir, "nier2blender_extracted", basename(path));
     await Directory(extractDir).create(recursive: true);
     
+    textures?.dispose();
     textures = await WtaWtpTextures.fromWtaWtp(uuid, path, wtpPath!, extractDir);
 
     await super.load();

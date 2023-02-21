@@ -59,7 +59,15 @@ class FilesAreaManager extends NestedNotifier<OpenFileData> implements Undoable 
       );
       if (answer == true)
         await file.save();
-      else if (answer == null)
+      else if (answer == false) {
+        file.hasUnsavedChanges = false;
+        try {
+          await file.reload();
+        } catch (e, stackTrace) {
+          print("Error reloading file: $e");
+          print(stackTrace);
+        }
+      } else if (answer == null)
         return;
     }
     if (file.keepOpenAsHidden && !releaseHidden)
