@@ -15,6 +15,7 @@ import 'stateManagement/otherFileTypes/beforeExitCleanup.dart';
 import 'utils/loggingWrapper.dart';
 import 'utils/utils.dart';
 import 'utils/assetDirFinder.dart';
+import 'widgets/splashScreen/splashScreen.dart';
 import 'widgets/theme/customTheme.dart';
 import 'keyboardEvents/globalShortcutsWrapper.dart';
 import 'stateManagement/preferencesData.dart';
@@ -30,6 +31,8 @@ void main() {
 
 void init() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  runApp(const SplashScreen());
 
   if (isDesktop) {
     await windowManager.ensureInitialized();
