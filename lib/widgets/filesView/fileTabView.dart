@@ -9,7 +9,6 @@ import 'package:path/path.dart' as path;
 import 'package:window_manager/window_manager.dart';
 
 import '../../stateManagement/FileHierarchy.dart';
-import '../../stateManagement/HierarchyEntryTypes.dart';
 import '../../stateManagement/openFileTypes.dart';
 import '../../stateManagement/events/statusInfo.dart';
 import 'FileTabEntry.dart';
@@ -67,13 +66,13 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
     if (files.isEmpty)
       return;
     OpenFileData? firstFile;
-    const fileExplorerExtensions = { ".pak", ".dat", ".yax", ".bin", ".wai", ".wsp", ".bxm", ".gad", ".sar", ".bnk" };
+    const fileExplorerExtensions = { ".pak", ".dat", ".yax", ".bin", ".wai", ".wsp", ".bxm", ".gad", ".sar", ".bnk", ".cpk" };
     for (var file in files) {
       bool isSaveSlotData = file.name.startsWith("SlotData_") && file.name.endsWith(".dat");
       if (fileExplorerExtensions.contains(path.extension(file.name)) && !isSaveSlotData || await Directory(file.path).exists()) {
         var entry = await openHierarchyManager.openFile(file.path);
-        if (entry is XmlScriptHierarchyEntry)
-          areasManager.openFile(entry.path);
+        if (entry?.isOpenable == true)
+          entry!.onOpen();
         continue;
       }
       var newFileData = areasManager.openFile(file.path, toArea: widget.viewArea);

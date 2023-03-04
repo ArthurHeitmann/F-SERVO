@@ -7,7 +7,19 @@ import 'package:flutter/material.dart';
 import '../../widgets/theme/customTheme.dart';
 import 'RowSeparated.dart';
 
-Future<String?> fileSelectionDialog(BuildContext context, { required bool isFile, required String title, String? body }) {
+enum SelectionType { file, folder }
+
+const _typeToWindowTitle = {
+  SelectionType.file: "Select file",
+  SelectionType.folder: "Select folder",
+};
+
+Future<String?> fileSelectionDialog(BuildContext context, {
+    required SelectionType selectionType,
+    required String title,
+    String? body,
+    String? initialDirectory,
+  }) {
   var result = Completer<String?>();
 
   showDialog(
@@ -41,15 +53,19 @@ Future<String?> fileSelectionDialog(BuildContext context, { required bool isFile
                     ElevatedButton(
                       onPressed: () async {
                         String? path;
-                        if (isFile) {
+                        if (selectionType == SelectionType.file) {
                           path = (await FilePicker.platform.pickFiles(
                             dialogTitle: title,
                             allowMultiple: false,
+                            initialDirectory: initialDirectory,
                           ))?.files.first.path;
-                        } else {
+                        } else if (selectionType == SelectionType.folder) {
                           path = await FilePicker.platform.getDirectoryPath(
                             dialogTitle: title,
+                            initialDirectory: initialDirectory,
                           );
+                        } else {
+                          throw "Invalid selection type";
                         }
 
                         if (path != null) {
@@ -59,7 +75,7 @@ Future<String?> fileSelectionDialog(BuildContext context, { required bool isFile
                         }
                       },
                       style: getTheme(context).dialogPrimaryButtonStyle,
-                      child: Text(isFile ? "Select file" : "Select folder"),
+                      child: Text(_typeToWindowTitle[selectionType] ?? "Select"),
                     ),
                     ElevatedButton(
                       onPressed: () {

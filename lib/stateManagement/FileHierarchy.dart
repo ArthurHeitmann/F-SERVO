@@ -10,6 +10,7 @@ import '../fileTypeUtils/audio/bnkExtractor.dart';
 import '../fileTypeUtils/audio/bnkIO.dart';
 import '../fileTypeUtils/audio/waiExtractor.dart';
 import '../fileTypeUtils/bxm/bxmReader.dart';
+import '../fileTypeUtils/cpk/cpkExtractor.dart';
 import '../fileTypeUtils/dat/datExtractor.dart';
 import '../fileTypeUtils/ruby/pythonRuby.dart';
 import '../fileTypeUtils/utils/ByteDataWrapper.dart';
@@ -42,12 +43,12 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
     return findRecWhere((e) => e.contains(entry)) ?? this;
   }
 
-  Future<HierarchyEntry> openFile(String filePath, { HierarchyEntry? parent }) async {
+  Future<HierarchyEntry?> openFile(String filePath, { HierarchyEntry? parent }) async {
     isLoadingStatus.pushIsLoading();
 
     HierarchyEntry? entry;
     try {
-      List<Tuple2<Iterable<String>, Future<HierarchyEntry> Function()>> hierarchyPresets = [
+      List<Tuple2<Iterable<String>, Future<HierarchyEntry?> Function()>> hierarchyPresets = [
         Tuple2(datExtensions, () async {
           if (await File(filePath).exists()) {
             if (basename(filePath).startsWith("SlotData"))  // special case for save data
@@ -116,7 +117,11 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
         Tuple2(
           [".wta"],
           () async => openWtaFile(filePath, parent: parent)
-        )
+        ),
+        Tuple2(
+          [".cpk"],
+          () async => openCpkFile(filePath, parent: parent)
+        ),
       ];
 
       for (var preset in hierarchyPresets) {
@@ -126,8 +131,8 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
         }
       }
       if (entry == null) {
-        showToast("Unsupported file type: $filePath");
-        throw FileSystemException("Unsupported file type: $filePath");
+        messageLog.add("${basename(filePath)} not opened");
+        return null;
       }
       
       undoHistoryManager.onUndoableEvent();
@@ -326,7 +331,7 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
 
     var prefs = PreferencesData();
     if (prefs.waiExtractDir!.value.isEmpty) {
-      String? waiExtractDir = await fileSelectionDialog(getGlobalContext(), isFile: false, title: "Select WAI Extract Directory");
+      String? waiExtractDir = await fileSelectionDialog(getGlobalContext(), selectionType: SelectionType.folder, title: "Select WAI Extract Directory");
       if (waiExtractDir == null) {
         showToast("WAI Extract Directory not set");
         throw Exception("WAI Extract Directory not set");
@@ -450,6 +455,13 @@ class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable 
       add(wtaEntry);
 
     return wtaEntry;
+  }
+  
+  Future<HierarchyEntry?> openCpkFile(String filePath, {HierarchyEntry? parent}) async {
+    var extractedDir = await extractCpkWithPrompt(filePath);
+    if (extractedDir != null)
+      revealFileInExplorer(extractedDir);
+    return null;
   }
 
   @override
