@@ -96,12 +96,19 @@ class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor>
           borderRadius: BorderRadius.circular(5),
           child: puidDraggableWrapper(
             codeProp, idProp,
+            isDraggable: showLookup && idProp is HexProp,
+            isDragTarget: true,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.link, size: 25,),
+                  puidDraggableWrapper(
+                    codeProp, idProp,
+                    isDraggable: !showLookup && idProp is HexProp,
+                    isDragTarget: false,
+                    child: const Icon(Icons.link, size: 25,)
+                  ),
                   const SizedBox(width: 4,),
                   showLookup && idProp is HexProp
                     ? makeLookup(codeProp, idProp)
@@ -190,16 +197,23 @@ class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor>
     );
   }
 
-  Widget puidDraggableWrapper(HexProp code, HexProp? id, { required Widget child }) {
+  Widget puidDraggableWrapper(HexProp code, HexProp? id, {
+    required Widget child,
+    required bool isDraggable,
+    required bool isDragTarget,
+  }) {
     if (id != null) {
-      child = PuidDraggable(
-        code: code.strVal ?? "",
-        id: id.value,
-        onDragStarted: () => isDragging = false,
-        onDragEnd: () => isDragging = false,
-        child: child,
-      );
+      if (isDraggable)
+        child = PuidDraggable(
+          code: code.strVal ?? "",
+          id: id.value,
+          onDragStarted: () => isDragging = false,
+          onDragEnd: () => isDragging = false,
+          child: child,
+        );
     }
+    if (!isDragTarget)
+      return child;
     return DragTarget<PuidRefData>(
       onAccept: (data) {
         if (isDragging)

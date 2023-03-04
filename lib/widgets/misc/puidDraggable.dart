@@ -30,6 +30,7 @@ class PuidDraggable extends StatelessWidget {
   Widget build(BuildContext context) {
     return Draggable<PuidRefData>(
       data: puid,
+      hitTestBehavior: HitTestBehavior.translucent,
       onDragStarted: onDragStarted,
       onDragEnd: (_) => onDragEnd?.call(),
       feedback: Material(

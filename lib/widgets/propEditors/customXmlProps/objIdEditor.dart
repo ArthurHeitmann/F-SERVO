@@ -30,14 +30,15 @@ String _getAssetPath(String modeName) {
 
 class _ObjIdEditorState extends ChangeNotifierState<ObjIdEditor> { @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        optionalPuidDraggable(
-          child: ObjIdIcon(objId: widget.objId)
-        ),
-        const SizedBox(width: 8),
-        UnderlinePropTextField(prop: widget.objId),
-      ],
+    return optionalPuidDraggable(
+      child: Row(
+        mainAxisSize: MainAxisSize.max,
+        children: [
+          ObjIdIcon(objId: widget.objId),
+          const SizedBox(width: 8),
+          UnderlinePropTextField(prop: widget.objId),
+        ],
+      ),
     );
   }
 
