@@ -17,6 +17,7 @@ import '../../misc/selectionPopup.dart';
 import '../customXmlProps/areaEditor.dart';
 import '../customXmlProps/commandEditor.dart';
 import '../customXmlProps/conditionEditor.dart';
+import '../customXmlProps/distEditor.dart';
 import '../customXmlProps/entityEditor.dart';
 import '../customXmlProps/layoutsEditor.dart';
 import '../customXmlProps/minMaxPropEditor.dart';
@@ -332,6 +333,11 @@ class XmlPresets {
     <T extends PropTextField>(prop, showDetails) => ScriptIdEditor<T>(prop: prop),
     (cxt) => throw UnimplementedError(),
   );
+  static XmlRawPreset dist = XmlRawPreset(
+    "Child",
+    <T extends PropTextField>(prop, showDetails) => DistEditor(dist: prop, showDetails: showDetails,),
+    (cxt) => throw UnimplementedError(),
+  );
 
   static XmlRawPreset fallback = XmlRawPreset(
     "Child",
@@ -395,6 +401,10 @@ XmlRawPreset getXmlPropPreset(XmlProp prop) {
   // script id
   if (prop.tagName == "script" && prop.length == 1 && prop[0].tagName == "id") {
     return XmlPresets.scriptId;
+  }
+  // dist
+  if (prop.tagName == "dist") {
+    return XmlPresets.dist;
   }
   // fallback
   return XmlPresets.fallback;
