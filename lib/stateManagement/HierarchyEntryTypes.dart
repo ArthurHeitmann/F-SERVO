@@ -285,22 +285,24 @@ class DatHierarchyEntry extends ExtractableHierarchyEntry {
     await scriptGroup.addNewRubyScript(path, extractedPath);
   }
 
+  Future<void> repackDatAction() async {
+    var prefs = PreferencesData();
+    if (prefs.dataExportPath?.value == null) {
+      showToast("No export path set; go to Settings to set an export path");
+      return;
+    }
+    var datBaseName = basename(extractedPath);
+    var exportPath = join(prefs.dataExportPath!.value, getDatFolder(datBaseName), datBaseName);
+    await repackDat(extractedPath, exportPath);
+  }
+
   @override
   List<HierarchyEntryAction> getActions() {
     return [
       HierarchyEntryAction(
         name: "Repack DAT",
         icon: Icons.file_upload,
-        action: () async {
-          var prefs = PreferencesData();
-          if (prefs.dataExportPath?.value == null) {
-            showToast("No export path set; go to Settings to set an export path");
-            return;
-          }
-          var datBaseName = basename(extractedPath);
-          var exportPath = join(prefs.dataExportPath!.value, getDatFolder(datBaseName), datBaseName);
-          await repackDat(extractedPath, exportPath);
-        },
+        action: repackDatAction,
       ),
       HierarchyEntryAction(
         name: "Add new Ruby script",
@@ -752,7 +754,24 @@ class RubyScriptHierarchyEntry extends GenericFileHierarchyEntry {
       HierarchyEntryAction(
         name: "Compile to .bin",
         icon: Icons.file_upload,
-        action: () => rubyFileToBin(path),
+        action: () async {
+          var success = await rubyFileToBin(path);
+          if (!success)
+            return;
+          var datPath = dirname(path);
+          if (!strEndsWithDat(datPath))
+            return;
+          var parent = openHierarchyManager.parentOf(this);
+          if (parent is! DatHierarchyEntry) {
+            if (parent is HierarchyEntry)
+              parent = openHierarchyManager.parentOf(parent);
+            else
+              return;
+          }
+          if (parent is! DatHierarchyEntry)
+            return;
+          await parent.repackDatAction();
+        },
       ),
     ];
   }
@@ -958,6 +977,8 @@ class WspHierarchyEntry extends GenericFileHierarchyEntry {
     _childWems = childWems,
     super(name, path, true, false) {
     _isCollapsed = true;
+    if (childWems.length < 200)
+      addChildren();
   }
   
   @override
@@ -966,10 +987,14 @@ class WspHierarchyEntry extends GenericFileHierarchyEntry {
       return;
     _isCollapsed = value;
     notifyListeners();
-    if (!_isCollapsed && !_hasLoadedChildren && isEmpty) {
-      _hasLoadedChildren = true;
-      addAll(_childWems.map((child) => makeWaiChildEntry(child, bgmBnkPath)));
-    }
+
+    if (!_isCollapsed && !_hasLoadedChildren && isEmpty)
+      addChildren();
+  }
+
+  void addChildren() {
+    _hasLoadedChildren = true;
+    addAll(_childWems.map((child) => makeWaiChildEntry(child, bgmBnkPath)));
   }
   
   @override
