@@ -587,14 +587,21 @@ class EMGeneratorDistSyncedObject extends SyncedXmlObject {
 
     var distCur = prop;
     var distNew = propXml;
-    updateXmlPropWithStr(distCur, "position", distNew);
-    updateXmlPropWithStr(distCur, "rotation", distNew);
-    updateXmlPropWithStr(distCur, "areaDist", distNew);
-    updateXmlPropWithStr(distCur, "resetDist", distNew);
-    updateXmlPropWithStr(distCur, "searchDist", distNew);
-    updateXmlPropWithStr(distCur, "guardSDist", distNew);
-    updateXmlPropWithStr(distCur, "guardLDist", distNew);
-    updateXmlPropWithStr(distCur, "escapeDist", distNew);
+    updateXmlPropAndRound(distCur, "position", distNew);
+    updateXmlPropAndRound(distCur, "rotation", distNew);
+    updateXmlPropAndRound(distCur, "areaDist", distNew);
+    updateXmlPropAndRound(distCur, "resetDist", distNew);
+    updateXmlPropAndRound(distCur, "searchDist", distNew);
+    updateXmlPropAndRound(distCur, "guardSDist", distNew);
+    updateXmlPropAndRound(distCur, "guardLDist", distNew);
+    updateXmlPropAndRound(distCur, "escapeDist", distNew);
+  }
+  
+  void updateXmlPropAndRound(XmlProp root, String tagName, XmlElement newRoot) {
+    updateXmlPropWithStr(root, tagName, newRoot);
+    var xmlProp = root.get(tagName)!;
+    var prop = xmlProp.value as NumberProp;
+    prop.value = prop.value.round();
   }
 }
 

@@ -37,6 +37,7 @@ class _UndoSnapshot {
 class UndoHistoryManager with ChangeNotifier {
   final List<_UndoSnapshot> _undoStack = [];
   int _undoIndex = 0;
+  bool _isPushing = false;
   bool _isRestoring = false;
   late final void Function() _pushSnapshotThrottled;
 
@@ -46,6 +47,7 @@ class UndoHistoryManager with ChangeNotifier {
   }
 
   void onUndoableEvent() {
+    if (_isPushing) return;
     if (_isRestoring) return;
     if (disableFileChanges) return;
     _pushSnapshotThrottled();
@@ -53,6 +55,7 @@ class UndoHistoryManager with ChangeNotifier {
   
   void _pushSnapshot() {
     if (_isRestoring) return;
+    _isPushing = true;
     if (_undoStack.length - 1 > _undoIndex) {
       for (int i = _undoStack.length - 1; i > _undoIndex; i--) {
         _undoStack.removeAt(i)
@@ -66,6 +69,8 @@ class UndoHistoryManager with ChangeNotifier {
     int tD = DateTime.now().millisecondsSinceEpoch - t1;
     if (tD > 8)
       print("WARNING: Pushing history snapshot took ${tD}ms");
+    
+    _isPushing = false;
     
     notifyListeners();
   }

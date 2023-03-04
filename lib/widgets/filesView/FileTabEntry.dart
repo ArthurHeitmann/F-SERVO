@@ -25,8 +25,11 @@ class FileTabEntry extends ChangeNotifierWidget {
 class _FileTabEntryState extends ChangeNotifierState<FileTabEntry> {
   @override
   Widget build(BuildContext context) {
-    var file = areasManager.fromId(widget.file)!;
+    var file = areasManager.fromId(widget.file);
+    if (file == null)
+      return const SizedBox();
     return logicWrapper(
+      file,
       SizedBox(
         width: 200,
         child: Padding(
@@ -98,7 +101,7 @@ class _FileTabEntryState extends ChangeNotifierState<FileTabEntry> {
     );
   }
 
-  Widget logicWrapper(Widget child) {
+  Widget logicWrapper(OpenFileData file, Widget child) {
     return ContextMenuRegion(
       enableLongPress: isMobile,
       contextMenu: GenericContextMenu(
@@ -112,11 +115,12 @@ class _FileTabEntryState extends ChangeNotifierState<FileTabEntry> {
               await processChangedFiles();
             },
           ),
-          ContextMenuButtonConfig(
-            "Reload",
-            icon: const Icon(Icons.refresh, size: 15),
-            onPressed: () => areasManager.fromId(widget.file)!.reload(),
-          ),
+          if (file.canBeReloaded)
+            ContextMenuButtonConfig(
+              "Reload",
+              icon: const Icon(Icons.refresh, size: 15),
+              onPressed: () => areasManager.fromId(widget.file)!.reload(),
+            ),
           ContextMenuButtonConfig(
             "Copy path",
             icon: const Icon(Icons.link, size: 15),

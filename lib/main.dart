@@ -33,6 +33,7 @@ void init() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   runApp(const SplashScreen());
+  await Future.delayed(const Duration(milliseconds: 50));
 
   if (isDesktop) {
     await windowManager.ensureInitialized();

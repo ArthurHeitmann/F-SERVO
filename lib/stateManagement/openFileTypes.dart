@@ -64,6 +64,7 @@ abstract class OpenFileData extends ChangeNotifier with HasUuid, Undoable {
   bool keepOpenAsHidden = false;
   final ChangeNotifier contentNotifier = ChangeNotifier();
   final ScrollController scrollController = ScrollController();
+  bool canBeReloaded = true;
 
   OpenFileData(this._name, this._path, { String? secondaryName, this.icon, this.iconColor })
     : type = OpenFileData.getFileType(_path),
@@ -158,6 +159,7 @@ abstract class OpenFileData extends ChangeNotifier with HasUuid, Undoable {
   }
 
   Future<void> reload() async {
+    if (!canBeReloaded) return;
     _loadingState = LoadingState.notLoaded;
     await load();
   }
@@ -1386,7 +1388,8 @@ class BnkSegmentData with HasUuid, Undoable {
     if (markers.length >= 2) {
       var minMarkerPos = markers.map((m) => m.pos.value).reduce(min);
       var maxMarkerPos = markers.map((m) => m.pos.value).reduce(max);
-      newSegment.fDuration = maxMarkerPos - minMarkerPos.toDouble();
+      // newSegment.fDuration = maxMarkerPos - minMarkerPos.toDouble();
+      newSegment.fDuration = maxMarkerPos.toDouble();
     }
     for (var i = 0; i < markers.length; i++) {
       var newMarker = newSegment.wwiseMarkers[i];
@@ -1536,7 +1539,9 @@ class BnkFilePlaylistData extends OpenFileData {
 
   BnkFilePlaylistData(String name, String path, { super.secondaryName }) :
     playlistId = int.parse(RegExp(r"\.bnk#p=(\d+)$").firstMatch(name)!.group(1)!),
-    super(name, path, icon: Icons.queue_music);
+    super(name, path, icon: Icons.queue_music) {
+    canBeReloaded = false;
+  }
 
   @override
   Future<void> load() async {
@@ -1623,7 +1628,9 @@ class SaveSlotData extends OpenFileData {
   SlotDataDat? slotData;
 
   SaveSlotData(String name, String path, { super.secondaryName })
-    : super(name, path, icon: Icons.save);
+    : super(name, path, icon: Icons.save) {
+    canBeReloaded = false;
+  }
 
   @override
   Future<void> load() async {

@@ -84,6 +84,12 @@ class _SelectionContextMenuState extends State<_SelectionContextMenu> with Arrow
   }
 
   @override
+  void dispose() {
+    scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     var searchedConfigs = widget.configs
       .where((config) => config.name.toLowerCase().contains(search.toLowerCase()))

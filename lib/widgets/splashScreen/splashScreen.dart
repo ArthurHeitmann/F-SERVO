@@ -12,38 +12,13 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
-  // late final AnimationController pulseAnim;
   Offset? mousePos;
-
-  @override
-  void initState() {
-    super.initState();
-    // pulseAnim = AnimationController(
-    //   vsync: this,
-    //   duration: const Duration(seconds: 5)
-    // );
-    // pulseAnim.forward();
-    // pulseAnim.addStatusListener((status) {
-    //   if (status == AnimationStatus.completed) {
-    //     pulseAnim.repeat();
-    //   }
-    // });
-  }
-
-  @override
-  void dispose() {
-    // pulseAnim.dispose();
-    super.dispose();
-  }
+  late Image image;
 
   void onMouseMove(PointerEvent event) {
     mousePos = event.position;
     setState(() {});
   }
-
-  // double pulseFunc(double x, { double minVal = 0.95, double maxVal = 1 }) {
-  //   return minVal + (maxVal - minVal) * sin(x * pi * 2);
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -73,15 +48,6 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                     ],
                   ),
                   child: Image.asset("assets/logo/pod_logo.png")
-                  // child: AnimatedBuilder(
-                  //   animation: pulseAnim,
-                  //   builder: (context, child) {
-                  //     return Transform.scale(
-                  //       scale: pulseFunc(pulseAnim.value),
-                  //       child: Image.asset("assets/logo/pod_logo.png", isAntiAlias: true,)
-                  //     );
-                  //   }
-                  // )
                 ),
               )
             )
