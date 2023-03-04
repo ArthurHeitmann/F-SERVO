@@ -15,7 +15,7 @@ import 'waiIO.dart';
 Future<void> revertAllAudioMods(String waiPath) async {
   var metadataPath = join(dirname(waiPath), audioModsMetadataFileName);
   if (!await File(metadataPath).exists()) {
-    showToast("No audio mods metadata fiel found");
+    showToast("No audio mods metadata file found");
     return;
   }
   var metadata = await AudioModsMetadata.fromFile(metadataPath);

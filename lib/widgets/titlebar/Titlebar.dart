@@ -85,25 +85,6 @@ class TitleBarState extends ChangeNotifierState<TitleBar> with WindowListener {
               onPressed: undoHistoryManager.canRedo ? undoHistoryManager.redo : null,
             ),
             Tooltip(
-              message: "Auto translate Jap to Eng",
-              waitDuration: const Duration(milliseconds: 500),
-              child: ChangeNotifierBuilder(
-                notifier: shouldAutoTranslate,
-                builder: (context) => Opacity(
-                  opacity: shouldAutoTranslate.value ? 1.0 : 0.25,
-                  child: IconButton(
-                    padding: const EdgeInsets.all(5),
-                    constraints: const BoxConstraints(),
-                    iconSize: 20,
-                    splashRadius: 20,
-                    icon: const Icon(Icons.translate, size: 15,),
-                    isSelected: shouldAutoTranslate.value,
-                    onPressed: () => shouldAutoTranslate.value ^= true,
-                  ),
-                ),
-              ),
-            ),
-            Tooltip(
               message: "Save all changed files",
               waitDuration: const Duration(milliseconds: 500),
               child: IconButton(
@@ -121,6 +102,25 @@ class TitleBarState extends ChangeNotifierState<TitleBar> with WindowListener {
                 splashRadius: 14,
                 icon: const Icon(Icons.settings, size: 15),
                 onPressed: () => areasManager.openPreferences(),
+              ),
+            ),
+            Tooltip(
+              message: "Auto translate Jap to Eng",
+              waitDuration: const Duration(milliseconds: 500),
+              child: ChangeNotifierBuilder(
+                notifier: shouldAutoTranslate,
+                builder: (context) => Opacity(
+                  opacity: shouldAutoTranslate.value ? 1.0 : 0.25,
+                  child: IconButton(
+                    padding: const EdgeInsets.all(5),
+                    constraints: const BoxConstraints(),
+                    iconSize: 20,
+                    splashRadius: 20,
+                    icon: const Icon(Icons.translate, size: 15,),
+                    isSelected: shouldAutoTranslate.value,
+                    onPressed: () => shouldAutoTranslate.value ^= true,
+                  ),
+                ),
               ),
             ),
             Expanded(

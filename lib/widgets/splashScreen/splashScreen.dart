@@ -3,7 +3,6 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
-import '../misc/mousePosition.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});

@@ -295,21 +295,25 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> with Audi
         "Duplicate",
         icon: const Icon(Icons.copy_all, size: 16),
         onPressed: () => _duplicateClip(clip),
+        shortcutLabel: "Ctrl+D"
       ),
       ContextMenuButtonConfig(
         "Delete",
         icon: const Icon(Icons.delete, size: 16),
         onPressed: () => _deleteClip(clip),
+        shortcutLabel: "Del"
       ),
       ContextMenuButtonConfig(
         "Copy offsets",
         icon: const Icon(Icons.copy, size: 16),
         onPressed: () => _copyOffsets(clip),
+        shortcutLabel: "Ctrl+C"
       ),
       ContextMenuButtonConfig(
         "Paste offsets",
         icon: const Icon(Icons.paste, size: 16),
         onPressed: () => _pasteOffsets(clip),
+        shortcutLabel: "Ctrl+V"
       ),
       if (viewData.selectedClipUuids.length >= 2)
         ContextMenuButtonConfig(
