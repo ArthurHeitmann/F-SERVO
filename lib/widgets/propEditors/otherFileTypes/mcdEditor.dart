@@ -6,7 +6,7 @@ import 'package:tuple/tuple.dart';
 
 import '../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
-import '../../../stateManagement/nestedNotifier.dart';
+import '../../../stateManagement/listNotifier.dart';
 import '../../../stateManagement/openFileTypes.dart';
 import '../../../stateManagement/otherFileTypes/McdData.dart';
 import '../../../utils/utils.dart';
@@ -122,7 +122,7 @@ class _McdEditorState extends ChangeNotifierState<McdEditor> {
 }
 
 class _MovingEvent {
-  final NestedNotifier<McdEvent> src;
+  final ListNotifier<McdEvent> src;
   final McdEvent event;
   final int index;
 
@@ -331,7 +331,7 @@ class _McdEditorBodyState extends ChangeNotifierState<_McdEditorBody> {
 class _McdEventEditor extends ChangeNotifierWidget {
   final McdFileData file;
   final McdEvent event;
-  final NestedNotifier<McdEvent> events;
+  final ListNotifier<McdEvent> events;
   final bool altColor;
   final int index;
 
@@ -440,7 +440,7 @@ class _McdEventEditorState extends ChangeNotifierState<_McdEventEditor> {
 }
 
 class _McdEventInsertionMarker extends StatelessWidget {
-  final NestedNotifier<McdEvent> events;
+  final ListNotifier<McdEvent> events;
   final int index;
 
   const _McdEventInsertionMarker({ required this.events, required this.index });

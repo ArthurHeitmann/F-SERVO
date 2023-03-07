@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../stateManagement/Property.dart';
-import '../../../../stateManagement/nestedNotifier.dart';
+import '../../../../stateManagement/listNotifier.dart';
 import '../../../../stateManagement/openFileTypes.dart';
 import '../../../../stateManagement/openFilesManager.dart';
 import '../../../misc/mousePosition.dart';
@@ -12,7 +12,7 @@ import 'audioSequenceController.dart';
 class AudioEditorData extends InheritedWidget {
   final ValueNotifier<double> msPerPix;
   final ValueNotifier<double> xOff;
-  final ValueNestedNotifier<String> selectedClipUuids;
+  final ValueListNotifier<String> selectedClipUuids;
   final BnkTrackClip? Function(String uuid) getClipByUuid;
 
   const AudioEditorData({

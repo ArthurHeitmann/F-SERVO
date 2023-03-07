@@ -15,7 +15,7 @@ import '../../stateManagement/HierarchyEntryTypes.dart';
 import '../../stateManagement/Property.dart';
 import '../../stateManagement/events/jumpToEvents.dart';
 import '../../stateManagement/events/searchPanelEvents.dart';
-import '../../stateManagement/nestedNotifier.dart';
+import '../../stateManagement/listNotifier.dart';
 import '../../stateManagement/openFilesManager.dart';
 import '../../utils/utils.dart';
 import '../misc/RowSeparated.dart';
@@ -47,7 +47,7 @@ class _SearchPanelState extends State<SearchPanel> {
   SearchService? searchService;
   Stream<SearchResult>? searchStream;
   StreamSubscription<String>? onSearchPathChangeSubscription;
-  final ValueNestedNotifier<SearchResult> searchResults = ValueNestedNotifier([]);
+  final ValueListNotifier<SearchResult> searchResults = ValueListNotifier([]);
   final BoolProp isSearching = BoolProp(false);
   final Mutex cancelMutex = Mutex();
   final scrollController = ScrollController();

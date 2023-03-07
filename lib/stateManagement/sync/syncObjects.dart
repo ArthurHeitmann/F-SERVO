@@ -11,7 +11,7 @@ import 'package:xml/xml.dart';
 import '../../utils/utils.dart';
 import '../Property.dart';
 import '../hasUuid.dart';
-import '../nestedNotifier.dart';
+import '../listNotifier.dart';
 import '../events/statusInfo.dart';
 import '../xmlProps/xmlProp.dart';
 import 'syncServer.dart';
@@ -254,7 +254,7 @@ abstract class SyncedXmlObject extends SyncedObject {
 }
 
 class SyncedList<T extends HasUuid> extends SyncedObject {
-  final NestedNotifier<T> list;
+  final ListNotifier<T> list;
   final bool Function(T) filter;
   final SyncedObject Function(T, String parentUuid) makeSyncedObj;
   final T Function(T, String uuid) makeCopy;

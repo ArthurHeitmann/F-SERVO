@@ -6,7 +6,7 @@ import '../../fileTypeUtils/tmd/tmdReader.dart';
 import '../../widgets/propEditors/otherFileTypes/genericTable/tableEditor.dart';
 import '../Property.dart';
 import '../hasUuid.dart';
-import '../nestedNotifier.dart';
+import '../listNotifier.dart';
 import '../undoable.dart';
 
 class TmdEntryData with HasUuid, Undoable {
@@ -39,7 +39,7 @@ class TmdEntryData with HasUuid, Undoable {
   }
 }
 
-class TmdData extends NestedNotifier<TmdEntryData> with CustomTableConfig, Undoable {
+class TmdData extends ListNotifier<TmdEntryData> with CustomTableConfig, Undoable {
   final ChangeNotifier fileChangeNotifier;
 
   TmdData(List<TmdEntryData> entries, String fileName, this.fileChangeNotifier)

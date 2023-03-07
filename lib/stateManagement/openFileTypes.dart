@@ -28,7 +28,7 @@ import 'changesExporter.dart';
 import 'events/statusInfo.dart';
 import 'hasUuid.dart';
 import 'miscValues.dart';
-import 'nestedNotifier.dart';
+import 'listNotifier.dart';
 import 'openFilesManager.dart';
 import 'otherFileTypes/FtbFileData.dart';
 import 'otherFileTypes/McdData.dart';
@@ -1172,13 +1172,13 @@ class BnkTrackClip with HasUuid, Undoable {
 class BnkTrackData with HasUuid, Undoable {
   final OpenFileId file;
   final BnkMusicTrack srcTrack;
-  final ValueNestedNotifier<BnkTrackClip> clips;
+  final ValueListNotifier<BnkTrackClip> clips;
   final ValueNotifier<bool> hasSourceChanged = ValueNotifier(false);
   BnkTrackData(this.file, this.srcTrack, this.clips) {
     _setupListeners();
   }
   BnkTrackData.fromTrack(this.file, this.srcTrack) :
-    clips = ValueNestedNotifier(
+    clips = ValueListNotifier(
       List.generate(srcTrack.playlists.length, (i) => BnkTrackClip.fromPlaylist(
         file,
         srcTrack.playlists[i],
@@ -1253,7 +1253,7 @@ class BnkTrackData with HasUuid, Undoable {
     var snapshot = BnkTrackData(
       file,
       srcTrack,
-      clips.takeSnapshot() as ValueNestedNotifier<BnkTrackClip>,
+      clips.takeSnapshot() as ValueListNotifier<BnkTrackClip>,
     );
     snapshot.overrideUuid(uuid);
     return snapshot;

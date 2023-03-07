@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
 
-import '../nestedNotifier.dart';
+import '../listNotifier.dart';
 
 class IsLoadingStatus extends ChangeNotifier {
   int _loadingActivities = 0;
@@ -25,5 +25,5 @@ class IsLoadingStatus extends ChangeNotifier {
 
 final isLoadingStatus = IsLoadingStatus();
 
-final ValueNestedNotifier<String> messageLog = ValueNestedNotifier<String>([])
+final ValueListNotifier<String> messageLog = ValueListNotifier<String>([])
   ..addListener(() => print("messageLog: ${messageLog.last}"));

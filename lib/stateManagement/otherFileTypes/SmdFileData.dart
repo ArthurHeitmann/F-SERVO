@@ -6,7 +6,7 @@ import '../../fileTypeUtils/smd/smdReader.dart';
 import '../../widgets/propEditors/otherFileTypes/genericTable/tableEditor.dart';
 import '../Property.dart';
 import '../hasUuid.dart';
-import '../nestedNotifier.dart';
+import '../listNotifier.dart';
 import '../undoable.dart';
 
 class SmdEntryData with HasUuid, Undoable {
@@ -39,7 +39,7 @@ class SmdEntryData with HasUuid, Undoable {
   }
 }
 
-class SmdData extends NestedNotifier<SmdEntryData> with CustomTableConfig, Undoable {
+class SmdData extends ListNotifier<SmdEntryData> with CustomTableConfig, Undoable {
   final ChangeNotifier fileChangeNotifier;
 
   SmdData(List<SmdEntryData> entries, String fileName, this.fileChangeNotifier)

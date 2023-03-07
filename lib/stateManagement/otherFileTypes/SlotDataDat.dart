@@ -5,7 +5,7 @@ import '../../fileTypeUtils/utils/ByteDataWrapper.dart';
 import '../../utils/utils.dart';
 import '../Property.dart';
 import '../hasUuid.dart';
-import '../nestedNotifier.dart';
+import '../listNotifier.dart';
 import '../openFilesManager.dart';
 import '../undoable.dart';
 
@@ -162,7 +162,7 @@ class SaveVector with HasUuid, Undoable {
   }
 }
 
-class TreeEntry extends NestedNotifier<TreeEntry> {
+class TreeEntry extends ListNotifier<TreeEntry> {
   final StringProp text;
   final OpenFileId file;
 

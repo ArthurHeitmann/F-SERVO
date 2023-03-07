@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../stateManagement/ChangeNotifierWidget.dart';
-import '../../../../stateManagement/nestedNotifier.dart';
+import '../../../../stateManagement/listNotifier.dart';
 import '../../../../stateManagement/openFileTypes.dart';
 import '../../../../stateManagement/openFilesManager.dart';
 import '../../../../utils/utils.dart';
@@ -30,7 +30,7 @@ class _BnkPlaylistEditorState extends State<BnkPlaylistEditor> {
   final playbackMarker = PlaybackMarker(ValueNotifier(null), ValueNotifier(0));
   final ValueNotifier<double> msPerPix = ValueNotifier(1);
   final ValueNotifier<double> xOff = ValueNotifier(0);
-  final selectedClipUuids = ValueNestedNotifier<String>([]);
+  final selectedClipUuids = ValueListNotifier<String>([]);
   final scrollController = ScrollController();
 
   @override

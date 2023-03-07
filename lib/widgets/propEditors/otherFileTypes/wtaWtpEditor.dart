@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 
 import '../../../stateManagement/Property.dart';
-import '../../../stateManagement/nestedNotifier.dart';
+import '../../../stateManagement/listNotifier.dart';
 import '../../../stateManagement/openFileTypes.dart';
 import '../../../stateManagement/otherFileTypes/wtaData.dart';
 import '../../../stateManagement/undoable.dart';
@@ -25,7 +25,7 @@ class WtaWtpEditor extends StatefulWidget {
 
 class _TexturesTableConfig with CustomTableConfig {
   final WtaWtpTextures texData;
-  final NestedNotifier<WtaTextureEntry> textures;
+  final ListNotifier<WtaTextureEntry> textures;
 
   _TexturesTableConfig(String name, this.texData)
     : textures = texData.textures {

@@ -8,7 +8,7 @@ import '../../utils/utils.dart';
 import '../Property.dart';
 import '../events/statusInfo.dart';
 import '../hasUuid.dart';
-import '../nestedNotifier.dart';
+import '../listNotifier.dart';
 import '../openFileTypes.dart';
 import '../openFilesManager.dart';
 import '../undoable.dart';
@@ -69,7 +69,7 @@ class WtaWtpTextures with HasUuid, Undoable {
   final OpenFileId file;
   final String wtaPath;
   final String wtpPath;
-  final ValueNestedNotifier<WtaTextureEntry> textures;
+  final ValueListNotifier<WtaTextureEntry> textures;
   final bool hasAnySimpleModeFlags;
   final bool useFlagsSimpleMode;
 
@@ -80,7 +80,7 @@ class WtaWtpTextures with HasUuid, Undoable {
   static Future<WtaWtpTextures> fromWtaWtp(OpenFileId file, String wtaPath, String wtpPath, String extractDir) async {
     var wta = await WtaFile.readFromFile(wtaPath);
     var wtpFile = await File(wtpPath).open();
-    var textures = ValueNestedNotifier<WtaTextureEntry>([]);
+    var textures = ValueListNotifier<WtaTextureEntry>([]);
     try {
       for (int i = 0; i < wta.textureOffsets.length; i++) {
         messageLog.add("Extracting texture ${i + 1}/${wta.textureOffsets.length}");
@@ -181,7 +181,7 @@ class WtaWtpTextures with HasUuid, Undoable {
       file,
       wtaPath,
       wtpPath,
-      textures.takeSnapshot() as ValueNestedNotifier<WtaTextureEntry>,
+      textures.takeSnapshot() as ValueListNotifier<WtaTextureEntry>,
       useFlagsSimpleMode,
       hasAnySimpleModeFlags,
     );

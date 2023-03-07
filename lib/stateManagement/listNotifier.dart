@@ -6,12 +6,12 @@ import '../utils/utils.dart';
 import 'hasUuid.dart';
 import 'undoable.dart';
 
-abstract class NestedNotifier<T> extends ChangeNotifier with IterableMixin<T>, HasUuid, Undoable {
+abstract class ListNotifier<T> extends ChangeNotifier with IterableMixin<T>, HasUuid, Undoable {
   final List<T> _children;
   late final ChangeNotifier onDisposed;
   bool _debugDisposed = false;
 
-  NestedNotifier(List<T> children)
+  ListNotifier(List<T> children)
     : _children = children,
     onDisposed = ChangeNotifier();
     
@@ -230,24 +230,23 @@ abstract class NestedNotifier<T> extends ChangeNotifier with IterableMixin<T>, H
   }
 }
 
-class ValueNestedNotifier<T> extends NestedNotifier<T> {
-  
-  ValueNestedNotifier(super.children);
+class ValueListNotifier<T> extends ListNotifier<T> {
+  ValueListNotifier(super.children);
 
   @override
   Undoable takeSnapshot() {
     Undoable snapshot;
     if (isSubtype<T, Undoable>())
-      snapshot = ValueNestedNotifier(_children.map((e) => (e as Undoable).takeSnapshot() as T).toList());
+      snapshot = ValueListNotifier(_children.map((e) => (e as Undoable).takeSnapshot() as T).toList());
     else
-      snapshot = ValueNestedNotifier<T>(toList());
+      snapshot = ValueListNotifier<T>(toList());
     snapshot.overrideUuid(uuid);
     return snapshot;
   }
 
   @override
   void restoreWith(Undoable snapshot) {
-    var list = snapshot as ValueNestedNotifier<T>;
+    var list = snapshot as ValueListNotifier<T>;
     if (isSubtype<T, Undoable>()) {
       updateOrReplaceWith(list.toList() as List<Undoable>, (e) => e.takeSnapshot() as T);
     }

@@ -32,7 +32,7 @@ import 'openFileTypes.dart';
 import 'openFilesManager.dart';
 import 'preferencesData.dart';
 import 'undoable.dart';
-import 'nestedNotifier.dart';
+import 'listNotifier.dart';
 import 'xmlProps/xmlProp.dart';
 
 final pakGroupIdMatcher = RegExp(r"^\w+_([a-f0-9]+)_grp\.pak$", caseSensitive: false);
@@ -46,7 +46,7 @@ class HierarchyEntryAction {
   const HierarchyEntryAction({ required this.name, this.icon, this.iconScale = 1.0, required this.action });
 }
 
-abstract class HierarchyEntry extends NestedNotifier<HierarchyEntry> with Undoable {
+abstract class HierarchyEntry extends ListNotifier<HierarchyEntry> with Undoable {
   OptionalFileInfo? optionalFileInfo;
   StringProp name;
   final bool isSelectable;

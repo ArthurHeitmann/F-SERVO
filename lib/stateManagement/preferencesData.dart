@@ -6,7 +6,7 @@ import '../background/IdLookup.dart';
 import '../widgets/theme/darkTheme.dart';
 import '../widgets/theme/nierTheme.dart';
 import 'Property.dart';
-import 'nestedNotifier.dart';
+import 'listNotifier.dart';
 import 'openFileTypes.dart';
 import 'undoable.dart';
 
@@ -151,7 +151,7 @@ class PreferencesData extends OpenFileData {
   }
 }
 
-class IndexingPathsProp extends NestedNotifier<StringProp> {
+class IndexingPathsProp extends ListNotifier<StringProp> {
   final SharedPreferences _prefs;
 
   IndexingPathsProp(this._prefs, List<String> paths)

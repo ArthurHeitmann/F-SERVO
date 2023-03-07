@@ -24,7 +24,7 @@ import '../widgets/misc/fileSelectionDialog.dart';
 import '../widgets/propEditors/xmlActions/XmlActionPresets.dart';
 import 'HierarchyEntryTypes.dart';
 import 'Property.dart';
-import 'nestedNotifier.dart';
+import 'listNotifier.dart';
 import '../fileTypeUtils/pak/pakExtractor.dart';
 import 'openFileTypes.dart';
 import 'openFilesManager.dart';
@@ -34,12 +34,12 @@ import 'undoable.dart';
 import 'xmlProps/xmlProp.dart';
 
 
-class OpenHierarchyManager extends NestedNotifier<HierarchyEntry> with Undoable {
+class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
   HierarchyEntry? _selectedEntry;
 
   OpenHierarchyManager() : super([]);
 
-  NestedNotifier parentOf(HierarchyEntry entry) {
+  ListNotifier parentOf(HierarchyEntry entry) {
     return findRecWhere((e) => e.contains(entry)) ?? this;
   }
 

@@ -8,14 +8,14 @@ import '../utils/utils.dart';
 import '../widgets/misc/confirmCancelDialog.dart';
 import 'changesExporter.dart';
 import 'miscValues.dart';
-import 'nestedNotifier.dart';
+import 'listNotifier.dart';
 import 'openFileTypes.dart';
 import 'preferencesData.dart';
 import 'events/statusInfo.dart';
 import 'undoable.dart';
 
 typedef OpenFileId = String;
-class FilesAreaManager extends NestedNotifier<OpenFileData> implements Undoable {
+class FilesAreaManager extends ListNotifier<OpenFileData> implements Undoable {
   OpenFileData? _currentFile;
 
   FilesAreaManager() : super([]);
@@ -223,7 +223,7 @@ class FilesAreaManager extends NestedNotifier<OpenFileData> implements Undoable 
   }
 }
 
-class OpenFilesAreasManager extends NestedNotifier<FilesAreaManager> {
+class OpenFilesAreasManager extends ListNotifier<FilesAreaManager> {
   FilesAreaManager? _activeArea;
   final FilesAreaManager hiddenArea;
   final ChangeNotifier subEvents = ChangeNotifier();

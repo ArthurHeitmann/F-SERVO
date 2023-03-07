@@ -8,7 +8,7 @@ import 'package:tuple/tuple.dart';
 
 import '../../../background/IdLookup.dart';
 import '../../../stateManagement/Property.dart';
-import '../../../stateManagement/nestedNotifier.dart';
+import '../../../stateManagement/listNotifier.dart';
 import '../../../stateManagement/openFileTypes.dart';
 import '../../../stateManagement/otherFileTypes/SlotDataDat.dart';
 import '../../../stateManagement/otherFileTypes/itemIdsToNames.dart';
@@ -366,7 +366,7 @@ Iterable<AutocompleteConfig> _getItemIdAutocomplete() {
 }
 
 class _StringListTableConfig with CustomTableConfig {
-  final NestedNotifier<TreeEntry> strings;
+  final ListNotifier<TreeEntry> strings;
   final FutureOr<Iterable<AutocompleteConfig>> Function()? autocompleteOptions;
 
   _StringListTableConfig(String name, this.strings, [this.autocompleteOptions]) {
@@ -424,7 +424,7 @@ class _StringListTableConfig with CustomTableConfig {
 
 class _TogglesEditor extends StatefulWidget {
   final String name;
-  final NestedNotifier<TreeEntry> toggles;
+  final ListNotifier<TreeEntry> toggles;
 
   const _TogglesEditor({ super.key, required this.name, required this.toggles });
 

@@ -6,12 +6,12 @@ import '../../fileTypeUtils/yax/japToEng.dart';
 import '../../utils/utils.dart';
 import '../Property.dart';
 import '../charNamesXmlWrapper.dart';
-import '../nestedNotifier.dart';
+import '../listNotifier.dart';
 import '../openFilesManager.dart';
 import '../undoable.dart';
 import 'xmlActionProp.dart';
 
-class XmlProp extends NestedNotifier<XmlProp> {
+class XmlProp extends ListNotifier<XmlProp> {
   final int tagId;
   final String tagName;
   final Prop value;
