@@ -30,15 +30,15 @@ String _getAssetPath(String modeName) {
 
 class _ObjIdEditorState extends ChangeNotifierState<ObjIdEditor> { @override
   Widget build(BuildContext context) {
-    return optionalPuidDraggable(
-      child: Row(
-        mainAxisSize: MainAxisSize.max,
-        children: [
-          ObjIdIcon(objId: widget.objId),
-          const SizedBox(width: 8),
-          UnderlinePropTextField(prop: widget.objId),
-        ],
-      ),
+    return Row(
+      mainAxisSize: MainAxisSize.max,
+      children: [
+        optionalPuidDraggable(
+          child: ObjIdIcon(objId: widget.objId)
+        ),
+        const SizedBox(width: 8),
+        UnderlinePropTextField(prop: widget.objId),
+      ],
     );
   }
 
@@ -167,12 +167,15 @@ class _ObjIdIconFB extends StatelessWidget {
           if (snapshot.data == true) {
             return Image.asset(assetPath, width: 50, height: 50);
           } else {
-            return Text(
-              "?",
-              style: TextStyle(
-                fontSize: 30,
-                fontWeight: FontWeight.bold,
-                color: getTheme(context).textColor!.withOpacity(0.333),
+            return Material(
+              color: Colors.transparent,
+              child: Text(
+                "?",
+                style: TextStyle(
+                  fontSize: 30,
+                  fontWeight: FontWeight.bold,
+                  color: getTheme(context).textColor!.withOpacity(0.333),
+                ),
               ),
             );
           }

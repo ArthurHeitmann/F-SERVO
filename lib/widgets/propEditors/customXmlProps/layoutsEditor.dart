@@ -26,6 +26,8 @@ class LayoutsEditor extends StatelessWidget {
               ),
             ],
           ),
+        if (showDetails && prop.get("normal")!.get("flags") != null)
+          makeXmlPropEditor(prop.get("normal")!.get("flags")!, showDetails),
         makeXmlPropEditor(prop.get("normal")!.get("layouts")!, showDetails),
       ],
     );

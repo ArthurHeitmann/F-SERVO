@@ -17,6 +17,7 @@ import '../../stateManagement/events/jumpToEvents.dart';
 import '../../stateManagement/events/searchPanelEvents.dart';
 import '../../stateManagement/listNotifier.dart';
 import '../../stateManagement/openFilesManager.dart';
+import '../../stateManagement/preferencesData.dart';
 import '../../utils/utils.dart';
 import '../misc/RowSeparated.dart';
 import '../misc/SmoothScrollBuilder.dart';
@@ -73,12 +74,16 @@ class _SearchPanelState extends State<SearchPanel> {
     prevOpenFileUuids = openHierarchyManager.map((e) => e.uuid).toSet();
     extensions.addListener(updateSearchStream);
     path.addListener(updateSearchStream);
+    path.addListener(_saveLastPath);
     query.addListener(updateSearchStream);
     isRegex.addListener(updateSearchStream);
     isCaseSensitive.addListener(updateSearchStream);
     id.addListener(updateSearchStream);
     useIndexedData.addListener(updateSearchStream);
+    var prefs = PreferencesData();
     extensions.changesUndoable = false;
+    if (prefs.lastSearchDir != null)
+      path.value = prefs.lastSearchDir!.value;
     path.changesUndoable = false;
     query.changesUndoable = false;
     isRegex.changesUndoable = false;
@@ -141,6 +146,12 @@ class _SearchPanelState extends State<SearchPanel> {
       return false;
     }
     return true;
+  }
+
+  void _saveLastPath() {
+    var prefs = PreferencesData();
+    if (prefs.lastSearchDir != null)
+      prefs.lastSearchDir!.value = path.value;
   }
 
   void _updateSearchStream() async {

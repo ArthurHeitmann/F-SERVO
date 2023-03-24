@@ -153,7 +153,7 @@ class _FileMetaEditorState extends ChangeNotifierState<FileMetaEditor> {
               ],
             ),
             const SizedBox(height: 5),
-            const Text("Tokens:"),
+            const Text("Conditions:"),
             const SizedBox(height: 5),
             if (tokens != null)
               XmlArrayEditor(

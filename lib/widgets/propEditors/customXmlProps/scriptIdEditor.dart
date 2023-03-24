@@ -64,7 +64,10 @@ class _ScriptIdEditorState<T extends PropTextField> extends ChangeNotifierState<
   }
 
   Widget makeGoToScriptButton(BuildContext context) {
-    var scriptFileName = "${datName!}_${(prop.value).toRadixString(16)}_scp.bin.rb";
+    var baseName = datName!;
+    if (baseName == "corehap")
+      baseName = "global";
+    var scriptFileName = "${baseName}_${(prop.value).toRadixString(16)}_scp.bin.rb";
     return Flexible(
       child: OutlinedButton.icon(
         icon: Icon(Icons.description, size: 15, color: getTheme(context).filetypeDocColor),

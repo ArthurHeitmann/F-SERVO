@@ -64,11 +64,12 @@ class _TextFieldAutocompleteState extends State<TextFieldAutocomplete> {
     super.dispose();
   }
 
-  void _onFocusChange() {
+  void _onFocusChange() async {
     if (widget.focusNode.hasFocus)
       _showOverlay();
-    else
+    else {
       _hideOverlay();
+    }
   }
 
   void _showOverlay() {
@@ -245,7 +246,7 @@ class __AutocompleteOverlayState extends State<_AutocompleteOverlay> with ArrowN
   }
 
   void onOptionSelected(AutocompleteConfig option) {
-    widget.textController.text = option.displayText;
+    // widget.textController.text = option.displayText;
     if (widget.prop is! HexProp || isHexInt(option.displayText))
       widget.prop.updateWith(option.insertText);
     else
