@@ -20,10 +20,10 @@ XmlElement _makeAction(String code, List<XmlElement> children, { int attribute =
   ]);
 }
 
-XmlElement _makePuid() {
+XmlElement _makePuid({ String code = "0x0" }) {
   return makeXmlElement(name: "puid",
     children: [
-      makeXmlElement(name: "code", text: "0x0"),
+      makeXmlElement(name: "code", text: code),
       makeXmlElement(name: "id", text: "0x0"),
     ],
   );
@@ -1094,6 +1094,197 @@ class XmlActionPresets {
       parentTags: cxt.parentTags,
     ),
   );
+  static XmlRawPreset uiTimerAction = XmlRawPreset(
+    "Action",
+    XmlActionPresets.action.editor,
+    (cxt) => XmlProp.fromXml(
+      _makeAction("UITimerAction", [
+        makeXmlElement(name: "timeLimit", text: "30"),
+        makeXmlElement(name: "timeWarn", text: "3"),
+        makeXmlElement(name: "countDown", text: "1"),
+        makeXmlElement(name: "setStart", text: "1"),
+        makeXmlElement(name: "uiType", text: "0x0"),
+      ]),
+      file: cxt.file,
+      parentTags: cxt.parentTags,
+    ),
+  );
+  static XmlRawPreset subPhaseAction = XmlRawPreset(
+    "Action",
+    XmlActionPresets.action.editor,
+    (cxt) => XmlProp.fromXml(
+      _makeAction("SubPhaseAction", [
+        makeXmlElement(name: "area", children: [
+          makeXmlElement(name: "size", text: "0"),
+        ]),
+        makeXmlElement(name: "subPhase", text: "00_AB_Ruined_City"),
+      ]),
+      file: cxt.file,
+      parentTags: cxt.parentTags,
+    ),
+  );
+  static XmlRawPreset playerCombatLimitAction = XmlRawPreset(
+    "Action",
+    XmlActionPresets.action.editor,
+    (cxt) => XmlProp.fromXml(
+      _makeAction("PlayerCombatLimitAction", [
+        makeXmlElement(name: "on", text: "1"),
+        makeXmlElement(name: "attack_", text: "1"),
+        makeXmlElement(name: "escape_", text: "1"),
+        makeXmlElement(name: "run_", text: "1"),
+        makeXmlElement(name: "jump_", text: "1"),
+        makeXmlElement(name: "gun_", text: "1"),
+        makeXmlElement(name: "skill_", text: "1"),
+        makeXmlElement(name: "suicide_", text: "1"),
+        makeXmlElement(name: "walk_", text: "0"),
+        makeXmlElement(name: "area_", children: [
+          makeXmlElement(name: "size", text: "0"),
+        ]),
+        makeXmlElement(name: "forceWalkArea_", text: "0"),
+        makeXmlElement(name: "noCaption_", text: "1"),
+        makeXmlElement(name: "actIgnore", text: "1"),
+      ]),
+      file: cxt.file,
+      parentTags: cxt.parentTags,
+    ),
+  );
+  static XmlRawPreset fadeAction = XmlRawPreset(
+    "Action",
+    XmlActionPresets.action.editor,
+    (cxt) => XmlProp.fromXml(
+      _makeAction("FadeAction", [
+        makeXmlElement(name: "time", text: "1.0"),
+        makeXmlElement(name: "type", text: "2"),
+      ]),
+      file: cxt.file,
+      parentTags: cxt.parentTags,
+    ),
+  );
+  static XmlRawPreset entityLayoutLottery = XmlRawPreset(
+    "Action",
+    XmlActionPresets.action.editor,
+    (cxt) => XmlProp.fromXml(
+      _makeAction("EntityLayoutLottery", [
+        _makePuid(code: "0xa6aaf7a4"),  // hap::Action
+        makeXmlElement(name: "count", text: "5"),
+        makeXmlElement(name: "near", text: "10"),
+      ]),
+      file: cxt.file,
+      parentTags: cxt.parentTags,
+    ),
+  );
+  static XmlRawPreset positionSet = XmlRawPreset(
+    "Action",
+    XmlActionPresets.action.editor,
+    (cxt) => XmlProp.fromXml(
+      _makeAction("PositionSet", [
+        makeXmlElement(name: "location", children: [
+          makeXmlElement(name: "position", text: "0 0 0"),
+        ]),
+      ]),
+      file: cxt.file,
+      parentTags: cxt.parentTags,
+    ),
+  );
+  static XmlRawPreset positionJump = XmlRawPreset(
+    "Action",
+    XmlActionPresets.action.editor,
+    (cxt) => XmlProp.fromXml(
+      _makeAction("PositionJump", [
+        makeXmlElement(name: "area", children: [
+          makeXmlElement(name: "size", text: "0"),
+        ]),
+        makeXmlElement(name: "location", children: [
+          makeXmlElement(name: "position", text: "0 0 0"),
+        ]),
+        makeXmlElement(name: "stopFrame", text: "10"),
+      ]),
+      file: cxt.file,
+      parentTags: cxt.parentTags,
+    ),
+  );
+  static XmlRawPreset emListUnlockAction = XmlRawPreset(
+    "Action",
+    XmlActionPresets.action.editor,
+    (cxt) => XmlProp.fromXml(
+      _makeAction("EmListUnlockAction", [
+        makeXmlElement(name: "ObjId", text: "em0000"),
+        makeXmlElement(name: "setType", text: "0"),
+        makeXmlElement(name: "setFlag", text: "0x0"),
+      ]),
+      file: cxt.file,
+      parentTags: cxt.parentTags,
+    ),
+  );
+  static XmlRawPreset recoveryArea = XmlRawPreset(
+    "Action",
+    XmlActionPresets.action.editor,
+    (cxt) => XmlProp.fromXml(
+      _makeAction("RecoveryArea", [
+        makeXmlElement(name: "area", children: [
+          makeXmlElement(name: "size", text: "1"),
+          _makeArea(),
+        ]),
+      ]),
+      file: cxt.file,
+      parentTags: cxt.parentTags,
+    ),
+  );
+  static XmlRawPreset killArea = XmlRawPreset(
+    "Action",
+    XmlActionPresets.action.editor,
+    (cxt) => XmlProp.fromXml(
+      _makeAction("KillArea", [
+        makeXmlElement(name: "area", children: [
+          makeXmlElement(name: "size", text: "1"),
+          _makeArea(),
+        ]),
+        makeXmlElement(name: "location", children: [
+          makeXmlElement(name: "position", text: "0 0 0"),
+          makeXmlElement(name: "rotation", text: "0 0 0"),
+        ]),
+      ]),
+      file: cxt.file,
+      parentTags: cxt.parentTags,
+    ),
+  );
+  static XmlRawPreset sacredArea = XmlRawPreset(
+    "Action",
+    XmlActionPresets.action.editor,
+    (cxt) => XmlProp.fromXml(
+      _makeAction("SacredArea", [
+        makeXmlElement(name: "area", children: [
+          makeXmlElement(name: "size", text: "1"),
+          _makeArea(),
+        ]),
+      ]),
+      file: cxt.file,
+      parentTags: cxt.parentTags,
+    ),
+  );
+  static XmlRawPreset soundNovelAction = XmlRawPreset(
+    "Action",
+    XmlActionPresets.action.editor,
+    (cxt) => XmlProp.fromXml(
+      _makeAction("SoundNovelAction", [
+        makeXmlElement(name: "filename", text: "M9000_S0500_N.txt"),
+        makeXmlElement(name: "type", text: "0"),
+      ]),
+      file: cxt.file,
+      parentTags: cxt.parentTags,
+    ),
+  );
+  static XmlRawPreset battleCounter = XmlRawPreset(
+    "Action",
+    XmlActionPresets.action.editor,
+    (cxt) => XmlProp.fromXml(
+      _makeAction("tr::BattleCounter", [
+        makeXmlElement(name: "resetType", text: "1"),
+      ]),
+      file: cxt.file,
+      parentTags: cxt.parentTags,
+    ),
+  );
 }
 
 final _actionPreset = {
@@ -1129,4 +1320,17 @@ final _actionPreset = {
   "HackingRequestEndAction (with endType)": XmlActionPresets.hackingRequestEndActionWithEndType,
   "BgmAction": XmlActionPresets.bgmAction,
   "BattleBgmAction": XmlActionPresets.battleBgmAction,
+  "UITimerAction": XmlActionPresets.uiTimerAction,
+  "SubPhaseAction": XmlActionPresets.subPhaseAction,
+  "PlayerCombatLimitAction": XmlActionPresets.playerCombatLimitAction,
+  "FadeAction": XmlActionPresets.fadeAction,
+  "EntityLayoutLottery": XmlActionPresets.entityLayoutLottery,
+  "PositionSet": XmlActionPresets.positionSet,
+  "PositionJump": XmlActionPresets.positionJump,
+  "EmListUnlockAction": XmlActionPresets.emListUnlockAction,
+  "RecoveryArea": XmlActionPresets.recoveryArea,
+  "KillArea": XmlActionPresets.killArea,
+  "SacredArea": XmlActionPresets.sacredArea,
+  "SoundNovelAction": XmlActionPresets.soundNovelAction,
+  "tr::BattleCounter": XmlActionPresets.battleCounter,
 };
