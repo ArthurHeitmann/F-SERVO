@@ -14,6 +14,8 @@ import '../../../utils/puidPresets.dart';
 import '../../../utils/utils.dart';
 import '../../misc/CustomIcons.dart';
 import '../../misc/selectionPopup.dart';
+import '../customXmlProps/EmgPointEditor.dart';
+import '../customXmlProps/EmgSpawnNodeEditor.dart';
 import '../customXmlProps/areaEditor.dart';
 import '../customXmlProps/commandEditor.dart';
 import '../customXmlProps/conditionEditor.dart';
@@ -315,18 +317,31 @@ class XmlPresets {
     <T extends PropTextField>(prop, showDetails) => ScriptVariableEditor<T>(prop: prop, showDetails: showDetails),
     (cxt) => XmlProp.fromXml(
       makeXmlElement(name: "value", children: [
-          makeXmlElement(name: "id", text: "0x${randomId().toRadixString(16)}"),
-          makeXmlElement(name: "name", text: "myVariable"),
-          makeXmlElement(name: "value", children: [
-            makeXmlElement(name: "code", text: "0x0"),
-            makeXmlElement(name: "value", text: "0x0"),
-          ]),
-        ],
-      ),
+        makeXmlElement(name: "id", text: "0x${randomId().toRadixString(16)}"),
+        makeXmlElement(name: "name", text: "myVariable"),
+        makeXmlElement(name: "value", children: [
+          makeXmlElement(name: "code", text: "0x0"),
+          makeXmlElement(name: "value", text: "0x0"),
+        ]),
+      ]),
       file: cxt.file,
       parentTags: cxt.parentTags,
     ),
     XmlRawPreset.defaultDuplicateWithRandIdAsXml,
+  );
+  static XmlRawPreset spawnNode = XmlRawPreset(
+    "Node",
+    <T extends PropTextField>(prop, showDetails) => XmlEmgSpawnNodeEditor(prop: prop, showDetails: showDetails,),
+    (cxt) => XmlProp.fromXml(
+      makeXmlElement(name: "value", children: [
+        makeXmlElement(name: "point", text: "0.0 0.0 0.0"),
+        makeXmlElement(name: "radius", text: "5.0"),
+        makeXmlElement(name: "rate", text: "0"),
+        makeXmlElement(name: "minDistance", text: "0"),
+      ]),
+      file: cxt.file,
+      parentTags: cxt.parentTags,
+    ),
   );
   static XmlRawPreset scriptId = XmlRawPreset(
     "Child",
@@ -336,6 +351,11 @@ class XmlPresets {
   static XmlRawPreset dist = XmlRawPreset(
     "Child",
     <T extends PropTextField>(prop, showDetails) => DistEditor(dist: prop, showDetails: showDetails,),
+    (cxt) => throw UnimplementedError(),
+  );
+  static XmlRawPreset points = XmlRawPreset(
+    "Child",
+    <T extends PropTextField>(prop, showDetails) => XmlEmgPointEditor(prop: prop, showDetails: showDetails,),
     (cxt) => throw UnimplementedError(),
   );
 
@@ -405,6 +425,10 @@ XmlRawPreset getXmlPropPreset(XmlProp prop) {
   // dist
   if (prop.tagName == "dist") {
     return XmlPresets.dist;
+  }
+  // points
+  if (prop.tagName == "points") {
+    return XmlPresets.points;
   }
   // fallback
   return XmlPresets.fallback;

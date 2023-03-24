@@ -12,8 +12,11 @@ import 'transformsEditor.dart';
 class DistEditor extends ChangeNotifierWidget {
   final XmlProp dist;
   final bool showDetails;
+  final bool showTagName;
 
-  DistEditor({ super.key, required this.dist, required this.showDetails }) : super(notifier: dist);
+  DistEditor({
+    super.key, required this.dist, required this.showDetails, this.showTagName = true
+  }) : super(notifier: dist);
 
   @override
   State<DistEditor> createState() => _DistEditorState();
@@ -57,8 +60,10 @@ class _DistEditorState extends ChangeNotifierState<DistEditor> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 8),
-          const Text("dist"),
+          if (widget.showTagName)
+            const SizedBox(height: 8),
+          if (widget.showTagName)
+            const Text("dist"),
           if (widget.dist.any((e) => e.tagName == "position" || e.tagName == "rotation"))
             TransformsEditor(parent: widget.dist, canBeScaled: false),
           ...widget.dist
