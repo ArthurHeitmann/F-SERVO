@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:path/path.dart';
 
+import '../stateManagement/events/miscEvents.dart';
 import '../stateManagement/preferencesData.dart';
 
 class WemFilesLookup {
@@ -13,6 +14,7 @@ class WemFilesLookup {
   WemFilesLookup() {
     var prefs = PreferencesData();
     prefs.waiExtractDir?.addListener(updateIndex);
+    onWaiFilesExtractedStream.listen((_) => updateIndex());
   }
 
   Future<void> updateIndex() async {

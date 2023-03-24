@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:path/path.dart';
 
+import '../../stateManagement/events/miscEvents.dart';
 import '../../stateManagement/events/statusInfo.dart';
 import 'waiIO.dart';
 
@@ -35,6 +36,7 @@ class WaiChildWem extends WaiChild {
 Future<List<WaiChild>> extractWaiWsps(WaiFile wai, String waiPath, String extractPath, [bool noExtract = false]) async {
   List<WaiChild> structure = [];
   String waiDir = dirname(waiPath);
+  bool hasExtractedFiles = false;
   await Future.wait(wai.wspDirectories.map((dir) async {
     String wspsDir = dir.name.isNotEmpty ? join(extractPath, dir.name) : extractPath;
     await Directory(wspsDir).create(recursive: true);
@@ -84,6 +86,7 @@ Future<List<WaiChild>> extractWaiWsps(WaiFile wai, String waiPath, String extrac
           wemFilesInWsp.add(WaiChildWem(wemStruct.toFileName(i), wemPath, wemStruct.wemID));
         }
         messageLog.add("Extracted $wspName");
+        hasExtractedFiles = true;
       } finally {
         await wspFile.close();
       }
@@ -93,6 +96,9 @@ Future<List<WaiChild>> extractWaiWsps(WaiFile wai, String waiPath, String extrac
   }));
 
   structure.sort((a, b) => a.name.compareTo(b.name));
+
+  if (hasExtractedFiles)
+    onWaiFilesExtracted.add(null);
 
   return structure;
 }
