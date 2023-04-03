@@ -28,6 +28,7 @@ import '../customXmlProps/puidReferenceEditor.dart';
 import '../customXmlProps/scriptIdEditor.dart';
 import '../customXmlProps/scriptVariableEditor.dart';
 import '../customXmlProps/transformsEditor.dart';
+import '../xmlActions/XmlEnemyGeneratorActionEditor.dart';
 import '../xmlActions/xmlArrayEditor.dart';
 import 'XmlPropEditor.dart';
 import 'propTextField.dart';
@@ -528,6 +529,11 @@ List<Widget> makeXmlMultiPropEditor<T extends PropTextField>(
       widgets.add(XmlArrayEditor(parent, preset, child, childTagName, showDetails));
 
       i = parent.length;
+    }
+    // EnemyGenerator
+    else if (parent.tagName == "action" && parent.length > i + 1 && child.tagName == "points" && parent[i + 1].tagName == "items") {
+      widgets.add(EnemyGeneratorEditor(action: parent, showDetails: showDetails));
+      break;
     }
     // fallback
     else {

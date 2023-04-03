@@ -1,13 +1,13 @@
 
 import 'package:flutter/material.dart';
 
+import '../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../stateManagement/sync/syncListImplementations.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
 import '../../misc/syncButton.dart';
 import '../../theme/customTheme.dart';
 import '../customXmlProps/distEditor.dart';
 import '../simpleProps/XmlPropEditorFactory.dart';
-import '../simpleProps/propEditorFactory.dart';
 import 'XmlActionEditor.dart';
 
 class XmlEnemyGeneratorActionEditor extends XmlActionEditor {
@@ -34,6 +34,27 @@ class _XmlEnemyGeneratorActionEditorState extends XmlActionEditorState<XmlEnemyG
 
   @override
   Widget makeInnerActionBody() {
+    return EnemyGeneratorEditor(
+      action: widget.action,
+      showDetails: widget.showDetails,
+    );
+  }  
+}
+
+class EnemyGeneratorEditor extends ChangeNotifierWidget {
+  final XmlProp action;
+  final bool showDetails;
+
+  EnemyGeneratorEditor({ super.key, required this.action, required this.showDetails })
+    : super(notifier: action);
+
+  @override
+  State<EnemyGeneratorEditor> createState() => _EnemyGeneratorEditorState();
+}
+
+class _EnemyGeneratorEditorState extends ChangeNotifierState<EnemyGeneratorEditor> {
+  @override
+  Widget build(BuildContext context) {
     var spawnNodes = widget.action.get("points");
     var spawnEntities = widget.action.get("items");
     var minMaxProps = widget.action.where((e) => _minMaxProperties.contains(e.tagName));
