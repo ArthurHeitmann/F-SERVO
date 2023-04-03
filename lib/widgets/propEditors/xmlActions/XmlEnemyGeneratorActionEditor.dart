@@ -34,25 +34,25 @@ class _XmlEnemyGeneratorActionEditorState extends XmlActionEditorState<XmlEnemyG
 
   @override
   Widget makeInnerActionBody() {
-    return EnemyGeneratorEditor(
+    return EnemyGeneratorInnerEditor(
       action: widget.action,
       showDetails: widget.showDetails,
     );
   }  
 }
 
-class EnemyGeneratorEditor extends ChangeNotifierWidget {
+class EnemyGeneratorInnerEditor extends ChangeNotifierWidget {
   final XmlProp action;
   final bool showDetails;
 
-  EnemyGeneratorEditor({ super.key, required this.action, required this.showDetails })
+  EnemyGeneratorInnerEditor({ super.key, required this.action, required this.showDetails })
     : super(notifier: action);
 
   @override
-  State<EnemyGeneratorEditor> createState() => _EnemyGeneratorEditorState();
+  State<EnemyGeneratorInnerEditor> createState() => _EnemyGeneratorEditorState();
 }
 
-class _EnemyGeneratorEditorState extends ChangeNotifierState<EnemyGeneratorEditor> {
+class _EnemyGeneratorEditorState extends ChangeNotifierState<EnemyGeneratorInnerEditor> {
   @override
   Widget build(BuildContext context) {
     var spawnNodes = widget.action.get("points");

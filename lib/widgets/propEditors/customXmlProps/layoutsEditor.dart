@@ -14,6 +14,10 @@ class LayoutsEditor extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    XmlProp? parent;
+    parent ??= prop.get("normal");
+    parent ??= prop;
+    
     return Column(
       children: [
         if (showDetails)
@@ -22,13 +26,13 @@ class LayoutsEditor extends StatelessWidget {
               Text("parent", style: getTheme(context).propInputTextStyle,),
               const SizedBox(width: 10),
               Flexible(
-                child: PuidReferenceEditor(prop: prop.get("normal")!.get("parent")!.get("id")!.get("id")!, showDetails: showDetails)
+                child: PuidReferenceEditor(prop: parent.get("parent")!.get("id")!.get("id")!, showDetails: showDetails)
               ),
             ],
           ),
-        if (showDetails && prop.get("normal")!.get("flags") != null)
-          makeXmlPropEditor(prop.get("normal")!.get("flags")!, showDetails),
-        makeXmlPropEditor(prop.get("normal")!.get("layouts")!, showDetails),
+        if (showDetails && parent.get("flags") != null)
+          makeXmlPropEditor(parent.get("flags")!, showDetails),
+        ...makeXmlMultiPropEditor(parent.get("layouts")!, showDetails),
       ],
     );
   }

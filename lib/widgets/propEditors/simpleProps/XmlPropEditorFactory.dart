@@ -6,8 +6,10 @@ import 'package:flutter/material.dart';
 import 'package:xml/xml.dart';
 
 import '../../../main.dart';
+import '../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/openFilesManager.dart';
+import '../../../stateManagement/xmlProps/xmlActionProp.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
 import '../../../utils/paramPresets.dart';
 import '../../../utils/puidPresets.dart';
@@ -29,6 +31,7 @@ import '../customXmlProps/scriptIdEditor.dart';
 import '../customXmlProps/scriptVariableEditor.dart';
 import '../customXmlProps/transformsEditor.dart';
 import '../xmlActions/XmlEnemyGeneratorActionEditor.dart';
+import '../xmlActions/XmlEntityActionEditor.dart';
 import '../xmlActions/xmlArrayEditor.dart';
 import 'XmlPropEditor.dart';
 import 'propTextField.dart';
@@ -378,6 +381,14 @@ class XmlPresets {
   );
 }
 
+final Map<int, Widget Function(XmlActionProp action, bool showDetails)> _innerActionEditors = {
+  crc32("EnemyGenerator"): (action, showDetails) => EnemyGeneratorInnerEditor(action: action, showDetails: showDetails),
+  crc32("EntityLayoutAction"): (action, showDetails) => EntityActionInnerEditor(action: action, showDetails: showDetails),
+  crc32("EntityLayoutArea"): (action, showDetails) => EntityActionInnerEditor(action: action, showDetails: showDetails),
+  crc32("EnemySetAction"): (action, showDetails) => EntityActionInnerEditor(action: action, showDetails: showDetails),
+  crc32("EnemySetArea"): (action, showDetails) => EntityActionInnerEditor(action: action, showDetails: showDetails),
+  crc32("SQ090_Layout"): (action, showDetails) => EntityActionInnerEditor(action: action, showDetails: showDetails),
+};
 
 XmlRawPreset getXmlPropPreset(XmlProp prop) {
   // area editor
@@ -428,7 +439,7 @@ XmlRawPreset getXmlPropPreset(XmlProp prop) {
     return XmlPresets.dist;
   }
   // points
-  if (prop.tagName == "points") {
+  if (prop.tagName == "points" && prop.length == 2) {
     return XmlPresets.points;
   }
   // fallback
@@ -531,8 +542,9 @@ List<Widget> makeXmlMultiPropEditor<T extends PropTextField>(
       i = parent.length;
     }
     // EnemyGenerator
-    else if (parent.tagName == "action" && parent.length > i + 1 && child.tagName == "points" && parent[i + 1].tagName == "items") {
-      widgets.add(EnemyGeneratorEditor(action: parent, showDetails: showDetails));
+    else if (i == 4 && parent is XmlActionProp && _innerActionEditors.containsKey(parent.code.value)) {
+      var innerEditor = _innerActionEditors[parent.code.value]!.call(parent, showDetails);
+      widgets.add(innerEditor);
       break;
     }
     // fallback

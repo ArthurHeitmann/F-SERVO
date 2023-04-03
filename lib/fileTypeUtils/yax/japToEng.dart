@@ -11118,5 +11118,10 @@ final Map<String, String> japToEng = HashMap<String, String>.from({
 	"エリアコマンド_2Fの裏側死体ON": "Area command _ 2F back side corpse ON",
 	"STG中停止(2)": "Stop in STG (2)",
 	"\"敵パスカーブ4 D1\"": "\" enemy path curve 4 D1\"",
-	"リマインド会話マネージャー": "reminder conversation manager"
+	"リマインド会話マネージャー": "reminder conversation manager",
+  "左奥": "Back left",
+  "最奥": "Deepest part",
+  "入口右": "Entrance right",
+  "入口左": "Entrance left",
+  "中央": "Center",
 });
