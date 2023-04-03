@@ -46,6 +46,7 @@ class _TextFieldAutocompleteState extends State<TextFieldAutocomplete> {
   final layerLink = LayerLink();
   Iterable<AutocompleteConfig>? options;
   OverlayEntry? overlayEntry;
+  bool isOverlayHovered = false;
 
   @override
   void initState() {
@@ -67,9 +68,13 @@ class _TextFieldAutocompleteState extends State<TextFieldAutocomplete> {
   void _onFocusChange() async {
     if (widget.focusNode.hasFocus)
       _showOverlay();
-    else {
+    else if (!isOverlayHovered) {
       _hideOverlay();
     }
+  }
+
+  void _onOverlayHoverChange(bool isHovered) {
+    isOverlayHovered = isHovered;
   }
 
   void _showOverlay() {
@@ -86,6 +91,8 @@ class _TextFieldAutocompleteState extends State<TextFieldAutocomplete> {
         options: options!,
         textController: widget.textController,
         focusNode: widget.focusNode,
+        onHoverChanged: _onOverlayHoverChange,
+        closeOverly: _hideOverlay,
         prop: widget.prop,
         offset: offset,
         size: size,
@@ -128,6 +135,8 @@ class _AutocompleteOverlay extends StatefulWidget {
   final Iterable<AutocompleteConfig> options;
   final TextEditingController textController;
   final FocusNode focusNode;
+  final void Function(bool isHovered) onHoverChanged;
+  final void Function() closeOverly;
   final Prop prop;
   final Offset offset;
   final Size size;
@@ -138,6 +147,8 @@ class _AutocompleteOverlay extends StatefulWidget {
     required this.options,
     required this.textController,
     required this.focusNode,
+    required this.onHoverChanged,
+    required this.closeOverly,
     required this.prop,
     required this.offset,
     required this.size,
@@ -200,27 +211,31 @@ class __AutocompleteOverlayState extends State<_AutocompleteOverlay> with ArrowN
                 maxWidth: 300,
                 maxHeight: 215,
               ),
-              child: SmoothSingleChildScrollView(
-                controller: scrollController,
-                child: Material(
-                  color: getTheme(context).contextMenuBgColor,
-                  elevation: 8.0,
-                  borderRadius: BorderRadius.circular(4.0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: List.generate(
-                      filteredOptions.length,
-                      (index) {
-                        var option = filteredOptions.elementAt(index);
-                        return SelectableListEntry(
-                          height: 25,
-                          text: option.displayText,
-                          isSelected: index == focusedIndex,
-                          scale: 0.85,
-                          reserveIconSpace: false,
-                          onPressed: () => onOptionSelected(option),
-                        );
-                      },
+              child: MouseRegion(
+                onEnter: (_) => widget.onHoverChanged(true),
+                onExit: (_) => widget.onHoverChanged(false),
+                child: SmoothSingleChildScrollView(
+                  controller: scrollController,
+                  child: Material(
+                    color: getTheme(context).contextMenuBgColor,
+                    elevation: 8.0,
+                    borderRadius: BorderRadius.circular(4.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: List.generate(
+                        filteredOptions.length,
+                        (index) {
+                          var option = filteredOptions.elementAt(index);
+                          return SelectableListEntry(
+                            height: 25,
+                            text: option.displayText,
+                            isSelected: index == focusedIndex,
+                            scale: 0.85,
+                            reserveIconSpace: false,
+                            onPressed: () => onOptionSelected(option),
+                          );
+                        },
+                      ),
                     ),
                   ),
                 ),
@@ -253,5 +268,6 @@ class __AutocompleteOverlayState extends State<_AutocompleteOverlay> with ArrowN
       (widget.prop as HexProp).updateWith(option.insertText, isStr: true);
     option.onSelect?.call();
     widget.focusNode.unfocus();
+    widget.closeOverly();
   }
 }
