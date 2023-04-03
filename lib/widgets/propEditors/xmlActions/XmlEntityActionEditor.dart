@@ -1,15 +1,11 @@
 
 import 'package:flutter/material.dart';
 
-import '../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../stateManagement/sync/syncListImplementations.dart';
-import '../../../stateManagement/xmlProps/xmlActionProp.dart';
-import '../../../stateManagement/xmlProps/xmlProp.dart';
 import '../../misc/syncButton.dart';
-import '../../theme/customTheme.dart';
 import '../customXmlProps/layoutsEditor.dart';
-import '../simpleProps/XmlPropEditorFactory.dart';
 import 'XmlActionEditor.dart';
+import 'XmlActionInnerEditor.dart';
 
 class XmlEntityActionEditor extends XmlActionEditor {
   XmlEntityActionEditor({ super.key,  required super.action, required super.showDetails });
@@ -42,18 +38,14 @@ class _XmlEntityActionEditorState extends XmlActionEditorState<XmlEntityActionEd
   }
 }
 
-class EntityActionInnerEditor extends ChangeNotifierWidget {
-  final bool showDetails;
-  final XmlActionProp action;
-
-  EntityActionInnerEditor({ super.key, required this.action, required this.showDetails})
-    : super(notifier: action);
+class EntityActionInnerEditor extends XmlActionInnerEditor {
+  EntityActionInnerEditor({ super.key, required super.action, required super.showDetails});
 
   @override
   State<EntityActionInnerEditor> createState() => _EntityActionInnerEditorState();
 }
 
-class _EntityActionInnerEditorState extends ChangeNotifierState<EntityActionInnerEditor> {
+class _EntityActionInnerEditorState extends XmlActionInnerEditorState<EntityActionInnerEditor> {
   @override
   Widget build(BuildContext context) {
     var layouts = widget.action.get(_layoutsTag)!;
@@ -64,70 +56,22 @@ class _EntityActionInnerEditorState extends ChangeNotifierState<EntityActionInne
     
     return Column(
       children: [
-        _makeGroupWrapperCustom("Spawn Entities", LayoutsEditor(prop: layouts, showDetails: widget.showDetails)),
+        makeGroupWrapperCustom("Spawn Entities", LayoutsEditor(prop: layouts, showDetails: widget.showDetails)),
         if (!onlyLayouts)
-          _makeSeparator(),
+          makeSeparator(),
         if (areaProps.isNotEmpty) ...[
-          _makeGroupWrapperSingle("Spawn Areas", areaProps),
+          makeGroupWrapperSingle("Spawn Areas", areaProps),
           if (enemySetProps.isNotEmpty || enemySetAreaProps.isNotEmpty)
-            _makeSeparator(),
+            makeSeparator(),
         ],
         if (enemySetProps.isNotEmpty) ...[
-          _makeGroupWrapperSingle("Enemy Set Properties", enemySetProps),
+          makeGroupWrapperSingle("Enemy Set Properties", enemySetProps),
           if (enemySetAreaProps.isNotEmpty)
-            _makeSeparator(),
+            makeSeparator(),
         ],
         if (enemySetAreaProps.isNotEmpty)
-          _makeGroupWrapperSingle("Enemy Behavior Properties", enemySetAreaProps),
+          makeGroupWrapperSingle("Enemy Behavior Properties", enemySetAreaProps),
       ],
-    );
-  }
-
-  Widget _makeGroupWrapperSingle(String title, Iterable<XmlProp> props) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 25),
-          child: Row(
-            children: [
-              Text(title, style: getTheme(context).propInputTextStyle,),
-            ],
-          ),
-        ),
-        for (var prop in props)
-          Padding(
-            padding: const EdgeInsets.only(left: 10),
-            child: makeXmlPropEditor(prop, widget.showDetails),
-          )
-      ],
-    );
-  }
-  Widget _makeGroupWrapperCustom(String title, Widget child) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 25),
-          child: Row(
-            children: [
-              Text(title, style: getTheme(context).propInputTextStyle,),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 10),
-          child: child,
-        ),
-      ],
-    );
-  }
-  Widget _makeSeparator() {
-    return const Divider(
-      height: 20,
-      thickness: 1,
-      indent: 10,
-      endIndent: 10,
     );
   }
 }

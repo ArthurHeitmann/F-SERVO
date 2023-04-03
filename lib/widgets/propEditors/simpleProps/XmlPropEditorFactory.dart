@@ -29,6 +29,7 @@ import '../customXmlProps/puidReferenceEditor.dart';
 import '../customXmlProps/scriptIdEditor.dart';
 import '../customXmlProps/scriptVariableEditor.dart';
 import '../customXmlProps/transformsEditor.dart';
+import '../xmlActions/XmlCameraActionEditor.dart';
 import '../xmlActions/XmlEnemyGeneratorActionEditor.dart';
 import '../xmlActions/XmlEntityActionEditor.dart';
 import '../xmlActions/xmlArrayEditor.dart';
@@ -387,6 +388,7 @@ final Map<int, Widget Function(XmlActionProp action, bool showDetails)> _innerAc
   crc32("EnemySetAction"): (action, showDetails) => EntityActionInnerEditor(action: action, showDetails: showDetails),
   crc32("EnemySetArea"): (action, showDetails) => EntityActionInnerEditor(action: action, showDetails: showDetails),
   crc32("SQ090_Layout"): (action, showDetails) => EntityActionInnerEditor(action: action, showDetails: showDetails),
+  crc32("CameraAction"): (action, showDetails) => CameraActionInnerEditor(action: action, showDetails: showDetails),
 };
 
 XmlRawPreset getXmlPropPreset(XmlProp prop) {

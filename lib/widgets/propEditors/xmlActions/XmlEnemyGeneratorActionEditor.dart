@@ -1,17 +1,16 @@
 
 import 'package:flutter/material.dart';
 
-import '../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/sync/syncListImplementations.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
 import '../../../utils/utils.dart';
 import '../../misc/nestedContextMenu.dart';
 import '../../misc/syncButton.dart';
-import '../../theme/customTheme.dart';
 import '../customXmlProps/distEditor.dart';
 import '../simpleProps/XmlPropEditorFactory.dart';
 import 'XmlActionEditor.dart';
+import 'XmlActionInnerEditor.dart';
 
 class XmlEnemyGeneratorActionEditor extends XmlActionEditor {
   XmlEnemyGeneratorActionEditor({super.key, required super.action, required super.showDetails});
@@ -34,28 +33,17 @@ class _XmlEnemyGeneratorActionEditorState extends XmlActionEditorState<XmlEnemyG
       ...super.getRightHeaderButtons(context),	
     ];
   }
-
-  @override
-  Widget makeInnerActionBody() {
-    return EnemyGeneratorInnerEditor(
-      action: widget.action,
-      showDetails: widget.showDetails,
-    );
-  }  
 }
 
-class EnemyGeneratorInnerEditor extends ChangeNotifierWidget {
-  final XmlProp action;
-  final bool showDetails;
+class EnemyGeneratorInnerEditor extends XmlActionInnerEditor {
 
-  EnemyGeneratorInnerEditor({ super.key, required this.action, required this.showDetails })
-    : super(notifier: action);
+  EnemyGeneratorInnerEditor({ super.key, required super.action, required super.showDetails });
 
   @override
   State<EnemyGeneratorInnerEditor> createState() => _EnemyGeneratorEditorState();
 }
 
-class _EnemyGeneratorEditorState extends ChangeNotifierState<EnemyGeneratorInnerEditor> {
+class _EnemyGeneratorEditorState extends XmlActionInnerEditorState<EnemyGeneratorInnerEditor> {
   @override
   Widget build(BuildContext context) {
     var spawnNodes = widget.action.get("points");
@@ -69,17 +57,17 @@ class _EnemyGeneratorEditorState extends ChangeNotifierState<EnemyGeneratorInner
       children: [
         if (spawnNodes != null) ...[
           makeXmlPropEditor(spawnNodes, widget.showDetails),
-          _makeSeparator(),
+          makeSeparator(),
         ],
         if (spawnEntities != null) ...[
-          _makeGroupWrapperMulti("Spawn Entities", [spawnEntities]),
-          _makeSeparator(),
+          makeGroupWrapperMulti("Spawn Entities", [spawnEntities]),
+          makeSeparator(),
         ],
         if (minMaxProps.isNotEmpty) ...[
           _minMaxWrapper(
-            child: _makeGroupWrapperSingle("Min/Max", minMaxProps)
+            child: makeGroupWrapperSingle("Min/Max", minMaxProps)
           ),
-          _makeSeparator(),
+          makeSeparator(),
         ],
         if (inBetweenProps.isNotEmpty && widget.showDetails) ...[
           _inBetweenWrapper(
@@ -89,16 +77,16 @@ class _EnemyGeneratorEditorState extends ChangeNotifierState<EnemyGeneratorInner
                 .toList(),
             ),
           ),
-          _makeSeparator(),
+          makeSeparator(),
         ],
         if (areaProps.isNotEmpty) ...[
-          _makeGroupWrapperSingle("Areas", areaProps),
-          _makeSeparator(),
+          makeGroupWrapperSingle("Areas", areaProps),
+          makeSeparator(),
         ],
         if (distProp != null) ...[
-          _makeGroupWrapperCustom("Distances", DistEditor(dist: distProp, showDetails: widget.showDetails, showTagName: false,)),
+          makeGroupWrapperCustom("Distances", DistEditor(dist: distProp, showDetails: widget.showDetails, showTagName: false,)),
           if (trailingProps.isNotEmpty && widget.showDetails)
-            _makeSeparator(),
+            makeSeparator(),
         ],
         if (trailingProps.isNotEmpty && widget.showDetails) ...[
           ...trailingProps.map((prop) => makeXmlPropEditor(prop, widget.showDetails)),
@@ -112,25 +100,25 @@ class _EnemyGeneratorEditorState extends ChangeNotifierState<EnemyGeneratorInner
       buttons: [
         optionalPropButtonConfig(
           widget.action, "respawnTime", () => 6,
-          () => _makeMinMaxProps(2.0, 10.0, false),
+          () => makeMinMaxProps(2.0, 10.0, false),
         ),
         optionalPropButtonConfig(
           widget.action, "levelRange", () => getNextInsertIndexAfter(widget.action, ["createRange"]),
-          () => _makeMinMaxProps(20, 30, true),
+          () => makeMinMaxProps(20, 30, true),
         ),
         optionalPropButtonConfig(
           widget.action, "spawnInterval", () => getNextInsertIndexAfter(widget.action, ["levelRange", "createRange"]),
-          () => _makeMinMaxProps(2.0, 5.0, false),
+          () => makeMinMaxProps(2.0, 5.0, false),
         ),
         optionalPropButtonConfig(
           widget.action, "amountEachSpawn", () => getNextInsertIndexAfter(widget.action, ["spawnInterval", "levelRange", "createRange"]),
-          () => _makeMinMaxProps(2, 5, true),
+          () => makeMinMaxProps(2, 5, true),
         ),
       ],
       child: child,
     );
   }
-  List<XmlProp> _makeMinMaxProps(num min, num max, bool isInt) {
+  List<XmlProp> makeMinMaxProps(num min, num max, bool isInt) {
     return [
       XmlProp(
         file: widget.action.file,
@@ -155,76 +143,6 @@ class _EnemyGeneratorEditorState extends ChangeNotifierState<EnemyGeneratorInner
         ),
       ],
       child: child,
-    );
-  }
-
-  Widget _makeGroupWrapperSingle(String title, Iterable<XmlProp> props) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 25),
-          child: Row(
-            children: [
-              Text(title, style: getTheme(context).propInputTextStyle,),
-            ],
-          ),
-        ),
-        for (var prop in props)
-          Padding(
-            padding: const EdgeInsets.only(left: 10),
-            child: makeXmlPropEditor(prop, widget.showDetails),
-          )
-      ],
-    );
-  }
-  Widget _makeGroupWrapperMulti(String title, Iterable<XmlProp> props) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 25),
-          child: Row(
-            children: [
-              Text(title, style: getTheme(context).propInputTextStyle,),
-            ],
-          ),
-        ),
-        ...props.map((prop) => makeXmlMultiPropEditor(prop, widget.showDetails)
-          .map((child) => Padding(
-            key: child.key != null ? ValueKey(child.key) : null,
-            padding: const EdgeInsets.only(left: 10),
-            child: child,
-          ))
-        ).expand((e) => e),
-      ],
-    );
-  }
-  Widget _makeGroupWrapperCustom(String title, Widget child) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 25),
-          child: Row(
-            children: [
-              Text(title, style: getTheme(context).propInputTextStyle,),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 10),
-          child: child,
-        ),
-      ],
-    );
-  }
-  Widget _makeSeparator() {
-    return const Divider(
-      height: 20,
-      thickness: 1,
-      indent: 10,
-      endIndent: 10,
     );
   }
 }
