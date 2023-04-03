@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
 import '../../misc/onHoverBuilder.dart';
 import '../../misc/smallButton.dart';
+import 'XmlPropEditorFactory.dart';
 import 'propEditorFactory.dart';
 import 'propTextField.dart';
 
@@ -32,7 +33,10 @@ class OptionalPropEditor<T extends PropTextField> extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          Flexible(child: makePropEditor<T>(prop!.value)),
+          if (prop!.isEmpty)
+            Flexible(child: makePropEditor<T>(prop!.value))
+          else
+            Flexible(child: makeXmlPropEditor<T>(prop!, true)),
           const SizedBox(width: 5),
           AnimatedOpacity(
             duration: const Duration(milliseconds: 100),

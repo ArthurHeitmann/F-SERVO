@@ -32,6 +32,7 @@ import '../customXmlProps/transformsEditor.dart';
 import '../xmlActions/XmlCameraActionEditor.dart';
 import '../xmlActions/XmlEnemyGeneratorActionEditor.dart';
 import '../xmlActions/XmlEntityActionEditor.dart';
+import '../xmlActions/XmlFadeActionEditor.dart';
 import '../xmlActions/xmlArrayEditor.dart';
 import 'XmlPropEditor.dart';
 import 'propTextField.dart';
@@ -389,6 +390,7 @@ final Map<int, Widget Function(XmlActionProp action, bool showDetails)> _innerAc
   crc32("EnemySetArea"): (action, showDetails) => EntityActionInnerEditor(action: action, showDetails: showDetails),
   crc32("SQ090_Layout"): (action, showDetails) => EntityActionInnerEditor(action: action, showDetails: showDetails),
   crc32("CameraAction"): (action, showDetails) => CameraActionInnerEditor(action: action, showDetails: showDetails),
+  crc32("FadeAction"): (action, showDetails) => FadeActionInnerEditor(action: action, showDetails: showDetails),
 };
 
 XmlRawPreset getXmlPropPreset(XmlProp prop) {
@@ -461,13 +463,13 @@ List<Widget> makeXmlMultiPropEditor<T extends PropTextField>(
 
   for (var i = 0; i < parent.length; i++) {
     var child = parent[i];
-    var context = XmlPresetContext(parent: child);
     if (filter != null && !filter(child)) {
       continue;
     }
     if (_skipPropNames.contains(child.tagName)) {
       continue;
     }
+    var context = XmlPresetContext(parent: child);
     // transformable with position, rotation (optional), scale (optional)
     if (child.tagName == "location") {
       widgets.add(XmlPresets.transforms.withCxt(context).editor<T>(parent, showDetails));
@@ -542,7 +544,7 @@ List<Widget> makeXmlMultiPropEditor<T extends PropTextField>(
 
       i = parent.length;
     }
-    // EnemyGenerator
+    // Custom Actions
     else if (i == 4 && parent is XmlActionProp && _innerActionEditors.containsKey(parent.code.value)) {
       var innerEditor = _innerActionEditors[parent.code.value]!.call(parent, showDetails);
       widgets.add(innerEditor);
