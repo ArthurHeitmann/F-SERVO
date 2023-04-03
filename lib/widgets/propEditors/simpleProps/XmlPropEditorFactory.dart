@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:xml/xml.dart';
 
 import '../../../main.dart';
-import '../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/openFilesManager.dart';
 import '../../../stateManagement/xmlProps/xmlActionProp.dart';

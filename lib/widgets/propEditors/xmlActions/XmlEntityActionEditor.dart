@@ -103,28 +103,6 @@ class _EntityActionInnerEditorState extends ChangeNotifierState<EntityActionInne
       ],
     );
   }
-  Widget _makeGroupWrapperMulti(String title, Iterable<XmlProp> props) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 25),
-          child: Row(
-            children: [
-              Text(title, style: getTheme(context).propInputTextStyle,),
-            ],
-          ),
-        ),
-        ...props.map((prop) => makeXmlMultiPropEditor(prop, widget.showDetails)
-          .map((child) => Padding(
-            key: child.key != null ? ValueKey(child.key) : null,
-            padding: const EdgeInsets.only(left: 10),
-            child: child,
-          ))
-        ).expand((e) => e),
-      ],
-    );
-  }
   Widget _makeGroupWrapperCustom(String title, Widget child) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

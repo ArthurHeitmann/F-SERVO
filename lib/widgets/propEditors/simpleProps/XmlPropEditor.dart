@@ -14,7 +14,8 @@ class XmlPropEditor<T extends PropTextField> extends ChangeNotifierWidget {
   final bool showTagName;
   final XmlProp prop;
 
-  XmlPropEditor({super.key, required this.prop, required this.showDetails, this.showTagName = true}) : super(notifier: prop);
+  XmlPropEditor({Key? key, required this.prop, required this.showDetails, this.showTagName = true})
+    : super(notifier: prop, key: key ?? Key(prop.uuid));
 
   @override
   State<XmlPropEditor> createState() => XmlPropEditorState<T>();

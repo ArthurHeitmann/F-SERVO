@@ -9,7 +9,6 @@ import '../../misc/CustomIcons.dart';
 import '../../theme/customTheme.dart';
 import '../simpleProps/XmlPropEditorFactory.dart';
 import '../simpleProps/propEditorFactory.dart';
-import 'transformsEditor.dart';
 
 class XmlEmgSpawnNodeEditor extends ChangeNotifierWidget {
   final XmlProp prop;

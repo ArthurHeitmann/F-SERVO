@@ -2,8 +2,11 @@
 import 'package:flutter/material.dart';
 
 import '../../../stateManagement/ChangeNotifierWidget.dart';
+import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/sync/syncListImplementations.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
+import '../../../utils/utils.dart';
+import '../../misc/nestedContextMenu.dart';
 import '../../misc/syncButton.dart';
 import '../../theme/customTheme.dart';
 import '../customXmlProps/distEditor.dart';
@@ -73,11 +76,19 @@ class _EnemyGeneratorEditorState extends ChangeNotifierState<EnemyGeneratorInner
           _makeSeparator(),
         ],
         if (minMaxProps.isNotEmpty) ...[
-          _makeGroupWrapperSingle("Min/Max", minMaxProps),
+          _minMaxWrapper(
+            child: _makeGroupWrapperSingle("Min/Max", minMaxProps)
+          ),
           _makeSeparator(),
         ],
         if (inBetweenProps.isNotEmpty && widget.showDetails) ...[
-          ...inBetweenProps.map((prop) => makeXmlPropEditor(prop, widget.showDetails)),
+          _inBetweenWrapper(
+            child: Column(
+              children: inBetweenProps
+                .map((prop) => makeXmlPropEditor(prop, widget.showDetails))
+                .toList(),
+            ),
+          ),
           _makeSeparator(),
         ],
         if (areaProps.isNotEmpty) ...[
@@ -93,6 +104,57 @@ class _EnemyGeneratorEditorState extends ChangeNotifierState<EnemyGeneratorInner
           ...trailingProps.map((prop) => makeXmlPropEditor(prop, widget.showDetails)),
         ],
       ],
+    );
+  }
+
+  Widget _minMaxWrapper({ required Widget child }) {
+    return NestedContextMenu(
+      buttons: [
+        optionalPropButtonConfig(
+          widget.action, "respawnTime", () => 6,
+          () => _makeMinMaxProps(2.0, 10.0, false),
+        ),
+        optionalPropButtonConfig(
+          widget.action, "levelRange", () => getNextInsertIndexAfter(widget.action, ["createRange"]),
+          () => _makeMinMaxProps(20, 30, true),
+        ),
+        optionalPropButtonConfig(
+          widget.action, "spawnInterval", () => getNextInsertIndexAfter(widget.action, ["levelRange", "createRange"]),
+          () => _makeMinMaxProps(2.0, 5.0, false),
+        ),
+        optionalPropButtonConfig(
+          widget.action, "amountEachSpawn", () => getNextInsertIndexAfter(widget.action, ["spawnInterval", "levelRange", "createRange"]),
+          () => _makeMinMaxProps(2, 5, true),
+        ),
+      ],
+      child: child,
+    );
+  }
+  List<XmlProp> _makeMinMaxProps(num min, num max, bool isInt) {
+    return [
+      XmlProp(
+        file: widget.action.file,
+        tagId: crc32("min"), tagName: "min",
+        value: NumberProp(min, isInt),
+        parentTags: widget.action.nextParents()
+      ),
+      XmlProp(
+        file: widget.action.file,
+        tagId: crc32("max"), tagName: "max",
+        value: NumberProp(max, isInt),
+        parentTags: widget.action.nextParents()
+      ),
+    ];
+  }
+  Widget _inBetweenWrapper({ required Widget child }) {
+    return NestedContextMenu(
+      buttons: [
+        optionalValPropButtonConfig(
+          widget.action, "cameraType", () => getNextInsertIndexBefore(widget.action, ["relativeLevel"]),
+          () => NumberProp(-1, true)
+        ),
+      ],
+      child: child,
     );
   }
 
