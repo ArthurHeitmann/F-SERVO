@@ -167,7 +167,7 @@ const _miscMidTags = {
   "playerTargetForceInUp_", "playerTargetForceInUpDist_"
 };
 const _interpTimeTags = { "interpTimeDistance_", "interpTimeAngle_", "interpTimeFov_", "interpTimePosition_", "interpTimeTarget_" };
-const _interpTimeAccTypeTags = { "interpTimeDistance_", "interpTimeAngle_", "interpTimeFov_", "interpTimePosition_", "interpTimeTarget_" };
+const _interpTimeAccTypeTags = { "interpTimeAccTypeDistance_", "interpTimeAccTypeAngle_", "interpTimeAccTypeFov_", "interpTimeAccTypePosition_", "interpTimeAccTypeTarget_" };
 const _endInterpTimeTags = { "endInterpTimeDistance_", "endInterpTimeAngle_", "endInterpTimeFov_", "endInterpTimePosition_", "endInterpTimeTarget_" };
 const _endInterpTimeAccTypeTags = { "endInterpTimeAccTypeDistance_", "endInterpTimeAccTypeAngle_", "endInterpTimeAccTypeFov_", "endInterpTimeAccTypePosition_", "endInterpTimeAccTypeTarget_" };
 const _forceTags = { "forceInterTimer", "forceInterRate", "forcePosInter", "forcePosInterRate", "forceDisInter", "forceDis", "forceDisInterRate" };
