@@ -226,7 +226,7 @@ abstract class GenericFileHierarchyEntry extends FileHierarchyEntry {
     var entry = snapshot as HierarchyEntry;
     _isSelected = entry._isSelected;
     _isCollapsed = entry._isCollapsed;
-    replaceWith(entry.map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
+    updateOrReplaceWith(entry.toList(), (entry) => entry.takeSnapshot() as HierarchyEntry);
   }
 }
 
@@ -269,7 +269,7 @@ class DatHierarchyEntry extends ExtractableHierarchyEntry {
     name.restoreWith(entry.name);
     _isSelected = entry._isSelected;
     _isCollapsed = entry._isCollapsed;
-    replaceWith(entry.map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
+    updateOrReplaceWith(entry.toList(), (entry) => entry.takeSnapshot() as HierarchyEntry);
   }
 
   Future<void> addNewRubyScript() async {
@@ -912,7 +912,7 @@ class WaiHierarchyEntry extends ExtractableHierarchyEntry {
     name.restoreWith(entry.name);
     _isSelected = entry._isSelected;
     _isCollapsed = entry._isCollapsed;
-    replaceWith(entry.map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
+    updateOrReplaceWith(entry.toList(), (entry) => entry.takeSnapshot() as HierarchyEntry);
   }
 
   @override
