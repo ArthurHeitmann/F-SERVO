@@ -50,9 +50,9 @@ class _WemFileEditorState extends ChangeNotifierState<WemFileEditor> {
 
   Future<void> _pickOverride() async {
     var files = await FilePicker.platform.pickFiles(
-      type: FileType.audio,
       allowMultiple: false,
       allowedExtensions: ["wav"],
+      type: FileType.custom,
     );
     if (files == null)
       return;
