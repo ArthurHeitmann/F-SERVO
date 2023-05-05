@@ -1,7 +1,15 @@
 
-import '../../utils/utils.dart';
+// import '../../utils/utils.dart';
 
 // From https://github.com/xxk-i/DATrepacker
+import 'dart:convert';
+
+import 'package:crclib/catalog.dart';
+
+final _crc32 = Crc32();
+int crc32(String str) {
+  return _crc32.convert(utf8.encode(str)).toBigInt().toInt();
+}
 class HashInfo {
   List<String> inFiles;
   List<String> filenames = [];

@@ -3,8 +3,9 @@ import 'dart:io';
 import 'package:path/path.dart' as path;
 import 'package:xml/xml.dart';
 
-import '../../stateManagement/events/statusInfo.dart';
-import '../../utils/utils.dart';
+// import '../../stateManagement/events/statusInfo.dart';
+// import '../../utils/utils.dart';
+import '../../randomScripts/newQuests/utils.dart';
 import '../utils/ByteDataWrapper.dart';
 
 int _getTagId(XmlElement tag) {
@@ -81,7 +82,6 @@ ByteDataWrapper xmlToYax(XmlElement root) {
 
 Future<void> xmlFileToYaxFile(String xmlFilePath) async {
   print("Converting $xmlFilePath to yax");
-  messageLog.add("Converting ${path.basename(xmlFilePath)}...");
 
   var xmlFile = File(xmlFilePath);
   var xmlString = await xmlFile.readAsString();
@@ -90,6 +90,4 @@ Future<void> xmlFileToYaxFile(String xmlFilePath) async {
   var yaxFilePath = "${path.withoutExtension(xmlFilePath)}.yax";
   var yaxFile = File(yaxFilePath);
   await yaxFile.writeAsBytes(yax.buffer.asUint8List());
-  
-  messageLog.add("Converting ${path.basename(xmlFilePath)} done");
 }

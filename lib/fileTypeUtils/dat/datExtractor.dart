@@ -3,8 +3,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:path/path.dart' as path;
 
-import '../../stateManagement/events/statusInfo.dart';
-import '../pak/pakExtractor.dart';
+// import '../../stateManagement/events/statusInfo.dart';
+// import '../pak/pakExtractor.dart';
 import '../utils/ByteDataWrapper.dart';
 
 /*
@@ -38,9 +38,9 @@ class _DatHeader {
   }
 }
 
-Future<List<String>> extractDatFiles(String datPath, { bool shouldExtractPakFiles = false }) async {
-  print("Extracting dat files from $datPath");
-  messageLog.add("Extracting ${path.basename(datPath)}...");
+Future<List<String>> extractDatFiles(String datPath, { String? extractDir, bool shouldExtractPakFiles = false }) async {
+  // print("Extracting dat files from $datPath");
+  // messageLog.add("Extracting ${path.basename(datPath)}...");
 
   var bytes = await ByteDataWrapper.fromFile(datPath);
   var header = _DatHeader(bytes);
@@ -55,8 +55,10 @@ Future<List<String>> extractDatFiles(String datPath, { bool shouldExtractPakFile
     bytes.readString(nameLength).split("\u0000")[0]);
 
   // extract dir is file path --> /nier2blender_extracted/[filename]/
-  var datDir = path.dirname(datPath);
-  var extractDir = path.join(datDir, "nier2blender_extracted", path.basename(datPath));
+  if (extractDir == null) {
+    var datDir = path.dirname(datPath);
+    extractDir = path.join(datDir, "nier2blender_extracted", path.basename(datPath));
+  }
   await Directory(extractDir).create(recursive: true);
   for (int i = 0; i < header.fileNumber; i++) {
     bytes.position = fileOffsets[i];
@@ -81,15 +83,15 @@ Future<List<String>> extractDatFiles(String datPath, { bool shouldExtractPakFile
   await File(path.join(extractDir, "dat_info.json"))
     .writeAsString(const JsonEncoder.withIndent("\t").convert(jsonMetadata));
 
-  if (shouldExtractPakFiles) {
-    var pakFiles = fileNames.where((file) => file.endsWith(".pak"));
-    await Future.wait(pakFiles.map<Future<void>>((pakFile) async {
-      var pakPath = path.join(extractDir, pakFile);
-      await extractPakFiles(pakPath, yaxToXml: true);
-    }));
-  }
+  // if (shouldExtractPakFiles) {
+  //   var pakFiles = fileNames.where((file) => file.endsWith(".pak"));
+  //   await Future.wait(pakFiles.map<Future<void>>((pakFile) async {
+  //     var pakPath = path.join(extractDir, pakFile);
+  //     await extractPakFiles(pakPath, yaxToXml: true);
+  //   }));
+  // }
 
-  messageLog.add("Extracting ${path.basename(datPath)} done");
+  // messageLog.add("Extracting ${path.basename(datPath)} done");
 
   return fileNames;
 }

@@ -1,17 +1,59 @@
 
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:path/path.dart' as path;
-import 'package:path/path.dart';
 
-import '../../stateManagement/events/statusInfo.dart';
-import '../../utils/utils.dart';
+// import '../../stateManagement/events/statusInfo.dart';
+// import '../../utils/utils.dart';
 import '../utils/ByteDataWrapper.dart';
 import 'datHashGenerator.dart';
 
+Future<List<String>> getDatFileList(String datDir) async {
+  var datInfoPath = path.join(datDir, "dat_info.json");
+  if (await File(datInfoPath).exists())
+    return _getDatFileListFromJson(datInfoPath);
+  var metadataPath = path.join(datDir, "file_order.metadata");
+  if (await File(metadataPath).exists())
+    return _getDatFileListFromMetadata(metadataPath);
+  
+  throw Exception("No dat_info.json or file_order.metadata found in $datDir");
+}
+
+Future<List<String>> _getDatFileListFromJson(String datInfoPath) async {
+  var datInfoJson = jsonDecode(await File(datInfoPath).readAsString());
+  List<String> files = [];
+  var dir = path.dirname(datInfoPath);
+  for (var file in datInfoJson["files"]) {
+    files.add(path.join(dir, file));
+  }
+  files = files.toSet().toList();
+  files.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+
+  return files;
+}
+extension StringNullTrim on String {
+  String trimNull() => replaceAll(RegExp("\x00+\$"), "");
+}
+
+Future<List<String>> _getDatFileListFromMetadata(String metadataPath) async {
+  var metadataBytes = await ByteDataWrapper.fromFile(metadataPath);
+  var numFiles = metadataBytes.readUint32();
+  var nameLength = metadataBytes.readUint32();
+  List<String> files = [];
+  for (var i = 0; i < numFiles; i++)
+    files.add(metadataBytes.readString(nameLength).trimNull());
+  files = files.toSet().toList();
+  files.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+  var dir = path.dirname(metadataPath);
+  files = files.map((file) => path.join(dir, file)).toList();
+
+  return files;
+}
+
 Future<void> repackDat(String datDir, String exportPath) async {
-  messageLog.add("Repacking ${path.basename(exportPath)}...");
+  // messageLog.add("Repacking ${path.basename(exportPath)}...");
   
   var fileList = await getDatFileList(datDir);
   var fileNames = fileList.map((e) => path.basename(e)).toList();
@@ -24,8 +66,8 @@ Future<void> repackDat(String datDir, String exportPath) async {
   }
   if (missingFiles.isNotEmpty) {
     for (var f in missingFiles)
-      messageLog.add("Missing file: ${basename(f)}");
-    showToast("DAT is missing ${pluralStr(missingFiles.length, "file")}. Check log for details");
+      // messageLog.add("Missing file: ${basename(f)}");
+    // showToast("DAT is missing ${pluralStr(missingFiles.length, "file")}. Check log for details");
     return;
   }
   var fileSizes = (await Future.wait(fileList.map((e) => File(e).length()))).toList();
@@ -139,5 +181,5 @@ Future<void> repackDat(String datDir, String exportPath) async {
 
   await datFile.writeAsBytes(datBytes.buffer.asUint8List());
 
-  messageLog.add("Repacking ${path.basename(exportPath)} done");
+  // messageLog.add("Repacking ${path.basename(exportPath)} done");
 }

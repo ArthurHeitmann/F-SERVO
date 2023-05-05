@@ -1,12 +1,13 @@
 
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:archive/archive_io.dart';
 import 'package:path/path.dart' as path;
 import 'dart:io';
-import 'package:flutter/foundation.dart';
+// import 'package:flutter/foundation.dart';
 
-import '../../stateManagement/events/statusInfo.dart';
-import '../../utils/utils.dart';
+// import '../../stateManagement/events/statusInfo.dart';
+// import '../../utils/utils.dart';
 import '../utils/ByteDataWrapper.dart';
 
 const ZLibEncoder _zLibEncoder = ZLibEncoder();
@@ -74,7 +75,7 @@ class _FileEntry {
 }
 
 Future<void> repackPak(String pakDir) async {
-  messageLog.add("Repacking ${path.basename(pakDir)}...");
+  print("Repacking ${path.basename(pakDir)}...");
   
   var infoJsonFile = File(path.join(pakDir, "pakInfo.json"));
   var pakInfo = jsonDecode(await infoJsonFile.readAsString());
@@ -101,10 +102,8 @@ Future<void> repackPak(String pakDir) async {
 
   var pakFileName = path.basename(pakDir);
   var pakFilePath = path.join(path.dirname(path.dirname(pakDir)), pakFileName);
-  await backupFile(pakFilePath);
   var pakFile = File(pakFilePath);
   await pakFile.writeAsBytes(bytes.buffer.asUint8List());
 
   print("Pak file $pakFileName created (${fileEntries.length} file repacked)");
-  messageLog.add("Repacking ${path.basename(pakDir)} done");
 }

@@ -1,8 +1,12 @@
 
 import 'dart:io';
 
-import '../../utils/utils.dart';
+// import '../../utils/utils.dart';
 import '../utils/ByteDataWrapper.dart';
+
+extension StringNullTrim on String {
+  String trimNull() => replaceAll(RegExp("\x00+\$"), "");
+}
 
 class McdFileHeader {
   final int messagesOffset;
