@@ -117,6 +117,13 @@ abstract class ListNotifier<T> extends ChangeNotifier with IterableMixin<T>, Has
     notifyListeners();
   }
 
+  void sort([int Function(T, T)? compare]) {
+    if (_children.length < 2)
+      return;
+    _children.sort(compare);
+    notifyListeners();
+  }
+
   void replaceWith(List<T> newChildren) {
     if (listEquals(newChildren, _children)) return;
     _children.clear();

@@ -243,6 +243,31 @@ String _stringifyTreeEntry(TreeEntry entry, int indentationLevel) {
   return text;
 }
 
+void _sortTree(List<TreeEntry> tree) {
+  var sceneStateRes = tree.where((entry) => entry.text.value.startsWith("SceneState")).toList();
+  if (sceneStateRes.isNotEmpty)
+    _sortSceneStateEntries(sceneStateRes.first);
+  var questEntryRes = tree.where((entry) => entry.text.value.startsWith("Quest")).toList();
+  if (questEntryRes.isNotEmpty)
+    _sortQuestEntries(questEntryRes.first);
+}
+void _sortSceneStateEntries(TreeEntry sceneStateEntry) {
+  sceneStateEntry.sort((s0, s1) {
+    var s0Hash = crc32(s0.text.value);
+    var s1Hash = crc32(s1.text.value);
+    return s0Hash.compareTo(s1Hash);
+  });
+}
+void _sortQuestEntries(TreeEntry questEntry) {
+  questEntry.sort((q0, q1) {
+    var q0Id = int.tryParse(q0.text.value.substring(1));
+    var q1Id = int.tryParse(q1.text.value.substring(1));
+    if (q0Id == null || q1Id == null)
+      return 0;
+    return q0Id.compareTo(q1Id);
+  });
+}
+
 class SlotDataDat with HasUuid, Undoable {
   late final NumberProp steamId64;
   late final StringProp name;
@@ -325,6 +350,7 @@ class SlotDataDat with HasUuid, Undoable {
     for (var weaponSet in weaponSets)
       weaponSet.write(bytes);
     bytes.position = 0x7C;
+    _sortTree(tree);
     bytes.writeString(_stringifyTree(tree).padRight(0x30000, "\x00"));
   }
 

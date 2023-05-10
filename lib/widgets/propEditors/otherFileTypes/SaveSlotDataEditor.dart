@@ -62,6 +62,7 @@ class _SaveSlotDataEditorState extends State<SaveSlotDataEditor> {
             _makeTabButton(2, "Corpse Inventory"),
             _makeTabButton(3, "Weapons"),
             _makeTabButton(4, "Scene State"),
+            _makeTabButton(5, "Quests"),
           ]
         ),
         const Divider(height: 1,),
@@ -84,6 +85,7 @@ class _SaveSlotDataEditorState extends State<SaveSlotDataEditor> {
                 ),
                 _WeaponEditor(save: save),
                 _TogglesEditor(name: "Scene State", toggles: save.tree.where((e) => e.text.value == "SceneState").first),
+                _TogglesEditor(name: "Quests", toggles: save.tree.where((e) => e.text.value == "Quest").first),
               ],
             ),
           ),
