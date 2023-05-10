@@ -614,7 +614,7 @@ class WemFileData extends OpenFileData with AudioFileData {
   }
 
   @override
-  Future<void> load() async {
+  Future<void> load([bool superReload = true]) async {
     if (_loadingState != LoadingState.notLoaded && resource != null)
       return;
     _loadingState = LoadingState.loading;
@@ -643,7 +643,8 @@ class WemFileData extends OpenFileData with AudioFileData {
     if (wemRiff.format is WemFormatChunk)
       usesSeekTable = (wemRiff.format as WemFormatChunk).setupPacketOffset != 0;
 
-    await super.load();
+    if (superReload)
+      await super.load();
   }
 
   @override
@@ -689,9 +690,10 @@ class WemFileData extends OpenFileData with AudioFileData {
       overrideData.value = null;
 
       // reload
-      _loadingState = LoadingState.notLoaded;
       await audioResourcesManager.reloadAudioResource(resource!);
-      // await load();
+      _loadingState = LoadingState.notLoaded;
+      await load(false);
+      _loadingState = LoadingState.loaded;
 
       onOverrideApplied.notifyListeners();
     } finally {
