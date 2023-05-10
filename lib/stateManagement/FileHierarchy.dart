@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:path/path.dart' as path;
 import 'package:path/path.dart';
@@ -500,8 +501,17 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
     if (filePath == null) {
       assert(parentPath != null);
       var pakFiles = await getPakInfoData(parentPath!);
-      var newFileName = "${pakFiles.length}.xml";
+      var newIndex = pakFiles
+        .map((e) => e["name"])
+        .whereType<String>()
+        .map((e) => RegExp(r"^(\d+)\.yax$").firstMatch(e))
+        .whereType<RegExpMatch>()
+        .map((e) => int.parse(e.group(1)!))
+        .fold<int>(0, (prev, e) => max(prev, e)) + 1;
+      var newFileName = "$newIndex.xml";
       filePath = path.join(parentPath, newFileName);
+      if (await File(filePath).exists())
+        filePath = "${randomId()}.xml";
     }
 
     // create file
@@ -531,7 +541,8 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
     await addPakInfoFileData(yaxPath, 3);
 
     // add to hierarchy
-    var entry = XmlScriptHierarchyEntry(StringProp("New Script"), filePath);
+    var entry = XmlScriptHierarchyEntry(StringProp(basename(filePath)), filePath);
+    await entry.readMeta();
     parent.add(entry);
 
     showToast("Remember to check the \"pak file type\"");

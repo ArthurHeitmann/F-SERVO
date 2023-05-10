@@ -114,7 +114,10 @@ abstract class HierarchyEntry extends ListNotifier<HierarchyEntry> with Undoable
         HierarchyEntryAction(
           name: "Close All",
           icon: Icons.close,
-          action: () => openHierarchyManager.clear(),
+          action: () async {
+            if (await confirmOrCancelDialog(getGlobalContext(), title: "Close All", body: "Are you sure you want to close all open files?") == true)
+              openHierarchyManager.clear();
+          },
         ),
       ],
     ];
