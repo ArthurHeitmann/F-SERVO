@@ -8,7 +8,7 @@ import '../utils/ByteDataWrapper.dart';
 abstract class ChunkWithSize {
   int calculateSize();
 }
-abstract class ChunkBase with ChunkWithSize {
+abstract class ChunkBase extends ChunkWithSize {
   void write(ByteDataWrapper bytes);
 }
 abstract class BnkChunkBase extends ChunkBase {
@@ -28,7 +28,7 @@ abstract class BnkChunkBase extends ChunkBase {
   }
 }
 
-class BnkFile with ChunkWithSize {
+class BnkFile extends ChunkWithSize {
   List<BnkChunkBase> chunks = [];
 
   BnkFile(this.chunks);
