@@ -147,17 +147,17 @@ class McdFileLetterBase {
   int get byteSize => 2;
 }
 class McdFileLetter extends McdFileLetterBase {
-  late final int idx;
+  late final int kerning;
 
   final List<McdFileSymbol> _symbols;
 
-  McdFileLetter(int code, this.idx, this._symbols) {
+  McdFileLetter(int code, this.kerning, this._symbols) {
     super.code = code;
   }
   
   McdFileLetter.read(ByteDataWrapper bytes, this._symbols) {
     code = bytes.readUint16();
-    idx = bytes.readInt16();
+    kerning = bytes.readInt16();
   }
 
   @override
@@ -169,14 +169,14 @@ class McdFileLetter extends McdFileLetterBase {
     } else if (code == 0x8001)
       return " ";
     else if (code == 0x8020) {
-      if (idx == 9)
+      if (kerning == 9)
         return "≡";  // controller menu button
-      if (idx == 121)
+      if (kerning == 121)
         return "<Alt>";
     }
 
-    print("<Special_0x${(code).toRadixString(16)}_$idx>");
-    return "<Special_0x${(code).toRadixString(16)}_$idx>";
+    print("<Special_0x${(code).toRadixString(16)}_$kerning>");
+    return "<Special_0x${(code).toRadixString(16)}_$kerning>";
   }
 
   @override
@@ -184,7 +184,7 @@ class McdFileLetter extends McdFileLetterBase {
 
   void write(ByteDataWrapper bytes) {
     bytes.writeUint16(code);
-    bytes.writeInt16(idx);
+    bytes.writeInt16(kerning);
   }
 }
 class McdFileLetterTerminator extends McdFileLetterBase {

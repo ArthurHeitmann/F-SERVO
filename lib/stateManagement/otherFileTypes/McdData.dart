@@ -11,6 +11,7 @@ import 'package:tuple/tuple.dart';
 
 import '../../fileTypeUtils/dat/datExtractor.dart';
 import '../../fileTypeUtils/dat/datRepacker.dart';
+import '../../fileTypeUtils/mcd/defaultFontKerningMap.dart';
 import '../../fileTypeUtils/mcd/fontAtlasGeneratorTypes.dart';
 import '../../fileTypeUtils/mcd/mcdIO.dart';
 import '../../fileTypeUtils/wta/wtaReader.dart';
@@ -211,14 +212,21 @@ class McdLine extends _McdFilePart {
     return symbols;
   }
 
-  List<McdFileLetter> toLetters(int fontId, List<McdFileSymbol> symbols) {
+  List<McdFileLetter> toLetters(int fontId, List<McdFileSymbol> symbols, bool isFontOverriden) {
     var str = text.value;
     List<McdFileLetter> letters = [];
-    McdFileSymbol prevSymbol = symbols.first;
     for (var i = 0; i < str.length; i++) {
+      int kerning = 0;
       var char = str[i];
+      if (i > 0 && !isFontOverriden) {
+        var prevChar = str[i - 1];
+        var searchKey = (prevChar, char);
+        var kerningLookup = defaultFontKerningMap[fontId]?[searchKey];
+        if (kerningLookup != null)
+          kerning = kerningLookup;
+      }
       if (char == " ")
-        letters.add(McdFileLetter(0x8001, prevSymbol.fontId, const []));
+        letters.add(McdFileLetter(0x8001, kerning, const []));
       else if (char == "…")
         letters.add(McdFileLetter(0x80, 0, const []));
       else if (char == "≡")
@@ -233,8 +241,7 @@ class McdLine extends _McdFilePart {
         final symbolIndex = symbols.indexWhere((s) => s.charCode == charCode && s.fontId == fontId);
         if (symbolIndex == -1)
           throw Exception("Unknown char: $char");
-        letters.add(McdFileLetter(symbolIndex, 0, symbols));  
-        prevSymbol = symbols[symbolIndex];
+        letters.add(McdFileLetter(symbolIndex, kerning, symbols));
       }
     }
     return letters;
@@ -645,8 +652,9 @@ class McdData extends _McdFilePart {
         var paragraph = events[msgI].paragraphs[parI];
         List<McdFileLine> paragraphLines = [];
         var font = exportFontMap[paragraph.fontId.value.toInt()]!;
+        var isFontOverriden = fontOverrides.any((fo) => fo.fontIds.contains(font.id) && !fo.isFallbackOnly.value);
         for (var line in paragraph.lines) {
-          var lineLetters = line.toLetters(paragraph.fontId.value.toInt(), exportSymbols);
+          var lineLetters = line.toLetters(paragraph.fontId.value.toInt(), exportSymbols, isFontOverriden);
           exportLetters.addAll(lineLetters);
           var parLine = McdFileLine(
             -1, 0, lineLetters.length * 2 + 1, lineLetters.length * 2 + 1,
