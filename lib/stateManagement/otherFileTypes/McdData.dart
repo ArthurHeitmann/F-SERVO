@@ -154,6 +154,7 @@ class McdFontOverride with HasUuid {
   final NumberProp letYPadding;
   final NumberProp xOffset;
   final NumberProp yOffset;
+  final BoolProp isFallbackOnly;
 
   McdFontOverride(int firstFontId) :
     fontIds = ValueListNotifier([firstFontId]),
@@ -163,13 +164,19 @@ class McdFontOverride with HasUuid {
     letXPadding = NumberProp(0.0, true),
     letYPadding = NumberProp(0.0, true),
     xOffset = NumberProp(0.0, false),
-    yOffset = NumberProp(0.0, false);
+    yOffset = NumberProp(0.0, false),
+    isFallbackOnly = BoolProp(false);
 
   void dispose() {
     fontIds.dispose();
     scale.dispose();
     yOffset.dispose();
     fontPath.dispose();
+    letXPadding.dispose();
+    letYPadding.dispose();
+    xOffset.dispose();
+    heightScale.dispose();
+    isFallbackOnly.dispose();
   }
 }
 
@@ -777,7 +784,7 @@ class McdData extends _McdFilePart {
             fontOverridesMap[symbol.fontId]!.yOffset.value * scaleFact,
           );
         }
-        CliImgOperationDrawFromTexture? fallback;
+        CliImgOperationDrawFromTexture? drawTextureOperation;
         var fontSymbol = availableFonts[symbol.fontId]?.supportedSymbols[symbol.code];
         if (fontSymbol != null) {
           var globalTex = availableFonts[symbol.fontId]!;
@@ -786,15 +793,20 @@ class McdData extends _McdFilePart {
             srcTexPaths.add(globalTex.atlasTexturePath);
             texId = srcTexPaths.length - 1;
           }
-          fallback = CliImgOperationDrawFromTexture(
+          drawTextureOperation = CliImgOperationDrawFromTexture(
             i, texId,
             fontSymbol.x, fontSymbol.y,
             fontSymbol.width, fontSymbol.height,
           );
         }
-        imgOperations.add(CliImgOperationDrawFromFont(
-          i, symbol.char, symbol.fontId, fallback
-        ));
+        var fontOverride = fontOverridesMap[symbol.fontId]!;
+        if (fontOverride.isFallbackOnly.value && drawTextureOperation != null) {
+          imgOperations.add(drawTextureOperation);
+        } else {
+          imgOperations.add(CliImgOperationDrawFromFont(
+            i, symbol.char, symbol.fontId, drawTextureOperation
+          ));
+        }
       } else {
         var globalTex = availableFonts[symbol.fontId]!;
         int texId = srcTexPaths.indexOf(globalTex.atlasTexturePath);
@@ -935,10 +947,19 @@ class McdData extends _McdFilePart {
   Set<UsedFontSymbol> getGlobalFontUnsupportedSymbols() {
     var usedSymbols = getUsedSymbols();
     return usedSymbols
-      .where((usedSym) => !availableFonts.containsKey(usedSym.fontId) || !availableFonts[usedSym.fontId]!
-        .supportedSymbols
-        .values
-        .any((supSym) => supSym.code == usedSym.code))
+      .where((usedSym) {
+        var isValidFontId = !availableFonts.containsKey(usedSym.fontId);
+        if (!isValidFontId)
+          return false;
+        var fontOverrideExists = fontOverrides.any((fo) => fo.fontIds.contains(usedSym.fontId));
+        if (fontOverrideExists)
+          return true;
+        var isSupportedByAvailableFonts = availableFonts[usedSym.fontId]!
+            .supportedSymbols
+            .values
+            .any((supSym) => supSym.code == usedSym.code);
+        return !isSupportedByAvailableFonts;
+      })
       .toSet();
   }
 

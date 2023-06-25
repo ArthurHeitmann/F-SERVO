@@ -32,8 +32,6 @@ class __McdFontsManagerState extends ChangeNotifierState<FontsManager> {
 
   @override
   Widget build(BuildContext context) {
-    const columnNames = ["", "Font IDs", "absScale", "TTF/OTF Path", "", "locScale", "xPadding", "yPadding", "xOffset", "yOffset", "", ""];
-
     int iStart = 0;
     int iEnd = McdData.fontOverrides.length;
     if (widget.singleFontId != -1) {
@@ -42,37 +40,40 @@ class __McdFontsManagerState extends ChangeNotifierState<FontsManager> {
       iEnd = iStart + 1;
     }
 
+    const columnNames = [
+      "",
+      "Font IDs",
+      "TTF/OTF Path",
+      "",
+      "fallback only",
+      "absScale",
+      "relScale",
+      "xPadding",
+      "yPadding",
+      "xOffset",
+      "yOffset",
+      "",
+      ""
+    ];
     return SmoothSingleChildScrollView(
       controller: scrollController,
       child: ColumnSeparated(
         children: [
           Table(
-            // columns:
-            // X: spacer
-            // 0: fontIDs
-            // 1: height scale
-            // 2: fontFilePath
-            // 3: file path selector
-            // 4: scale
-            // 5: x letter padding
-            // 6: y letter padding
-            // 7: y Offset
-            // 8: y Offset
-            // 9: remove button
-            // X: spacer
             columnWidths: const {
               0: FixedColumnWidth(16),
               1: FixedColumnWidth(100 + 8),
-              2: FixedColumnWidth(60 + 8),
-              3: FlexColumnWidth(1),
-              4: FixedColumnWidth(30 + 8),
-              5: FixedColumnWidth(60 + 8),
-              6: FixedColumnWidth(60 + 8),
-              7: FixedColumnWidth(60 + 8),
-              8: FixedColumnWidth(60 + 8),
-              9: FixedColumnWidth(60 + 8),
-              10: FixedColumnWidth(30 + 8),
-              11: FixedColumnWidth(16),
+              2: FlexColumnWidth(1),
+              3: FixedColumnWidth(30 + 8),
+              4: FixedColumnWidth(120 + 8),
+              5: FixedColumnWidth(70 + 8),
+              6: FixedColumnWidth(70 + 8),
+              7: FixedColumnWidth(70 + 8),
+              8: FixedColumnWidth(70 + 8),
+              9: FixedColumnWidth(70 + 8),
+              10: FixedColumnWidth(70 + 8),
+              11: FixedColumnWidth(30 + 8),
+              12: FixedColumnWidth(16),
             },
             defaultVerticalAlignment: TableCellVerticalAlignment.middle,
             children: [
@@ -123,10 +124,6 @@ class __McdFontsManagerState extends ChangeNotifierState<FontsManager> {
                         ),
                       ],
                     ),
-                    makePropEditor(
-                      McdData.fontOverrides[i].heightScale,
-                      const PropTFOptions(hintText: "absScale", constraints: BoxConstraints.tightFor(height: 30)),
-                    ),
                     PrimaryPropTextField(
                       prop: McdData.fontOverrides[i].fontPath,
                       options: const PropTFOptions(hintText: "Font Path", constraints: BoxConstraints.tightFor(height: 30)),
@@ -147,6 +144,14 @@ class __McdFontsManagerState extends ChangeNotifierState<FontsManager> {
                       },
                       constraints: BoxConstraints.tight(const Size(30, 30)),
                       child: const Icon(Icons.folder, size: 17),
+                    ),
+                    makePropEditor(
+                      McdData.fontOverrides[i].isFallbackOnly,
+                      const PropTFOptions(hintText: "Fallback only", constraints: BoxConstraints.tightFor(height: 30)),
+                    ),
+                    makePropEditor(
+                      McdData.fontOverrides[i].heightScale,
+                      const PropTFOptions(hintText: "absScale", constraints: BoxConstraints.tightFor(height: 30)),
                     ),
                     makePropEditor(
                       McdData.fontOverrides[i].scale,
