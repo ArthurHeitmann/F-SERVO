@@ -10,7 +10,15 @@ Supported file types:
 - SMD (localized subtitles)
 - MCD (localized UI text)
 
-## Building
+## Installation
+
+Go to the [releases](https://github.com/ArthurHeitmann/F-SERVO/releases) page and download the latest `F-SERVO_x.x.x.7z` file. Extract the archive and run `F-SERVO.exe`.
+
+## Usage
+
+See the incomplete [wiki](https://github.com/ArthurHeitmann/F-SERVO/wiki/Getting-Started).
+
+## Building (for developers only)
 
 1. [Setup Flutter for Windows](https://docs.flutter.dev/get-started/install/windows)
 
