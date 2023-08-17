@@ -1,14 +1,20 @@
-# Nier Scripts Editor
+# F-SERVO (File and Scripts EditoR Version One)
 
-A tool for modding a variety of files in Nier:Automata. Primarily for editing quest scripting files.
+A tool for modding a variety of files in Nier:Automata
 
 Supported file types:
 - DAT, DTT
 - PAK, YAX, XML (xml quest scripts)
 - BIN (ruby quest scripts)
-- TMD (translations)
-- SMD (localized subtitles)
+- BXM (XML config files)
+- WTA, WTP, WTB (texture files)
+- BNK, WEM, WAI, WSP (audio files)
+- TMD (localized UI text)
 - MCD (localized UI text)
+- SMD (localized subtitles)
+- FTB (fonts)
+- CPK extract
+- Save files (SlotData_X.dat)
 
 ## Installation
 
