@@ -3,6 +3,8 @@ import 'package:xml/xml.dart';
 import '../utils/ByteDataWrapper.dart';
 
 
+const bxmEncoding = StringEncoding.shiftJis;
+
 class BxmHeader {
   final String type;
   final int flags;
@@ -61,12 +63,12 @@ class BxmDataOffsets {
   BxmDataOffsets(this.nameOffset, this.valueOffset);
 
   BxmDataOffsets.read(ByteDataWrapper bytes) :
-    nameOffset = bytes.readInt16(),
-    valueOffset = bytes.readInt16();
+    nameOffset = bytes.readUint16(),
+    valueOffset = bytes.readUint16();
   
   void write(ByteDataWrapper bytes) {
-    bytes.writeInt16(nameOffset);
-    bytes.writeInt16(valueOffset);
+    bytes.writeUint16(nameOffset);
+    bytes.writeUint16(valueOffset);
   }
 
   int get size => 2 + 2;

@@ -24,10 +24,13 @@ Future<void> xmlToBxm(XmlElement root, String savePath) async {
   getNodes(root);
 
   // gather all unique strings in tag names, tag value, attribute names and attribute values
-  List<String> uniqueStrings = [];
+  Set<String> uniqueStringsSet = {};
+  List<(String, List<int>)> uniqueStrings = [];
   void tryAddString(String string) {
-    if (string.isNotEmpty && !uniqueStrings.contains(string))
-      uniqueStrings.add(string);
+    if (string.isNotEmpty && !uniqueStringsSet.contains(string)) {
+      uniqueStrings.add((string, encodeString(string, bxmEncoding)));
+      uniqueStringsSet.add(string);
+    }
   }
   for (var node in nodes) {
     tryAddString(node.name.local);
@@ -42,8 +45,8 @@ Future<void> xmlToBxm(XmlElement root, String savePath) async {
   Map<String, int> stringToOffset = {};
   int curOffset = 0;
   for (var string in uniqueStrings) {
-    stringToOffset[string] = curOffset;
-    curOffset += string.length + 1;
+    stringToOffset[string.$1] = curOffset;
+    curOffset += string.$2.length + 1;
   }
 
   // calculate data offsets (for strings)
@@ -51,15 +54,15 @@ Future<void> xmlToBxm(XmlElement root, String savePath) async {
   Map<XmlElement, int> nodeToDataIndex = {};
   for (var node in nodes) {
     var dataOffset = BxmDataOffsets(
-      stringToOffset[node.name.local] ?? -1,
-      stringToOffset[_getElementText(node).trim()] ?? -1,
+      stringToOffset[node.name.local] ?? 0xFFFF,
+      stringToOffset[_getElementText(node).trim()] ?? 0xFFFF,
     );
     nodeToDataIndex[node] = dataOffsets.length;
     dataOffsets.add(dataOffset);
     for (var attribute in node.attributes) {
       dataOffset = BxmDataOffsets(
-        stringToOffset[attribute.name.local] ?? -1,
-        stringToOffset[attribute.value] ?? -1,
+        stringToOffset[attribute.name.local] ?? 0xFFFF,
+        stringToOffset[attribute.value] ?? 0xFFFF,
       );
       dataOffsets.add(dataOffset);
     }
@@ -119,7 +122,7 @@ Future<void> xmlToBxm(XmlElement root, String savePath) async {
     nodeInfos.length,
     dataOffsets.length,
     uniqueStrings
-      .map((string) => string.length + 1)
+      .map((string) => string.$2.length + 1)
       .fold(0, (a, b) => a + b),
   );
 
@@ -135,8 +138,10 @@ Future<void> xmlToBxm(XmlElement root, String savePath) async {
     nodeInfo.write(bytes);
   for (var dataOffset in dataOffsets)
     dataOffset.write(bytes);
-  for (var string in uniqueStrings)
-    bytes.writeString0P(string);
+  for (var string in uniqueStrings) {
+    bytes.writeBytes(string.$2);
+    bytes.writeUint8(0);
+  }
   
   await File(savePath).writeAsBytes(bytes.buffer.asUint8List());
 }
