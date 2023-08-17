@@ -68,18 +68,19 @@ class WtaTextureEntry with HasUuid, Undoable {
 class WtaWtpTextures with HasUuid, Undoable {
   final OpenFileId file;
   final String wtaPath;
-  final String wtpPath;
+  final String? wtpPath;
+  final bool isWtb;
   final ValueListNotifier<WtaTextureEntry> textures;
   final bool hasAnySimpleModeFlags;
   final bool useFlagsSimpleMode;
 
-  WtaWtpTextures(this.file, this.wtaPath, this.wtpPath, this.textures, this.useFlagsSimpleMode, this.hasAnySimpleModeFlags) {
+  WtaWtpTextures(this.file, this.wtaPath, this.wtpPath, this.isWtb, this.textures, this.useFlagsSimpleMode, this.hasAnySimpleModeFlags) {
     textures.addListener(_onPropChange);
   }
 
-  static Future<WtaWtpTextures> fromWtaWtp(OpenFileId file, String wtaPath, String wtpPath, String extractDir) async {
+  static Future<WtaWtpTextures> fromWtaWtp(OpenFileId file, String wtaPath, String? wtpPath, String extractDir, bool isWtb) async {
     var wta = await WtaFile.readFromFile(wtaPath);
-    var wtpFile = await File(wtpPath).open();
+    var wtpFile = await File(isWtb ? wtaPath : wtpPath!).open();
     var textures = ValueListNotifier<WtaTextureEntry>([]);
     try {
       for (int i = 0; i < wta.textureOffsets.length; i++) {
@@ -111,7 +112,7 @@ class WtaWtpTextures with HasUuid, Undoable {
 
     messageLog.add("Done extracting textures");
 
-    return WtaWtpTextures(file, wtaPath, wtpPath, textures, useFlagsSimpleMode, hashAnySimpleModeFlags);
+    return WtaWtpTextures(file, wtaPath, wtpPath, isWtb, textures, useFlagsSimpleMode, hashAnySimpleModeFlags);
   }
 
   Future<void> save() async {
@@ -129,14 +130,6 @@ class WtaWtpTextures with HasUuid, Undoable {
       return await File(e.path.value).length();
     }));
 
-    // update offsets (4096 byte alignment)
-    int offset = 0;
-    for (int i = 0; i < wta.textureOffsets.length; i++) {
-      wta.textureOffsets[i] = offset;
-      offset += wta.textureSizes[i];
-      offset = (offset + 4095) & ~4095;
-    }
-
     // update texture infos
     wta.textureInfo = await Future.wait(textures.map((e) async {
       return await WtaFileTextureInfo.fromDds(e.path.value);
@@ -144,14 +137,23 @@ class WtaWtpTextures with HasUuid, Undoable {
 
     wta.updateHeader();
 
+    // update offsets (4096 byte alignment)
+    int offset = isWtb ? alignTo(wta.header.offsetTextureInfo + wta.textureInfo.length * 20, 32) : 0;
+    for (int i = 0; i < wta.textureOffsets.length; i++) {
+      wta.textureOffsets[i] = offset;
+      offset += wta.textureSizes[i];
+      offset = (offset + 4095) & ~4095;
+    }
+
     // write wta
     await backupFile(wtaPath);
     await wta.writeToFile(wtaPath);
     messageLog.add("Saved WTA");
 
     // write wtp
-    await backupFile(wtpPath);
-    var wtpFile = await File(wtpPath).open(mode: FileMode.write);
+    var textureFilePath = isWtb ? wtaPath : wtpPath!;
+    await backupFile(textureFilePath);
+    var wtpFile = await File(textureFilePath).open(mode: isWtb ? FileMode.append : FileMode.write);
     try {
       for (int i = 0; i < wta.textureOffsets.length; i++) {
         await wtpFile.setPosition(wta.textureOffsets[i]);
@@ -181,6 +183,7 @@ class WtaWtpTextures with HasUuid, Undoable {
       file,
       wtaPath,
       wtpPath,
+      isWtb,
       textures.takeSnapshot() as ValueListNotifier<WtaTextureEntry>,
       useFlagsSimpleMode,
       hasAnySimpleModeFlags,

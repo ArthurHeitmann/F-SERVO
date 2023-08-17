@@ -13,6 +13,8 @@ struct {
 */
 import 'dart:io';
 
+import '../../stateManagement/events/statusInfo.dart';
+import '../../utils/utils.dart';
 import '../utils/ByteDataWrapper.dart';
 
 class WtaFileHeader {
@@ -64,7 +66,7 @@ class WtaFileTextureInfo {
     dds.position = 112;
     var cube = dds.readUint32();
     if (!const ["DXT1", "DXT3", "DXT5"].contains(dxt))
-      throw Exception("Invalid DDS file");
+      messageLog.add("Warning: $ddsPath uses unknown DDS format $dxt. This may not work.");
     var isCube = cube == 0xFE00;
     
     int format = 0;
@@ -78,6 +80,9 @@ class WtaFileTextureInfo {
         break;
       case "DXT5":
         format = 77;
+        break;
+      default:
+        format = 87;
         break;
     }
 
@@ -155,9 +160,9 @@ class WtaFile {
   void updateHeader() {
     header.numTex = textureOffsets.length;
     header.offsetTextureOffsets = 0x20;
-    header.offsetTextureSizes = header.offsetTextureOffsets + textureOffsets.length * 4;
-    header.offsetTextureFlags = header.offsetTextureSizes + textureSizes.length * 4;
-    header.offsetTextureIdx = header.offsetTextureFlags + textureFlags.length * 4;
-    header.offsetTextureInfo = header.offsetTextureIdx + textureIdx.length * 4;
+    header.offsetTextureSizes = alignTo(header.offsetTextureOffsets + textureOffsets.length * 4, 32);
+    header.offsetTextureFlags = alignTo(header.offsetTextureSizes + textureSizes.length * 4, 32);
+    header.offsetTextureIdx = alignTo(header.offsetTextureFlags + textureFlags.length * 4, 32);
+    header.offsetTextureInfo = alignTo(header.offsetTextureIdx + textureIdx.length * 4, 32);
   }
 }

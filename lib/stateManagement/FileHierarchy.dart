@@ -120,6 +120,10 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
           () async => openWtaFile(filePath, parent: parent)
         ),
         Tuple2(
+          [".wtb"],
+          () async => openWtbFile(filePath, parent: parent)
+        ),
+        Tuple2(
           [".cpk"],
           () async => openCpkFile(filePath, parent: parent)
         ),
@@ -182,7 +186,7 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
     List<Future<void>> futures = [];
     datFilePaths ??= await getDatFileList(datExtractDir);
     RubyScriptGroupHierarchyEntry? rubyScriptGroup;
-    const supportedFileEndings = { ".pak", "_scp.bin", ".tmd", ".smd", ".mcd", ".ftb", ".bnk", ".bxm" };
+    const supportedFileEndings = { ".pak", "_scp.bin", ".tmd", ".smd", ".mcd", ".ftb", ".bnk", ".bxm", ".wta", ".wtb" };
     for (var file in datFilePaths) {
       if (supportedFileEndings.every((ending) => !file.endsWith(ending)))
         continue;
@@ -450,6 +454,20 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
     }
 
     var wtaEntry = WtaHierarchyEntry(StringProp(basename(wtaPath)), wtaPath, wtpPath);
+    if (parent != null)
+      parent.add(wtaEntry);
+    else
+      add(wtaEntry);
+
+    return wtaEntry;
+  }
+
+  Future<HierarchyEntry> openWtbFile(String wtaPath, { HierarchyEntry? parent }) async {
+    var existing = findRecWhere((entry) => entry is WtaHierarchyEntry && entry.path == wtaPath);
+    if (existing != null)
+      return existing;
+
+    var wtaEntry = WtbHierarchyEntry(StringProp(basename(wtaPath)), wtaPath);
     if (parent != null)
       parent.add(wtaEntry);
     else

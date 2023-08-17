@@ -91,8 +91,8 @@ abstract class OpenFileData extends ChangeNotifier with HasUuid, Undoable {
       return BnkFilePlaylistData(name, path, secondaryName: secondaryName);
     else if (path.endsWith(".dat") && basename(path).startsWith("SlotData_"))
       return SaveSlotData(name, path, secondaryName: secondaryName);
-    else if (path.endsWith(".wta"))
-      return WtaWtpData(name, path, secondaryName: secondaryName);
+    else if (path.endsWith(".wta") || path.endsWith(".wtb"))
+      return WtaWtpData(name, path, secondaryName: secondaryName, isWtb: path.endsWith(".wtb"));
     else
       return TextFileData(name, path, secondaryName: secondaryName);
   }
@@ -118,7 +118,7 @@ abstract class OpenFileData extends ChangeNotifier with HasUuid, Undoable {
       return FileType.bnkPlaylist;
     else if (path.endsWith(".dat") && basename(path).startsWith("SlotData_"))
       return FileType.saveSlotData;
-    else if (path.endsWith(".wta"))
+    else if (path.endsWith(".wta") || path.endsWith(".wtb"))
       return FileType.wta;
     else
       return FileType.text;
@@ -1702,8 +1702,9 @@ class WtaWtpOptionalInfo extends OptionalFileInfo {
 class WtaWtpData extends OpenFileData {
   String? wtpPath;
   WtaWtpTextures? textures;
+  final bool isWtb;
 
-  WtaWtpData(String name, String path, { super.secondaryName, WtaWtpOptionalInfo? optionalInfo }) :
+  WtaWtpData(String name, String path, { super.secondaryName, WtaWtpOptionalInfo? optionalInfo, this.isWtb = false }) :
     wtpPath = optionalInfo?.wtpPath,
     super(name, path, icon: Icons.image);
 
@@ -1715,8 +1716,8 @@ class WtaWtpData extends OpenFileData {
 
     // find wtp
     var datDir = dirname(path);
-    var dttDir = await findDttDirOfDat(datDir);
-    if (wtpPath == null) {
+    var dttDir = isWtb ? null : await findDttDirOfDat(datDir);
+    if (wtpPath == null && !isWtb) {
       var wtaName = basenameWithoutExtension(path);
       var wtpName = "$wtaName.wtp";
       // wtpPath = join(dttDir, wtpName);
@@ -1730,6 +1731,10 @@ class WtaWtpData extends OpenFileData {
         }
       }
     }
+    if (!isWtb && wtpPath == null) {
+      showToast("Can't find corresponding WTP file");
+      throw Exception("Can't find corresponding WTP file in ${dttDir ?? datDir}");
+    }
 
     String extractDir;
     if (dttDir != null)
@@ -1739,7 +1744,7 @@ class WtaWtpData extends OpenFileData {
     await Directory(extractDir).create(recursive: true);
     
     textures?.dispose();
-    textures = await WtaWtpTextures.fromWtaWtp(uuid, path, wtpPath!, extractDir);
+    textures = await WtaWtpTextures.fromWtaWtp(uuid, path, wtpPath, extractDir, isWtb);
 
     await super.load();
   }

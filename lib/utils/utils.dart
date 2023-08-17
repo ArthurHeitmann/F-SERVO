@@ -669,3 +669,11 @@ Future<String?> findDttDirOfDat(String extractedDatDir) async {
   }
   return dttDir;
 }
+
+int alignTo(int value, int alignment) {
+  return ((value + alignment - 1) ~/ alignment) * alignment;
+}
+
+int remainingPadding(int value, int alignment) {
+  return alignTo(value, alignment) - value;
+}
