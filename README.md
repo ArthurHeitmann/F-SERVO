@@ -24,6 +24,17 @@ Go to the [releases](https://github.com/ArthurHeitmann/F-SERVO/releases) page an
 
 See the incomplete [wiki](https://github.com/ArthurHeitmann/F-SERVO/wiki/Getting-Started).
 
+## Screenshots
+
+![image](https://user-images.githubusercontent.com/37270165/221270764-b10a7810-f704-47c6-9b1b-fe652d00ee05.png)  
+Editing quest scripts
+
+![image](https://user-images.githubusercontent.com/37270165/222829431-4c1f1123-f6a5-48bc-b211-07cd5126658b.png)  
+Music replacement & loop point editing
+
+![image](https://github.com/ArthurHeitmann/F-SERVO/assets/37270165/36770284-fb7d-4293-9656-d64e28f3e74f)  
+MCD editing
+
 ## Building (for developers only)
 
 1. [Setup Flutter for Windows](https://docs.flutter.dev/get-started/install/windows)
