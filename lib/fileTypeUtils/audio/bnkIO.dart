@@ -327,7 +327,20 @@ class BnkHircUnknownChunk extends BnkHircChunkBase {
   int calculateSize() => data.length;
 }
 
-class BnkMusicTrack extends BnkHircChunkBase {
+mixin BnkHircChunkWithBaseParamsGetter {
+  late String chunkType;
+
+  BnkNodeBaseParams getBaseParams();
+}
+
+mixin BnkHircChunkWithBaseParams implements BnkHircChunkWithBaseParamsGetter {
+  late BnkNodeBaseParams baseParams;
+
+  BnkNodeBaseParams getBaseParams() => baseParams;
+}
+
+class BnkMusicTrack extends BnkHircChunkBase with BnkHircChunkWithBaseParams {
+  String chunkType = "MusicTrack";
   late int uFlags;
   late int numSources;
   late List<BnkSource> sources;
@@ -336,13 +349,14 @@ class BnkMusicTrack extends BnkHircChunkBase {
   int? numSubTrack;
   late int numClipAutomationItem;
   late List<BnkClipAutomation> clipAutomations;
-  late BnkNodeBaseParams baseParams;
   late int eTrackType;
   BnkSwitchParams? switchParam;
   BnkTransParams? transParam;
   late int iLookAheadTime;
 
-  BnkMusicTrack(super.type, super.size, super.uid, this.uFlags, this.numSources, this.sources, this.numPlaylistItem, this.playlists, this.numSubTrack, this.numClipAutomationItem, this.clipAutomations, this.baseParams, this.eTrackType, this.switchParam, this.transParam, this.iLookAheadTime);
+  BnkMusicTrack(super.type, super.size, super.uid, this.uFlags, this.numSources, this.sources, this.numPlaylistItem, this.playlists, this.numSubTrack, this.numClipAutomationItem, this.clipAutomations, BnkNodeBaseParams baseParams, this.eTrackType, this.switchParam, this.transParam, this.iLookAheadTime) {
+    this.baseParams = baseParams;
+  }
 
   BnkMusicTrack.read(ByteDataWrapper bytes) : super.read(bytes) {
     uFlags = bytes.readUint8();
@@ -406,7 +420,8 @@ class BnkMusicTrack extends BnkHircChunkBase {
   }
 }
 
-class BnkMusicSegment extends BnkHircChunkBase {
+class BnkMusicSegment extends BnkHircChunkBase with BnkHircChunkWithBaseParamsGetter {
+  String chunkType = "MusicSegment";
   late BnkMusicNodeParams musicParams;
   late double fDuration;
   late int ulNumMarkers;
@@ -440,9 +455,15 @@ class BnkMusicSegment extends BnkHircChunkBase {
       wwiseMarkers.fold<int>(0, (sum, m) => sum + m.calcChunkSize())  // wwiseMarkers
     );
   }
+
+  @override
+  BnkNodeBaseParams getBaseParams() {
+    return musicParams.baseParams;
+  }
 }
 
-class BnkMusicPlaylist extends BnkHircChunkBase {
+class BnkMusicPlaylist extends BnkHircChunkBase with BnkHircChunkWithBaseParamsGetter {
+  String chunkType = "MusicPlaylist";
   late BnkMusicTransNodeParams musicTransParams;
   late int numPlaylistItems;
   late List<BnkPlaylistItem> playlistItems;
@@ -471,6 +492,11 @@ class BnkMusicPlaylist extends BnkHircChunkBase {
       4 + // numPlaylistItems
       playlistItems.fold<int>(0, (sum, p) => sum + p.calcChunkSize())  // playlistItems
     );
+  }
+
+  @override
+  BnkNodeBaseParams getBaseParams() {
+    return musicTransParams.musicParams.baseParams;
   }
 }
 
@@ -752,16 +778,18 @@ class BnkMusicMarker {
   }
 }
 
-class BnkMusicNodeParams {
+class BnkMusicNodeParams with BnkHircChunkWithBaseParams {
+  String chunkType = "MusicNodeParams";
   late int uFlags;
-  late BnkNodeBaseParams baseParams;
   late BnkChildren childrenList;
   late BnkAkMeterInfo meterInfo;
   late int bMeterInfoFlag;
   late int uNumStingers;
   late List<BnkAkStinger> stingers;
 
-  BnkMusicNodeParams(this.uFlags, this.baseParams, this.childrenList, this.meterInfo, this.bMeterInfoFlag, this.uNumStingers, this.stingers);
+  BnkMusicNodeParams(this.uFlags, BnkNodeBaseParams baseParams, this.childrenList, this.meterInfo, this.bMeterInfoFlag, this.uNumStingers, this.stingers) {
+    this.baseParams = baseParams;
+  }
 
   BnkMusicNodeParams.read(ByteDataWrapper bytes) {
     uFlags = bytes.readUint8();
@@ -1694,11 +1722,13 @@ class BnkEvent extends BnkHircChunkBase {
   }
 }
 
-class BnkActorMixer extends BnkHircChunkBase {
-  late BnkNodeBaseParams baseParams;
+class BnkActorMixer extends BnkHircChunkBase with BnkHircChunkWithBaseParams {
+  String chunkType = "ActorMixer";
   late List<int> childIDs;
 
-  BnkActorMixer(super.type, super.size, super.uid, this.baseParams, this.childIDs);
+  BnkActorMixer(super.type, super.size, super.uid, BnkNodeBaseParams baseParams, this.childIDs) {
+    this.baseParams = baseParams;
+  }
 
   BnkActorMixer.read(ByteDataWrapper bytes) : super.read(bytes) {
     baseParams = BnkNodeBaseParams.read(bytes);
@@ -1721,11 +1751,13 @@ class BnkActorMixer extends BnkHircChunkBase {
   }
 }
 
-class BnkSound extends BnkHircChunkBase {
+class BnkSound extends BnkHircChunkBase with BnkHircChunkWithBaseParams {
+  String chunkType = "Sound";
   late BnkSourceData bankData;
-  late BnkNodeBaseParams baseParams;
 
-  BnkSound(super.type, super.size, super.uid, this.bankData, this.baseParams);
+  BnkSound(super.type, super.size, super.uid, this.bankData, BnkNodeBaseParams baseParams) {
+    this.baseParams = baseParams;
+  }
 
   BnkSound.read(ByteDataWrapper bytes) : super.read(bytes) {
     bankData = BnkSourceData.read(bytes);

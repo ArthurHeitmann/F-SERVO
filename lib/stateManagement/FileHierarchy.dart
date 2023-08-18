@@ -10,6 +10,7 @@ import 'package:xml/xml.dart';
 import '../fileTypeUtils/audio/bnkExtractor.dart';
 import '../fileTypeUtils/audio/bnkIO.dart';
 import '../fileTypeUtils/audio/waiExtractor.dart';
+import '../fileTypeUtils/audio/wemIdsToNames.dart';
 import '../fileTypeUtils/bxm/bxmReader.dart';
 import '../fileTypeUtils/cpk/cpkExtractor.dart';
 import '../fileTypeUtils/dat/datExtractor.dart';
@@ -397,16 +398,52 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
     if (await extractedFile.exists())
       noExtract = true;
     var wemFiles = await extractBnkWems(bnk, bnkExtractDir, noExtract);
+    await extractedFile.writeAsString("Delete this file to re-extract files");
 
     var bnkEntry = BnkHierarchyEntry(StringProp(basename(bnkPath)), bnkPath, bnkExtractDir);
-    bnkEntry.addAll(wemFiles.map((e) => WemHierarchyEntry(
-      StringProp(basename(e.item2)), 
+
+    var wemParentEntry = BnkSubCategoryParentHierarchyEntry("WEM files");
+    bnkEntry.add(wemParentEntry);
+    wemParentEntry.addAll(wemFiles.map((e) => WemHierarchyEntry(
+      StringProp(basename(e.item2)),
       e.item2,
       e.item1,
       OptionalWemData(bnkPath, WemSource.bnk)
     )));
 
-    await extractedFile.writeAsString("Delete this file to re-extract files");
+    var hircChunk = bnk.chunks.whereType<BnkHircChunk>().firstOrNull;
+    if (hircChunk != null) {
+      var hierarchyParentEntry = BnkSubCategoryParentHierarchyEntry("Hierarchy");
+      bnkEntry.add(hierarchyParentEntry);
+      Map<int, BnkHircHierarchyEntry> hircEntries = {};
+      for (var hirc in hircChunk.chunks) {
+        if (hirc is! BnkHircChunkWithBaseParamsGetter)
+          continue;
+        var hircChunk = hirc as BnkHircChunkWithBaseParamsGetter;
+        var uidNameLookup = wemIdsToNames[hirc.uid];
+        var uidNameStr = uidNameLookup != null ? "_uidNameLookup" : "";
+        String path;
+        if (hirc is! BnkMusicPlaylist)
+          path = "$bnkPath#id=${hirc.uid}";
+        else
+          path = "$bnkPath#p=${hirc.uid}";
+        var parentId = hircChunk.getBaseParams().directParentID;
+
+        var entry = BnkHircHierarchyEntry(StringProp("${hirc.uid}_${hircChunk.chunkType}$uidNameStr"), path, hirc.uid, parentId, hircChunk.chunkType);
+
+        hircEntries[hirc.uid] = entry;
+      }
+
+      for (var entry in hircEntries.entries) {
+        var hasParent = hircEntries.containsKey(entry.value.parentId);
+        if (hasParent) {
+          var parent = hircEntries[entry.value.parentId]!;
+          parent.add(entry.value);
+        }
+        else
+          hierarchyParentEntry.add(entry.value);
+      }
+    }
 
     if (parent != null)
       parent.add(bnkEntry);

@@ -1119,6 +1119,43 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
   }
 }
 
+class BnkSubCategoryParentHierarchyEntry extends HierarchyEntry {
+  BnkSubCategoryParentHierarchyEntry(String name)
+    : super(StringProp(name), false, true, false);
+
+  @override
+  Undoable takeSnapshot() {
+    var entry = BnkSubCategoryParentHierarchyEntry(name.value);
+    entry.overrideUuid(uuid);
+    entry._isSelected = _isSelected;
+    entry._isCollapsed = _isCollapsed;
+    entry.replaceWith(map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
+    return entry;
+  }
+
+  @override
+  void restoreWith(Undoable snapshot) {
+    var entry = snapshot as HierarchyEntry;
+    _isSelected = entry._isSelected;
+    _isCollapsed = entry._isCollapsed;
+    updateOrReplaceWith(entry.toList(), (entry) => entry.takeSnapshot() as HierarchyEntry);
+  }
+}
+
+class BnkHircHierarchyEntry extends GenericFileHierarchyEntry {
+  final int id;
+  final int parentId;
+  final String type;
+
+  BnkHircHierarchyEntry(StringProp name, String path, this.id, this.parentId, this.type)
+    : super(name, path, true, true);
+
+  @override
+  HierarchyEntry clone() {
+    return BnkHircHierarchyEntry(name.takeSnapshot() as StringProp, path, id, parentId, type);
+  }
+}
+
 class SaveSlotDataHierarchyEntry extends GenericFileHierarchyEntry {
   SaveSlotDataHierarchyEntry(StringProp name, String path)
     : super(name, path, false, true);
