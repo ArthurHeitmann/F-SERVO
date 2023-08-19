@@ -435,6 +435,26 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
           if (parentId == 0)
             parentId = null;
           props.addAll(BnkHircHierarchyEntry.makePropsFromParams(baseParams.iniParams.propValues, baseParams.iniParams.rangedPropValues));
+          for (var stateGroup in baseParams.states.stateGroup) {
+            var stateGroupId = randomId();
+            var groupName = wemIdsToNames[stateGroup.ulStateGroupID] ?? stateGroup.ulStateGroupID.toString();
+            var stateGroupEntry = BnkHircHierarchyEntry(StringProp("StateGroup_$groupName"), "", stateGroupId, "StateGroup", hirc.uid);
+            hircEntries[stateGroupId] = stateGroupEntry;
+            for (var state in stateGroup.state) {
+              var stateName = wemIdsToNames[state.ulStateID] ?? state.ulStateID.toString();
+              var stateId = randomId();
+              var childId = state.ulStateInstanceID;
+              if (hircEntries.containsKey(childId)) {
+                var childState = hircEntries[childId]!;
+                childState.name.value += " = $stateName";
+                childState.parentId = stateGroupId;
+              }
+              else {
+                var stateEntry = BnkHircHierarchyEntry(StringProp("State_$stateName"), "", stateId, "State", stateGroupId, [childId]);
+                hircEntries[stateId] = stateEntry;
+              }
+            }
+          }
           Future<void> addWemChild(int srcId) async {
             var srcName = wemIdsToNames[srcId];
             if (srcName == null)
@@ -477,6 +497,8 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
           childIds = hirc.ids;
         else if (hirc is BnkActorMixer)
           childIds = hirc.childIDs;
+        else if (hirc is BnkState)
+          props.addAll(BnkHircHierarchyEntry.makePropsFromParams(hirc.props));
         else
           continue;
 

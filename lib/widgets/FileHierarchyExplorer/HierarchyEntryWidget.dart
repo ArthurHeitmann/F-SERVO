@@ -56,6 +56,10 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
         return Icon(Icons.account_tree_outlined, color: iconColor, size: 15);
       else if (entryType == "Action")
         return Icon(Icons.keyboard_double_arrow_right, color: iconColor, size: 15);
+      else if (entryType == "StateGroup")
+        return Icon(Icons.workspaces, color: iconColor, size: 15);
+      else if (entryType == "State")
+        return Icon(Icons.trip_origin, color: iconColor, size: 15);
       else
         return Icon(Icons.list, color: iconColor, size: 15);
     }

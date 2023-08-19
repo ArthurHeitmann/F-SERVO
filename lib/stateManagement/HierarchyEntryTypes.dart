@@ -1160,7 +1160,7 @@ class BnkHircHierarchyEntry extends GenericFileHierarchyEntry {
     return BnkHircHierarchyEntry(name.takeSnapshot() as StringProp, path, id, type, parentId, childIds, properties);
   }
 
-  static List<(bool, String, String)> makePropsFromParams(BnkPropValue propValues, BnkPropRangedValue rangedPropValues) {
+  static List<(bool, String, String)> makePropsFromParams(BnkPropValue propValues, [BnkPropRangedValue? rangedPropValues]) {
     List<(bool, String, String)> props = [];
     if (propValues.cProps > 0) {
       var ids = propValues.pID
@@ -1175,7 +1175,7 @@ class BnkHircHierarchyEntry extends GenericFileHierarchyEntry {
           (true, ids.elementAt(i), values.elementAt(i)),
       ]);
     }
-    if (rangedPropValues.cProps > 0) {
+    if (rangedPropValues != null && rangedPropValues.cProps > 0) {
       var ids = rangedPropValues.pID
           .map((id) => BnkPropIds[id] ?? wemIdsToNames[id] ?? id.toString())
           .toList();
