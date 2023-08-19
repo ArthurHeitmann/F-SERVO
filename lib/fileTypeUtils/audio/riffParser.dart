@@ -182,26 +182,27 @@ class DataChunk extends RiffChunk {
   DataChunk(super.chunkId, super.size, this.samples, this.format);
 
   DataChunk.read(ByteDataWrapper bytes, this.format) : super.read(bytes) {
+    var chunkSize = size <= bytes.length - bytes.position ? size : bytes.length - bytes.position;
     switch (format.bitsPerSample) {
       case 8:
-        samples = bytes.asInt8List(size);
+        samples = bytes.asInt8List(chunkSize);
         break;
       case 16:
         if (bytes.position % 2 == 0)
-          samples = bytes.asInt16List(size ~/ 2);
+          samples = bytes.asInt16List(chunkSize ~/ 2);
         else
-          samples = List.generate(size ~/ 2, (i) => bytes.readInt16()); 
+          samples = List.generate(chunkSize ~/ 2, (i) => bytes.readInt16());
         break;
       case 32:
         if (bytes.position % 4 == 0)
-            samples = bytes.asInt32List(size ~/ 4);
+            samples = bytes.asInt32List(chunkSize ~/ 4);
         else
-          samples = List.generate(size ~/ 4, (i) => bytes.readInt32()); 
+          samples = List.generate(chunkSize ~/ 4, (i) => bytes.readInt32());
         break;
       default:
-        samples = bytes.asInt8List(size);
+        samples = bytes.asInt8List(chunkSize);
     }
-    if (size & 1 == 1 && bytes.position < bytes.length) {
+    if (chunkSize & 1 == 1 && bytes.position < bytes.length) {
       bytes.readUint8();
     }
   }

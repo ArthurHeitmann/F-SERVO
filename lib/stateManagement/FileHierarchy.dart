@@ -417,23 +417,51 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
       bnkEntry.add(hierarchyParentEntry);
       Map<int, BnkHircHierarchyEntry> hircEntries = {};
       for (var hirc in hircChunk.chunks) {
-        if (hirc is! BnkHircChunkWithBaseParamsGetter)
-          continue;
-        var hircChunk = hirc as BnkHircChunkWithBaseParamsGetter;
         var uidNameLookup = wemIdsToNames[hirc.uid];
-        var uidNameStr = uidNameLookup != null ? "_uidNameLookup" : "";
+        var uidNameStr = uidNameLookup != null ? "_$uidNameLookup" : "";
         String path;
         if (hirc is! BnkMusicPlaylist)
           path = "$bnkPath#id=${hirc.uid}";
         else
           path = "$bnkPath#p=${hirc.uid}";
-        var parentId = hircChunk.getBaseParams().directParentID;
+        int? parentId;
+        List<int>? childIds;
+        if (hirc is BnkHircChunkWithBaseParamsGetter) {
+          var hircChunk = hirc as BnkHircChunkWithBaseParamsGetter;
+          parentId = hircChunk.getBaseParams().directParentID;
+          if (parentId == 0)
+            parentId = null;
+        } else if (hirc is BnkAction) {
+          childIds = [hirc.initialParams.idExt];
+          if (uidNameStr.isEmpty && hirc.specificParams != null)
+            uidNameStr = "_${hirc.specificParams!.runtimeType.toString().replaceAll("Bnk", "").replaceAll("Params", "")}";
+        } else if (hirc is BnkEvent)
+          childIds = hirc.ids;
+        else if (hirc is BnkActorMixer)
+          childIds = hirc.childIDs;
+        else
+          continue;
 
-        var entry = BnkHircHierarchyEntry(StringProp("${hirc.uid}_${hircChunk.chunkType}$uidNameStr"), path, hirc.uid, parentId, hircChunk.chunkType);
+        var chunkType = hirc.runtimeType.toString().replaceFirst("Bnk", "");
+        var entryName = "${hirc.uid}_$chunkType$uidNameStr";
+        var entry = BnkHircHierarchyEntry(StringProp(entryName), path, hirc.uid, chunkType, parentId, childIds);
 
         hircEntries[hirc.uid] = entry;
       }
 
+      for (var entry in hircEntries.entries) {
+        var hasChildren = entry.value.childIds != null && entry.value.childIds!.isNotEmpty;
+        if (hasChildren) {
+          for (var childId in entry.value.childIds!) {
+            var child = hircEntries[childId];
+            if (child == null)
+              continue;
+            if (child.parentId != null)
+              continue;
+            child.parentId = entry.value.id;
+          }
+        }
+      }
       for (var entry in hircEntries.entries) {
         var hasParent = hircEntries.containsKey(entry.value.parentId);
         if (hasParent) {

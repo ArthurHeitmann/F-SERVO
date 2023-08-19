@@ -1144,15 +1144,16 @@ class BnkSubCategoryParentHierarchyEntry extends HierarchyEntry {
 
 class BnkHircHierarchyEntry extends GenericFileHierarchyEntry {
   final int id;
-  final int parentId;
   final String type;
+  int? parentId;
+  List<int>? childIds;
 
-  BnkHircHierarchyEntry(StringProp name, String path, this.id, this.parentId, this.type)
+  BnkHircHierarchyEntry(StringProp name, String path, this.id, this.type, [this.parentId, this.childIds])
     : super(name, path, true, true);
 
   @override
   HierarchyEntry clone() {
-    return BnkHircHierarchyEntry(name.takeSnapshot() as StringProp, path, id, parentId, type);
+    return BnkHircHierarchyEntry(name.takeSnapshot() as StringProp, path, id, type, parentId, childIds);
   }
 }
 

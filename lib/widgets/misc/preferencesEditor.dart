@@ -269,6 +269,25 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
       RowSeparated(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          const Text("WEM Extract Directory:", overflow: TextOverflow.ellipsis,),
+          Expanded(
+            child: PrimaryPropTextField(
+              prop: widget.prefs.wemExtractDir!,
+              onValid: (value) => widget.prefs.wemExtractDir!.value = value,
+              validatorOnChange: (value) => value.isEmpty || Directory(value).existsSync() ? null : "Directory does not exist",
+              options: const PropTFOptions(constraints: BoxConstraints(minHeight: 30)),
+            ),
+          ),
+          makeFilePickerButton(
+            "Select WEM Extract Directory",
+            widget.prefs.wemExtractDir!.value.isNotEmpty ? widget.prefs.wemExtractDir!.value : null,
+            (dir) => widget.prefs.wemExtractDir!.value = dir,
+          ),
+        ],
+      ),
+      RowSeparated(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
           const Text("Wwise CLI Path (2014):", overflow: TextOverflow.ellipsis,),
           Expanded(
             child: PrimaryPropTextField(

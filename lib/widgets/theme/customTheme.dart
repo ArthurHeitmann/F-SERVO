@@ -255,7 +255,21 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
       return filetypeDatColor!;
     if (entry is HapGroupHierarchyEntry || entry is WemHierarchyEntry)
       return filetypeGroupColor!;
-    
+    if (entry is BnkHircHierarchyEntry) {
+      if (entry.name.value.contains("_Event"))
+        return filetypeDatColor!;
+      else if (entry.name.value.contains("_Action"))
+        return filetypeDocColor!;
+      else if (entry.name.value.contains("_MusicPlaylist"))
+        return filetypeGroupColor!;
+      else if (entry.name.value.contains("_MusicSegment"))
+        return filetypePakColor!;
+      // else if (entry.name.value.contains("_MusicTrack"))
+      //   return Colors.blue;
+      else
+        return Colors.white;
+    }
+
     return Colors.white;
   }
 }

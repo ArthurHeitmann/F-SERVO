@@ -95,11 +95,11 @@ class BnkHeader extends BnkChunkBase {
   late int bnkId;
   late int languageId;
   late int isFeedbackInBnk;
-  late int projectId;
+  // late int projectId;
   late List<int> padding;
   List<int>? unknown;
 
-  BnkHeader(super.chunkId, super.chunkSize, this.version, this.bnkId, this.languageId, this.isFeedbackInBnk, this.projectId, this.padding, [this.unknown]);
+  BnkHeader(super.chunkId, super.chunkSize, this.version, this.bnkId, this.languageId, this.isFeedbackInBnk, this.padding, [this.unknown]);
 
   BnkHeader.read(ByteDataWrapper bytes) : super.read(bytes) {
     if (chunkSize < 20) {
@@ -111,8 +111,8 @@ class BnkHeader extends BnkChunkBase {
     bnkId = bytes.readUint32();
     languageId = bytes.readUint32();
     isFeedbackInBnk = bytes.readUint32();
-    projectId = bytes.readUint32();
-    padding = bytes.readUint8List(chunkSize - 20);
+    // projectId = bytes.readUint32();
+    padding = bytes.readUint8List(chunkSize - 0x10);
   }
 
   @override
@@ -127,14 +127,14 @@ class BnkHeader extends BnkChunkBase {
     bytes.writeUint32(bnkId);
     bytes.writeUint32(languageId);
     bytes.writeUint32(isFeedbackInBnk);
-    bytes.writeUint32(projectId);
+    // bytes.writeUint32(projectId);
     for (var i = 0; i < padding.length; i++)
       bytes.writeUint8(padding[i]);
   }
 
   @override
   int calculateSize() {
-    return 8 + (unknown?.length ?? 5*4 + padding.length);
+    return 8 + (unknown?.length ?? 4*4 + padding.length);
   }
 }
 
@@ -193,6 +193,10 @@ class BnkDataChunk extends BnkChunkBase {
       bytes.position = initialPosition + file.offset;
       wemFiles.add(bytes.readUint8List(file.size));
     }
+    int remaining = chunkSize - (bytes.position - initialPosition);
+    if (remaining > 0) {
+      bytes.position += remaining;
+    }
   }
 
   @override
@@ -227,7 +231,11 @@ class BnkHircChunk extends BnkChunkBase {
 
   BnkHircChunk.read(ByteDataWrapper bytes) : super.read(bytes) {
     int childrenCount = bytes.readUint32();
-    chunks = List.generate(childrenCount, (index) => _makeNextHircChunk(bytes));
+    chunks = List.generate(childrenCount, (index) {
+      if (index == 405)
+        print("here");
+      return _makeNextHircChunk(bytes);
+    });
   }
 
   @override
@@ -256,6 +264,7 @@ enum BnkHircType {
   actorMixer(0x07),
   musicTrack(0x0B),
   musicSegment(0x0A),
+  musicSwitch(0x0C),
   musicPlaylist(0x0D),
   unknown(-1);
 
@@ -301,6 +310,8 @@ BnkHircChunkBase _makeNextHircChunk(ByteDataWrapper bytes) {
       return BnkMusicTrack.read(bytes);
     case BnkHircType.musicSegment:
       return BnkMusicSegment.read(bytes);
+    case BnkHircType.musicSwitch:
+      return BnkMusicSwitch.read(bytes);
     case BnkHircType.musicPlaylist:
       return BnkMusicPlaylist.read(bytes);
     default: return BnkHircUnknownChunk.read(bytes);
@@ -341,7 +352,7 @@ mixin BnkHircChunkWithBaseParams implements BnkHircChunkWithBaseParamsGetter {
 
 class BnkMusicTrack extends BnkHircChunkBase with BnkHircChunkWithBaseParams {
   String chunkType = "MusicTrack";
-  late int uFlags;
+  // late int uFlags;
   late int numSources;
   late List<BnkSource> sources;
   late int numPlaylistItem;
@@ -349,17 +360,15 @@ class BnkMusicTrack extends BnkHircChunkBase with BnkHircChunkWithBaseParams {
   int? numSubTrack;
   late int numClipAutomationItem;
   late List<BnkClipAutomation> clipAutomations;
-  late int eTrackType;
-  BnkSwitchParams? switchParam;
-  BnkTransParams? transParam;
+  late int eRSType;
   late int iLookAheadTime;
 
-  BnkMusicTrack(super.type, super.size, super.uid, this.uFlags, this.numSources, this.sources, this.numPlaylistItem, this.playlists, this.numSubTrack, this.numClipAutomationItem, this.clipAutomations, BnkNodeBaseParams baseParams, this.eTrackType, this.switchParam, this.transParam, this.iLookAheadTime) {
+  BnkMusicTrack(super.type, super.size, super.uid, this.numSources, this.sources, this.numPlaylistItem, this.playlists, this.numSubTrack, this.numClipAutomationItem, this.clipAutomations, BnkNodeBaseParams baseParams, this.eRSType, this.iLookAheadTime) {
     this.baseParams = baseParams;
   }
 
   BnkMusicTrack.read(ByteDataWrapper bytes) : super.read(bytes) {
-    uFlags = bytes.readUint8();
+    // uFlags = bytes.readUint8();
     numSources = bytes.readUint32();
     sources = List.generate(numSources, (index) => BnkSource.read(bytes));
     numPlaylistItem = bytes.readUint32();
@@ -369,18 +378,14 @@ class BnkMusicTrack extends BnkHircChunkBase with BnkHircChunkWithBaseParams {
     numClipAutomationItem = bytes.readUint32();
     clipAutomations = List.generate(numClipAutomationItem, (index) => BnkClipAutomation.read(bytes));
     baseParams = BnkNodeBaseParams.read(bytes);
-    eTrackType = bytes.readUint8();
-    if (eTrackType == 3) {
-      switchParam = BnkSwitchParams.read(bytes);
-      transParam = BnkTransParams.read(bytes);
-    }
+    eRSType = bytes.readUint32();
     iLookAheadTime = bytes.readUint32();
   }
 
   @override
   void write(ByteDataWrapper bytes) {
     super.write(bytes);
-    bytes.writeUint8(uFlags);
+    // bytes.writeUint8(uFlags);
     bytes.writeUint32(numSources);
     for (var i = 0; i < numSources; i++)
       sources[i].write(bytes);
@@ -393,18 +398,14 @@ class BnkMusicTrack extends BnkHircChunkBase with BnkHircChunkWithBaseParams {
     for (var i = 0; i < numClipAutomationItem; i++)
       clipAutomations[i].write(bytes);
     baseParams.write(bytes);
-    bytes.writeUint8(eTrackType);
-    if (eTrackType == 3) {
-      switchParam!.write(bytes);
-      transParam!.write(bytes);
-    }
+    bytes.writeUint32(eRSType);
     bytes.writeUint32(iLookAheadTime);
   }
 
   @override
   int calculateSize() {
     return (
-      1 + // uFlags
+      // 1 + // uFlags
       4 + // numSources
       sources.fold<int>(0, (sum, s) => sum + s.calcChunkSize()) +  // sources
       4 + // numPlaylistItem
@@ -413,8 +414,8 @@ class BnkMusicTrack extends BnkHircChunkBase with BnkHircChunkWithBaseParams {
       4 + // numClipAutomationItem
       clipAutomations.fold<int>(0, (sum, c) => sum + c.calcChunkSize()) +  // clipAutomations
       baseParams.calcChunkSize() +  // baseParams
-      1 + // eTrackType
-      (eTrackType == 3 ? switchParam!.calcChunkSize() + transParam!.calcChunkSize() : 0) +  // switchParam, transParam
+      4 + // eTrackType
+      // (eRSType == 3 ? switchParam!.calcChunkSize() + transParam!.calcChunkSize() : 0) +  // switchParam, transParam
       4 // iLookAheadTime
     );
   }
@@ -462,6 +463,61 @@ class BnkMusicSegment extends BnkHircChunkBase with BnkHircChunkWithBaseParamsGe
   }
 }
 
+class BnkMusicSwitch extends BnkHircChunkBase with BnkHircChunkWithBaseParamsGetter {
+  String chunkType = "MusicSwitch";
+  late BnkMusicTransNodeParams musicTransParams;
+  late int eGroupType;
+  late int ulGroupID;
+  late int ulDefaultSwitch;
+  late int bIsContinuousValidation;
+  late int numSwitchAssocs;
+  late List<BnkAkMusicSwitchAssoc> pAssocs;
+
+  BnkMusicSwitch(super.type, super.size, super.uid, this.musicTransParams, this.eGroupType, this.ulGroupID, this.ulDefaultSwitch, this.bIsContinuousValidation, this.numSwitchAssocs, this.pAssocs);
+
+  BnkMusicSwitch.read(ByteDataWrapper bytes) : super.read(bytes) {
+    musicTransParams = BnkMusicTransNodeParams.read(bytes);
+    eGroupType = bytes.readUint32();
+    ulGroupID = bytes.readUint32();
+    ulDefaultSwitch = bytes.readUint32();
+    bIsContinuousValidation = bytes.readUint8();
+    numSwitchAssocs = bytes.readUint32();
+    pAssocs = List.generate(numSwitchAssocs, (index) => BnkAkMusicSwitchAssoc.read(bytes));
+  }
+
+  @override
+  void write(ByteDataWrapper bytes) {
+    super.write(bytes);
+    musicTransParams.write(bytes);
+    bytes.writeUint32(eGroupType);
+    bytes.writeUint32(ulGroupID);
+    bytes.writeUint32(ulDefaultSwitch);
+    bytes.writeUint8(bIsContinuousValidation);
+    bytes.writeUint32(numSwitchAssocs);
+    for (var i = 0; i < numSwitchAssocs; i++)
+      pAssocs[i].write(bytes);
+  }
+
+  @override
+  int calculateSize() {
+    return (
+      musicTransParams.calcChunkSize() +  // musicTransParams
+      4 + // eGroupType
+      4 + // ulGroupID
+      4 + // ulDefaultSwitch
+      1 + // bIsContinuousValidation
+      4 + // numSwitchAssocs
+      pAssocs.fold<int>(0, (sum, a) => sum + a.calcChunkSize())  // pAssocs
+    );
+  }
+
+  @override
+  BnkNodeBaseParams getBaseParams() {
+    return musicTransParams.musicParams.baseParams;
+  }
+}
+
+
 class BnkMusicPlaylist extends BnkHircChunkBase with BnkHircChunkWithBaseParamsGetter {
   String chunkType = "MusicPlaylist";
   late BnkMusicTransNodeParams musicTransParams;
@@ -500,20 +556,41 @@ class BnkMusicPlaylist extends BnkHircChunkBase with BnkHircChunkWithBaseParamsG
   }
 }
 
+class BnkAkMusicSwitchAssoc {
+  late int switchID;
+  late int nodeID;
+
+  BnkAkMusicSwitchAssoc(this.switchID, this.nodeID);
+
+  BnkAkMusicSwitchAssoc.read(ByteDataWrapper bytes) {
+    switchID = bytes.readUint32();
+    nodeID = bytes.readUint32();
+  }
+
+  void write(ByteDataWrapper bytes) {
+    bytes.writeUint32(switchID);
+    bytes.writeUint32(nodeID);
+  }
+
+  int calcChunkSize() {
+    return 4 + 4;
+  }
+}
+
 class BnkPlaylistItem {
   late int segmentId;
   late int playlistItemId;
   late int numChildren;
   late int eRSType;
   late int loop;
-  late int loopMin;
-  late int loopMax;
+  // late int loopMin;
+  // late int loopMax;
   late int weight;
   late int wAvoidRepeatCount;
   late int bIsUsingWeight;
   late int bIsShuffle;
 
-  BnkPlaylistItem(this.segmentId, this.playlistItemId, this.numChildren, this.eRSType, this.loop, this.loopMin, this.loopMax, this.weight, this.wAvoidRepeatCount, this.bIsUsingWeight, this.bIsShuffle);
+  BnkPlaylistItem(this.segmentId, this.playlistItemId, this.numChildren, this.eRSType, this.loop, this.weight, this.wAvoidRepeatCount, this.bIsUsingWeight, this.bIsShuffle);
 
   BnkPlaylistItem.read(ByteDataWrapper bytes) {
     segmentId = bytes.readUint32();
@@ -521,8 +598,8 @@ class BnkPlaylistItem {
     numChildren = bytes.readUint32();
     eRSType = bytes.readInt32();
     loop = bytes.readInt16();
-    loopMin = bytes.readInt16();
-    loopMax = bytes.readInt16();
+    // loopMin = bytes.readInt16();
+    // loopMax = bytes.readInt16();
     weight = bytes.readUint32();
     wAvoidRepeatCount = bytes.readUint16();
     bIsUsingWeight = bytes.readUint8();
@@ -535,8 +612,8 @@ class BnkPlaylistItem {
     bytes.writeUint32(numChildren);
     bytes.writeInt32(eRSType);
     bytes.writeInt16(loop);
-    bytes.writeInt16(loopMin);
-    bytes.writeInt16(loopMax);
+    // bytes.writeInt16(loopMin);
+    // bytes.writeInt16(loopMax);
     bytes.writeUint32(weight);
     bytes.writeUint16(wAvoidRepeatCount);
     bytes.writeUint8(bIsUsingWeight);
@@ -550,8 +627,8 @@ class BnkPlaylistItem {
       4 + // numChildren
       4 + // eRSType
       2 + // loop
-      2 + // loopMin
-      2 + // loopMax
+      // 2 + // loopMin
+      // 2 + // loopMax
       4 + // weight
       2 + // wAvoidRepeatCount
       1 + // bIsUsingWeight
@@ -590,106 +667,64 @@ class BnkMusicTransNodeParams {
 }
 
 class BnkMusicTransitionRule {
-  late int uNumSrc;
+  final int uNumSrc = 1;
   late List<int> srcNumIDs;
-  late int uNumDst;
+  final int uNumDst = 1;
   late List<int> dstNumIDs;
-  late BnkMusicTransSrcRule srcRule;
-  late BnkMusicTransDstRule dstRule;
-  late int allocTransObjectFlag;
+  late BnkMusicTransDstRule srcRule;
+  late BnkMusicTransSrcRule dstRule;
+  late int bIsTransObjectEnabled;
   BnkMusicTransitionObject? musicTransition;
 
-  BnkMusicTransitionRule(this.uNumSrc, this.srcNumIDs, this.uNumDst, this.dstNumIDs, this.srcRule, this.dstRule, this.allocTransObjectFlag, this.musicTransition);
+  BnkMusicTransitionRule(this.srcNumIDs, this.dstNumIDs, this.srcRule, this.dstRule, this.bIsTransObjectEnabled, this.musicTransition);
 
   BnkMusicTransitionRule.read(ByteDataWrapper bytes) {
-    uNumSrc = bytes.readUint32();
+    // uNumSrc = bytes.readUint32();
     srcNumIDs = List.generate(uNumSrc, (index) => bytes.readUint32());
-    uNumDst = bytes.readUint32();
+    // uNumDst = bytes.readUint32();
     dstNumIDs = List.generate(uNumDst, (index) => bytes.readUint32());
-    srcRule = BnkMusicTransSrcRule.read(bytes);
-    dstRule = BnkMusicTransDstRule.read(bytes);
-    allocTransObjectFlag = bytes.readUint8();
-    if (allocTransObjectFlag != 0)
-      musicTransition = BnkMusicTransitionObject.read(bytes);
+    srcRule = BnkMusicTransDstRule.read(bytes);
+    dstRule = BnkMusicTransSrcRule.read(bytes);
+    bIsTransObjectEnabled = bytes.readUint8();
+    musicTransition = BnkMusicTransitionObject.read(bytes);
   }
 
   void write(ByteDataWrapper bytes) {
-    bytes.writeUint32(uNumSrc);
+    // bytes.writeUint32(uNumSrc);
     for (var i = 0; i < uNumSrc; i++)
       bytes.writeUint32(srcNumIDs[i]);
-    bytes.writeUint32(uNumDst);
+    // bytes.writeUint32(uNumDst);
     for (var i = 0; i < uNumDst; i++)
       bytes.writeUint32(dstNumIDs[i]);
     srcRule.write(bytes);
     dstRule.write(bytes);
-    bytes.writeUint8(allocTransObjectFlag);
-    if (allocTransObjectFlag != 0)
-      musicTransition!.write(bytes);
+    bytes.writeUint8(bIsTransObjectEnabled);
+    musicTransition!.write(bytes);
   }
   
   int calcChunkSize() {
     return (
-      4 + // uNumSrc
+      // 4 + // uNumSrc
       uNumSrc * 4 + // srcNumIDs
-      4 + // uNumDst
+      // 4 + // uNumDst
       uNumDst * 4 + // dstNumIDs
       srcRule.calcChunkSize() + // srcRule
       dstRule.calcChunkSize() + // dstRule
       1 + // allocTransObjectFlag
-      (allocTransObjectFlag != 0 ? musicTransition!.calcChunkSize() : 0) // musicTransition
+      musicTransition!.calcChunkSize() // musicTransition
     );
   }
 }
 
 class BnkMusicTransSrcRule {
   late BnkFadeParams fadeParam;
-  late int uCueFilterHash;
-  late int uJumpToID;
-  late int eEntryType;
-  late int bPlayPreEntry;
-  late int bDestMatchSourceCueName;
-
-  BnkMusicTransSrcRule(this.fadeParam, this.uCueFilterHash, this.uJumpToID, this.eEntryType, this.bPlayPreEntry, this.bDestMatchSourceCueName);
-
-  BnkMusicTransSrcRule.read(ByteDataWrapper bytes) {
-    fadeParam = BnkFadeParams.read(bytes);
-    uCueFilterHash = bytes.readUint32();
-    uJumpToID = bytes.readUint32();
-    eEntryType = bytes.readUint16();
-    bPlayPreEntry = bytes.readUint8();
-    bDestMatchSourceCueName = bytes.readUint8();
-  }
-
-  void write(ByteDataWrapper bytes) {
-    fadeParam.write(bytes);
-    bytes.writeUint32(uCueFilterHash);
-    bytes.writeUint32(uJumpToID);
-    bytes.writeUint16(eEntryType);
-    bytes.writeUint8(bPlayPreEntry);
-    bytes.writeUint8(bDestMatchSourceCueName);
-  }
-  
-  int calcChunkSize() {
-    return (
-      fadeParam.calcChunkSize() + // fadeParam
-      4 + // uCueFilterHash
-      4 + // uJumpToID
-      2 + // eEntryType
-      1 + // bPlayPreEntry
-      1 // bDestMatchSourceCueName
-    );
-  }
-}
-
-class BnkMusicTransDstRule {
-  late BnkFadeParams fadeParam;
   late int eSyncType;
   late int uCueFilterHash;
   late int bPlayPostExit;
 
-  BnkMusicTransDstRule(this.fadeParam, this.eSyncType, this.uCueFilterHash, this.bPlayPostExit);
+  BnkMusicTransSrcRule(this.fadeParam, this.eSyncType, this.uCueFilterHash, this.bPlayPostExit);
 
-  BnkMusicTransDstRule.read(ByteDataWrapper bytes) {
+  BnkMusicTransSrcRule.read(ByteDataWrapper bytes) {
     fadeParam = BnkFadeParams.read(bytes);
     eSyncType = bytes.readUint32();
     uCueFilterHash = bytes.readUint32();
@@ -709,6 +744,46 @@ class BnkMusicTransDstRule {
       4 + // eSyncType
       4 + // uCueFilterHash
       1 // bPlayPostExit
+    );
+  }
+}
+
+class BnkMusicTransDstRule {
+  late BnkFadeParams fadeParam;
+  late int uCueFilterHash;
+  late int uJumpToID;
+  late int eEntryType;
+  late int bPlayPreEntry;
+  late int bDestMatchSourceCueName;
+
+  BnkMusicTransDstRule(this.fadeParam, this.uCueFilterHash, this.uJumpToID, this.eEntryType, this.bPlayPreEntry, this.bDestMatchSourceCueName);
+
+  BnkMusicTransDstRule.read(ByteDataWrapper bytes) {
+    fadeParam = BnkFadeParams.read(bytes);
+    uCueFilterHash = bytes.readUint32();
+    uJumpToID = bytes.readUint32();
+    eEntryType = bytes.readUint16();
+    bPlayPreEntry = bytes.readUint8();
+    bDestMatchSourceCueName = bytes.readUint8();
+  }
+
+  void write(ByteDataWrapper bytes) {
+    fadeParam.write(bytes);
+    bytes.writeUint32(uCueFilterHash);
+    bytes.writeUint32(uJumpToID);
+    bytes.writeUint16(eEntryType);
+    bytes.writeUint8(bPlayPreEntry);
+    bytes.writeUint8(bDestMatchSourceCueName);
+  }
+
+  int calcChunkSize() {
+    return (
+      fadeParam.calcChunkSize() + // fadeParam
+      4 + // uCueFilterHash
+      4 + // uJumpToID
+      2 + // eEntryType
+      1 + // bPlayPreEntry
+      1 // bDestMatchSourceCueName
     );
   }
 }
@@ -780,19 +855,19 @@ class BnkMusicMarker {
 
 class BnkMusicNodeParams with BnkHircChunkWithBaseParams {
   String chunkType = "MusicNodeParams";
-  late int uFlags;
+  // late int uFlags;
   late BnkChildren childrenList;
   late BnkAkMeterInfo meterInfo;
   late int bMeterInfoFlag;
   late int uNumStingers;
   late List<BnkAkStinger> stingers;
 
-  BnkMusicNodeParams(this.uFlags, BnkNodeBaseParams baseParams, this.childrenList, this.meterInfo, this.bMeterInfoFlag, this.uNumStingers, this.stingers) {
+  BnkMusicNodeParams(BnkNodeBaseParams baseParams, this.childrenList, this.meterInfo, this.bMeterInfoFlag, this.uNumStingers, this.stingers) {
     this.baseParams = baseParams;
   }
 
   BnkMusicNodeParams.read(ByteDataWrapper bytes) {
-    uFlags = bytes.readUint8();
+    // uFlags = bytes.readUint8();
     baseParams = BnkNodeBaseParams.read(bytes);
     childrenList = BnkChildren.read(bytes);
     meterInfo = BnkAkMeterInfo.read(bytes);
@@ -802,7 +877,7 @@ class BnkMusicNodeParams with BnkHircChunkWithBaseParams {
   }
 
   void write(ByteDataWrapper bytes) {
-    bytes.writeUint8(uFlags);
+    // bytes.writeUint8(uFlags);
     baseParams.write(bytes);
     childrenList.write(bytes);
     meterInfo.write(bytes);
@@ -814,7 +889,7 @@ class BnkMusicNodeParams with BnkHircChunkWithBaseParams {
   
   int calcChunkSize() {
     return (
-      1 + // uFlags
+      // 1 + // uFlags
       baseParams.calcChunkSize() +
       childrenList.calcChunkSize() +
       meterInfo.calcChunkSize() +
@@ -914,29 +989,59 @@ class BnkSource {
   late int ulPluginID;
   late int streamType;
   late int sourceID;
-  late int uInMemorySize;
+  late int fileID;
+  late int? uFileOffset;
+  late int? uInMemorySize;
   late int uSourceBits;
+  late int? gapSize;
+  late List<int>? gap;
 
-  BnkSource(this.ulPluginID, this.streamType, this.sourceID, this.uInMemorySize, this.uSourceBits);
+  BnkSource(this.ulPluginID, this.streamType, this.sourceID, this.uFileOffset, this.uInMemorySize, this.uSourceBits, this.gap);
 
   BnkSource.read(ByteDataWrapper bytes) {
     ulPluginID = bytes.readUint32();
-    streamType = bytes.readUint8();
+    streamType = bytes.readUint32();
     sourceID = bytes.readUint32();
-    uInMemorySize = bytes.readUint32();
+    fileID = bytes.readUint32();
+    if (streamType != 1) {
+      uFileOffset = bytes.readUint32();
+      uInMemorySize = bytes.readUint32();
+    }
     uSourceBits = bytes.readUint8();
+    var pluginType = ulPluginID & 0x0F;
+    if (pluginType == 2 || pluginType == 5) {
+      gapSize = bytes.readUint32();
+      gap = bytes.readUint8List(gapSize!);
+    }
   }
 
   void write(ByteDataWrapper bytes) {
     bytes.writeUint32(ulPluginID);
-    bytes.writeUint8(streamType);
+    bytes.writeUint32(streamType);
     bytes.writeUint32(sourceID);
-    bytes.writeUint32(uInMemorySize);
+    bytes.writeUint32(fileID);
+    if (streamType != 1) {
+      bytes.writeUint32(uFileOffset!);
+      bytes.writeUint32(uInMemorySize!);
+    }
     bytes.writeUint8(uSourceBits);
+    var pluginType = ulPluginID & 0x0F;
+    if (pluginType == 2 || pluginType == 5) {
+      bytes.writeUint32(gapSize!);
+      for (var i = 0; i < gapSize!; i++)
+        bytes.writeUint8(gap![i]);
+    }
   }
   
   int calcChunkSize() {
-    return 14;
+    return
+      4 + // ulPluginID
+      4 + // streamType
+      4 + // sourceID
+      4 + // fileID
+      (streamType != 1 ? 4 + 4 : 0) + // uFileOffset, uInMemorySize
+      1 + // uSourceBits
+      (gapSize != null && gap != null ? 4 + gapSize! : 0); // gapSize, gap
   }
 }
 
@@ -1341,120 +1446,148 @@ class PathListItemOffset {
 }
 
 class Bnk3DAutomationParams {
-  late double xRange, yRange, zRange;
+  late double xRange, yRange/*, zRange*/;
 
-  Bnk3DAutomationParams(this.xRange, this.yRange, this.zRange);
+  Bnk3DAutomationParams(this.xRange, this.yRange);
 
   Bnk3DAutomationParams.read(ByteDataWrapper bytes) {
     xRange = bytes.readFloat32();
     yRange = bytes.readFloat32();
-    zRange = bytes.readFloat32();
+    // zRange = bytes.readFloat32();
   }
 
   void write(ByteDataWrapper bytes) {
     bytes.writeFloat32(xRange);
     bytes.writeFloat32(yRange);
-    bytes.writeFloat32(zRange);
+    // bytes.writeFloat32(zRange);
   }
 }
 
 class BnkPositioningParams {
-  late int uBitsPositioning;
-  int has3D = 0;
-  int? uBits3D;
-  int? attenuationID;
-  bool hasAutomation = false;
-  int? pathMode;
-  int? transitionTime;
-  int? numVertices;
-  List<BnkPathVertex>? vertices;
-  int? numPlayListItem;
-  List<PathListItemOffset>? playListItems;
-  List<Bnk3DAutomationParams>? params;
-
-  BnkPositioningParams(this.uBitsPositioning, [this.uBits3D, this.attenuationID, this.pathMode, this.transitionTime, this.numVertices, this.vertices, this.numPlayListItem, this.playListItems, this.params]);
+  late int uByVector;
+  late int? cbIs3DPositioningAvailable;
+  late int? bIsPannerEnabled;
+  late int? eType_;
+  late int? attenuationID;
+  late int? bIsSpatialized;
+  late int? bIsDynamic;
+  late int? ePathMode;
+  late int? bIsLooping;
+  late int? transitionTime;
+  late int? bFollowOrientation;
+  late int? ulNumVertices;
+  late List<BnkPathVertex>? pVertices;
+  late int? ulNumPlayListItem;
+  late List<PathListItemOffset>? pPlayListItems;
+  late List<Bnk3DAutomationParams>? params;
 
   BnkPositioningParams.read(ByteDataWrapper bytes) {
-    uBitsPositioning = bytes.readUint8();
-    var hasPositioning = (uBitsPositioning >> 0) & 1;
-    has3D = hasPositioning == 1 ? (uBitsPositioning >> 3) & 1 : 0;
-    if (has3D == 1) {
-      uBits3D = bytes.readUint8();
+    uByVector = bytes.readInt8();
+    bool hasPositioning = (uByVector & 1) != 0;
+    bool has3D = false;
+    if (hasPositioning) {
+      cbIs3DPositioningAvailable = bytes.readUint8();
+      has3D = cbIs3DPositioningAvailable != 0;
+      if (!has3D)
+        bIsPannerEnabled = bytes.readInt8();
+    }
+    if (has3D) {
+      eType_ = bytes.readUint32();
       attenuationID = bytes.readUint32();
-
-      var e3DPositionType = (uBits3D! >> 0) & 3;
-      hasAutomation = e3DPositionType != 1;
-
+      bIsSpatialized = bytes.readInt8();
+      bool hasAutomation = eType_ == 2;
+      bool hasDynamic = eType_ == 3;
+      if (hasDynamic)
+        bIsDynamic = bytes.readUint8();
       if (hasAutomation) {
-        pathMode = bytes.readUint8();
-        transitionTime = bytes.readUint32();
+        ePathMode = bytes.readUint32();
+        bIsLooping = bytes.readUint8();
+        transitionTime = bytes.readInt32();
+        bFollowOrientation = bytes.readUint8();
 
-        numVertices = bytes.readUint32();
-        vertices = List.generate(numVertices!, (index) => BnkPathVertex.read(bytes));
-
-        numPlayListItem = bytes.readUint32();
-        playListItems = List.generate(numPlayListItem!, (index) => PathListItemOffset.read(bytes));
-        params = List.generate(numPlayListItem!, (index) => Bnk3DAutomationParams.read(bytes));
+        ulNumVertices = bytes.readUint32();
+        pVertices = List.generate(ulNumVertices!, (_) => BnkPathVertex.read(bytes));
+        ulNumPlayListItem = bytes.readUint32();
+        pPlayListItems = List.generate(ulNumPlayListItem!, (_) => PathListItemOffset.read(bytes));
+        params = List.generate(ulNumPlayListItem!, (_) => Bnk3DAutomationParams.read(bytes));
       }
     }
   }
 
   void write(ByteDataWrapper bytes) {
-    bytes.writeUint8(uBitsPositioning);
-    if (has3D == 1) {
-      bytes.writeUint8(uBits3D!);
+    bytes.writeInt8(uByVector);
+    if (cbIs3DPositioningAvailable != null)
+      bytes.writeUint8(cbIs3DPositioningAvailable!);
+    if (bIsPannerEnabled != null)
+      bytes.writeInt8(bIsPannerEnabled!);
+    if (eType_ != null)
+      bytes.writeUint32(eType_!);
+    if (attenuationID != null)
       bytes.writeUint32(attenuationID!);
-
-      if (hasAutomation) {
-        bytes.writeUint8(pathMode!);
-        bytes.writeUint32(transitionTime!);
-
-        bytes.writeUint32(numVertices!);
-        for (var element in vertices!)
-          element.write(bytes);
-
-        bytes.writeUint32(numPlayListItem!);
-        for (var element in playListItems!)
-          element.write(bytes);
-        for (var element in params!)
-          element.write(bytes);
-      }
-    }
+    if (bIsSpatialized != null)
+      bytes.writeInt8(bIsSpatialized!);
+    if (bIsDynamic != null)
+      bytes.writeUint8(bIsDynamic!);
+    if (ePathMode != null)
+      bytes.writeUint32(ePathMode!);
+    if (bIsLooping != null)
+      bytes.writeUint8(bIsLooping!);
+    if (transitionTime != null)
+      bytes.writeInt32(transitionTime!);
+    if (bFollowOrientation != null)
+      bytes.writeUint8(bFollowOrientation!);
+    if (ulNumVertices != null)
+      bytes.writeUint32(ulNumVertices!);
+    if (pVertices != null)
+      for (var i = 0; i < ulNumVertices!; i++)
+        pVertices![i].write(bytes);
+    if (ulNumPlayListItem != null)
+      bytes.writeUint32(ulNumPlayListItem!);
+    if (pPlayListItems != null)
+      for (var i = 0; i < ulNumPlayListItem!; i++)
+        pPlayListItems![i].write(bytes);
+    if (params != null)
+      for (var i = 0; i < ulNumPlayListItem!; i++)
+        params![i].write(bytes);
   }
 
   int calcChunkSize() {
-    return (
-      1 + // uBitsPositioning
-      (has3D == 1 ? (
-        1 + // uBits3D
-        4 + // attenuationID
-        (hasAutomation ? (
-          1 + // pathMode
-          4 + // transitionTime
-          4 + // numVertices
-          numVertices! * 16 + // vertices
-          4 + // numPlayListItem
-          numPlayListItem! * 8 + // playListItems
-          numPlayListItem! * 12 // params
-        ) : 0)
-      ) : 0)
-    );
+    return
+      1 + // uByVector
+      (cbIs3DPositioningAvailable != null ? 1 : 0) + // cbIs3DPositioningAvailable
+      (bIsPannerEnabled != null ? 1 : 0) + // bIsPannerEnabled
+      (eType_ != null ? 4 : 0) + // eType_
+      (attenuationID != null ? 4 : 0) + // attenuationID
+      (bIsSpatialized != null ? 1 : 0) + // bIsSpatialized
+      (bIsDynamic != null ? 1 : 0) + // bIsDynamic
+      (ePathMode != null ? 4 : 0) + // ePathMode
+      (bIsLooping != null ? 1 : 0) + // bIsLooping
+      (transitionTime != null ? 4 : 0) + // transitionTime
+      (bFollowOrientation != null ? 1 : 0) + // bFollowOrientation
+      (ulNumVertices != null ? 4 : 0) + // ulNumVertices
+      (pVertices != null ? ulNumVertices! * 16 : 0) + // pVertices
+      (ulNumPlayListItem != null ? 4 : 0) + // ulNumPlayListItem
+      (pPlayListItems != null ? ulNumPlayListItem! * 8 : 0) + // pPlayListItems
+      (params != null ? ulNumPlayListItem! * 8 : 0); // params
   }
 }
 
 class BnkAuxParams {
-  late int byBitVector;
+  late int bOverrideGameAuxSends;
+  late int bUseGameAuxSends;
+  late int bOverrideUserAuxSends;
+  late int bHasAux;
   int? auxID1;
   int? auxID2;
   int? auxID3;
   int? auxID4;
 
-  BnkAuxParams(this.byBitVector, [this.auxID1, this.auxID2, this.auxID3, this.auxID4]);
-
   BnkAuxParams.read(ByteDataWrapper bytes) {
-    byBitVector = bytes.readUint8();
-    var hasAux = (byBitVector >> 3) & 1;
-    if (hasAux == 1) {
+    bOverrideGameAuxSends = bytes.readUint8();
+    bUseGameAuxSends = bytes.readUint8();
+    bOverrideUserAuxSends = bytes.readUint8();
+    bHasAux = bytes.readUint8();
+    if (bHasAux != 0) {
       auxID1 = bytes.readUint32();
       auxID2 = bytes.readUint32();
       auxID3 = bytes.readUint32();
@@ -1463,8 +1596,11 @@ class BnkAuxParams {
   }
 
   void write(ByteDataWrapper bytes) {
-    bytes.writeUint8(byBitVector);
-    if (auxID1 != null && auxID2 != null && auxID3 != null && auxID4 != null) {
+    bytes.writeUint8(bOverrideGameAuxSends);
+    bytes.writeUint8(bUseGameAuxSends);
+    bytes.writeUint8(bOverrideUserAuxSends);
+    bytes.writeUint8(bHasAux);
+    if (bHasAux != 0) {
       bytes.writeUint32(auxID1!);
       bytes.writeUint32(auxID2!);
       bytes.writeUint32(auxID3!);
@@ -1473,37 +1609,49 @@ class BnkAuxParams {
   }
   
   int calcChunkSize() {
-    return 1 + (auxID1 != null && auxID2 != null && auxID3 != null && auxID4 != null ? 16 : 0);
+    return
+      1 + // bOverrideGameAuxSends
+      1 + // bUseGameAuxSends
+      1 + // bOverrideUserAuxSends
+      1 + // bHasAux
+      (bHasAux != 0 ? 4 + 4 + 4 + 4 : 0); // auxID1, auxID2, auxID3, auxID4
   }
 }
 
 class BnkAdvSettingsParams {
-  late int byBitVector1;
   late int eVirtualQueueBehavior;
-  late int uMaxNumInstance;
+  late int bKillNewest;
+  late int bUseVirtualBehavior;
+  late int u16MaxNumInstance;
+  late int bIsGlobalLimit;
   late int eBelowThresholdBehavior;
-  late int byBitVector2;
-
-  BnkAdvSettingsParams(this.byBitVector1, this.eVirtualQueueBehavior, this.uMaxNumInstance, this.eBelowThresholdBehavior, this.byBitVector2);
+  late int bIsMaxNumInstOverrideParent;
+  late int bIsVVoicesOptOverrideParent;
 
   BnkAdvSettingsParams.read(ByteDataWrapper bytes) {
-    byBitVector1 = bytes.readUint8();
     eVirtualQueueBehavior = bytes.readUint8();
-    uMaxNumInstance = bytes.readUint16();
+    bKillNewest = bytes.readUint8();
+    bUseVirtualBehavior = bytes.readUint8();
+    u16MaxNumInstance = bytes.readUint16();
+    bIsGlobalLimit = bytes.readUint8();
     eBelowThresholdBehavior = bytes.readUint8();
-    byBitVector2 = bytes.readUint8();
+    bIsMaxNumInstOverrideParent = bytes.readUint8();
+    bIsVVoicesOptOverrideParent = bytes.readUint8();
   }
 
   void write(ByteDataWrapper bytes) {
-    bytes.writeUint8(byBitVector1);
     bytes.writeUint8(eVirtualQueueBehavior);
-    bytes.writeUint16(uMaxNumInstance);
+    bytes.writeUint8(bKillNewest);
+    bytes.writeUint8(bUseVirtualBehavior);
+    bytes.writeUint16(u16MaxNumInstance);
+    bytes.writeUint8(bIsGlobalLimit);
     bytes.writeUint8(eBelowThresholdBehavior);
-    bytes.writeUint8(byBitVector2);
+    bytes.writeUint8(bIsMaxNumInstOverrideParent);
+    bytes.writeUint8(bIsVVoicesOptOverrideParent);
   }
-  
+
   int calcChunkSize() {
-    return 6;
+    return 1 + 1 + 1 + 2 + 1 + 1 + 1 + 1;
   }
 }
 
@@ -1599,21 +1747,21 @@ class BnkInitialRTPC {
 }
 class BnkRtpc {
   late int rtpcId;
-  late int rtpcType;
-  late int rtpcAcc;
+  // late int rtpcType;
+  // late int rtpcAcc;
   late int paramID;
   late int rtpcCurveID;
   late int eScaling;
   late int ulSize;
   late List<BnkRtpcGraphPoint> rtpcGraphPoint;
 
-  BnkRtpc(this.rtpcId, this.rtpcType, this.rtpcAcc, this.paramID, this.rtpcCurveID, this.eScaling, this.ulSize, this.rtpcGraphPoint);
+  BnkRtpc(this.rtpcId, this.paramID, this.rtpcCurveID, this.eScaling, this.ulSize, this.rtpcGraphPoint);
 
   BnkRtpc.read(ByteDataWrapper bytes) {
     rtpcId = bytes.readUint32();
-    rtpcType = bytes.readUint8();
-    rtpcAcc = bytes.readUint8();
-    paramID = bytes.readUint8();
+    // rtpcType = bytes.readUint8();
+    // rtpcAcc = bytes.readUint8();
+    paramID = bytes.readUint32();
     rtpcCurveID = bytes.readUint32();
     eScaling = bytes.readUint8();
     ulSize = bytes.readUint16();
@@ -1622,9 +1770,9 @@ class BnkRtpc {
 
   void write(ByteDataWrapper bytes) {
     bytes.writeUint32(rtpcId);
-    bytes.writeUint8(rtpcType);
-    bytes.writeUint8(rtpcAcc);
-    bytes.writeUint8(paramID);
+    // bytes.writeUint8(rtpcType);
+    // bytes.writeUint8(rtpcAcc);
+    bytes.writeUint32(paramID);
     bytes.writeUint32(rtpcCurveID);
     bytes.writeUint8(eScaling);
     bytes.writeUint16(ulSize);
@@ -1633,16 +1781,25 @@ class BnkRtpc {
   }
   
   int calcChunkSize() {
-    return 14 + rtpcGraphPoint.fold<int>(0, (prev, p) => prev + p.calcChunkSize());
+    return
+      4 + // rtpcId
+      // 1 + // rtpcType
+      // 1 + // rtpcAcc
+      4 + // paramID
+      4 + // rtpcCurveID
+      1 + // eScaling
+      2 + // ulSize
+      ulSize * 12; // rtpcGraphPoint
   }
 }
 
 class BnkNodeBaseParams {
   late BnkNodeInitialFXParams fxParams;
-  late int bOverrideAttachmentParams;
+  // late int bOverrideAttachmentParams;
   late int overrideBusID;
   late int directParentID;
-  late int byBitVector;
+  late int bPriorityOverrideParent;
+  late int bPriorityApplyDistFactor;
   late BnkNodeInitialParams iniParams;
   late BnkPositioningParams positioning;
   late BnkAuxParams auxParam;
@@ -1650,14 +1807,15 @@ class BnkNodeBaseParams {
   late BnkStateChunk states;
   late BnkInitialRTPC rtpc;
 
-  BnkNodeBaseParams(this.fxParams, this.bOverrideAttachmentParams, this.overrideBusID, this.directParentID, this.byBitVector, this.iniParams, this.positioning, this.auxParam, this.advSettings, this.states, this.rtpc);
+  BnkNodeBaseParams(this.fxParams, this.overrideBusID, this.directParentID, this.bPriorityOverrideParent, this.bPriorityApplyDistFactor, this.iniParams, this.positioning, this.auxParam, this.advSettings, this.states, this.rtpc);
 
   BnkNodeBaseParams.read(ByteDataWrapper bytes) {
     fxParams = BnkNodeInitialFXParams.read(bytes);
-    bOverrideAttachmentParams = bytes.readUint8();
+    // bOverrideAttachmentParams = bytes.readUint8();
     overrideBusID = bytes.readUint32();
     directParentID = bytes.readUint32();
-    byBitVector = bytes.readUint8();
+    bPriorityOverrideParent = bytes.readUint8();
+    bPriorityApplyDistFactor = bytes.readUint8();
     iniParams = BnkNodeInitialParams.read(bytes);
     positioning = BnkPositioningParams.read(bytes);
     auxParam = BnkAuxParams.read(bytes);
@@ -1668,10 +1826,11 @@ class BnkNodeBaseParams {
 
   void write(ByteDataWrapper bytes) {
     fxParams.write(bytes);
-    bytes.writeUint8(bOverrideAttachmentParams);
+    // bytes.writeUint8(bOverrideAttachmentParams);
     bytes.writeUint32(overrideBusID);
     bytes.writeUint32(directParentID);
-    bytes.writeUint8(byBitVector);
+    bytes.writeUint8(bPriorityOverrideParent);
+    bytes.writeUint8(bPriorityApplyDistFactor);
     iniParams.write(bytes);
     positioning.write(bytes);
     auxParam.write(bytes);
@@ -1686,6 +1845,7 @@ class BnkNodeBaseParams {
       1 +
       4 +
       4 +
+      1 +
       1 +
       iniParams.calcChunkSize() +
       positioning.calcChunkSize() +
@@ -1787,48 +1947,65 @@ class BnkSourceData {
 
   BnkSourceData.read(ByteDataWrapper bytes) {
     ulPluginID = bytes.readUint32();
-    streamType = bytes.readUint8();
-    mediaInformation = BnkMediaInformation.read(bytes);
-    if ((ulPluginID & 0x000000FF) == 2) {
+    streamType = bytes.readUint32();
+    mediaInformation = BnkMediaInformation.read(bytes, streamType);
+    int pluginType = ulPluginID & 0x0F;
+    bool hasParam = pluginType == 2 || pluginType == 5;
+    if (hasParam && ulPluginID > 0) {
       uSize = bytes.readUint32();
     }
   }
 
   void write(ByteDataWrapper bytes) {
     bytes.writeUint32(ulPluginID);
-    bytes.writeUint8(streamType);
+    bytes.writeUint32(streamType);
     mediaInformation.write(bytes);
-    if ((ulPluginID & 0x000000FF) == 2) {
+    if (uSize != null) {
       bytes.writeUint32(uSize!);
     }
   }
   
   int calcChunkSize() {
-    return 5 + mediaInformation.calcChunkSize() + ((ulPluginID & 0x000000FF) == 2 ? 4 : 0);
+    return 8 + mediaInformation.calcChunkSize() + (uSize != null ? 4 : 0);
   }
 }
 
 class BnkMediaInformation {
   late int sourceID;
-  late int uInMemoryMediaSize;
+  late int uFileID;
+  late int? fileOffset;
+  late int? uInMemoryMediaSize;
   late int uSourceBits;
 
-  BnkMediaInformation(this.sourceID, this.uInMemoryMediaSize, this.uSourceBits);
+  BnkMediaInformation(this.sourceID, this.fileOffset, this.uInMemoryMediaSize, this.uSourceBits);
 
-  BnkMediaInformation.read(ByteDataWrapper bytes) {
+  BnkMediaInformation.read(ByteDataWrapper bytes, int streamType) {
     sourceID = bytes.readUint32();
-    uInMemoryMediaSize = bytes.readUint32();
+    uFileID = bytes.readUint32();
+    if (streamType != 1) {
+      fileOffset = bytes.readUint32();
+      uInMemoryMediaSize = bytes.readUint32();
+    }
     uSourceBits = bytes.readUint8();
   }
 
   void write(ByteDataWrapper bytes) {
     bytes.writeUint32(sourceID);
-    bytes.writeUint32(uInMemoryMediaSize);
+    bytes.writeUint32(uFileID);
+    if (fileOffset != null)
+      bytes.writeUint32(fileOffset!);
+    if (uInMemoryMediaSize != null)
+      bytes.writeUint32(uInMemoryMediaSize!);
     bytes.writeUint8(uSourceBits);
   }
   
   int calcChunkSize() {
-    return 9;
+    return
+      4 + // sourceID
+      4 + // uFileID
+      (fileOffset != null ? 4 : 0) + // fileOffset
+      (uInMemoryMediaSize != null ? 4 : 0) + // uInMemoryMediaSize
+      1; // uSourceBits
   }
 }
 
@@ -1943,16 +2120,16 @@ class BnkActiveActionParams implements ActionSpecificParams {
 }
 
 class BnkGameParameterParams implements ActionSpecificParams {
-  late int bBypassTransition;
+  // late int bBypassTransition;
   late int eValueMeaning;
   late double base;
   late double min;
   late double max;
 
-  BnkGameParameterParams(this.bBypassTransition, this.eValueMeaning, this.base, this.min, this.max);
+  BnkGameParameterParams(this.eValueMeaning, this.base, this.min, this.max);
 
   BnkGameParameterParams.read(ByteDataWrapper bytes) {
-    bBypassTransition = bytes.readUint8();
+    // bBypassTransition = bytes.readUint8();
     eValueMeaning = bytes.readUint8();
     base = bytes.readFloat32();
     min = bytes.readFloat32();
@@ -1961,7 +2138,7 @@ class BnkGameParameterParams implements ActionSpecificParams {
 
   @override
   void write(ByteDataWrapper bytes) {
-    bytes.writeUint8(bBypassTransition);
+    // bytes.writeUint8(bBypassTransition);
     bytes.writeUint8(eValueMeaning);
     bytes.writeFloat32(base);
     bytes.writeFloat32(min);
@@ -1970,7 +2147,7 @@ class BnkGameParameterParams implements ActionSpecificParams {
   
   @override
   int calcChunkSize() {
-    return 1*2 + 3*4;
+    return 1 + 3*4;
   }
 }
 
@@ -2003,8 +2180,8 @@ class BnkPropActionParams implements ActionSpecificParams {
   }
 }
 
-const _gameParamActionTypes = {0x1302, 0x1303, 0x1402, 0x1403};
-const _propActionActionTypes = {0x0A02, 0x0A03, 0x0A04, 0x0A05, 0x0B02, 0x0B03, 0x0B04, 0x0B05, 0x0C02, 0x0C03, 0x0C04, 0x0C05, 0x0D02, 0x0D03, 0x0D04, 0x0D05, 0x0802, 0x0803, 0x0804, 0x0805, 0x0902, 0x0903, 0x0904, 0x0905, 0x0F02, 0x0F03, 0x0F04, 0x0F05, 0x0E02, 0x0E03, 0x0E04, 0x0E05, 0x2002, 0x2003, 0x2004, 0x2005, 0x3002, 0x3003, 0x3004, 0x3005};
+const _gameParamActionTypes = { 0x1300, 0x1400 };
+const _propActionActionTypes = { 0x0800, 0x0900, 0x0A00, 0x0B00, 0x0C00, 0x0D00, 0x0E00, 0x0F00, 0x2000, 0x3000 };
 class BnkValueActionParams implements ActionSpecificParams {
   final int actionType;
   late int byBitVector;
@@ -2115,9 +2292,12 @@ class BnkActionInitialParams implements ActionSpecificParams {
   }
 }
 
-const _activeActionParamsActionsTypes = {0x0102, 0x0103, 0x0104, 0x0105, 0x0202, 0x0203, 0x0204, 0x0205, 0x0302, 0x0303, 0x0304, 0x0305};
-const _bypassFXActionParamsActionsTypes = {0x1A02, 0x1A03};
-const _valueActionParamsActionsTypes = {0x1302, 0x1303, 0x1402, 0x1403, 0x0602, 0x0603, 0x0604, 0x0605, 0x0F02, 0x0F03, 0x0F04, 0x0F05, 0x0E02, 0x0E03, 0x0E04, 0x0E05, 0x0702, 0x0703, 0x0704, 0x0705, 0x0802, 0x0803, 0x0804, 0x0805, 0x0902, 0x0903, 0x0904, 0x0905, 0x0A02, 0x0A03, 0x0A04, 0x0A05, 0x0B02, 0x0B03, 0x0B04, 0x0B05, 0x0C02, 0x0C03, 0x0C04, 0x0C05, 0x0D02, 0x0D03, 0x0D04, 0x0D05, 0x2002, 0x2003, 0x2004, 0x2005, 0x3002, 0x3003, 0x3004, 0x3005};
+const _activeActionParamsActionsTypes = {0x0100, 0x0200, 0x0300};
+const _playActionParamsActionsTypes = {0x0400};
+const _bypassFXActionParamsActionsTypes = {0x1A00, 0x1B00};
+const _valueActionParamsActionsTypes = { 0x0600, 0x0700, 0x0800, 0x0900, 0x0A00, 0x0B00, 0x0C00, 0x0D00, 0x0E00, 0x0F00, 0x1300, 0x1400, 0x2000, 0x3000 };
+const _switchActionParamsActionsTypes = {0x1900};
+const _stateActionParamsActionsTypes = {0x1200};
 class BnkAction extends BnkHircChunkBase {
   late int ulActionType;
   late BnkActionInitialParams initialParams;
@@ -2128,16 +2308,19 @@ class BnkAction extends BnkHircChunkBase {
   BnkAction.read(ByteDataWrapper bytes) : super.read(bytes) {
     ulActionType = bytes.readUint16();
     initialParams = BnkActionInitialParams.read(bytes);
-    if (ulActionType == 0x1204) {
-      specificParams = BnkStateActionParams.read(bytes);
-    } else if (_activeActionParamsActionsTypes.contains(ulActionType)) {
+    var actionType = ulActionType & 0xFF00;
+    if (_activeActionParamsActionsTypes.contains(actionType)) {
       specificParams = BnkActiveActionParams.read(bytes, ulActionType);
-    } else if (ulActionType == 0x0403) {
+    } else if (_playActionParamsActionsTypes.contains(actionType)) {
       specificParams = BnkPlayActionParams.read(bytes);
-    } else if (_bypassFXActionParamsActionsTypes.contains(ulActionType)) {
+    } else if (_bypassFXActionParamsActionsTypes.contains(actionType)) {
       specificParams = BnkBypassFXActionParams.read(bytes);
-    } else if (_valueActionParamsActionsTypes.contains(ulActionType)) {
-      specificParams = BnkValueActionParams.read(bytes, ulActionType);
+    } else if (_valueActionParamsActionsTypes.contains(actionType)) {
+      specificParams = BnkValueActionParams.read(bytes, actionType);
+    } else if (_switchActionParamsActionsTypes.contains(actionType)) {
+      specificParams = BnkSwitchActionParams.read(bytes);
+    } else if (_stateActionParamsActionsTypes.contains(actionType)) {
+      specificParams = BnkStateActionParams.read(bytes);
     }
   }
 
@@ -2155,4 +2338,3 @@ class BnkAction extends BnkHircChunkBase {
     return 2 + initialParams.calcChunkSize() + (specificParams?.calcChunkSize() ?? 0);
   }
 }
-
