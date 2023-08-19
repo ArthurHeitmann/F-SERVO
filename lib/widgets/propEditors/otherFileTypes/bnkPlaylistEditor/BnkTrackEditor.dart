@@ -398,9 +398,10 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> with Audi
     setState(() {});
   }
 
-  void _replaceWem(BnkTrackClip clip) {
+  void _replaceWem(BnkTrackClip clip) async {
     var srcId = widget.track.srcTrack.sources.first.sourceID;
     var wemPath = wemFilesLookup.lookup[srcId];
+    wemPath ??= clip.resource?.wemPath;
     if (wemPath == null) {
       showToast("WEM file not found");
       return;
@@ -411,6 +412,7 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> with Audi
   void _openWemInExplorer(BnkTrackClip clip) {
     var srcId = widget.track.srcTrack.sources.first.sourceID;
     var wemPath = wemFilesLookup.lookup[srcId];
+    wemPath ??= clip.resource?.wemPath;
     if (wemPath == null) {
       showToast("WEM file not found");
       return;

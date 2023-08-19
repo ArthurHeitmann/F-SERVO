@@ -62,8 +62,8 @@ class _BnkPlaylistEditorState extends State<BnkPlaylistEditor> {
   @override
   Widget build(BuildContext context) {
     if (widget.playlist.loadingState != LoadingState.loaded) {
-      return Stack(
-        children: const [
+      return const Stack(
+        children: [
           SizedBox(
             height: 2,
             child: LinearProgressIndicator(backgroundColor: Colors.transparent),

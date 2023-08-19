@@ -338,8 +338,6 @@ class BnkHircUnknownChunk extends BnkHircChunkBase {
 }
 
 mixin BnkHircChunkWithBaseParamsGetter {
-  late String chunkType;
-
   BnkNodeBaseParams getBaseParams();
 }
 
@@ -350,7 +348,6 @@ mixin BnkHircChunkWithBaseParams implements BnkHircChunkWithBaseParamsGetter {
 }
 
 class BnkMusicTrack extends BnkHircChunkBase with BnkHircChunkWithBaseParams {
-  String chunkType = "MusicTrack";
   // late int uFlags;
   late int numSources;
   late List<BnkSource> sources;
@@ -421,7 +418,6 @@ class BnkMusicTrack extends BnkHircChunkBase with BnkHircChunkWithBaseParams {
 }
 
 class BnkMusicSegment extends BnkHircChunkBase with BnkHircChunkWithBaseParamsGetter {
-  String chunkType = "MusicSegment";
   late BnkMusicNodeParams musicParams;
   late double fDuration;
   late int ulNumMarkers;
@@ -463,7 +459,6 @@ class BnkMusicSegment extends BnkHircChunkBase with BnkHircChunkWithBaseParamsGe
 }
 
 class BnkMusicSwitch extends BnkHircChunkBase with BnkHircChunkWithBaseParamsGetter {
-  String chunkType = "MusicSwitch";
   late BnkMusicTransNodeParams musicTransParams;
   late int eGroupType;
   late int ulGroupID;
@@ -518,7 +513,6 @@ class BnkMusicSwitch extends BnkHircChunkBase with BnkHircChunkWithBaseParamsGet
 
 
 class BnkMusicPlaylist extends BnkHircChunkBase with BnkHircChunkWithBaseParamsGetter {
-  String chunkType = "MusicPlaylist";
   late BnkMusicTransNodeParams musicTransParams;
   late int numPlaylistItems;
   late List<BnkPlaylistItem> playlistItems;
@@ -853,7 +847,6 @@ class BnkMusicMarker {
 }
 
 class BnkMusicNodeParams with BnkHircChunkWithBaseParams {
-  String chunkType = "MusicNodeParams";
   // late int uFlags;
   late BnkChildren childrenList;
   late BnkAkMeterInfo meterInfo;
@@ -1917,7 +1910,6 @@ class BnkEvent extends BnkHircChunkBase {
 }
 
 class BnkActorMixer extends BnkHircChunkBase with BnkHircChunkWithBaseParams {
-  String chunkType = "ActorMixer";
   late List<int> childIDs;
 
   BnkActorMixer(super.type, super.size, super.uid, BnkNodeBaseParams baseParams, this.childIDs) {
@@ -1946,7 +1938,6 @@ class BnkActorMixer extends BnkHircChunkBase with BnkHircChunkWithBaseParams {
 }
 
 class BnkSound extends BnkHircChunkBase with BnkHircChunkWithBaseParams {
-  String chunkType = "Sound";
   late BnkSourceData bankData;
 
   BnkSound(super.type, super.size, super.uid, this.bankData, BnkNodeBaseParams baseParams) {
@@ -2372,3 +2363,115 @@ class BnkAction extends BnkHircChunkBase {
     return 2 + initialParams.calcChunkSize() + (specificParams?.calcChunkSize() ?? 0);
   }
 }
+
+const actionTypes = {
+  0x0000: "None",
+  0x1204: "SetState",
+  0x1A02: "BypassFX_M",
+  0x1A03: "BypassFX_O",
+  0x1B02: "ResetBypassFX_M",
+  0x1B03: "ResetBypassFX_O",
+  0x1B04: "ResetBypassFX_ALL",
+  0x1B05: "ResetBypassFX_ALL_O",
+  0x1B08: "ResetBypassFX_AE",
+  0x1B09: "ResetBypassFX_AE_O",
+  0x1901: "SetSwitch",
+  0x1002: "UseState_E",
+  0x1102: "UnuseState_E",
+  0x0403: "Play",
+  0x0503: "PlayAndContinue",
+  0x0102: "Stop_E",
+  0x0103: "Stop_E_O",
+  0x0104: "Stop_ALL",
+  0x0105: "Stop_ALL_O",
+  0x0108: "Stop_AE",
+  0x0109: "Stop_AE_O",
+  0x0202: "Pause_E",
+  0x0203: "Pause_E_O",
+  0x0204: "Pause_ALL",
+  0x0205: "Pause_ALL_O",
+  0x0208: "Pause_AE",
+  0x0209: "Pause_AE_O",
+  0x0302: "Resume_E",
+  0x0303: "Resume_E_O",
+  0x0304: "Resume_ALL",
+  0x0305: "Resume_ALL_O",
+  0x0308: "Resume_AE",
+  0x0309: "Resume_AE_O",
+  0x1C02: "Break_E",
+  0x1C03: "Break_E_O",
+  0x0602: "Mute_M",
+  0x0603: "Mute_O",
+  0x0702: "Unmute_M",
+  0x0703: "Unmute_O",
+  0x0704: "Unmute_ALL",
+  0x0705: "Unmute_ALL_O",
+  0x0708: "Unmute_AE",
+  0x0709: "Unmute_AE_O",
+  0x0A02: "SetVolume_M",
+  0x0A03: "SetVolume_O",
+  0x0B02: "ResetVolume_M",
+  0x0B03: "ResetVolume_O",
+  0x0B04: "ResetVolume_ALL",
+  0x0B05: "ResetVolume_ALL_O",
+  0x0B08: "ResetVolume_AE",
+  0x0B09: "ResetVolume_AE_O",
+  0x0802: "SetPitch_M",
+  0x0803: "SetPitch_O",
+  0x0902: "ResetPitch_M",
+  0x0903: "ResetPitch_O",
+  0x0904: "ResetPitch_ALL",
+  0x0905: "ResetPitch_ALL_O",
+  0x0908: "ResetPitch_AE",
+  0x0909: "ResetPitch_AE_O",
+  0x0E02: "SetLPF_M",
+  0x0E03: "SetLPF_O",
+  0x0F02: "ResetLPF_M",
+  0x0F03: "ResetLPF_O",
+  0x0F04: "ResetLPF_ALL",
+  0x0F05: "ResetLPF_ALL_O",
+  0x0F08: "ResetLPF_AE",
+  0x0F09: "ResetLPF_AE_O",
+  0x2002: "SetHPF_M",
+  0x2003: "SetHPF_O",
+  0x3002: "ResetHPF_M",
+  0x3003: "ResetHPF_O",
+  0x3004: "ResetHPF_ALL",
+  0x3005: "ResetHPF_ALL_O",
+  0x3008: "ResetHPF_AE",
+  0x3009: "ResetHPF_AE_O",
+  0x0C02: "SetBusVolume_M",
+  0x0C03: "SetBusVolume_O",
+  0x0D02: "ResetBusVolume_M",
+  0x0D03: "ResetBusVolume_O",
+  0x0D04: "ResetBusVolume_ALL",
+  0x0D08: "ResetBusVolume_AE",
+  0x2103: "PlayEvent",
+  0x1511: "StopEvent",
+  0x1611: "PauseEvent",
+  0x1711: "ResumeEvent",
+  0x1820: "Duck",
+  0x1D00: "Trigger",
+  0x1D01: "Trigger_O",
+  0x1D02: "Trigger_E?",
+  0x1D03: "Trigger_E_O?",
+  0x1E02: "Seek_E",
+  0x1E03: "Seek_E_O",
+  0x1E04: "Seek_ALL",
+  0x1E05: "Seek_ALL_O",
+  0x1E08: "Seek_AE",
+  0x1E09: "Seek_AE_O",
+  0x2202: "ResetPlaylist_E",
+  0x2203: "ResetPlaylist_E_O",
+  0x1302: "SetGameParameter",
+  0x1303: "SetGameParameter_O",
+  0x1402: "ResetGameParameter",
+  0x1403: "ResetGameParameter_O",
+  0x1F02: "Release",
+  0x1F03: "Release_O",
+  0x2303: "PlayEventUnknown_O?",
+  0x3102: "SetFX_M",
+  0x3202: "ResetSetFX_M",
+  0x3204: "ResetSetFX_ALL",
+  0x4000: "NoOp",
+};

@@ -1128,8 +1128,15 @@ class BnkTrackClip with HasUuid, Undoable {
 
   Future<void> loadResource() async {
     var wemPath = wemFilesLookup.lookup[sourceId];
-    if (wemPath == null)
-      return;
+    if (wemPath == null) {
+      var fileData = areasManager.fromId(file);
+      if (fileData == null || fileData is! BnkFilePlaylistData)
+        return;
+      var bnkPath = fileData.path;
+      wemPath = await wemFilesLookup.lookupWithAdditionalDir(sourceId, dirname(bnkPath));
+      if (wemPath == null)
+        return;
+    }
     resource = await audioResourcesManager.getAudioResource(wemPath);
     undoHistoryManager.onUndoableEvent();
   }

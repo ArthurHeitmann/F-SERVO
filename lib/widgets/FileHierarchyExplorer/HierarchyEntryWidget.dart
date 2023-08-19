@@ -41,9 +41,15 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
     else if (widget.entry is SaveSlotDataHierarchyEntry)
       return Icon(Icons.save, color: iconColor, size: 15);
     else if (widget.entry is BnkHircHierarchyEntry) {
-      // if (widget.entry.name.value.contains("_Event_"))
-      //   return Icon(Icons.event, color: iconColor, size: 15);
-      // else
+      if ((widget.entry as BnkHircHierarchyEntry).type == "WEM")
+        return Icon(Icons.music_note, color: iconColor, size: 15);
+      else if ((widget.entry as BnkHircHierarchyEntry).type == "Sound")
+        return Icon(Icons.volume_up, color: iconColor, size: 15);
+      else if ((widget.entry as BnkHircHierarchyEntry).type == "MusicTrack")
+        return Icon(Icons.volume_up, color: iconColor, size: 15);
+      else if ((widget.entry as BnkHircHierarchyEntry).type == "MusicPlaylist")
+        return Icon(Icons.queue_music, color: iconColor, size: 15);
+      else
         return Icon(Icons.list, color: iconColor, size: 15);
     }
     else

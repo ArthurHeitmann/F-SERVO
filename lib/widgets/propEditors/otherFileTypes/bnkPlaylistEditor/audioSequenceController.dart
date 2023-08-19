@@ -220,6 +220,10 @@ class BnkTrackPlaybackController extends PlaybackController {
     }
     for (int i = 0; i < clips.length; i++) {
       var clip = clips[i];
+      if (clip.resource == null) {
+        showToast("Missing resource for clip ${clip.sourceId}");
+        continue;
+      }
       var controller = ClipPlaybackController(clip, _onClipEnd);
       _setupControllerEvents(controller);
       _controllers.add(controller);

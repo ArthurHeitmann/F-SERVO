@@ -7,6 +7,7 @@ import 'package:path/path.dart';
 import 'package:tuple/tuple.dart';
 import 'package:xml/xml.dart';
 
+import '../background/wemFilesIndexer.dart';
 import '../fileTypeUtils/audio/bnkExtractor.dart';
 import '../fileTypeUtils/audio/bnkIO.dart';
 import '../fileTypeUtils/audio/waiExtractor.dart';
@@ -420,10 +421,10 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
         var uidNameLookup = wemIdsToNames[hirc.uid];
         var uidNameStr = uidNameLookup != null ? "_$uidNameLookup" : "";
         String path;
-        if (hirc is! BnkMusicPlaylist)
-          path = "$bnkPath#id=${hirc.uid}";
-        else
+        if (hirc is BnkMusicPlaylist)
           path = "$bnkPath#p=${hirc.uid}";
+        else
+          path = "$bnkPath#id=${hirc.uid}";
         int? parentId;
         List<int>? childIds;
         List<(bool, String, String)> props = [];
@@ -434,10 +435,31 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
           if (parentId == 0)
             parentId = null;
           props.addAll(BnkHircHierarchyEntry.makePropsFromParams(baseParams.iniParams.propValues, baseParams.iniParams.rangedPropValues));
-        } else if (hirc is BnkAction) {
+          Future<void> addWemChild(int srcId) async {
+            var srcName = wemIdsToNames[srcId];
+            if (srcName == null)
+              srcName = srcId.toString();
+            else
+              srcName = "${srcId}_($srcName)";
+            var path = await wemFilesLookup.lookupWithAdditionalDir(srcId, bnkExtractDir);
+            var srcEntry = BnkHircHierarchyEntry(StringProp(srcName!), path ?? "", srcId, "WEM", hirc.uid);
+            hircEntries[srcId] = srcEntry;
+          }
+          if (hircChunk is BnkMusicTrack) {
+            for (var src in hircChunk.sources) {
+              var srcId = src.sourceID;
+              await addWemChild(srcId);
+            }
+          }
+          if (hircChunk is BnkSound) {
+            var srcId = hircChunk.bankData.mediaInformation.sourceID;
+            await addWemChild(srcId);
+          }
+        }
+        else if (hirc is BnkAction) {
           childIds = [hirc.initialParams.idExt];
-          if (uidNameStr.isEmpty && hirc.specificParams != null)
-            uidNameStr = "_${hirc.specificParams!.runtimeType.toString().replaceAll("Bnk", "").replaceAll("Params", "")}";
+          if (uidNameStr.isEmpty)
+            uidNameStr = actionTypes[hirc.ulActionType] ?? "";
           props.addAll(BnkHircHierarchyEntry.makePropsFromParams(hirc.initialParams.propValues, hirc.initialParams.rangedPropValues));
           var specificParams = hirc.specificParams;
           if (specificParams is BnkSwitchActionParams)
@@ -450,7 +472,8 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
               (false, "State Group", "Target State"),
               (true, wemIdsToNames[specificParams.ulStateGroupID] ?? specificParams.ulStateGroupID.toString(), wemIdsToNames[specificParams.ulStateGroupID] ?? specificParams.ulTargetStateID.toString()),
             ]);
-        } else if (hirc is BnkEvent)
+        }
+        else if (hirc is BnkEvent)
           childIds = hirc.ids;
         else if (hirc is BnkActorMixer)
           childIds = hirc.childIDs;

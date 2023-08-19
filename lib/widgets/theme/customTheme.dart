@@ -264,8 +264,8 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
         return filetypeGroupColor!;
       else if (entry.name.value.contains("_MusicSegment"))
         return filetypePakColor!;
-      // else if (entry.name.value.contains("_MusicTrack"))
-      //   return Colors.blue;
+      else if (entry.type == "WEM")
+        return filetypeGroupColor!;
       else
         return Colors.white;
     }
