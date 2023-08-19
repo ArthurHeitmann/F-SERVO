@@ -1395,7 +1395,7 @@ class BnkSegmentData with HasUuid, Undoable {
       throw Exception("Cannot apply segment with different number of tracks");
     metadata.moddedBnkChunks[newSegment.uid] = AudioModChunkInfo(newSegment.uid);
     if (markers.length >= 2) {
-      var minMarkerPos = markers.map((m) => m.pos.value).reduce(min);
+      // var minMarkerPos = markers.map((m) => m.pos.value).reduce(min);
       var maxMarkerPos = markers.map((m) => m.pos.value).reduce(max);
       // newSegment.fDuration = maxMarkerPos - minMarkerPos.toDouble();
       newSegment.fDuration = maxMarkerPos.toDouble();

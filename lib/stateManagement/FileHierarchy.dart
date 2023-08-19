@@ -442,7 +442,7 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
             else
               srcName = "${srcId}_($srcName)";
             var path = await wemFilesLookup.lookupWithAdditionalDir(srcId, bnkExtractDir);
-            var srcEntry = BnkHircHierarchyEntry(StringProp(srcName!), path ?? "", srcId, "WEM", hirc.uid);
+            var srcEntry = BnkHircHierarchyEntry(StringProp(srcName), path ?? "", srcId, "WEM", hirc.uid);
             hircEntries[srcId] = srcEntry;
           }
           if (hircChunk is BnkMusicTrack) {

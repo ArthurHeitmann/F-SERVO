@@ -256,16 +256,14 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
     if (entry is HapGroupHierarchyEntry || entry is WemHierarchyEntry)
       return filetypeGroupColor!;
     if (entry is BnkHircHierarchyEntry) {
-      if (entry.name.value.contains("_Event"))
+      if (entry.type == "WEM")
+        return filetypeGroupColor!;
+      else if (entry.type == "Event")
         return filetypeDatColor!;
-      else if (entry.name.value.contains("_Action"))
+      else if (entry.type == "Action")
         return filetypeDocColor!;
-      else if (entry.name.value.contains("_MusicPlaylist"))
-        return filetypeGroupColor!;
-      else if (entry.name.value.contains("_MusicSegment"))
+      else if (entry.type == "MusicPlaylist")
         return filetypePakColor!;
-      else if (entry.type == "WEM")
-        return filetypeGroupColor!;
       else
         return Colors.white;
     }

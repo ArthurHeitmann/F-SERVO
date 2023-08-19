@@ -1145,6 +1145,7 @@ class BnkSubCategoryParentHierarchyEntry extends HierarchyEntry {
 }
 
 class BnkHircHierarchyEntry extends GenericFileHierarchyEntry {
+  static const openableTypes = { "MusicPlaylist", "WEM" };
   final int id;
   final String type;
   int? parentId;
@@ -1152,7 +1153,7 @@ class BnkHircHierarchyEntry extends GenericFileHierarchyEntry {
   List<(bool, String, String)>? properties;
 
   BnkHircHierarchyEntry(StringProp name, String path, this.id, this.type, [this.parentId, this.childIds, this.properties])
-    : super(name, path, true, true);
+    : super(name, path, true, openableTypes.contains(type));
 
   @override
   HierarchyEntry clone() {
