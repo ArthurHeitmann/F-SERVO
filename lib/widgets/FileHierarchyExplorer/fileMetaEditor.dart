@@ -10,6 +10,7 @@ import '../../stateManagement/openFilesManager.dart';
 import '../../stateManagement/xmlProps/xmlProp.dart';
 import '../../utils/utils.dart';
 import '../misc/SmoothScrollBuilder.dart';
+import '../misc/onHoverBuilder.dart';
 import '../misc/smallButton.dart';
 import '../propEditors/simpleProps/XmlPropEditorFactory.dart';
 import '../propEditors/simpleProps/optionalPropEditor.dart';
@@ -20,12 +21,14 @@ enum _EditorType {
   none,
   hapGroup,
   xmlScript,
+  hircObject,
 }
 
 const _editorTypeNames = {
   _EditorType.none: "Properties",
   _EditorType.hapGroup: "Group Editor",
   _EditorType.xmlScript: "Script Properties",
+  _EditorType.hircObject: "Object Properties",
 };
 
 class FileMetaEditor extends ChangeNotifierWidget {
@@ -46,6 +49,8 @@ class _FileMetaEditorState extends ChangeNotifierState<FileMetaEditor> {
       return _EditorType.hapGroup;
     if (file is XmlScriptHierarchyEntry)
       return _EditorType.xmlScript;
+    if (file is BnkHircHierarchyEntry)
+      return _EditorType.hircObject;
     return _EditorType.none;
   }
 
@@ -55,6 +60,8 @@ class _FileMetaEditorState extends ChangeNotifierState<FileMetaEditor> {
         return makeGroupEditor;
       case _EditorType.xmlScript:
         return makeXmlScriptEditor;
+      case _EditorType.hircObject:
+        return makeBnkHircObjectEditor;
       default:
         return makeFallback;
     }
@@ -248,6 +255,70 @@ class _FileMetaEditorState extends ChangeNotifierState<FileMetaEditor> {
           ],
         );
       },
+    );
+  }
+
+  Widget makeBnkHircObjectEditor(HierarchyEntry hircObject) {
+    if (hircObject is! BnkHircHierarchyEntry)
+      throw Exception(":/");
+
+    if (hircObject.properties == null)
+      return const SizedBox();
+
+    var props = hircObject.properties!;
+
+    return SelectionArea(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ...makeActionsBar(hircObject),
+          for (var prop in props)
+            Row(
+              children: [
+                Expanded(
+                  child: Row(
+                    children: [
+                      Text(prop.$2, style: getTheme(context).propInputTextStyle,),
+                      if (prop.$1)
+                        OnHoverBuilder(
+                          builder: (context, isHovering) => AnimatedOpacity(
+                            duration: const Duration(milliseconds: 250),
+                            opacity: isHovering ? 0.66 : 0.33,
+                            child: IconButton(
+                              splashRadius: 18,
+                              icon: const Icon(Icons.copy, size: 16,),
+                              onPressed: () => copyToClipboard(prop.$2),
+                              padding: EdgeInsets.zero,
+                            ),
+                          ),
+                        )
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Row(
+                    children: [
+                      Text(prop.$3, style: getTheme(context).propInputTextStyle,),
+                      if (prop.$1)
+                        OnHoverBuilder(
+                          builder: (context, isHovering) => AnimatedOpacity(
+                            duration: const Duration(milliseconds: 250),
+                            opacity: isHovering ? 0.66 : 0.33,
+                            child: IconButton(
+                              splashRadius: 18,
+                              icon: const Icon(Icons.copy, size: 16,),
+                              onPressed: () => copyToClipboard(prop.$3),
+                              padding: EdgeInsets.zero,
+                            ),
+                          ),
+                        )
+                    ],
+                  ),
+                )
+              ]
+            ),
+        ],
+      ),
     );
   }
 

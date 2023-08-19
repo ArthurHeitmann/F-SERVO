@@ -426,15 +426,30 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
           path = "$bnkPath#p=${hirc.uid}";
         int? parentId;
         List<int>? childIds;
+        List<(bool, String, String)> props = [];
         if (hirc is BnkHircChunkWithBaseParamsGetter) {
           var hircChunk = hirc as BnkHircChunkWithBaseParamsGetter;
-          parentId = hircChunk.getBaseParams().directParentID;
+          var baseParams = hircChunk.getBaseParams();
+          parentId = baseParams.directParentID;
           if (parentId == 0)
             parentId = null;
+          props.addAll(BnkHircHierarchyEntry.makePropsFromParams(baseParams.iniParams.propValues, baseParams.iniParams.rangedPropValues));
         } else if (hirc is BnkAction) {
           childIds = [hirc.initialParams.idExt];
           if (uidNameStr.isEmpty && hirc.specificParams != null)
             uidNameStr = "_${hirc.specificParams!.runtimeType.toString().replaceAll("Bnk", "").replaceAll("Params", "")}";
+          props.addAll(BnkHircHierarchyEntry.makePropsFromParams(hirc.initialParams.propValues, hirc.initialParams.rangedPropValues));
+          var specificParams = hirc.specificParams;
+          if (specificParams is BnkSwitchActionParams)
+            props.addAll([
+              (false, "Switch Group", "Switch State"),
+              (true, wemIdsToNames[specificParams.ulSwitchGroupID] ?? specificParams.ulSwitchGroupID.toString(), wemIdsToNames[specificParams.ulSwitchStateID] ?? specificParams.ulSwitchStateID.toString()),
+            ]);
+          if (specificParams is BnkStateActionParams)
+            props.addAll([
+              (false, "State Group", "Target State"),
+              (true, wemIdsToNames[specificParams.ulStateGroupID] ?? specificParams.ulStateGroupID.toString(), wemIdsToNames[specificParams.ulStateGroupID] ?? specificParams.ulTargetStateID.toString()),
+            ]);
         } else if (hirc is BnkEvent)
           childIds = hirc.ids;
         else if (hirc is BnkActorMixer)
@@ -444,7 +459,7 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
 
         var chunkType = hirc.runtimeType.toString().replaceFirst("Bnk", "");
         var entryName = "${hirc.uid}_$chunkType$uidNameStr";
-        var entry = BnkHircHierarchyEntry(StringProp(entryName), path, hirc.uid, chunkType, parentId, childIds);
+        var entry = BnkHircHierarchyEntry(StringProp(entryName), path, hirc.uid, chunkType, parentId, childIds, props);
 
         hircEntries[hirc.uid] = entry;
       }

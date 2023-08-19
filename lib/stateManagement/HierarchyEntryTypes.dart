@@ -9,8 +9,10 @@ import 'package:xml/xml.dart';
 
 import '../fileTypeUtils/audio/audioModPacker.dart';
 import '../fileTypeUtils/audio/audioModsChangesUndo.dart';
+import '../fileTypeUtils/audio/bnkIO.dart';
 import '../fileTypeUtils/audio/modInstaller.dart';
 import '../fileTypeUtils/audio/waiExtractor.dart';
+import '../fileTypeUtils/audio/wemIdsToNames.dart';
 import '../fileTypeUtils/audio/wemToWavConverter.dart';
 import '../fileTypeUtils/bxm/bxmReader.dart';
 import '../fileTypeUtils/bxm/bxmWriter.dart';
@@ -1147,13 +1149,46 @@ class BnkHircHierarchyEntry extends GenericFileHierarchyEntry {
   final String type;
   int? parentId;
   List<int>? childIds;
+  List<(bool, String, String)>? properties;
 
-  BnkHircHierarchyEntry(StringProp name, String path, this.id, this.type, [this.parentId, this.childIds])
+  BnkHircHierarchyEntry(StringProp name, String path, this.id, this.type, [this.parentId, this.childIds, this.properties])
     : super(name, path, true, true);
 
   @override
   HierarchyEntry clone() {
-    return BnkHircHierarchyEntry(name.takeSnapshot() as StringProp, path, id, type, parentId, childIds);
+    return BnkHircHierarchyEntry(name.takeSnapshot() as StringProp, path, id, type, parentId, childIds, properties);
+  }
+
+  static List<(bool, String, String)> makePropsFromParams(BnkPropValue propValues, BnkPropRangedValue rangedPropValues) {
+    List<(bool, String, String)> props = [];
+    if (propValues.cProps > 0) {
+      var ids = propValues.pID
+          .map((id) => BnkPropIds[id] ?? wemIdsToNames[id] ?? id.toString())
+          .toList();
+      var values = propValues.values
+          .map((value) => wemIdsToNames[value] ?? value.toString())
+          .toList();
+      props.addAll([
+        (false, "Prop ID", "Prop Value"),
+        for (var i = 0; i < ids.length; i++)
+          (true, ids.elementAt(i), values.elementAt(i)),
+      ]);
+    }
+    if (rangedPropValues.cProps > 0) {
+      var ids = rangedPropValues.pID
+          .map((id) => BnkPropIds[id] ?? wemIdsToNames[id] ?? id.toString())
+          .toList();
+      var values = rangedPropValues.minMax
+          .map((value) => "${value.$1} - ${value.$2}")
+          .toList();
+      props.addAll([
+        (false, "Ranged Prop ID", "Ranged Prop Min - Max"),
+        for (var i = 0; i < ids.length; i++)
+          (true, ids.elementAt(i), values.elementAt(i)),
+      ]);
+    }
+
+    return props;
   }
 }
 

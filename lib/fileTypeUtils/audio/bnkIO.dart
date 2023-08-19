@@ -1,8 +1,7 @@
 
 // ignore_for_file: constant_identifier_names
 
-import 'dart:typed_data';
-
+import '../../randomScripts/wemIdToEvent.dart';
 import '../utils/ByteDataWrapper.dart';
 
 abstract class ChunkWithSize {
@@ -1213,92 +1212,125 @@ class BnkClipAutomation {
   }
 }
 
-enum BnkPropId {
-  Volume(0x00),
-  LFE(0x01),
-  Pitch(0x02),
-  LPF(0x03),
-  BusVolume(0x04),
-  Priority(0x05),
-  PriorityDistanceOffset(0x06),
-  Loop(0x07),
-  FeedbackVolume(0x08),
-  FeedbackLPF(0x09),
-  MuteRatio(0x0A),
-  PAN_LR(0x0B),
-  PAN_FR(0x0C),
-  CenterPCT(0x0D),
-  DelayTime(0x0E),
-  TransitionTime(0x0F),
-  Probability(0x10),
-  DialogueMode(0x11),
-  UserAuxSendVolume0(0x12),
-  UserAuxSendVolume1(0x13),
-  UserAuxSendVolume2(0x14),
-  UserAuxSendVolume3(0x15),
-  GameAuxSendVolume(0x16),
-  OutputBusVolume(0x17),
-  OutputBusLPF(0x18),
-  InitialDelay(0x19),
-  HDRBusThreshold(0x1A),
-  HDRBusRatio(0x1B),
-  HDRBusReleaseTime(0x1C),
-  HDRBusGameParam(0x1D),
-  HDRBusGameParamMin(0x1E),
-  HDRBusGameParamMax(0x1F),
-  HDRActiveRange(0x20),
-  MakeUpGain(0x21),
-  LoopStart(0x22),
-  LoopEnd(0x23),
-  TrimInTime(0x24),
-  TrimOutTime(0x25),
-  FadeInTime(0x26),
-  FadeOutTime(0x27),
-  FadeInCurve(0x28),
-  FadeOutCurve(0x29),
-  LoopCrossfadeDuration(0x2A),
-  CrossfadeUpCurve(0x2B),
-  CrossfadeDownCurve(0x2C);
+const BnkPropIds = {
+  0x00: "Volume",
+  0x01: "LFE",
+  0x02: "Pitch",
+  0x03: "LPF",
+  0x04: "BusVolume",
+  0x05: "Priority",
+  0x06: "PriorityDistanceOffset",
+  0x07: "Loop",
+  0x08: "FeedbackVolume",
+  0x09: "FeedbackLPF",
+  0x0A: "MuteRatio",
+  0x0B: "PAN_LR",
+  0x0C: "PAN_FR",
+  0x0D: "CenterPCT",
+  0x0E: "DelayTime",
+  0x0F: "TransitionTime",
+  0x10: "Probability",
+  0x11: "DialogueMode",
+  0x12: "UserAuxSendVolume0",
+  0x13: "UserAuxSendVolume1",
+  0x14: "UserAuxSendVolume2",
+  0x15: "UserAuxSendVolume3",
+  0x16: "GameAuxSendVolume",
+  0x17: "OutputBusVolume",
+  0x18: "OutputBusLPF",
+  0x19: "InitialDelay",
+  0x1A: "HDRBusThreshold",
+  0x1B: "HDRBusRatio",
+  0x1C: "HDRBusReleaseTime",
+  0x1D: "HDRBusGameParam",
+  0x1E: "HDRBusGameParamMin",
+  0x1F: "HDRBusGameParamMax",
+  0x20: "HDRActiveRange",
+  0x21: "MakeUpGain",
+  0x22: "LoopStart",
+  0x23: "LoopEnd",
+  0x24: "TrimInTime",
+  0x25: "TrimOutTime",
+  0x26: "FadeInTime",
+  0x27: "FadeOutTime",
+  0x28: "FadeInCurve",
+  0x29: "FadeOutCurve",
+  0x2A: "LoopCrossfadeDuration",
+  0x2B: "CrossfadeUpCurve",
+  0x2C: "CrossfadeDownCurve",
+};
 
-  final int id;
-  const BnkPropId(this.id);
+class UnionUint32Float32 {
+  late bool isInt;
+  late int? i;
+  late double? f;
+
+  UnionUint32Float32(this.isInt, { this.i, this.f });
+
+  UnionUint32Float32.read(ByteDataWrapper bytes) {
+    var uint32 = bytes.readUint32();
+    if (uint32 > 0x10000000) {
+      isInt = false;
+      bytes.position -= 4;
+      f = bytes.readFloat32();
+    } else {
+      isInt = true;
+      i = uint32;
+    }
+  }
+
+  void write(ByteDataWrapper bytes) {
+    if (isInt)
+      bytes.writeUint32(i!);
+    else {
+      bytes.writeFloat32(f!);
+    }
+  }
+
+  @override
+  String toString() {
+    if (isInt)
+      return wemIdsToNames[i] ?? i.toString();
+    else
+      return f.toString();
+  }
 }
 
 class BnkPropValue {
   late int cProps;
   late List<int> pID;
-  late List<int> pValueBytes;
+  late List<UnionUint32Float32> values;
 
-  BnkPropValue(this.cProps, this.pID, this.pValueBytes);
+  BnkPropValue(this.cProps, this.pID, this.values);
 
-  void addPropBundle(int id, int value) {
-    var bytes = ByteData(4);
-    bytes.setInt32(0, value, Endian.little);
-    pID.add(id);
-    pValueBytes.addAll(bytes.buffer.asUint8List());
-    cProps++;
-  }
-
-  void addPropBundleF(int id, double value) {
-    var bytes = ByteData(4);
-    bytes.setFloat32(0, value, Endian.little);
-    pID.add(id);
-    pValueBytes.addAll(bytes.buffer.asUint8List());
-    cProps++;
-  }
+  // void addPropBundle(int id, int value) {
+  //   var bytes = ByteData(4);
+  //   bytes.setInt32(0, value, Endian.little);
+  //   pID.add(id);
+  //   pValueBytes.addAll(bytes.buffer.asUint8List());
+  //   cProps++;
+  // }
+  //
+  // void addPropBundleF(int id, double value) {
+  //   var bytes = ByteData(4);
+  //   bytes.setFloat32(0, value, Endian.little);
+  //   pID.add(id);
+  //   pValueBytes.addAll(bytes.buffer.asUint8List());
+  //   cProps++;
+  // }
 
   BnkPropValue.read(ByteDataWrapper bytes) {
     cProps = bytes.readUint8();
     pID = List.generate(cProps, (index) => bytes.readUint8());
-    pValueBytes = List.generate(cProps*4, (index) => bytes.readUint8());
+    values = List.generate(cProps, (index) => UnionUint32Float32.read(bytes));
   }
 
   void write(ByteDataWrapper bytes) {
     bytes.writeUint8(cProps);
     for (var i = 0; i < cProps; i++)
       bytes.writeUint8(pID[i]);
-    for (var b in pValueBytes)
-      bytes.writeUint8(b);
+    for (var v in values)
+      v.write(bytes);
   }
   
   int calcChunkSize() {
@@ -1309,22 +1341,24 @@ class BnkPropValue {
 class BnkPropRangedValue {
   late int cProps;
   late List<int> pID;
-  late List<double> minMax;
+  late List<(UnionUint32Float32, UnionUint32Float32)> minMax;
 
   BnkPropRangedValue(this.cProps, this.pID, this.minMax);
 
   BnkPropRangedValue.read(ByteDataWrapper bytes) {
     cProps = bytes.readUint8();
     pID = List.generate(cProps, (index) => bytes.readUint8());
-    minMax = List.generate(cProps*2, (index) => bytes.readFloat32());
+    minMax = List.generate(cProps, (index) => (UnionUint32Float32.read(bytes), UnionUint32Float32.read(bytes)));
   }
 
   void write(ByteDataWrapper bytes) {
     bytes.writeUint8(cProps);
     for (var i = 0; i < cProps; i++)
       bytes.writeUint8(pID[i]);
-    for (var i = 0; i < cProps*2; i++)
-      bytes.writeFloat32(minMax[i]);
+    for (var i = 0; i < cProps; i++) {
+      minMax[i].$1.write(bytes);
+      minMax[i].$2.write(bytes);
+    }
   }
   
   int calcChunkSize() {

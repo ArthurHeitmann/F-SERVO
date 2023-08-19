@@ -2,8 +2,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:path/path.dart';
-
 import '../stateManagement/events/miscEvents.dart';
 import '../stateManagement/preferencesData.dart';
 
