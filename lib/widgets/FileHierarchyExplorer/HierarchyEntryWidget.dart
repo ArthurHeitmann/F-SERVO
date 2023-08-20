@@ -53,6 +53,8 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
       else if (entryType == "Event")
         return Icon(Icons.priority_high, color: iconColor, size: 15);
       else if (entryType == "MusicSwitch")
+        return Icon(Icons.account_tree, color: iconColor, size: 15);
+      else if (entryType == "SwitchAssoc")
         return Icon(Icons.account_tree_outlined, color: iconColor, size: 15);
       else if (entryType == "Action")
         return Icon(Icons.keyboard_double_arrow_right, color: iconColor, size: 15);
@@ -60,6 +62,8 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
         return Icon(Icons.workspaces, color: iconColor, size: 15);
       else if (entryType == "State")
         return Icon(Icons.trip_origin, color: iconColor, size: 15);
+      else if (entryType == "ActionTarget")
+        return Icon(Icons.arrow_right_alt, color: iconColor, size: 15);
       else
         return Icon(Icons.list, color: iconColor, size: 15);
     }

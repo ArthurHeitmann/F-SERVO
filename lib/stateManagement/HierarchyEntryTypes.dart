@@ -1145,19 +1145,20 @@ class BnkSubCategoryParentHierarchyEntry extends HierarchyEntry {
 }
 
 class BnkHircHierarchyEntry extends GenericFileHierarchyEntry {
+  static const nonCollapsibleTypes = { "WEM" };
   static const openableTypes = { "MusicPlaylist", "WEM" };
   final int id;
   final String type;
-  int? parentId;
-  List<int>? childIds;
+  List<int> parentIds;
+  List<int> childIds;
   List<(bool, String, String)>? properties;
 
-  BnkHircHierarchyEntry(StringProp name, String path, this.id, this.type, [this.parentId, this.childIds, this.properties])
-    : super(name, path, true, openableTypes.contains(type));
+  BnkHircHierarchyEntry(StringProp name, String path, this.id, this.type, [this.parentIds = const [], this.childIds = const [], this.properties])
+    : super(name, path, !nonCollapsibleTypes.contains(type), openableTypes.contains(type));
 
   @override
   HierarchyEntry clone() {
-    return BnkHircHierarchyEntry(name.takeSnapshot() as StringProp, path, id, type, parentId, childIds, properties);
+    return BnkHircHierarchyEntry(name.takeSnapshot() as StringProp, path, id, type, parentIds, childIds, properties);
   }
 
   static List<(bool, String, String)> makePropsFromParams(BnkPropValue propValues, [BnkPropRangedValue? rangedPropValues]) {

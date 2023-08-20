@@ -425,20 +425,19 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
           path = "$bnkPath#p=${hirc.uid}";
         else
           path = "$bnkPath#id=${hirc.uid}";
-        int? parentId;
-        List<int>? childIds;
+        List<int> parentId = [];
+        List<int> childIds = [];
         List<(bool, String, String)> props = [];
         if (hirc is BnkHircChunkWithBaseParamsGetter) {
           var hircChunk = hirc as BnkHircChunkWithBaseParamsGetter;
           var baseParams = hircChunk.getBaseParams();
-          parentId = baseParams.directParentID;
-          if (parentId == 0)
-            parentId = null;
-          props.addAll(BnkHircHierarchyEntry.makePropsFromParams(baseParams.iniParams.propValues, baseParams.iniParams.rangedPropValues));
+          parentId.add(baseParams.directParentID);
+          if (parentId.last == 0)
+            parentId.removeLast();
           for (var stateGroup in baseParams.states.stateGroup) {
             var stateGroupId = randomId();
             var groupName = wemIdsToNames[stateGroup.ulStateGroupID] ?? stateGroup.ulStateGroupID.toString();
-            var stateGroupEntry = BnkHircHierarchyEntry(StringProp("StateGroup_$groupName"), "", stateGroupId, "StateGroup", hirc.uid);
+            var stateGroupEntry = BnkHircHierarchyEntry(StringProp("StateGroup_$groupName"), "", stateGroupId, "StateGroup", [hirc.uid]);
             hircEntries[stateGroupId] = stateGroupEntry;
             for (var state in stateGroup.state) {
               var stateName = wemIdsToNames[state.ulStateID] ?? state.ulStateID.toString();
@@ -447,10 +446,10 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
               if (hircEntries.containsKey(childId)) {
                 var childState = hircEntries[childId]!;
                 childState.name.value += " = $stateName";
-                childState.parentId = stateGroupId;
+                childState.parentIds.add(stateGroupId);
               }
               else {
-                var stateEntry = BnkHircHierarchyEntry(StringProp("State_$stateName"), "", stateId, "State", stateGroupId, [childId]);
+                var stateEntry = BnkHircHierarchyEntry(StringProp("State_$stateName"), "", stateId, "State", [stateGroupId], [childId]);
                 hircEntries[stateId] = stateEntry;
               }
             }
@@ -460,9 +459,10 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
             if (srcName == null)
               srcName = srcId.toString();
             else
-              srcName = "${srcId}_($srcName)";
+              srcName = "${srcId}_$srcName";
             var path = await wemFilesLookup.lookupWithAdditionalDir(srcId, bnkExtractDir);
-            var srcEntry = BnkHircHierarchyEntry(StringProp(srcName), path ?? "", srcId, "WEM", hirc.uid);
+            var srcEntry = BnkHircHierarchyEntry(StringProp(srcName), path ?? "", srcId, "WEM", [hirc.uid]);
+            srcEntry.optionalFileInfo = OptionalWemData(bnkPath, WemSource.bnk);
             hircEntries[srcId] = srcEntry;
           }
           if (hircChunk is BnkMusicTrack) {
@@ -475,9 +475,34 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
             var srcId = hircChunk.bankData.mediaInformation.sourceID;
             await addWemChild(srcId);
           }
+          if (hircChunk is BnkMusicSwitch) {
+            for (var switchAssoc in hircChunk.pAssocs) {
+              var switchAssocName = wemIdsToNames[switchAssoc.switchID] ?? switchAssoc.switchID.toString();
+              var switchId = randomId();
+              var childNodeId = switchAssoc.nodeID;
+              var switchAssocEntry = BnkHircHierarchyEntry(StringProp(switchAssocName), "", switchId, "SwitchAssoc", [hirc.uid], [childNodeId]);
+              hircEntries[switchId] = switchAssocEntry;
+              var nodeChild = hircEntries[childNodeId];
+              if (nodeChild != null) {
+                nodeChild.parentIds.add(switchId);
+              }
+              else {
+                var nodeEntry = BnkHircHierarchyEntry(StringProp("Node_$switchAssocName"), "", childNodeId, "Node", [switchId]);
+                hircEntries[childNodeId] = nodeEntry;
+              }
+            }
+          }
+
+          props.addAll(BnkHircHierarchyEntry.makePropsFromParams(baseParams.iniParams.propValues, baseParams.iniParams.rangedPropValues));
         }
         else if (hirc is BnkAction) {
           childIds = [hirc.initialParams.idExt];
+          if (hirc.initialParams.idExt != 0 && !hircEntries.containsKey(hirc.initialParams.idExt)) {
+            var targetName = wemIdsToNames[hirc.initialParams.idExt] ?? "Target_${hirc.initialParams.idExt.toString()}";
+            var targetId = randomId();
+            var child = BnkHircHierarchyEntry(StringProp(targetName), "", targetId, "ActionTarget", [hirc.uid]);
+            hircEntries[targetId] = child;
+          }
           if (uidNameStr.isEmpty)
             uidNameStr = actionTypes[hirc.ulActionType] ?? "";
           props.addAll(BnkHircHierarchyEntry.makePropsFromParams(hirc.initialParams.propValues, hirc.initialParams.rangedPropValues));
@@ -510,23 +535,29 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
       }
 
       for (var entry in hircEntries.entries) {
-        var hasChildren = entry.value.childIds != null && entry.value.childIds!.isNotEmpty;
+        var hasChildren = entry.value.childIds.isNotEmpty;
         if (hasChildren) {
-          for (var childId in entry.value.childIds!) {
+          for (var childId in entry.value.childIds) {
             var child = hircEntries[childId];
             if (child == null)
               continue;
-            if (child.parentId != null)
+            if (child.parentIds.contains(entry.value.id))
               continue;
-            child.parentId = entry.value.id;
+            child.parentIds.add(entry.value.id);
           }
         }
       }
       for (var entry in hircEntries.entries) {
-        var hasParent = hircEntries.containsKey(entry.value.parentId);
+        var hasParent = entry.value.parentIds.isNotEmpty;
         if (hasParent) {
-          var parent = hircEntries[entry.value.parentId]!;
-          parent.add(entry.value);
+          for (var parentId in entry.value.parentIds) {
+            var parent = hircEntries[parentId];
+            if (parent == null) {
+              entry.value.parentIds.remove(parentId);
+            } else {
+              parent.add(entry.value);
+            }
+          }
         }
         else
           hierarchyParentEntry.add(entry.value);

@@ -89,28 +89,30 @@ class _WemFileEditorState extends ChangeNotifierState<WemFileEditor> {
           key: refreshKey,
           file: widget.wem,
           lockControls: widget.lockControls,
-          additionalControls: widget.showOverride && widget.wem.optionalInfo != null ? Wrap(
+          additionalControls: Wrap(
             children: [
-              ElevatedButton(
-                onPressed: _pickOverride,
-                style: getTheme(context).dialogPrimaryButtonStyle,
-                child: const Text("Select WAV"),
-              ),
-              const SizedBox(width: 10),
-              if (widget.wem.overrideData.value != null)
+              if (widget.showOverride && widget.wem.optionalInfo != null) ...[
                 ElevatedButton(
-                  onPressed: () => widget.wem.removeOverride(),
-                  style: getTheme(context).dialogSecondaryButtonStyle,
-                  child: const Text("Remove"),
+                  onPressed: _pickOverride,
+                  style: getTheme(context).dialogPrimaryButtonStyle,
+                  child: const Text("Select WAV"),
                 ),
-              const SizedBox(width: 40),
+                const SizedBox(width: 10),
+                if (widget.wem.overrideData.value != null)
+                  ElevatedButton(
+                    onPressed: () => widget.wem.removeOverride(),
+                    style: getTheme(context).dialogSecondaryButtonStyle,
+                    child: const Text("Remove"),
+                  ),
+                const SizedBox(width: 40),
+              ],
               ElevatedButton(
                 onPressed: _exportAsWav,
                 style: getTheme(context).dialogSecondaryButtonStyle,
                 child: const Text("Export as WAV"),
               ),
             ],
-          ) : null,
+          ),
           rightSide: widget.wem.relatedBnkPlaylistIds.isNotEmpty && widget.wem.wemInfo != null ? Align(
             alignment: Alignment.centerRight,
             child: Container(
