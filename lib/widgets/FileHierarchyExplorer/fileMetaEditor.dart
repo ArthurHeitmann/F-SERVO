@@ -272,14 +272,15 @@ class _FileMetaEditorState extends ChangeNotifierState<FileMetaEditor> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ...makeActionsBar(hircObject),
-          for (var prop in props)
+          for (var propRow in props)
             Row(
               children: [
+                for (var prop in propRow.$2)
                 Expanded(
                   child: Row(
                     children: [
-                      Text(prop.$2, style: getTheme(context).propInputTextStyle,),
-                      if (prop.$1)
+                      Text(prop, style: getTheme(context).propInputTextStyle,),
+                      if (propRow.$1)
                         OnHoverBuilder(
                           builder: (context, isHovering) => AnimatedOpacity(
                             duration: const Duration(milliseconds: 250),
@@ -287,7 +288,7 @@ class _FileMetaEditorState extends ChangeNotifierState<FileMetaEditor> {
                             child: IconButton(
                               splashRadius: 18,
                               icon: const Icon(Icons.copy, size: 16,),
-                              onPressed: () => copyToClipboard(prop.$2),
+                              onPressed: () => copyToClipboard(prop),
                               padding: EdgeInsets.zero,
                             ),
                           ),
@@ -295,26 +296,6 @@ class _FileMetaEditorState extends ChangeNotifierState<FileMetaEditor> {
                     ],
                   ),
                 ),
-                Expanded(
-                  child: Row(
-                    children: [
-                      Text(prop.$3, style: getTheme(context).propInputTextStyle,),
-                      if (prop.$1)
-                        OnHoverBuilder(
-                          builder: (context, isHovering) => AnimatedOpacity(
-                            duration: const Duration(milliseconds: 250),
-                            opacity: isHovering ? 0.66 : 0.33,
-                            child: IconButton(
-                              splashRadius: 18,
-                              icon: const Icon(Icons.copy, size: 16,),
-                              onPressed: () => copyToClipboard(prop.$3),
-                              padding: EdgeInsets.zero,
-                            ),
-                          ),
-                        )
-                    ],
-                  ),
-                )
               ]
             ),
         ],

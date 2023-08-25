@@ -986,11 +986,11 @@ class BnkSource {
   late int streamType;
   late int sourceID;
   late int fileID;
-  late int? uFileOffset;
-  late int? uInMemorySize;
+  int? uFileOffset;
+  int? uInMemorySize;
   late int uSourceBits;
-  late int? gapSize;
-  late List<int>? gap;
+  int? gapSize;
+  List<int>? gap;
 
   BnkSource(this.ulPluginID, this.streamType, this.sourceID, this.uFileOffset, this.uInMemorySize, this.uSourceBits, this.gap);
 
@@ -1259,8 +1259,8 @@ const BnkPropIds = {
 
 class UnionUint32Float32 {
   late bool isInt;
-  late int? i;
-  late double? f;
+  int? i;
+  double? f;
 
   UnionUint32Float32(this.isInt, { this.i, this.f });
 
@@ -1283,6 +1283,8 @@ class UnionUint32Float32 {
       bytes.writeFloat32(f!);
     }
   }
+
+  num get number => isInt ? i! : f!;
 
   @override
   String toString() {
@@ -1496,21 +1498,21 @@ class Bnk3DAutomationParams {
 
 class BnkPositioningParams {
   late int uByVector;
-  late int? cbIs3DPositioningAvailable;
-  late int? bIsPannerEnabled;
-  late int? eType_;
-  late int? attenuationID;
-  late int? bIsSpatialized;
-  late int? bIsDynamic;
-  late int? ePathMode;
-  late int? bIsLooping;
-  late int? transitionTime;
-  late int? bFollowOrientation;
-  late int? ulNumVertices;
-  late List<BnkPathVertex>? pVertices;
-  late int? ulNumPlayListItem;
-  late List<PathListItemOffset>? pPlayListItems;
-  late List<Bnk3DAutomationParams>? params;
+  int? cbIs3DPositioningAvailable;
+  int? bIsPannerEnabled;
+  int? eType_;
+  int? attenuationID;
+  int? bIsSpatialized;
+  int? bIsDynamic;
+  int? ePathMode;
+  int? bIsLooping;
+  int? transitionTime;
+  int? bFollowOrientation;
+  int? ulNumVertices;
+  List<BnkPathVertex>? pVertices;
+  int? ulNumPlayListItem;
+  List<PathListItemOffset>? pPlayListItems;
+  List<Bnk3DAutomationParams>? params;
 
   BnkPositioningParams.read(ByteDataWrapper bytes) {
     uByVector = bytes.readInt8();
@@ -1873,7 +1875,7 @@ class BnkNodeBaseParams {
   int calcChunkSize() {
     return (
       fxParams.calcChunkSize() +
-      1 +
+      // 1 +
       4 +
       4 +
       1 +
@@ -2024,8 +2026,8 @@ class BnkSourceData {
 class BnkMediaInformation {
   late int sourceID;
   late int uFileID;
-  late int? fileOffset;
-  late int? uInMemoryMediaSize;
+  int? fileOffset;
+  int? uInMemoryMediaSize;
   late int uSourceBits;
 
   BnkMediaInformation(this.sourceID, this.fileOffset, this.uInMemoryMediaSize, this.uSourceBits);

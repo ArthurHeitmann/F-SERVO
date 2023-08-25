@@ -427,7 +427,7 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
           path = "$bnkPath#id=${hirc.uid}";
         List<int> parentId = [];
         List<int> childIds = [];
-        List<(bool, String, String)> props = [];
+        List<(bool, List<String>)> props = [];
         if (hirc is BnkHircChunkWithBaseParamsGetter) {
           var hircChunk = hirc as BnkHircChunkWithBaseParamsGetter;
           var baseParams = hircChunk.getBaseParams();
@@ -461,9 +461,15 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
             else
               srcName = "${srcId}_$srcName";
             var path = await wemFilesLookup.lookupWithAdditionalDir(srcId, bnkExtractDir);
-            var srcEntry = BnkHircHierarchyEntry(StringProp(srcName), path ?? "", srcId, "WEM", [hirc.uid]);
-            srcEntry.optionalFileInfo = OptionalWemData(bnkPath, WemSource.bnk);
-            hircEntries[srcId] = srcEntry;
+            if (hircEntries.containsKey(srcId)) {
+              var child = hircEntries[srcId]!;
+              child.parentIds.add(hirc.uid);
+            }
+            else {
+              var srcEntry = BnkHircHierarchyEntry(StringProp(srcName), path ?? "", srcId, "WEM", [hirc.uid]);
+              srcEntry.optionalFileInfo = OptionalWemData(bnkPath, WemSource.bnk);
+              hircEntries[srcId] = srcEntry;
+            }
           }
           if (hircChunk is BnkMusicTrack) {
             for (var src in hircChunk.sources) {
@@ -492,7 +498,31 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
               }
             }
           }
-
+          BnkAkMeterInfo? meterInfo;
+          if (hircChunk is BnkMusicSegment)
+            meterInfo = hircChunk.musicParams.meterInfo;
+          else if (hircChunk is BnkMusicPlaylist)
+            meterInfo = hircChunk.musicTransParams.musicParams.meterInfo;
+          else if (hircChunk is BnkMusicSwitch)
+            meterInfo = hircChunk.musicTransParams.musicParams.meterInfo;
+          if (meterInfo != null) {
+            const defaultTempo = 120.0;
+            const defaultBeatValue = 4;
+            const defaultNumBeatsPerBar = 4;
+            const defaultGridPeriod = 1000.0;
+            const defaultGridOffset = 0.0;
+            if (meterInfo.fTempo != defaultTempo || meterInfo.uBeatValue != defaultBeatValue || meterInfo.uNumBeatsPerBar != defaultNumBeatsPerBar || meterInfo.fGridPeriod != defaultGridPeriod || meterInfo.fGridOffset != defaultGridOffset) {
+              props.addAll([
+                (false, ["Tempo", "Time Signature", "Grid Period", "Grid Offset"]),
+                (true, [
+                    "${meterInfo.fTempo}",
+                    "${meterInfo.uBeatValue} / ${meterInfo.uNumBeatsPerBar}",
+                    "${meterInfo.fGridPeriod}",
+                    "${meterInfo.fGridOffset}"
+                ]),
+              ]);
+            }
+          }
           props.addAll(BnkHircHierarchyEntry.makePropsFromParams(baseParams.iniParams.propValues, baseParams.iniParams.rangedPropValues));
         }
         else if (hirc is BnkAction) {
@@ -509,13 +539,13 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
           var specificParams = hirc.specificParams;
           if (specificParams is BnkSwitchActionParams)
             props.addAll([
-              (false, "Switch Group", "Switch State"),
-              (true, wemIdsToNames[specificParams.ulSwitchGroupID] ?? specificParams.ulSwitchGroupID.toString(), wemIdsToNames[specificParams.ulSwitchStateID] ?? specificParams.ulSwitchStateID.toString()),
+              (false, ["Switch Group", "Switch State"]),
+              (true, [wemIdsToNames[specificParams.ulSwitchGroupID] ?? specificParams.ulSwitchGroupID.toString(), wemIdsToNames[specificParams.ulSwitchStateID] ?? specificParams.ulSwitchStateID.toString()]),
             ]);
           if (specificParams is BnkStateActionParams)
             props.addAll([
-              (false, "State Group", "Target State"),
-              (true, wemIdsToNames[specificParams.ulStateGroupID] ?? specificParams.ulStateGroupID.toString(), wemIdsToNames[specificParams.ulStateGroupID] ?? specificParams.ulTargetStateID.toString()),
+              (false, ["State Group", "Target State"]),
+              (true, [wemIdsToNames[specificParams.ulStateGroupID] ?? specificParams.ulStateGroupID.toString(), wemIdsToNames[specificParams.ulStateGroupID] ?? specificParams.ulTargetStateID.toString()]),
             ]);
         }
         else if (hirc is BnkEvent)
@@ -550,7 +580,7 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
       for (var entry in hircEntries.entries) {
         var hasParent = entry.value.parentIds.isNotEmpty;
         if (hasParent) {
-          for (var parentId in entry.value.parentIds) {
+          for (var parentId in entry.value.parentIds.toList()) {
             var parent = hircEntries[parentId];
             if (parent == null) {
               entry.value.parentIds.remove(parentId);

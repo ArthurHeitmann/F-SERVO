@@ -1151,7 +1151,7 @@ class BnkHircHierarchyEntry extends GenericFileHierarchyEntry {
   final String type;
   List<int> parentIds;
   List<int> childIds;
-  List<(bool, String, String)>? properties;
+  List<(bool, List<String>)>? properties;
 
   BnkHircHierarchyEntry(StringProp name, String path, this.id, this.type, [this.parentIds = const [], this.childIds = const [], this.properties])
     : super(name, path, !nonCollapsibleTypes.contains(type), openableTypes.contains(type));
@@ -1161,19 +1161,41 @@ class BnkHircHierarchyEntry extends GenericFileHierarchyEntry {
     return BnkHircHierarchyEntry(name.takeSnapshot() as StringProp, path, id, type, parentIds, childIds, properties);
   }
 
-  static List<(bool, String, String)> makePropsFromParams(BnkPropValue propValues, [BnkPropRangedValue? rangedPropValues]) {
-    List<(bool, String, String)> props = [];
+  @override
+  List<HierarchyEntryAction> getContextMenuActions() {
+    if (wemIdsToNames.containsKey(id))
+      return [
+        HierarchyEntryAction(
+          name: "Copy Name",
+          icon: Icons.copy,
+          action: () => copyToClipboard(wemIdsToNames[id]!),
+        ),
+        ...super.getContextMenuActions(),
+      ];
+    return super.getContextMenuActions();
+  }
+
+  static List<(bool, List<String>)> makePropsFromParams(BnkPropValue propValues, [BnkPropRangedValue? rangedPropValues]) {
+    const msPropNames = { "delaytime", "transitiontime" };
+    List<(bool, List<String>)> props = [];
     if (propValues.cProps > 0) {
-      var ids = propValues.pID
-          .map((id) => BnkPropIds[id] ?? wemIdsToNames[id] ?? id.toString())
-          .toList();
-      var values = propValues.values
-          .map((value) => wemIdsToNames[value] ?? value.toString())
-          .toList();
+      // var ids = propValues.pID
+      //     .map((id) => BnkPropIds[id] ?? wemIdsToNames[id] ?? id.toString())
+      //     .toList();
+      // var values = propValues.values
+      //     .map((value) => wemIdsToNames[value] ?? value.toString())
+      //     .toList();
       props.addAll([
-        (false, "Prop ID", "Prop Value"),
-        for (var i = 0; i < ids.length; i++)
-          (true, ids.elementAt(i), values.elementAt(i)),
+        (false, ["Prop ID", "Prop Value"]),
+        // for (var i = 0; i < ids.length; i++)
+          // (true, [ids.elementAt(i), values.elementAt(i)]),
+        for (var i = 0; i < propValues.cProps; i++)
+          (true, [
+            BnkPropIds[propValues.pID[i]] ?? wemIdsToNames[propValues.pID[i]] ?? propValues.pID[i].toString(),
+            msPropNames.contains(BnkPropIds[propValues.pID[i]]?.toLowerCase())
+              ? (propValues.values[i].number / 1000).toString()
+              : wemIdsToNames[propValues.values[i]] ?? propValues.values[i].toString()
+          ])
       ]);
     }
     if (rangedPropValues != null && rangedPropValues.cProps > 0) {
@@ -1184,9 +1206,9 @@ class BnkHircHierarchyEntry extends GenericFileHierarchyEntry {
           .map((value) => "${value.$1} - ${value.$2}")
           .toList();
       props.addAll([
-        (false, "Ranged Prop ID", "Ranged Prop Min - Max"),
+        (false, ["Ranged Prop ID", "Ranged Prop Min - Max"]),
         for (var i = 0; i < ids.length; i++)
-          (true, ids.elementAt(i), values.elementAt(i)),
+          (true, [ids.elementAt(i), values.elementAt(i)]),
       ]);
     }
 
