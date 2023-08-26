@@ -1122,8 +1122,10 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
 }
 
 class BnkSubCategoryParentHierarchyEntry extends HierarchyEntry {
-  BnkSubCategoryParentHierarchyEntry(String name)
-    : super(StringProp(name), false, true, false);
+  BnkSubCategoryParentHierarchyEntry(String name, { isCollapsed = false })
+    : super(StringProp(name), false, true, false) {
+    _isCollapsed = isCollapsed;
+  }
 
   @override
   Undoable takeSnapshot() {

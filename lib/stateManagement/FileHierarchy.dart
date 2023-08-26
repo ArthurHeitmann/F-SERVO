@@ -414,9 +414,15 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
 
     var hircChunk = bnk.chunks.whereType<BnkHircChunk>().firstOrNull;
     if (hircChunk != null) {
-      var hierarchyParentEntry = BnkSubCategoryParentHierarchyEntry("Hierarchy");
-      bnkEntry.add(hierarchyParentEntry);
       Map<int, BnkHircHierarchyEntry> hircEntries = {};
+      Map<String, Set<String>> usedSwitchGroups = {};
+      Map<String, Set<String>> usedStateGroups = {};
+      Map<String, Set<String>> usedGameParameters = {};
+      void addGroupUsage(Map<String, Set<String>> map, String groupName, String entryName) {
+        if (!map.containsKey(groupName))
+          map[groupName] = {};
+        map[groupName]!.add(entryName);
+      }
       for (var hirc in hircChunk.chunks) {
         var uidNameLookup = wemIdsToNames[hirc.uid];
         var uidNameStr = uidNameLookup != null ? "_$uidNameLookup" : "";
@@ -441,6 +447,7 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
             hircEntries[stateGroupId] = stateGroupEntry;
             for (var state in stateGroup.state) {
               var stateName = wemIdsToNames[state.ulStateID] ?? state.ulStateID.toString();
+              addGroupUsage(usedStateGroups, groupName, stateName);
               var stateId = randomId();
               var childId = state.ulStateInstanceID;
               if (hircEntries.containsKey(childId)) {
@@ -482,8 +489,16 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
             await addWemChild(srcId);
           }
           if (hircChunk is BnkMusicSwitch) {
+            var groupName = wemIdsToNames[hircChunk.ulGroupID] ?? hircChunk.ulGroupID.toString();
+            var defaultValue = wemIdsToNames[hircChunk.ulDefaultSwitch] ?? hircChunk.ulDefaultSwitch.toString();
+            addGroupUsage(usedSwitchGroups, groupName, defaultValue);
+            props.addAll([
+              (false, ["Switch Group", "Default Switch"]),
+              (true, [groupName, defaultValue]),
+            ]);
             for (var switchAssoc in hircChunk.pAssocs) {
               var switchAssocName = wemIdsToNames[switchAssoc.switchID] ?? switchAssoc.switchID.toString();
+              addGroupUsage(usedSwitchGroups, groupName, switchAssocName);
               var switchId = randomId();
               var childNodeId = switchAssoc.nodeID;
               var switchAssocEntry = BnkHircHierarchyEntry(StringProp(switchAssocName), "", switchId, "SwitchAssoc", [hirc.uid], [childNodeId]);
@@ -537,17 +552,33 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
             uidNameStr = actionTypes[hirc.ulActionType] ?? "";
           props.addAll(BnkHircHierarchyEntry.makePropsFromParams(hirc.initialParams.propValues, hirc.initialParams.rangedPropValues));
           var specificParams = hirc.specificParams;
-          if (specificParams is BnkSwitchActionParams)
+          if (specificParams is BnkSwitchActionParams) {
+            var groupName = wemIdsToNames[specificParams.ulSwitchGroupID] ?? specificParams.ulSwitchGroupID.toString();
+            var switchValue = wemIdsToNames[specificParams.ulSwitchStateID] ?? specificParams.ulSwitchStateID.toString();
+            addGroupUsage(usedSwitchGroups, groupName, switchValue);
             props.addAll([
               (false, ["Switch Group", "Switch State"]),
-              (true, [wemIdsToNames[specificParams.ulSwitchGroupID] ?? specificParams.ulSwitchGroupID.toString(), wemIdsToNames[specificParams.ulSwitchStateID] ?? specificParams.ulSwitchStateID.toString()]),
+              (true, [groupName, switchValue]),
             ]);
-          if (specificParams is BnkStateActionParams)
+          }
+          if (specificParams is BnkStateActionParams) {
+            var groupName = wemIdsToNames[specificParams.ulStateGroupID] ?? specificParams.ulStateGroupID.toString();
+            var stateValue = wemIdsToNames[specificParams.ulTargetStateID] ?? specificParams.ulTargetStateID.toString();
+            addGroupUsage(usedStateGroups, groupName, stateValue);
             props.addAll([
               (false, ["State Group", "Target State"]),
-              (true, [wemIdsToNames[specificParams.ulStateGroupID] ?? specificParams.ulStateGroupID.toString(), wemIdsToNames[specificParams.ulTargetStateID] ?? specificParams.ulTargetStateID.toString()]),
+              (true, [groupName, stateValue]),
             ]);
+          }
           if (specificParams is BnkValueActionParams) {
+            if (gameParamActionTypes.contains(hirc.ulActionType & 0xFF00)) {
+              var gameParamName = wemIdsToNames[hirc.initialParams.idExt] ?? hirc.initialParams.idExt.toString();
+              addGroupUsage(usedGameParameters, gameParamName, "");
+              props.addAll([
+                (false, ["Game Parameter"]),
+                (true, [gameParamName]),
+              ]);
+            }
             double? base, min, max;
             var valueParams = specificParams.specificParams;
             if (valueParams is BnkGameParameterParams) {
@@ -562,7 +593,7 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
             }
             if (base != null && min != null && max != null) {
               props.addAll([
-                (false, ["Value", "Min", "Max"]),
+                (false, ["Value", "(Min)", "(Max)"]),
                 (true, ["$base", "$min", "$max"]),
               ]);
             }
@@ -597,6 +628,36 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
           }
         }
       }
+      var groupUsages = [
+        ("Switch Groups", usedSwitchGroups),
+        ("State Groups", usedStateGroups),
+      ];
+      for (var groupUsage in groupUsages) {
+        var groupName = groupUsage.$1;
+        var groupMap = groupUsage.$2;
+        if (groupMap.isEmpty)
+          continue;
+        var groupParentEntry = BnkSubCategoryParentHierarchyEntry(groupName, isCollapsed: true);
+        bnkEntry.add(groupParentEntry);
+        for (var group in groupMap.entries) {
+          var groupEntry = BnkHircHierarchyEntry(StringProp(group.key), "", randomId(), groupName);
+          groupParentEntry.add(groupEntry);
+          for (var entryName in group.value) {
+            var entry = BnkHircHierarchyEntry(StringProp(entryName), "", randomId(), "Entry");
+            groupEntry.add(entry);
+          }
+        }
+      }
+      if (usedGameParameters.isNotEmpty) {
+        var gameParamParentEntry = BnkSubCategoryParentHierarchyEntry("Game Parameters", isCollapsed: true);
+        bnkEntry.add(gameParamParentEntry);
+        for (var gameParam in usedGameParameters.keys) {
+          var gameParamEntry = BnkHircHierarchyEntry(StringProp(gameParam), "", randomId(), "Game Parameter");
+          gameParamParentEntry.add(gameParamEntry);
+        }
+      }
+      var hierarchyParentEntry = BnkSubCategoryParentHierarchyEntry("Hierarchy");
+      bnkEntry.add(hierarchyParentEntry);
       for (var entry in hircEntries.entries) {
         var hasParent = entry.value.parentIds.isNotEmpty;
         if (hasParent) {

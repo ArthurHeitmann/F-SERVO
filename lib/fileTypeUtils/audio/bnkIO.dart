@@ -2233,7 +2233,9 @@ class BnkPropActionParams implements ActionSpecificParams {
   }
 }
 
-const _gameParamActionTypes = { 0x1300, 0x1400 };
+const setGameParamType = 0x1300;
+const resetGameParamType = 0x1400;
+const gameParamActionTypes = { setGameParamType, resetGameParamType };
 const _propActionActionTypes = { 0x0800, 0x0900, 0x0A00, 0x0B00, 0x0C00, 0x0D00, 0x0E00, 0x0F00, 0x2000, 0x3000 };
 class BnkValueActionParams implements ActionSpecificParams {
   final int actionType;
@@ -2245,7 +2247,7 @@ class BnkValueActionParams implements ActionSpecificParams {
 
   BnkValueActionParams.read(ByteDataWrapper bytes, this.actionType) {
     byBitVector = bytes.readUint8();
-    if (_gameParamActionTypes.contains(actionType)) {
+    if (gameParamActionTypes.contains(actionType)) {
       specificParams = BnkGameParameterParams.read(bytes);
     } else if (_propActionActionTypes.contains(actionType)) {
       specificParams = BnkPropActionParams.read(bytes);
