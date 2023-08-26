@@ -545,8 +545,28 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
           if (specificParams is BnkStateActionParams)
             props.addAll([
               (false, ["State Group", "Target State"]),
-              (true, [wemIdsToNames[specificParams.ulStateGroupID] ?? specificParams.ulStateGroupID.toString(), wemIdsToNames[specificParams.ulStateGroupID] ?? specificParams.ulTargetStateID.toString()]),
+              (true, [wemIdsToNames[specificParams.ulStateGroupID] ?? specificParams.ulStateGroupID.toString(), wemIdsToNames[specificParams.ulTargetStateID] ?? specificParams.ulTargetStateID.toString()]),
             ]);
+          if (specificParams is BnkValueActionParams) {
+            double? base, min, max;
+            var valueParams = specificParams.specificParams;
+            if (valueParams is BnkGameParameterParams) {
+              base = valueParams.base;
+              min = valueParams.min;
+              max = valueParams.max;
+            }
+            else if (valueParams is BnkPropActionParams) {
+              base = valueParams.base;
+              min = valueParams.min;
+              max = valueParams.max;
+            }
+            if (base != null && min != null && max != null) {
+              props.addAll([
+                (false, ["Value", "Min", "Max"]),
+                (true, ["$base", "$min", "$max"]),
+              ]);
+            }
+          }
         }
         else if (hirc is BnkEvent)
           childIds = hirc.ids;

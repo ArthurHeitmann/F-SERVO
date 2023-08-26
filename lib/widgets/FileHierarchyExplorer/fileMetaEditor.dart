@@ -279,7 +279,9 @@ class _FileMetaEditorState extends ChangeNotifierState<FileMetaEditor> {
                 Expanded(
                   child: Row(
                     children: [
-                      Text(prop, style: getTheme(context).propInputTextStyle,),
+                      Flexible(
+                        child: Text(prop, style: getTheme(context).propInputTextStyle, overflow: TextOverflow.ellipsis,)
+                      ),
                       if (propRow.$1)
                         OnHoverBuilder(
                           builder: (context, isHovering) => AnimatedOpacity(
