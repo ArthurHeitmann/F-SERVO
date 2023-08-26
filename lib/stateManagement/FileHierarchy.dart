@@ -639,11 +639,15 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
           continue;
         var groupParentEntry = BnkSubCategoryParentHierarchyEntry(groupName, isCollapsed: true);
         bnkEntry.add(groupParentEntry);
-        for (var group in groupMap.entries) {
+        var groupEntries = groupMap.entries.toList();
+        groupEntries.sort((a, b) => a.key.toLowerCase().compareTo(b.key.toLowerCase()));
+        for (var group in groupEntries) {
           var groupEntry = BnkHircHierarchyEntry(StringProp(group.key), "", randomId(), groupName);
           groupParentEntry.add(groupEntry);
-          for (var entryName in group.value) {
-            var entry = BnkHircHierarchyEntry(StringProp(entryName), "", randomId(), "Entry");
+          var groupValues = group.value.toList();
+          groupValues.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+          for (var entryName in groupValues) {
+            var entry = BnkHircHierarchyEntry(StringProp(entryName), "", randomId(), "Group Entry");
             groupEntry.add(entry);
           }
         }
@@ -651,7 +655,9 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
       if (usedGameParameters.isNotEmpty) {
         var gameParamParentEntry = BnkSubCategoryParentHierarchyEntry("Game Parameters", isCollapsed: true);
         bnkEntry.add(gameParamParentEntry);
-        for (var gameParam in usedGameParameters.keys) {
+        var gameParameters = usedGameParameters.keys.toList();
+        gameParameters.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+        for (var gameParam in gameParameters) {
           var gameParamEntry = BnkHircHierarchyEntry(StringProp(gameParam), "", randomId(), "Game Parameter");
           gameParamParentEntry.add(gameParamEntry);
         }

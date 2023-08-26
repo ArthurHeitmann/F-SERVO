@@ -1147,7 +1147,7 @@ class BnkSubCategoryParentHierarchyEntry extends HierarchyEntry {
 }
 
 class BnkHircHierarchyEntry extends GenericFileHierarchyEntry {
-  static const nonCollapsibleTypes = { "WEM" };
+  static const nonCollapsibleTypes = { "WEM", "Group Entry", "Game Parameter" };
   static const openableTypes = { "MusicPlaylist", "WEM" };
   final int id;
   final String type;
