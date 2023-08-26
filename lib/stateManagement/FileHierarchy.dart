@@ -531,7 +531,7 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
                 (false, ["Tempo", "Time Signature", "Grid Period", "Grid Offset"]),
                 (true, [
                     "${meterInfo.fTempo}",
-                    "${meterInfo.uBeatValue} / ${meterInfo.uNumBeatsPerBar}",
+                    "${meterInfo.uNumBeatsPerBar} / ${meterInfo.uBeatValue}",
                     "${meterInfo.fGridPeriod}",
                     "${meterInfo.fGridOffset}"
                 ]),
