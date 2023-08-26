@@ -272,34 +272,43 @@ class _FileMetaEditorState extends ChangeNotifierState<FileMetaEditor> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ...makeActionsBar(hircObject),
-          for (var propRow in props)
-            Row(
-              children: [
-                for (var prop in propRow.$2)
-                Expanded(
-                  child: Row(
-                    children: [
-                      Flexible(
-                        child: Text(prop, style: getTheme(context).propInputTextStyle, overflow: TextOverflow.ellipsis,)
-                      ),
-                      if (propRow.$1)
-                        OnHoverBuilder(
-                          builder: (context, isHovering) => AnimatedOpacity(
-                            duration: const Duration(milliseconds: 250),
-                            opacity: isHovering ? 0.66 : 0.33,
-                            child: IconButton(
-                              splashRadius: 18,
-                              icon: const Icon(Icons.copy, size: 16,),
-                              onPressed: () => copyToClipboard(prop),
-                              padding: EdgeInsets.zero,
-                            ),
+          for (var propRow in props) ...[
+            if (!propRow.$1 && props.first != propRow)
+              Padding(
+                padding: const EdgeInsets.only(top: 6, bottom: 6),
+                child: Divider(height: 1, color: getTheme(context).dividerColor),
+              ),
+            SizedBox(
+              height: 30,
+              child: Row(
+                children: [
+                  for (var prop in propRow.$2)
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Flexible(
+                            child: Text(prop, style: getTheme(context).propInputTextStyle, overflow: TextOverflow.ellipsis,)
                           ),
-                        )
-                    ],
-                  ),
-                ),
-              ]
+                          if (propRow.$1)
+                            OnHoverBuilder(
+                              builder: (context, isHovering) => AnimatedOpacity(
+                                duration: const Duration(milliseconds: 250),
+                                opacity: isHovering ? 0.66 : 0.33,
+                                child: IconButton(
+                                  splashRadius: 18,
+                                  icon: const Icon(Icons.copy, size: 16,),
+                                  onPressed: () => copyToClipboard(prop),
+                                  padding: EdgeInsets.zero,
+                                ),
+                              ),
+                            )
+                        ],
+                      ),
+                    ),
+                ]
+              ),
             ),
+          ],
         ],
       ),
     );
