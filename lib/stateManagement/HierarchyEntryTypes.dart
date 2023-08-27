@@ -1156,7 +1156,9 @@ class BnkHircHierarchyEntry extends GenericFileHierarchyEntry {
   List<(bool, List<String>)>? properties;
 
   BnkHircHierarchyEntry(StringProp name, String path, this.id, this.type, [this.parentIds = const [], this.childIds = const [], this.properties])
-    : super(name, path, !nonCollapsibleTypes.contains(type), openableTypes.contains(type));
+    : super(name, path, !nonCollapsibleTypes.contains(type), openableTypes.contains(type)){
+    _isCollapsed = true;
+  }
 
   @override
   HierarchyEntry clone() {
@@ -1181,16 +1183,8 @@ class BnkHircHierarchyEntry extends GenericFileHierarchyEntry {
     const msPropNames = { "delaytime", "transitiontime" };
     List<(bool, List<String>)> props = [];
     if (propValues.cProps > 0) {
-      // var ids = propValues.pID
-      //     .map((id) => BnkPropIds[id] ?? wemIdsToNames[id] ?? id.toString())
-      //     .toList();
-      // var values = propValues.values
-      //     .map((value) => wemIdsToNames[value] ?? value.toString())
-      //     .toList();
       props.addAll([
         (false, ["Prop ID", "Prop Value"]),
-        // for (var i = 0; i < ids.length; i++)
-          // (true, [ids.elementAt(i), values.elementAt(i)]),
         for (var i = 0; i < propValues.cProps; i++)
           (true, [
             BnkPropIds[propValues.pID[i]] ?? wemIdsToNames[propValues.pID[i]] ?? propValues.pID[i].toString(),

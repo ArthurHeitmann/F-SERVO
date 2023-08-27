@@ -1,5 +1,7 @@
 import 'dart:collection';
 
+import 'wwiseIdsToNames.dart';
+
 Map<int, String> wemIdsToNames = HashMap.from({
   248894: "R04h4000_141010",
   258743: "Ccom4000_4z1010",
@@ -22812,4 +22814,5 @@ Map<int, String> wemIdsToNames = HashMap.from({
   4294022267: "R03he000_1d1010",
   4294604199: "bgm_pstart_P430_P430_RUN_INIT",
   4294624122: "C0105000_1f1010",
-});
+})
+  ..addAll(wwiseIdsToNames);

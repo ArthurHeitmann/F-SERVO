@@ -489,29 +489,24 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
             await addWemChild(srcId);
           }
           if (hircChunk is BnkMusicSwitch) {
-            var groupName = wemIdsToNames[hircChunk.ulGroupID] ?? hircChunk.ulGroupID.toString();
-            var defaultValue = wemIdsToNames[hircChunk.ulDefaultSwitch] ?? hircChunk.ulDefaultSwitch.toString();
-            addGroupUsage(usedSwitchGroups, groupName, defaultValue);
-            props.addAll([
-              (false, ["Switch Group", "Default Switch"]),
-              (true, [groupName, defaultValue]),
-            ]);
-            for (var switchAssoc in hircChunk.pAssocs) {
-              var switchAssocName = wemIdsToNames[switchAssoc.switchID] ?? switchAssoc.switchID.toString();
-              addGroupUsage(usedSwitchGroups, groupName, switchAssocName);
-              var switchId = randomId();
-              var childNodeId = switchAssoc.nodeID;
-              var switchAssocEntry = BnkHircHierarchyEntry(StringProp(switchAssocName), "", switchId, "SwitchAssoc", [hirc.uid], [childNodeId]);
-              hircEntries[switchId] = switchAssocEntry;
-              var nodeChild = hircEntries[childNodeId];
-              if (nodeChild != null) {
-                nodeChild.parentIds.add(switchId);
+            var groups = hircChunk.arguments
+              .map((a) => wemIdsToNames[a.ulGroup] ?? a.ulGroup.toString())
+              .toList();
+            void parseSwitchNode(int parentId, BnkTreeNode node, int depth) {
+              if (node.key == 0 && node.audioNodeId == null) {
+                for (var child in node.children)
+                  parseSwitchNode(parentId, child, depth + 1);
+                return;
               }
-              else {
-                var nodeEntry = BnkHircHierarchyEntry(StringProp("Node_$switchAssocName"), "", childNodeId, "Node", [switchId]);
-                hircEntries[childNodeId] = nodeEntry;
-              }
+              var nodeId = randomId();
+              var nodeName = "${groups[depth]}=${wemIdsToNames[node.key] ?? node.key.toString()}";
+              var nodeEntry = BnkHircHierarchyEntry(StringProp(nodeName), "", nodeId, "SwitchNode", [parentId], node.audioNodeId != null ? [node.audioNodeId!] : []);
+              hircEntries[nodeId] = nodeEntry;
+              for (var child in node.children)
+                parseSwitchNode(nodeId, child, depth + 1);
             }
+            for (var node in hircChunk.decisionTree[0].children)
+              parseSwitchNode(hirc.uid, node, 0);
           }
           BnkAkMeterInfo? meterInfo;
           if (hircChunk is BnkMusicSegment)
