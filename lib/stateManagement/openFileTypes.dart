@@ -1274,6 +1274,8 @@ class BnkTrackData with HasUuid, Undoable {
   }
   
   Future<void> updateDuration() async {
+    if (srcTrack.sources.isEmpty)
+      return;
     if (!srcTrack.sources.every((s) => s.sourceID == srcTrack.sources.first.sourceID))
       throw Exception("Can't update duration of a track with multiple sources");
     var srcId = srcTrack.sources.first.sourceID;
