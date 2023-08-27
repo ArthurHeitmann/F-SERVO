@@ -411,10 +411,14 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
       e.item1,
       OptionalWemData(bnkPath, WemSource.bnk)
     )));
+    if (wemFiles.length > 8)
+      wemParentEntry.isCollapsed = true;
 
     var hircChunk = bnk.chunks.whereType<BnkHircChunk>().firstOrNull;
     if (hircChunk != null) {
       Map<int, BnkHircHierarchyEntry> hircEntries = {};
+      Map<int, BnkHircHierarchyEntry> actionEntries = {};
+      List<BnkHircHierarchyEntry> eventEntries = [];
       Map<String, Set<String>> usedSwitchGroups = {};
       Map<String, Set<String>> usedStateGroups = {};
       Map<String, Set<String>> usedGameParameters = {};
@@ -612,7 +616,33 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
         var entryName = "${hirc.uid}_$chunkType$uidNameStr";
         var entry = BnkHircHierarchyEntry(StringProp(entryName), path, hirc.uid, chunkType, parentId, childIds, props);
 
-        hircEntries[hirc.uid] = entry;
+        if (hirc is BnkEvent) {
+          List<BnkHircHierarchyEntry> childActions = [];
+          for (var childId in childIds) {
+            var child = actionEntries[childId];
+            if (child == null) {
+              var childName = wemIdsToNames[childId] ?? "Action_$childId";
+              child = BnkHircHierarchyEntry(StringProp(childName), "", childId, "Action", [hirc.uid]);
+              actionEntries[childId] = child;
+            }
+            child.parentIds.add(hirc.uid);
+            childActions.add(child);
+          }
+          childActions.sort((a, b) => a.name.value.toLowerCase().compareTo(b.name.value.toLowerCase()));
+          for (var actionEntry in childActions)
+            entry.add(actionEntry);
+          eventEntries.add(entry);
+        }
+        else if (hirc is BnkAction) {
+          actionEntries[hirc.uid] = entry;
+          var actionChild = hircEntries[hirc.initialParams.idExt];
+          if (actionChild != null) {
+            entry.add(actionChild);
+          }
+        }
+        else {
+          hircEntries[hirc.uid] = entry;
+        }
       }
 
       for (var entry in hircEntries.entries) {
@@ -662,8 +692,9 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
           gameParamParentEntry.add(gameParamEntry);
         }
       }
-      var hierarchyParentEntry = BnkSubCategoryParentHierarchyEntry("Hierarchy");
-      bnkEntry.add(hierarchyParentEntry);
+      var objectHierarchyParentEntry = BnkSubCategoryParentHierarchyEntry("Object Hierarchy");
+      bnkEntry.add(objectHierarchyParentEntry);
+      int directChildren = 0;
       for (var entry in hircEntries.entries) {
         var hasParent = entry.value.parentIds.isNotEmpty;
         if (hasParent) {
@@ -671,14 +702,28 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
             var parent = hircEntries[parentId];
             if (parent == null) {
               entry.value.parentIds.remove(parentId);
-            } else {
+            } else if (!parent.contains(entry.value)) {
               parent.add(entry.value);
+            } else {
+              print("Duplicate parent-child relationship: ${parent.name.value} -> ${entry.value.name.value}");
             }
           }
         }
-        else
-          hierarchyParentEntry.add(entry.value);
+        else {
+          objectHierarchyParentEntry.add(entry.value);
+          directChildren++;
+        }
       }
+      if (directChildren > 50)
+        objectHierarchyParentEntry.isCollapsed = true;
+      
+      var eventHierarchyParentEntry = BnkSubCategoryParentHierarchyEntry("Event Hierarchy");
+      bnkEntry.add(eventHierarchyParentEntry);
+      eventEntries.sort((a, b) => a.name.value.toLowerCase().compareTo(b.name.value.toLowerCase()));
+      for (var entry in eventEntries)
+        eventHierarchyParentEntry.add(entry);
+      if (eventEntries.length > 50)
+        eventHierarchyParentEntry.isCollapsed = true;
     }
 
     if (parent != null)
