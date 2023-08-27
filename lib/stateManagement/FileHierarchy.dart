@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:path/path.dart' as path;
 import 'package:path/path.dart';
@@ -389,7 +390,7 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
       return existing;
     
     // extract BNK WEMs
-    var bnk = BnkFile.read(await ByteDataWrapper.fromFile(bnkPath));
+    var bnk = BnkFile.read(await ByteDataWrapper.fromFile(bnkPath, endian: Endian.big));
     var bnkExtractDirName = "${basename(bnkPath)}_extracted";
     var bnkExtractDir = join(dirname(bnkPath), bnkExtractDirName);
     if (!await Directory(bnkExtractDir).exists())
@@ -714,16 +715,20 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
           directChildren++;
         }
       }
-      if (directChildren > 50)
+      if (directChildren > 8)
         objectHierarchyParentEntry.isCollapsed = true;
+      for (var entry in objectHierarchyParentEntry)
+        entry.isCollapsed = true;
       
       var eventHierarchyParentEntry = BnkSubCategoryParentHierarchyEntry("Event Hierarchy");
       bnkEntry.add(eventHierarchyParentEntry);
       eventEntries.sort((a, b) => a.name.value.toLowerCase().compareTo(b.name.value.toLowerCase()));
       for (var entry in eventEntries)
         eventHierarchyParentEntry.add(entry);
-      if (eventEntries.length > 50)
+      if (eventEntries.length > 8)
         eventHierarchyParentEntry.isCollapsed = true;
+      for (var entry in eventHierarchyParentEntry)
+        entry.isCollapsed = true;
     }
 
     if (parent != null)

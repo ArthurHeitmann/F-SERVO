@@ -40,12 +40,12 @@ class ByteDataWrapper {
     _data = buffer.asByteData(0, buffer.lengthInBytes);
   }
 
-  static Future<ByteDataWrapper> fromFile(String path) async {
+  static Future<ByteDataWrapper> fromFile(String path, { Endian endian = Endian.little }) async {
     const twoGB = 2 * 1024 * 1024 * 1024;
     var fileSize = await File(path).length();
     if (fileSize < twoGB) {
       var buffer = await File(path).readAsBytes();
-      return ByteDataWrapper(buffer.buffer);
+      return ByteDataWrapper(buffer.buffer, endian: endian);
     } else {
       print("File is over 2GB, loading in chunks");
       messageLog.add("Loading large file into memory...");
@@ -62,7 +62,7 @@ class ByteDataWrapper {
       }
       print("Read $position bytes");
       messageLog.add("Loaded file into memory");
-      return ByteDataWrapper(buffer);
+      return ByteDataWrapper(buffer, endian: endian);
     }
   }
 

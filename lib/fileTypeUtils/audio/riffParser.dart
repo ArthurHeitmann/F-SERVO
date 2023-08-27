@@ -1,5 +1,6 @@
 
 import 'dart:math';
+import 'dart:typed_data';
 
 import '../../utils/utils.dart';
 import '../utils/ByteDataWrapper.dart';
@@ -493,8 +494,8 @@ class RiffFile {
       chunks[i].write(bytes);
   }
 
-  static Future<RiffFile> fromFile(String path) async {
-    var bytes = await ByteDataWrapper.fromFile(path);
+  static Future<RiffFile> fromFile(String path, { Endian endian = Endian.little }) async {
+    var bytes = await ByteDataWrapper.fromFile(path, endian: endian);
     return RiffFile.fromBytes(bytes);
   }
 

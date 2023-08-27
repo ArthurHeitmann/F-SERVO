@@ -1,6 +1,7 @@
 
 import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
@@ -638,7 +639,7 @@ class WemFileData extends OpenFileData with AudioFileData {
     }
 
     // set usesSeekTable and usesLoudnessNormalization from WEM RIFF format
-    var wemRiff = await RiffFile.fromFile(path);
+    var wemRiff = await RiffFile.fromFile(path, endian: Endian.big);
     usesLoudnessNormalization.value = wemRiff.chunks.any((chunk) => chunk.chunkId == "akd ");
     if (wemRiff.format is WemFormatChunk)
       usesSeekTable = (wemRiff.format as WemFormatChunk).setupPacketOffset != 0;
@@ -798,7 +799,7 @@ class WspFileData extends OpenFileData {
 }
 
 Future<Map<int, Set<int>>> _getWemIdsToBnkPlaylists(String bnkPath) async {
-  var bnk = BnkFile.read(await ByteDataWrapper.fromFile(bnkPath));
+  var bnk = BnkFile.read(await ByteDataWrapper.fromFile(bnkPath, endian: Endian.big));
   var hirc = bnk.chunks.whereType<BnkHircChunk>().first;
   var hircData = hirc.chunks.whereType<BnkHircChunkBase>().toList();
   Map<int, BnkHircChunkBase> hircMap = {
@@ -1562,7 +1563,7 @@ class BnkFilePlaylistData extends OpenFileData {
       return;
     _loadingState = LoadingState.loading;
 
-    var bytes = await ByteDataWrapper.fromFile(path.split("#").first);
+    var bytes = await ByteDataWrapper.fromFile(path.split("#").first, endian: Endian.big);
     var bnk = BnkFile.read(bytes);
     var hircChunk = bnk.chunks.whereType<BnkHircChunk>().first;
     Map<int, BnkHircChunkBase> hircMap = {

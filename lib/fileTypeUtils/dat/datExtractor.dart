@@ -1,6 +1,7 @@
 
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:path/path.dart' as path;
 
 import '../../stateManagement/events/statusInfo.dart';
@@ -42,7 +43,7 @@ Future<List<String>> extractDatFiles(String datPath, { bool shouldExtractPakFile
   print("Extracting dat files from $datPath");
   messageLog.add("Extracting ${path.basename(datPath)}...");
 
-  var bytes = await ByteDataWrapper.fromFile(datPath);
+  var bytes = await ByteDataWrapper.fromFile(datPath, endian: Endian.big);
   var header = _DatHeader(bytes);
   bytes.position = header.fileOffsetsOffset;
   var fileOffsets = bytes.readUint32List(header.fileNumber);
