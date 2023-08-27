@@ -714,16 +714,20 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
           directChildren++;
         }
       }
-      if (directChildren > 50)
+      if (directChildren > 8)
         objectHierarchyParentEntry.isCollapsed = true;
+      for (var entry in objectHierarchyParentEntry)
+        entry.isCollapsed = true;
       
       var eventHierarchyParentEntry = BnkSubCategoryParentHierarchyEntry("Event Hierarchy");
       bnkEntry.add(eventHierarchyParentEntry);
       eventEntries.sort((a, b) => a.name.value.toLowerCase().compareTo(b.name.value.toLowerCase()));
       for (var entry in eventEntries)
         eventHierarchyParentEntry.add(entry);
-      if (eventEntries.length > 50)
+      if (eventEntries.length > 8)
         eventHierarchyParentEntry.isCollapsed = true;
+      for (var entry in eventHierarchyParentEntry)
+        entry.isCollapsed = true;
     }
 
     if (parent != null)
