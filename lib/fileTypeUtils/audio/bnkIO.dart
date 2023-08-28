@@ -1,6 +1,8 @@
 
 // ignore_for_file: constant_identifier_names
 
+import 'dart:typed_data';
+
 import '../../randomScripts/wemIdToEvent.dart';
 import '../utils/ByteDataWrapper.dart';
 
@@ -101,7 +103,12 @@ class BnkHeader extends BnkChunkBase {
   BnkHeader(super.chunkId, super.chunkSize, this.version, this.bnkId, this.languageId, this.isFeedbackInBnk, this.padding, [this.unknown]);
 
   BnkHeader.read(ByteDataWrapper bytes) : super.read(bytes) {
-    if (chunkSize < 20) {
+    if (chunkSize > 30) {
+      bytes.endian = Endian.big;
+      bytes.position -= 4;
+      chunkSize = bytes.readUint32();
+    }
+    if (chunkSize < 16) {
       print("Warning: BnkHeader chunk size is less than 20 ($chunkSize)");
       unknown = bytes.readUint8List(chunkSize);
       return;

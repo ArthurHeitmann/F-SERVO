@@ -1,5 +1,6 @@
 
 import 'dart:math';
+import 'dart:typed_data';
 
 import '../../utils/utils.dart';
 import '../utils/ByteDataWrapper.dart';
@@ -26,6 +27,15 @@ class RiffHeader extends RiffChunk {
   RiffHeader(super.chunkId, super.size, this.riffType);
 
   RiffHeader.read(ByteDataWrapper bytes) : super.read(bytes) {
+    bytes.position -= 4;
+    bytes.endian = Endian.big;
+    var sizeBE = bytes.readUint32();
+    if (size < sizeBE) {
+      bytes.endian = Endian.little;
+    }
+    else {
+      size = sizeBE;
+    }
     riffType = bytes.readString(4);
   }
 
