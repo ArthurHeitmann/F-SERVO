@@ -22812,4 +22812,12 @@ Map<int, String> wemIdsToNames = HashMap.from({
   4294022267: "R03he000_1d1010",
   4294604199: "bgm_pstart_P430_P430_RUN_INIT",
   4294624122: "C0105000_1f1010",
+  537504372: "Stage_Prologue_Low",
+  183830189: "Sub_Boss_Ray_Chorus",
+  99851259: "Sub_Boss_Ray_Fill",
+  131848346: "Sub_Boss_Ray_QTE1_Vo",
+  250588323: "Sub_Boss_Ray_QTE1",
+  167325256: "Sub_Boss_Ray_Intro",
+  750357986: "Sub_Boss_Ray_Outro",
+  27327331: "Sub_Boss_Ray_Bridge ",
 });
