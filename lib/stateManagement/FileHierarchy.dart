@@ -484,12 +484,12 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
           }
           if (hircChunk is BnkMusicTrack) {
             for (var src in hircChunk.sources) {
-              var srcId = src.sourceID;
+              var srcId = src.fileID;
               await addWemChild(srcId);
             }
           }
           if (hircChunk is BnkSound) {
-            var srcId = hircChunk.bankData.mediaInformation.sourceID;
+            var srcId = hircChunk.bankData.mediaInformation.uFileID;
             await addWemChild(srcId);
           }
           if (hircChunk is BnkMusicSwitch) {
