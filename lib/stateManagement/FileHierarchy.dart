@@ -493,6 +493,8 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
             await addWemChild(srcId);
           }
           if (hircChunk is BnkMusicSwitch) {
+            if (wemIdsToNames.containsKey(hircChunk.ulGroupID))
+              uidNameStr = "_${wemIdsToNames[hircChunk.ulGroupID]}";
             var groupName = wemIdsToNames[hircChunk.ulGroupID] ?? hircChunk.ulGroupID.toString();
             var defaultValue = wemIdsToNames[hircChunk.ulDefaultSwitch] ?? hircChunk.ulDefaultSwitch.toString();
             addGroupUsage(usedSwitchGroups, groupName, defaultValue);
