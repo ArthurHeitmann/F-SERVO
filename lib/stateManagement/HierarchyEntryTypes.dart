@@ -751,7 +751,9 @@ class RubyScriptHierarchyEntry extends GenericFileHierarchyEntry {
         icon: Icons.file_upload,
         action: () async {
           var success = await rubyFileToBin(path);
-          if (!success)
+          if (success)
+            showToast("Success!");
+          else
             return;
           var datPath = dirname(path);
           if (!strEndsWithDat(datPath))

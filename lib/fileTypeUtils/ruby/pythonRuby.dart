@@ -20,9 +20,7 @@ Future<bool> _processFile(String filePath) async {
   var pyToolPath = join(assetsDir!, "MrubyDecompiler", "__init__.py");
   var result = await Process.run(pythonCmd!, [pyToolPath, filePath]);
   var isSuccessful = result.exitCode == 0 && result.stderr.isEmpty;
-  if (isSuccessful)
-    showToast("Success");
-  else {
+  if (!isSuccessful) {
     for (String line in result.stderr.split("\n"))
       messageLog.add(line.replaceAll("\r", "").trim());
     showToast("Failed to process ${basename(filePath)}");
