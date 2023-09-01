@@ -149,17 +149,17 @@ abstract class HierarchyEntry extends ListNotifier<HierarchyEntry> with Undoable
       child.computeIsVisibleWithSearchFilter();
     }
   }
-  void propagateVisibility() {
+  void propagateVisibility(Map<HierarchyEntry, HierarchyEntry?> parentMap) {
     if (!isVisibleWithSearch.value) {
       for (var child in this)
-        child.propagateVisibility();
+        child.propagateVisibility(parentMap);
       return;
     }
     
-    var parent = openHierarchyManager.parentOf(this);
-    while (parent is HierarchyEntry) {
+    var parent = parentMap[this];
+    while (parent != null) {
       parent.isVisibleWithSearch.value = true;
-      parent = openHierarchyManager.parentOf(parent);
+      parent = parentMap[parent];
     }
     setIsVisibleWithSearchRecursive(true);
   }

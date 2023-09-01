@@ -621,6 +621,21 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
     notifyListeners();
   }
 
+  Map<HierarchyEntry, HierarchyEntry?> generateTmpParentMap() {
+    Map<HierarchyEntry, HierarchyEntry?> parentMap = {};
+    void generateTmpParentMapRec(HierarchyEntry entry) {
+      for (var child in entry) {
+        parentMap[child] = entry;
+        generateTmpParentMapRec(child);
+      }
+    }
+    for (var entry in this) {
+      parentMap[entry] = null;
+      generateTmpParentMapRec(entry);
+    }
+    return parentMap;
+  }
+
   @override
   Undoable takeSnapshot() {
     var snapshot = OpenHierarchyManager();
@@ -647,7 +662,7 @@ final StringProp openHierarchySearch = StringProp("")
     for (var entry in openHierarchyManager) {
       entry.setIsVisibleWithSearchRecursive(false);
       entry.computeIsVisibleWithSearchFilter();
-      entry.propagateVisibility();
+      entry.propagateVisibility(openHierarchyManager.generateTmpParentMap());
     }
     openHierarchyManager.treeViewIsDirty.value = true;
   });
