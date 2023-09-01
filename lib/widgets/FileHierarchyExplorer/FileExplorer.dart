@@ -8,11 +8,10 @@ import '../../utils/utils.dart';
 import '../../widgets/theme/customTheme.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/FileHierarchy.dart';
-import '../misc/SmoothScrollBuilder.dart';
 import '../propEditors/simpleProps/UnderlinePropTextField.dart';
 import '../propEditors/simpleProps/propEditorFactory.dart';
 import '../propEditors/simpleProps/propTextField.dart';
-import 'HierarchyEntryWidget.dart';
+import 'HierarchyFlatList.dart';
 
 class FileExplorer extends ChangeNotifierWidget {
   FileExplorer({super.key}) : super(notifiers: [openHierarchyManager, openHierarchySearch]);
@@ -74,16 +73,7 @@ class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
           Expanded(
             child: Stack(
               children: [
-                SmoothSingleChildScrollView(
-                  controller: scrollController,
-                  stepSize: 60,
-                  child: Column(
-                    children: openHierarchyManager
-                      .where((element) => element.isVisibleWithSearch)
-                      .map((element) => HierarchyEntryWidget(element))
-                      .toList(),
-                  ),
-                ),
+                HierarchyFlatList(),
                 if (openHierarchyManager.isEmpty)
                   const Center(
                     child: Text("No files open"),

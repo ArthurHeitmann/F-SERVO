@@ -39,6 +39,8 @@ class UndoHistoryManager with ChangeNotifier {
   int _undoIndex = 0;
   bool _isPushing = false;
   bool _isRestoring = false;
+  bool get isPushing => _isPushing;
+  bool get isRestoring => _isRestoring;
   late final void Function() _pushSnapshotThrottled;
 
   UndoHistoryManager() {

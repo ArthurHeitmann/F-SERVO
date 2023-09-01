@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as path;
 import 'package:path/path.dart';
 import 'package:tuple/tuple.dart';
@@ -37,6 +38,7 @@ import 'xmlProps/xmlProp.dart';
 
 class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
   HierarchyEntry? _selectedEntry;
+  ValueNotifier<bool> treeViewIsDirty = ValueNotifier(false);
 
   OpenHierarchyManager() : super([]);
 
@@ -211,7 +213,7 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
     if (rubyScriptGroup != null) {
       rubyScriptGroup.name.value += " (${rubyScriptGroup.length})";
       if (rubyScriptGroup.length > 8)
-        rubyScriptGroup.isCollapsed = true;
+        rubyScriptGroup.isCollapsed.value = true;
     }
 
     return datEntry;
@@ -484,9 +486,22 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
   }
 
   @override
+  void add(HierarchyEntry child) {
+    super.add(child);
+    treeViewIsDirty.value = true;
+  }
+
+  @override
+  void addAll(Iterable<HierarchyEntry> children) {
+    super.addAll(children);
+    treeViewIsDirty.value = true;
+  }
+
+  @override
   void remove(HierarchyEntry child) {
     _removeRec(child);
     super.remove(child);
+    treeViewIsDirty.value = true;
   }
 
   @override
@@ -495,6 +510,7 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
     for (var child in this)
       _removeRec(child);
     super.clear();
+    treeViewIsDirty.value = true;
   }
 
   void removeAny(HierarchyEntry child) {
@@ -598,10 +614,10 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
   set selectedEntry(HierarchyEntry? value) {
     if (value == _selectedEntry)
       return;
-    _selectedEntry?.isSelected = false;
+    _selectedEntry?.isSelected.value = false;
     assert(value == null || value.isSelectable);
     _selectedEntry = value;
-    _selectedEntry?.isSelected = true;
+    _selectedEntry?.isSelected.value = true;
     notifyListeners();
   }
 
@@ -633,4 +649,5 @@ final StringProp openHierarchySearch = StringProp("")
       entry.computeIsVisibleWithSearchFilter();
       entry.propagateVisibility();
     }
+    openHierarchyManager.treeViewIsDirty.value = true;
   });

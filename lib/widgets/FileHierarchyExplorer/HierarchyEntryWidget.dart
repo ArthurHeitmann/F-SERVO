@@ -45,7 +45,7 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
   }
 
   Color getTextColor(BuildContext context) {
-    return widget.entry.isSelected
+    return widget.entry.isSelected.value
       ? getTheme(context).hierarchyEntrySelectedTextColor!
       : getTheme(context).textColor!;
   }
@@ -53,64 +53,55 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
   @override
   Widget build(BuildContext context) {
     Icon? icon = getEntryIcon(context);
-    return Column(
-      children: [
-        setupContextMenu(
-          child: optionallySetupSelectable(context,
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 3),
-              height: 25,
-              child: Row(
-                children: [
-                  SizedBox(width: 15.0 * widget.depth,),
-                  if (widget.entry.isCollapsible)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 4, left: 2),
-                      child: IconButton(
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(
-                          maxWidth: 14
-                        ),
-                        splashRadius: 14,
-                        onPressed: toggleCollapsed,
-                        icon: Icon(
-                          widget.entry.isCollapsed ? Icons.chevron_right : Icons.expand_more,
-                          size: 17,
-                          color: getTextColor(context)
-                        ),
-                      ),
-                    )
-                  else if (widget.depth == 0)
-                    const SizedBox(width: 4),
-                  if (icon != null)
-                    icon,
-                  const SizedBox(width: 5),
-                  Expanded(
-                    child: ValueListenableBuilder(
-                      valueListenable: widget.entry.name,
-                      builder: (context, name, child) =>  Text(
-                        widget.entry.name.toString(),
-                        overflow: TextOverflow.ellipsis,
-                        textScaleFactor: 0.85,
-                        style: TextStyle(
-                          color: getTextColor(context)
-                        ),
-                      ),
-                    )
+    return setupContextMenu(
+      child: optionallySetupSelectable(context,
+        Container(
+          padding: const EdgeInsets.symmetric(vertical: 3),
+          height: 25,
+          child: Row(
+            children: [
+              SizedBox(width: 15.0 * widget.depth,),
+              if (widget.entry.isCollapsible)
+                Padding(
+                  padding: const EdgeInsets.only(right: 4, left: 2),
+                  child: IconButton(
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(
+                      maxWidth: 14
+                    ),
+                    splashRadius: 14,
+                    onPressed: toggleCollapsed,
+                    icon: Icon(
+                      widget.entry.isCollapsed.value ? Icons.chevron_right : Icons.expand_more,
+                      size: 17,
+                      color: getTextColor(context)
+                    ),
                   ),
-                  if (widget.entry is WemHierarchyEntry)
-                    WemPreviewButton(wemPath: (widget.entry as WemHierarchyEntry).path),
-                ]
+                )
+              else if (widget.depth == 0)
+                const SizedBox(width: 4),
+              if (icon != null)
+                icon,
+              const SizedBox(width: 5),
+              Expanded(
+                child: ValueListenableBuilder(
+                  valueListenable: widget.entry.name,
+                  builder: (context, name, child) =>  Text(
+                    widget.entry.name.toString(),
+                    overflow: TextOverflow.ellipsis,
+                    textScaleFactor: 0.85,
+                    style: TextStyle(
+                      color: getTextColor(context)
+                    ),
+                  ),
+                )
               ),
-            ),
+              if (widget.entry is WemHierarchyEntry)
+                WemPreviewButton(wemPath: (widget.entry as WemHierarchyEntry).path),
+            ]
           ),
         ),
-        if (widget.entry.isCollapsible && !widget.entry.isCollapsed)
-          ...widget.entry
-            .where((element) => element.isVisibleWithSearch)
-            .map((e) => HierarchyEntryWidget(e, depth: widget.depth + 1))
-            .toList()
-      ]
+      ),
 	  );
   }
 
@@ -134,7 +125,7 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
     if (!widget.entry.isSelectable && !widget.entry.isCollapsible)
       return child;
     
-    var bgColor = widget.entry.isSelected ? getTheme(context).hierarchyEntrySelected! : Colors.transparent;
+    var bgColor = widget.entry.isSelected.value ? getTheme(context).hierarchyEntrySelected! : Colors.transparent;
 
     return Material(
       color: bgColor,
@@ -167,6 +158,6 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
   }
 
   void toggleCollapsed() {
-    widget.entry.isCollapsed = !widget.entry.isCollapsed;
+    widget.entry.isCollapsed.value = !widget.entry.isCollapsed.value;
   }
 }

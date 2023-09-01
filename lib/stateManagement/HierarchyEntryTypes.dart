@@ -50,15 +50,18 @@ abstract class HierarchyEntry extends ListNotifier<HierarchyEntry> with Undoable
   OptionalFileInfo? optionalFileInfo;
   StringProp name;
   final bool isSelectable;
-  bool _isSelected = false;
-  bool get isSelected => _isSelected;
+  final ValueNotifier<bool> isSelected = ValueNotifier(false);
   final bool isCollapsible;
-  bool _isCollapsed = false;
+  final ValueNotifier<bool> isCollapsed = ValueNotifier(false);
   final bool isOpenable;
-  bool isVisibleWithSearch = true;
+  final ValueNotifier<bool> isVisibleWithSearch = ValueNotifier(true);
 
   HierarchyEntry(this.name, this.isSelectable, this.isCollapsible, this.isOpenable)
-    : super([]);
+    : super([]) {
+    addListener(onTreeViewChanged);
+    isCollapsed.addListener(onTreeViewChanged);
+    isVisibleWithSearch.addListener(onTreeViewChanged);
+  }
 
   @override
   void dispose() {
@@ -66,18 +69,10 @@ abstract class HierarchyEntry extends ListNotifier<HierarchyEntry> with Undoable
     super.dispose();
   }
 
-  set isSelected(bool value) {
-    if (value == _isSelected) return;
-    _isSelected = value;
-    notifyListeners();
-  }
-
-  bool get isCollapsed => _isCollapsed;
-
-  set isCollapsed(bool value) {
-    if (value == _isCollapsed) return;
-    _isCollapsed = value;
-    notifyListeners();
+  void onTreeViewChanged() {
+    if (undoHistoryManager.isPushing)
+      return;
+    openHierarchyManager.treeViewIsDirty.value = true;
   }
 
   void onOpen() {
@@ -125,7 +120,7 @@ abstract class HierarchyEntry extends ListNotifier<HierarchyEntry> with Undoable
   
   void setCollapsedRecursive(bool value, [bool setSelf = false]) {
     if (setSelf)
-      isCollapsed = value;
+      isCollapsed.value = value;
     for (var child in this) {
       child.setCollapsedRecursive(value, true);
     }
@@ -137,7 +132,7 @@ abstract class HierarchyEntry extends ListNotifier<HierarchyEntry> with Undoable
   //   2. for each entry, check and store if it is visible with search
   //   3. propagate visibility to parents and children (if an entry is visible, all its parents and children are visible)
   void setIsVisibleWithSearchRecursive(bool value) {
-    isVisibleWithSearch = value;
+    isVisibleWithSearch.value = value;
     for (var child in this) {
       child.setIsVisibleWithSearchRecursive(value);
     }
@@ -145,17 +140,17 @@ abstract class HierarchyEntry extends ListNotifier<HierarchyEntry> with Undoable
   void computeIsVisibleWithSearchFilter() {
     var search = openHierarchySearch.value.toLowerCase();
     if (search.isEmpty)
-      isVisibleWithSearch = true;
+      isVisibleWithSearch.value = true;
     else if (name.toString().toLowerCase().contains(search))
-      isVisibleWithSearch = true;
+      isVisibleWithSearch.value = true;
     else
-      isVisibleWithSearch = false;
+      isVisibleWithSearch.value = false;
     for (var child in this) {
       child.computeIsVisibleWithSearchFilter();
     }
   }
   void propagateVisibility() {
-    if (!isVisibleWithSearch) {
+    if (!isVisibleWithSearch.value) {
       for (var child in this)
         child.propagateVisibility();
       return;
@@ -163,7 +158,7 @@ abstract class HierarchyEntry extends ListNotifier<HierarchyEntry> with Undoable
     
     var parent = openHierarchyManager.parentOf(this);
     while (parent is HierarchyEntry) {
-      parent.isVisibleWithSearch = true;
+      parent.isVisibleWithSearch.value = true;
       parent = openHierarchyManager.parentOf(parent);
     }
     setIsVisibleWithSearchRecursive(true);
@@ -218,8 +213,8 @@ abstract class GenericFileHierarchyEntry extends FileHierarchyEntry {
   Undoable takeSnapshot() {
     var entry = clone();
     entry.overrideUuid(uuid);
-    entry._isSelected = _isSelected;
-    entry._isCollapsed = _isCollapsed;
+    entry.isSelected.value = isSelected.value;
+    entry.isCollapsed.value = isCollapsed.value;
     entry.replaceWith(map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
     return entry;
   }
@@ -227,8 +222,8 @@ abstract class GenericFileHierarchyEntry extends FileHierarchyEntry {
   @override
   void restoreWith(Undoable snapshot) {
     var entry = snapshot as HierarchyEntry;
-    _isSelected = entry._isSelected;
-    _isCollapsed = entry._isCollapsed;
+    isSelected.value = entry.isSelected.value;
+    isCollapsed.value = entry.isCollapsed.value;
     updateOrReplaceWith(entry.toList(), (entry) => entry.takeSnapshot() as HierarchyEntry);
   }
 }
@@ -260,8 +255,8 @@ class DatHierarchyEntry extends ExtractableHierarchyEntry {
   Undoable takeSnapshot() {
     var entry = DatHierarchyEntry(name.takeSnapshot() as StringProp, path, extractedPath);
     entry.overrideUuid(uuid);
-    entry._isSelected = _isSelected;
-    entry._isCollapsed = _isCollapsed;
+    entry.isSelected.value = isSelected.value;
+    entry.isCollapsed.value = isCollapsed.value;
     entry.replaceWith(map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
     return entry;
   }
@@ -270,8 +265,8 @@ class DatHierarchyEntry extends ExtractableHierarchyEntry {
   void restoreWith(Undoable snapshot) {
     var entry = snapshot as DatHierarchyEntry;
     name.restoreWith(entry.name);
-    _isSelected = entry._isSelected;
-    _isCollapsed = entry._isCollapsed;
+    isSelected.value = entry.isSelected.value;
+    isCollapsed.value = entry.isCollapsed.value;
     updateOrReplaceWith(entry.toList(), (entry) => entry.takeSnapshot() as HierarchyEntry);
   }
 
@@ -342,9 +337,6 @@ class PakHierarchyEntry extends ExtractableHierarchyEntry {
     }
     var groupsFileData = areasManager.openFileAsHidden(groupsXmlPath, optionalInfo: optionalFileInfo) as XmlFileData;
     await groupsFileData.load();
-    // var groupsXmlContents = await groupsFile.readAsString();
-    // var xmlDoc = XmlDocument.parse(groupsXmlContents);
-    // var xmlRoot = xmlDoc.firstElementChild!;
     var xmlRoot = groupsFileData.root!;
     var groups = xmlRoot.getAll("group");
     
@@ -401,8 +393,8 @@ class PakHierarchyEntry extends ExtractableHierarchyEntry {
   Undoable takeSnapshot() {
     var snapshot = PakHierarchyEntry(name.takeSnapshot() as StringProp, path, extractedPath);
     snapshot.overrideUuid(uuid);
-    snapshot._isSelected = _isSelected;
-    snapshot._isCollapsed = _isCollapsed;
+    snapshot.isSelected.value = isSelected.value;
+    snapshot.isCollapsed.value = isCollapsed.value;
     snapshot._flatGroups.addAll(_flatGroups);
     snapshot.replaceWith(map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
     return snapshot;
@@ -412,8 +404,8 @@ class PakHierarchyEntry extends ExtractableHierarchyEntry {
   void restoreWith(Undoable snapshot) {
     var entry = snapshot as PakHierarchyEntry;
     name.restoreWith(entry.name);
-    _isSelected = entry._isSelected;
-    _isCollapsed = entry._isCollapsed;
+    isSelected.value = entry.isSelected.value;
+    isCollapsed.value = entry.isCollapsed.value;
     updateOrReplaceWith(entry.toList(), (obj) => obj.takeSnapshot() as HierarchyEntry);
   }
 
@@ -522,8 +514,8 @@ class HapGroupHierarchyEntry extends FileHierarchyEntry {
   Undoable takeSnapshot() {
     var snapshot = HapGroupHierarchyEntry(name.takeSnapshot() as StringProp, prop.takeSnapshot() as XmlProp);
     snapshot.overrideUuid(uuid);
-    snapshot._isSelected = _isSelected;
-    snapshot._isCollapsed = _isCollapsed;
+    snapshot.isSelected.value = isSelected.value;
+    snapshot.isCollapsed.value = isCollapsed.value;
     snapshot.replaceWith(map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
     return snapshot;
   }
@@ -532,8 +524,8 @@ class HapGroupHierarchyEntry extends FileHierarchyEntry {
   void restoreWith(Undoable snapshot) {
     var entry = snapshot as HapGroupHierarchyEntry;
     name.restoreWith(entry.name);
-    _isSelected = entry._isSelected;
-    _isCollapsed = entry._isCollapsed;
+    isSelected.value = entry.isSelected.value;
+    isCollapsed.value = entry.isCollapsed.value;
     prop.restoreWith(entry.prop);
     updateOrReplaceWith(entry.toList(), (obj) => obj.takeSnapshot() as HierarchyEntry);
   }
@@ -628,8 +620,8 @@ class XmlScriptHierarchyEntry extends FileHierarchyEntry {
   Undoable takeSnapshot() {
     var snapshot = XmlScriptHierarchyEntry(name.takeSnapshot() as StringProp, path);
     snapshot.overrideUuid(uuid);
-    snapshot._isSelected = _isSelected;
-    snapshot._isCollapsed = _isCollapsed;
+    snapshot.isSelected.value = isSelected.value;
+    snapshot.isCollapsed.value = isCollapsed.value;
     snapshot._hasReadMeta = _hasReadMeta;
     snapshot._hapName = _hapName;
     snapshot.groupId = groupId;
@@ -641,8 +633,8 @@ class XmlScriptHierarchyEntry extends FileHierarchyEntry {
   void restoreWith(Undoable snapshot) {
     var entry = snapshot as XmlScriptHierarchyEntry;
     name.restoreWith(entry.name);
-    _isSelected = entry._isSelected;
-    _isCollapsed = entry._isCollapsed;
+    isSelected.value = entry.isSelected.value;
+    isCollapsed.value = entry.isCollapsed.value;
     _hasReadMeta = entry._hasReadMeta;
     hapName = entry.hapName;
     updateOrReplaceWith(entry.toList(), (obj) => obj.takeSnapshot() as HierarchyEntry);
@@ -679,8 +671,8 @@ class RubyScriptGroupHierarchyEntry extends HierarchyEntry {
   Undoable takeSnapshot() {
     var snapshot = RubyScriptGroupHierarchyEntry();
     snapshot.overrideUuid(uuid);
-    snapshot._isSelected = _isSelected;
-    snapshot._isCollapsed = _isCollapsed;
+    snapshot.isSelected.value = isSelected.value;
+    snapshot.isCollapsed.value = isCollapsed.value;
     snapshot.replaceWith(map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
     return snapshot;
   }
@@ -688,7 +680,7 @@ class RubyScriptGroupHierarchyEntry extends HierarchyEntry {
   @override
   void restoreWith(Undoable snapshot) {
     var entry = snapshot as RubyScriptGroupHierarchyEntry;
-    _isCollapsed = entry._isCollapsed;
+    isCollapsed.value = entry.isCollapsed.value;
     updateOrReplaceWith(entry.toList(), (obj) => obj.takeSnapshot() as HierarchyEntry);
   }
   
@@ -902,8 +894,8 @@ class WaiHierarchyEntry extends ExtractableHierarchyEntry {
   Undoable takeSnapshot() {
     var snapshot =  WaiHierarchyEntry(name.takeSnapshot() as StringProp, path, extractedPath, waiDataId);
     snapshot.overrideUuid(uuid);
-    snapshot._isSelected = _isSelected;
-    snapshot._isCollapsed = _isCollapsed;
+    snapshot.isSelected.value = isSelected.value;
+    snapshot.isCollapsed.value = isCollapsed.value;
     snapshot.structure = structure;
     snapshot.replaceWith(map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
     return snapshot;
@@ -913,8 +905,8 @@ class WaiHierarchyEntry extends ExtractableHierarchyEntry {
   void restoreWith(Undoable snapshot) {
     var entry = snapshot as WaiHierarchyEntry;
     name.restoreWith(entry.name);
-    _isSelected = entry._isSelected;
-    _isCollapsed = entry._isCollapsed;
+    isSelected.value = entry.isSelected.value;
+    isCollapsed.value = entry.isCollapsed.value;
     updateOrReplaceWith(entry.toList(), (entry) => entry.takeSnapshot() as HierarchyEntry);
   }
 
@@ -955,13 +947,13 @@ class WaiFolderHierarchyEntry extends GenericFileHierarchyEntry {
   WaiFolderHierarchyEntry(StringProp name, String path, List<WaiChild> children)
     : bgmBnkPath = join(dirname(path), "bgm", "BGM.bnk"),
       super(name, path, true, false) {
-    _isCollapsed = true;
+    isCollapsed.value = true;
     addAll(children.map((child) => makeWaiChildEntry(child, bgmBnkPath)));
   }
   WaiFolderHierarchyEntry.clone(WaiFolderHierarchyEntry other)
     : bgmBnkPath = other.bgmBnkPath,
       super(other.name.takeSnapshot() as StringProp, other.path, true, false) {
-    _isCollapsed = other._isCollapsed;
+    isCollapsed.value = other.isCollapsed.value;
     addAll(other.map((entry) => (entry as GenericFileHierarchyEntry).clone()));
   }
   
@@ -973,31 +965,13 @@ class WaiFolderHierarchyEntry extends GenericFileHierarchyEntry {
 
 class WspHierarchyEntry extends GenericFileHierarchyEntry {
   final List<WaiChild> _childWems;
-  bool _hasLoadedChildren = false;
   final String bgmBnkPath;
 
   WspHierarchyEntry(StringProp name, String path, List<WaiChild> childWems, this.bgmBnkPath) :
     _childWems = childWems,
     super(name, path, true, false) {
-    _isCollapsed = true;
-    if (childWems.length < 200)
-      addChildren();
-  }
-  
-  @override
-  set isCollapsed(bool value) {
-    if (value == _isCollapsed)
-      return;
-    _isCollapsed = value;
-    notifyListeners();
-
-    if (!_isCollapsed && !_hasLoadedChildren && isEmpty)
-      addChildren();
-  }
-
-  void addChildren() {
-    _hasLoadedChildren = true;
-    addAll(_childWems.map((child) => makeWaiChildEntry(child, bgmBnkPath)));
+    isCollapsed.value = true;
+    addAll(childWems.map((child) => makeWaiChildEntry(child, bgmBnkPath)));
   }
   
   @override
