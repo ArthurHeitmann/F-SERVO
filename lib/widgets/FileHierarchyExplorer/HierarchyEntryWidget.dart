@@ -14,8 +14,8 @@ class HierarchyEntryWidget extends ChangeNotifierWidget {
   final HierarchyEntry entry;
   final int depth;
 
-  HierarchyEntryWidget(this.entry, {this.depth = 0})
-    : super(key: Key(entry.uuid), notifiers: [entry, shouldAutoTranslate, openHierarchySearch]);
+  HierarchyEntryWidget({ required this.entry, Key? key, this.depth = 0 })
+    : super(key: key ?? Key(entry.uuid), notifiers: [entry, shouldAutoTranslate, openHierarchySearch]);
 
   @override
   State<HierarchyEntryWidget> createState() => _HierarchyEntryState();

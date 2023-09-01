@@ -36,11 +36,14 @@ class _HierarchyFlatListState extends ChangeNotifierState<HierarchyFlatList> {
           controller: controller,
           physics: physics,
           itemCount: cachedFlatTree.length,
-          prototypeItem: cachedFlatTree.isNotEmpty ? HierarchyEntryWidget(cachedFlatTree.first.entry) : null,
+          prototypeItem: cachedFlatTree.isNotEmpty ? HierarchyEntryWidget(entry: cachedFlatTree.first.entry) : null,
           itemBuilder: (context, index) {
-            var entry = cachedFlatTree[index].entry;
-            var depth = cachedFlatTree[index].depth;
-            return HierarchyEntryWidget(entry, depth: depth);
+            var entry = cachedFlatTree[index];
+            return HierarchyEntryWidget(
+              key: Key(entry.uuidPath.join(", ")),
+              entry: entry.entry,
+              depth: entry.depth
+            );
           }
         );
       }
@@ -55,20 +58,22 @@ class _HierarchyFlatListState extends ChangeNotifierState<HierarchyFlatList> {
     openHierarchyManager.treeViewIsDirty.value = false;
   }
 
-  void _regenerateFlatTree(HierarchyEntry entry, int depth) {
+  void _regenerateFlatTree(HierarchyEntry entry, int depth, [List<String> parentUuidPath = const []]) {
     if (!entry.isVisibleWithSearch.value)
       return;
-    cachedFlatTree.add(IndentedHierarchyEntry(entry, depth));
+    var uuidPath = [...parentUuidPath, entry.uuid];
+    cachedFlatTree.add(IndentedHierarchyEntry(entry, uuidPath, depth));
     if (!entry.isCollapsed.value) {
       for (var child in entry)
-        _regenerateFlatTree(child, depth + 1);
+        _regenerateFlatTree(child, depth + 1, uuidPath);
     }
   }
 }
 
 class IndentedHierarchyEntry {
   final HierarchyEntry entry;
+  final List<String> uuidPath;
   final int depth;
 
-  const IndentedHierarchyEntry(this.entry, this.depth);
+  const IndentedHierarchyEntry(this.entry, this.uuidPath, this.depth);
 }
