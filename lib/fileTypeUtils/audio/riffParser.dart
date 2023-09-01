@@ -199,7 +199,8 @@ class DataChunk extends RiffChunk {
           samples = List.generate(size ~/ 4, (i) => bytes.readInt32()); 
         break;
       default:
-        samples = bytes.asInt8List(size);
+        var remainingBytes = bytes.length - bytes.position;
+        samples = bytes.asInt8List(min(size, remainingBytes));
     }
     if (size & 1 == 1 && bytes.position < bytes.length) {
       bytes.readUint8();
