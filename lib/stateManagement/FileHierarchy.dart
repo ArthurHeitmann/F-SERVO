@@ -414,7 +414,7 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
       OptionalWemData(bnkPath, WemSource.bnk)
     )));
     if (wemFiles.length > 8)
-      wemParentEntry.isCollapsed = true;
+      wemParentEntry.isCollapsed.value = true;
 
     var hircChunk = bnk.chunks.whereType<BnkHircChunk>().firstOrNull;
     if (hircChunk != null) {
@@ -634,6 +634,9 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
           actionEntries[hirc.uid] = entry;
           var actionChild = hircEntries[hirc.initialParams.idExt];
           if (actionChild != null) {
+            actionChild.usages++;
+            if (actionChild.usages > 1)
+              actionChild = actionChild.takeSnapshot() as BnkHircHierarchyEntry;
             entry.add(actionChild);
           }
         }
@@ -700,19 +703,27 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
             if (parent == null) {
               entry.value.parentIds.remove(parentId);
             } else if (!parent.contains(entry.value)) {
-              parent.add(entry.value);
+              var child = entry.value;
+              child.usages++;
+              if (child.usages > 1)
+                child = child.takeSnapshot() as BnkHircHierarchyEntry;
+              parent.add(child);
             } else {
-              print("Duplicate parent-child relationship: ${parent.name.value} -> ${entry.value.name.value}");
+              // print("Duplicate parent-child relationship: ${parent.name.value} -> ${entry.value.name.value}");
             }
           }
         }
         else {
-          objectHierarchyParentEntry.add(entry.value);
+          var child = entry.value;
+          child.usages++;
+          if (child.usages > 1)
+            child = child.takeSnapshot() as BnkHircHierarchyEntry;
+          objectHierarchyParentEntry.add(child);
           directChildren++;
         }
       }
       if (directChildren > 50)
-        objectHierarchyParentEntry.isCollapsed = true;
+        objectHierarchyParentEntry.isCollapsed.value = true;
       
       var eventHierarchyParentEntry = BnkSubCategoryParentHierarchyEntry("Event Hierarchy");
       bnkEntry.add(eventHierarchyParentEntry);
@@ -720,7 +731,7 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
       for (var entry in eventEntries)
         eventHierarchyParentEntry.add(entry);
       if (eventEntries.length > 50)
-        eventHierarchyParentEntry.isCollapsed = true;
+        eventHierarchyParentEntry.isCollapsed.value = true;
     }
 
     if (parent != null)
@@ -938,6 +949,10 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
     Map<HierarchyEntry, HierarchyEntry?> parentMap = {};
     void generateTmpParentMapRec(HierarchyEntry entry) {
       for (var child in entry) {
+        if (parentMap.containsKey(child)) {
+          print("Duplicate parent-child relationship: ${parentMap[child]!.name.value} -> ${child.name.value} (child of ${entry.name.value})");
+          continue;
+        }
         parentMap[child] = entry;
         generateTmpParentMapRec(child);
       }

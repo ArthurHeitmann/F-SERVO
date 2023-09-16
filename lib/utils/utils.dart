@@ -677,3 +677,10 @@ int alignTo(int value, int alignment) {
 int remainingPadding(int value, int alignment) {
   return alignTo(value, alignment) - value;
 }
+
+void timeFunc(String name, void Function() func) {
+  var sw = Stopwatch()..start();
+  func();
+  sw.stop();
+  print("$name: ${sw.elapsedMilliseconds}ms");
+}

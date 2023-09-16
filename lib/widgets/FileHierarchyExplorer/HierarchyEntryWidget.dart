@@ -180,8 +180,6 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
       toggleCollapsed();
     if (widget.entry.isOpenable && (!widget.entry.isSelectable || isDoubleClick()))
       widget.entry.onOpen();
-    else if (widget.entry.isCollapsible && (!widget.entry.isSelectable || isDoubleClick()))
-      toggleCollapsed();
 
     lastClickAt = DateTime.now().millisecondsSinceEpoch;
   }

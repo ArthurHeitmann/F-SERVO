@@ -1098,17 +1098,17 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
 }
 
 class BnkSubCategoryParentHierarchyEntry extends HierarchyEntry {
-  BnkSubCategoryParentHierarchyEntry(String name, { isCollapsed = false })
+  BnkSubCategoryParentHierarchyEntry(String name, { bool isCollapsed = false })
     : super(StringProp(name), false, true, false) {
-    _isCollapsed = isCollapsed;
+    this.isCollapsed.value = isCollapsed;
   }
 
   @override
   Undoable takeSnapshot() {
     var entry = BnkSubCategoryParentHierarchyEntry(name.value);
     entry.overrideUuid(uuid);
-    entry._isSelected = _isSelected;
-    entry._isCollapsed = _isCollapsed;
+    entry.isSelected.value = isSelected.value;
+    entry.isCollapsed.value = isCollapsed.value;
     entry.replaceWith(map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
     return entry;
   }
@@ -1116,8 +1116,8 @@ class BnkSubCategoryParentHierarchyEntry extends HierarchyEntry {
   @override
   void restoreWith(Undoable snapshot) {
     var entry = snapshot as HierarchyEntry;
-    _isSelected = entry._isSelected;
-    _isCollapsed = entry._isCollapsed;
+    isSelected.value = entry.isSelected.value;
+    isCollapsed.value = entry.isCollapsed.value;
     updateOrReplaceWith(entry.toList(), (entry) => entry.takeSnapshot() as HierarchyEntry);
   }
 }
@@ -1130,10 +1130,11 @@ class BnkHircHierarchyEntry extends GenericFileHierarchyEntry {
   List<int> parentIds;
   List<int> childIds;
   List<(bool, List<String>)>? properties;
+  int usages = 0;
 
   BnkHircHierarchyEntry(StringProp name, String path, this.id, this.type, [this.parentIds = const [], this.childIds = const [], this.properties])
     : super(name, path, !nonCollapsibleTypes.contains(type), openableTypes.contains(type)){
-    _isCollapsed = true;
+    isCollapsed.value = true;
   }
 
   @override

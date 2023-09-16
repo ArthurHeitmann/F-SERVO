@@ -483,7 +483,7 @@ class BnkTreeNode {
 
   BnkTreeNode(this.key, this.audioNodeId, this.uIdx, this.uCount, this.uWeight, this.uProbability, this.children);
 
-  BnkTreeNode.read(ByteDataWrapper bytes, int countMax, int curDepth, int maxDepth) {
+  BnkTreeNode._read(ByteDataWrapper bytes, int countMax, int curDepth, int maxDepth) {
     key = bytes.readUint32();
     var peekIdx = bytes.readUint16();
     var peekCount = bytes.readUint16();
@@ -505,7 +505,7 @@ class BnkTreeNode {
   static List<BnkTreeNode> parse(ByteDataWrapper bytes, int count, int countMax, int curDepth, int maxDepth) {
     var nodes = List.generate(
       count,
-      (index) => BnkTreeNode.read(bytes, countMax, curDepth, maxDepth)
+      (index) => BnkTreeNode._read(bytes, countMax, curDepth, maxDepth)
     );
 
     for (var i = 0; i < count; i++) {
@@ -515,6 +515,31 @@ class BnkTreeNode {
     }
 
     return nodes;
+  }
+
+  void _writeHeader(ByteDataWrapper bytes) {
+    bytes.writeUint32(key);
+    if (audioNodeId != null) {
+      bytes.writeUint32(audioNodeId!);
+    }
+    else {
+      bytes.writeUint16(uIdx!);
+      bytes.writeUint16(uCount!);
+    }
+    bytes.writeUint16(uWeight);
+    bytes.writeUint16(uProbability);
+  }
+
+  void _writeChildren(ByteDataWrapper bytes) {
+    for (var child in children)
+      child._writeHeader(bytes);
+    for (var child in children)
+      child._writeChildren(bytes);
+  }
+  
+  void write(ByteDataWrapper bytes) {
+    _writeHeader(bytes);
+    _writeChildren(bytes);
   }
 }
 
@@ -548,14 +573,15 @@ class BnkMusicSwitch extends BnkHircChunkBase with BnkHircChunkWithBaseParamsGet
     musicTransParams.write(bytes);
     bytes.writeUint8(bIsContinuePlayback);
     bytes.writeUint32(uTreeDepth);
-    for (var i = 0; i < uTreeDepth; i++) {
+    for (var i = 0; i < uTreeDepth; i++)
       bytes.writeUint32(arguments[i].ulGroup);
+    for (var i = 0; i < uTreeDepth; i++)
       bytes.writeUint8(arguments[i].eGroupType);
-    }
     bytes.writeUint32(uTreeDataSize);
     bytes.writeUint8(bMode);
     // decisionTree.write(bytes);
-    throw UnimplementedError("decisionTree.write(bytes)");
+    for (var tree in decisionTree)
+      tree.write(bytes);
   }
 
   @override
@@ -568,7 +594,7 @@ class BnkMusicSwitch extends BnkHircChunkBase with BnkHircChunkWithBaseParamsGet
       4 + // uTreeDataSize
       1 + // bMode
       // decisionTree.calcChunkSize() // decisionTree
-      0
+      uTreeDataSize
     );
   }
 
