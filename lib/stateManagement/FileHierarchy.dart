@@ -499,11 +499,11 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
               .map((a) => wemIdsToNames[a.ulGroup] ?? a.ulGroup.toString())
               .toList();
             void parseSwitchNode(int parentId, BnkTreeNode node, int depth) {
-              if (node.key == 0 && node.audioNodeId == null) {
-                for (var child in node.children)
-                  parseSwitchNode(parentId, child, depth + 1);
-                return;
-              }
+              // if (node.key == 0 && node.audioNodeId == null) {
+              //   for (var child in node.children)
+              //     parseSwitchNode(parentId, child, depth + 1);
+              //   return;
+              // }
               var nodeId = randomId();
               var nodeName = "${groups[depth]}=${wemIdsToNames[node.key] ?? node.key.toString()}";
               var nodeEntry = BnkHircHierarchyEntry(StringProp(nodeName), "", nodeId, "SwitchNode", [parentId], node.audioNodeId != null ? [node.audioNodeId!] : []);
@@ -638,6 +638,13 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
             if (actionChild.usages > 1)
               actionChild = actionChild.takeSnapshot() as BnkHircHierarchyEntry;
             entry.add(actionChild);
+          }
+          else {
+            var actionChildName = wemIdsToNames[hirc.initialParams.idExt] ?? "Target_${hirc.initialParams.idExt.toString()}";
+            var actionChildId = randomId();
+            var actionChildEntry = BnkHircHierarchyEntry(StringProp(actionChildName), "", actionChildId, "ActionTarget", [hirc.uid]);
+            hircEntries[actionChildId] = actionChildEntry;
+            entry.add(actionChildEntry);
           }
         }
         else {
@@ -939,7 +946,7 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
     if (value == _selectedEntry)
       return;
     _selectedEntry?.isSelected.value = false;
-    assert(value == null || value.isSelectable);
+    // assert(value == null || value.isSelectable);
     _selectedEntry = value;
     _selectedEntry?.isSelected.value = true;
     notifyListeners();

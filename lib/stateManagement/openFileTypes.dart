@@ -656,6 +656,8 @@ class WemFileData extends OpenFileData with AudioFileData {
       wai.pendingPatches.add(WemPatch(path, wemId));
     } else if (wemInfo?.source == WemSource.bnk) {
       await patchBnk(wemInfo!.bnkPath, wemId, path);      
+    } else {
+      showToast("Unknown WEM source (not WSP or BNK)");
     }
 
     await super.save();

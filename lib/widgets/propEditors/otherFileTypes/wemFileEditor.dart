@@ -91,7 +91,7 @@ class _WemFileEditorState extends ChangeNotifierState<WemFileEditor> {
           lockControls: widget.lockControls,
           additionalControls: Wrap(
             children: [
-              if (widget.showOverride && widget.wem.optionalInfo != null) ...[
+              if (widget.showOverride /*&& widget.wem.optionalInfo != null*/) ...[
                 ElevatedButton(
                   onPressed: _pickOverride,
                   style: getTheme(context).dialogPrimaryButtonStyle,

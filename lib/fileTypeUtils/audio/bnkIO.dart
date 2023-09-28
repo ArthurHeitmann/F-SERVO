@@ -233,8 +233,17 @@ class BnkHircChunk extends BnkChunkBase {
   void write(ByteDataWrapper bytes) {
     super.write(bytes);
     bytes.writeUint32(chunks.length);
-    for (var chunk in chunks) {
+    // for (var chunk in chunks) {
+    for (int i = 0; i < chunks.length; i++) {
+      var chunk = chunks[i];
+      int beforePos = bytes.position;
       chunk.write(bytes);
+
+      int writtenSize = bytes.position - beforePos;
+      if (chunk.size - 4 != chunk.calculateSize())
+        print("Warning: chunkSize (${chunk.size - 4}) != chunk.calculateSize() (${chunk.calculateSize()}) for chunk ${chunk.runtimeType} at index $i");
+      if (writtenSize != chunk.calculateSize() + 9)
+        print("Warning: writtenSize ($writtenSize) != chunk.calculateSize() + 9 (${chunk.calculateSize() + 9}) for chunk ${chunk.runtimeType} at index $i");
     }
   }
 
@@ -253,9 +262,12 @@ enum BnkHircType {
   sound(0x02),
   action(0x03),
   event(0x04),
+  randomSequence(0x05),
+  soundSwitch(0x06),
   actorMixer(0x07),
-  musicTrack(0x0B),
+  layerContainer(0x09),
   musicSegment(0x0A),
+  musicTrack(0x0B),
   musicSwitch(0x0C),
   musicPlaylist(0x0D),
   unknown(-1);
@@ -296,14 +308,20 @@ BnkHircChunkBase _makeNextHircChunk(ByteDataWrapper bytes) {
       return BnkSound.read(bytes);
     case BnkHircType.event:
       return BnkEvent.read(bytes);
+    case BnkHircType.randomSequence:
+      return BnkRandomSequence.read(bytes);
+    case BnkHircType.soundSwitch:
+      return BnkSoundSwitch.read(bytes);
     case BnkHircType.actorMixer:
       return BnkActorMixer.read(bytes);
     case BnkHircType.action:
       return BnkAction.read(bytes);
-    case BnkHircType.musicTrack:
-      return BnkMusicTrack.read(bytes);
+    case BnkHircType.layerContainer:
+      return BnkLayerContainer.read(bytes);
     case BnkHircType.musicSegment:
       return BnkMusicSegment.read(bytes);
+    case BnkHircType.musicTrack:
+      return BnkMusicTrack.read(bytes);
     case BnkHircType.musicSwitch:
       return BnkMusicSwitch.read(bytes);
     case BnkHircType.musicPlaylist:
@@ -541,6 +559,146 @@ class BnkTreeNode {
     _writeHeader(bytes);
     _writeChildren(bytes);
   }
+
+  int updateTreeParams([int curIndex = 1]) {
+    uIdx = curIndex;
+    childrenCount = children.length;
+    uCount = childrenCount;
+
+    curIndex += childrenCount;
+    for (var child in children) {
+      curIndex = child.updateTreeParams(curIndex);
+    }
+
+    return curIndex;
+  }
+}
+
+class BnkSoundSwitch extends BnkHircChunkBase with BnkHircChunkWithBaseParams {
+  late int eGroupType;
+  late int ulGroupID;
+  late int ulDefaultSwitch;
+  late int bIsContinuousValidation;
+  late BnkChildren children;
+  late int ulNumSwitchGroups;
+  late List<BnkSwitchPackage> switches;
+  late int ulNumSwitchParams;
+  late List<BnkSwitchNodeParams> switchParams;
+
+  BnkSoundSwitch(super.type, super.size, super.uid, BnkNodeBaseParams baseParams, this.eGroupType, this.ulGroupID, this.ulDefaultSwitch, this.bIsContinuousValidation, this.children, this.ulNumSwitchGroups, this.switches, this.ulNumSwitchParams, this.switchParams) {
+    this.baseParams = baseParams;
+  }
+
+  BnkSoundSwitch.read(ByteDataWrapper bytes) : super.read(bytes) {
+    baseParams = BnkNodeBaseParams.read(bytes);
+    eGroupType = bytes.readUint8();
+    ulGroupID = bytes.readUint32();
+    ulDefaultSwitch = bytes.readUint32();
+    bIsContinuousValidation = bytes.readUint8();
+    children = BnkChildren.read(bytes);
+    ulNumSwitchGroups = bytes.readUint32();
+    switches = List.generate(ulNumSwitchGroups, (index) => BnkSwitchPackage.read(bytes));
+    ulNumSwitchParams = bytes.readUint32();
+    switchParams = List.generate(ulNumSwitchParams, (index) => BnkSwitchNodeParams.read(bytes));
+  }
+
+  @override
+  void write(ByteDataWrapper bytes) {
+    super.write(bytes);
+    baseParams.write(bytes);
+    bytes.writeUint8(eGroupType);
+    bytes.writeUint32(ulGroupID);
+    bytes.writeUint32(ulDefaultSwitch);
+    bytes.writeUint8(bIsContinuousValidation);
+    children.write(bytes);
+    bytes.writeUint32(ulNumSwitchGroups);
+    for (var i = 0; i < ulNumSwitchGroups; i++)
+      switches[i].write(bytes);
+    bytes.writeUint32(ulNumSwitchParams);
+    for (var i = 0; i < ulNumSwitchParams; i++)
+      switchParams[i].write(bytes);
+  }
+
+  @override
+  int calculateSize() {
+    return (
+      baseParams.calcChunkSize() +  // baseParams
+      1 + // eGroupType
+      4 + // ulGroupID
+      4 + // ulDefaultSwitch
+      1 + // bIsContinuousValidation
+      children.calcChunkSize() +  // children
+      4 + // ulNumSwitchGroups
+      switches.fold<int>(0, (sum, s) => sum + s.calculateSize()) +  // switches
+      4 + // ulNumSwitchParams
+      switchParams.fold<int>(0, (sum, s) => sum + s.calculateSize())  // switchParams
+    );
+  }
+}
+
+class BnkSwitchPackage {
+  late int ulSwitchID;
+  late int ulNumItems;
+  late List<int> nodeIDs;
+
+  BnkSwitchPackage(this.ulSwitchID, this.ulNumItems, this.nodeIDs);
+
+  BnkSwitchPackage.read(ByteDataWrapper bytes) {
+    ulSwitchID = bytes.readUint32();
+    ulNumItems = bytes.readUint32();
+    nodeIDs = List.generate(ulNumItems, (index) => bytes.readUint32());
+  }
+
+  void write(ByteDataWrapper bytes) {
+    bytes.writeUint32(ulSwitchID);
+    bytes.writeUint32(ulNumItems);
+    for (var i = 0; i < ulNumItems; i++)
+      bytes.writeUint32(nodeIDs[i]);
+  }
+
+  int calculateSize() {
+    return (
+      4 + // ulSwitchID
+      4 + // ulNumItems
+      ulNumItems * 4 // nodeIDs
+    );
+  }
+}
+
+class BnkSwitchNodeParams {
+  late int ulNodeID;
+  late int bitVector1;
+  late int bitVector2;
+  late int fadeOutTime;
+  late int fadeInTime;
+
+  BnkSwitchNodeParams(this.ulNodeID, this.bitVector1, this.bitVector2, this.fadeOutTime, this.fadeInTime);
+
+  BnkSwitchNodeParams.read(ByteDataWrapper bytes) {
+    ulNodeID = bytes.readUint32();
+    bitVector1 = bytes.readUint8();
+    bitVector2 = bytes.readUint8();
+    fadeOutTime = bytes.readInt32();
+    fadeInTime = bytes.readInt32();
+  }
+
+  void write(ByteDataWrapper bytes) {
+    bytes.writeUint32(ulNodeID);
+    bytes.writeUint8(bitVector1);
+    bytes.writeUint8(bitVector2);
+    bytes.writeInt32(fadeOutTime);
+    bytes.writeInt32(fadeInTime);
+  }
+
+  int calculateSize() {
+    return (
+      4 + // ulNodeID
+      1 + // bitVector1
+      1 + // bitVector2
+      4 + // fadeOutTime
+      4 // fadeInTime
+    );
+  }
 }
 
 class BnkMusicSwitch extends BnkHircChunkBase with BnkHircChunkWithBaseParamsGetter {
@@ -552,7 +710,7 @@ class BnkMusicSwitch extends BnkHircChunkBase with BnkHircChunkWithBaseParamsGet
   late int bMode;
   late List<BnkTreeNode> decisionTree;
 
-  BnkMusicSwitch(super.type, super.size, super.uid, this.musicTransParams);
+  BnkMusicSwitch(super.type, super.size, super.uid, this.musicTransParams, this.bIsContinuePlayback, this.uTreeDepth, this.arguments, this.uTreeDataSize, this.bMode, this.decisionTree);
 
   BnkMusicSwitch.read(ByteDataWrapper bytes) : super.read(bytes) {
     musicTransParams = BnkMusicTransNodeParams.read(bytes);
@@ -565,6 +723,7 @@ class BnkMusicSwitch extends BnkHircChunkBase with BnkHircChunkWithBaseParamsGet
     bMode = bytes.readUint8();
     var maxCount = uTreeDataSize ~/ 12;
     decisionTree = BnkTreeNode.parse(bytes, 1, maxCount, 0, uTreeDepth);
+    assert(decisionTree.length == 1);
   }
 
   @override
@@ -577,11 +736,13 @@ class BnkMusicSwitch extends BnkHircChunkBase with BnkHircChunkWithBaseParamsGet
       bytes.writeUint32(arguments[i].ulGroup);
     for (var i = 0; i < uTreeDepth; i++)
       bytes.writeUint8(arguments[i].eGroupType);
+    assert(decisionTree.length == 1);
+    var tree = decisionTree[0];
+    int nodeCount = tree.updateTreeParams();
+    uTreeDataSize = nodeCount * 12;
     bytes.writeUint32(uTreeDataSize);
     bytes.writeUint8(bMode);
-    // decisionTree.write(bytes);
-    for (var tree in decisionTree)
-      tree.write(bytes);
+    tree.write(bytes);
   }
 
   @override
@@ -641,6 +802,111 @@ class BnkMusicPlaylist extends BnkHircChunkBase with BnkHircChunkWithBaseParamsG
   }
 }
 
+class BnkRandomSequence extends BnkHircChunkBase with BnkHircChunkWithBaseParams {
+  late int sLoopCount;
+  late int sLoopModMin;
+  late int sLoopModMax;
+  late double fTransitionTime;
+  late double fTransitionTimeModMin;
+  late double fTransitionTimeModMax;
+  late int wAvoidRepeatCount;
+  late int eTransitionMode;
+  late int eRandomMode;
+  late int eMode;
+  late int bitVector;
+  late BnkChildren children;
+  late int ulNumPlaylistItem;
+  late List<BnkRandomSequencePlaylistItem> playlistItems;
+
+  BnkRandomSequence(super.type, super.size, super.uid, BnkNodeBaseParams baseParams, this.sLoopCount, this.sLoopModMin, this.sLoopModMax, this.fTransitionTime, this.fTransitionTimeModMin, this.fTransitionTimeModMax, this.wAvoidRepeatCount, this.eTransitionMode, this.eRandomMode, this.eMode, this.bitVector, this.children, this.ulNumPlaylistItem, this.playlistItems) {
+    this.baseParams = baseParams;
+  }
+
+  BnkRandomSequence.read(ByteDataWrapper bytes) : super.read(bytes) {
+    baseParams = BnkNodeBaseParams.read(bytes);
+    sLoopCount = bytes.readInt16();
+    sLoopModMin = bytes.readInt16();
+    sLoopModMax = bytes.readInt16();
+    fTransitionTime = bytes.readFloat32();
+    fTransitionTimeModMin = bytes.readFloat32();
+    fTransitionTimeModMax = bytes.readFloat32();
+    wAvoidRepeatCount = bytes.readUint16();
+    eTransitionMode = bytes.readUint8();
+    eRandomMode = bytes.readUint8();
+    eMode = bytes.readUint8();
+    bitVector = bytes.readUint8();
+    children = BnkChildren.read(bytes);
+    ulNumPlaylistItem = bytes.readUint16();
+    playlistItems = List.generate(ulNumPlaylistItem, (index) => BnkRandomSequencePlaylistItem.read(bytes));
+  }
+
+  @override
+  void write(ByteDataWrapper bytes) {
+    super.write(bytes);
+    baseParams.write(bytes);
+    bytes.writeInt16(sLoopCount);
+    bytes.writeInt16(sLoopModMin);
+    bytes.writeInt16(sLoopModMax);
+    bytes.writeFloat32(fTransitionTime);
+    bytes.writeFloat32(fTransitionTimeModMin);
+    bytes.writeFloat32(fTransitionTimeModMax);
+    bytes.writeUint16(wAvoidRepeatCount);
+    bytes.writeUint8(eTransitionMode);
+    bytes.writeUint8(eRandomMode);
+    bytes.writeUint8(eMode);
+    bytes.writeUint8(bitVector);
+    children.write(bytes);
+    bytes.writeUint16(ulNumPlaylistItem);
+    for (var i = 0; i < ulNumPlaylistItem; i++)
+      playlistItems[i].write(bytes);
+  }
+
+  @override
+  int calculateSize() {
+    return (
+      baseParams.calcChunkSize() +  // baseParams
+      2 + // sLoopCount
+      2 + // sLoopModMin
+      2 + // sLoopModMax
+      4 + // fTransitionTime
+      4 + // fTransitionTimeModMin
+      4 + // fTransitionTimeModMax
+      2 + // wAvoidRepeatCount
+      1 + // eTransitionMode
+      1 + // eRandomMode
+      1 + // eMode
+      1 + // bitVector
+      children.calcChunkSize() +  // children
+      2 + // ulNumPlaylistItem
+      playlistItems.fold<int>(0, (sum, p) => sum + p.calcChunkSize())  // playlistItems
+    );
+  }
+}
+
+class BnkRandomSequencePlaylistItem {
+  late int ulPlayID;
+  late int weight;
+
+  BnkRandomSequencePlaylistItem(this.ulPlayID, this.weight);
+
+  BnkRandomSequencePlaylistItem.read(ByteDataWrapper bytes) {
+    ulPlayID = bytes.readUint32();
+    weight = bytes.readInt32();
+  }
+
+  void write(ByteDataWrapper bytes) {
+    bytes.writeUint32(ulPlayID);
+    bytes.writeInt32(weight);
+  }
+  
+  int calcChunkSize() {
+    return (
+      4 + // ulPlayID
+      4   // weight
+    );
+  }
+}
+
 class BnkPlaylistItem {
   late int segmentId;
   late int playlistItemId;
@@ -697,6 +963,113 @@ class BnkPlaylistItem {
       2 + // wAvoidRepeatCount
       1 + // bIsUsingWeight
       1   // bIsShuffle
+    );
+  }
+}
+
+class BnkLayerContainer extends BnkHircChunkBase with BnkHircChunkWithBaseParams {
+  late BnkChildren children;
+  late int ulNumLayers;
+  late List<BnkLayer> layers;
+
+  BnkLayerContainer(super.type, super.size, super.uid, BnkNodeBaseParams baseParams, this.children, this.ulNumLayers, this.layers) {
+    this.baseParams = baseParams;
+  }
+
+  BnkLayerContainer.read(ByteDataWrapper bytes) : super.read(bytes) {
+    baseParams = BnkNodeBaseParams.read(bytes);
+    children = BnkChildren.read(bytes);
+    ulNumLayers = bytes.readUint32();
+    layers = List.generate(ulNumLayers, (index) => BnkLayer.read(bytes));
+  }
+
+  @override
+  void write(ByteDataWrapper bytes) {
+    super.write(bytes);
+    baseParams.write(bytes);
+    children.write(bytes);
+    bytes.writeUint32(ulNumLayers);
+    for (var i = 0; i < ulNumLayers; i++)
+      layers[i].write(bytes);
+  }
+
+  @override
+  int calculateSize() {
+    return (
+      baseParams.calcChunkSize() +  // baseParams
+      children.calcChunkSize() +  // children
+      4 + // ulNumLayers
+      layers.fold<int>(0, (sum, l) => sum + l.calcChunkSize())  // layers
+    );
+  }
+}
+
+class BnkLayer {
+  late int ulLayerId;
+  late BnkInitialRTPC rtpc;
+  late int rtpcId;
+  late int rtpcType;
+  late int ulNumAssoc;
+  late List<BnkAssociatedChildData> childData;
+
+  BnkLayer(this.ulLayerId, this.rtpc, this.rtpcId, this.rtpcType, this.ulNumAssoc, this.childData);
+
+  BnkLayer.read(ByteDataWrapper bytes) {
+    ulLayerId = bytes.readUint32();
+    rtpc = BnkInitialRTPC.read(bytes);
+    rtpcId = bytes.readUint32();
+    rtpcType = bytes.readUint8();
+    ulNumAssoc = bytes.readUint32();
+    childData = List.generate(ulNumAssoc, (index) => BnkAssociatedChildData.read(bytes));
+  }
+
+  void write(ByteDataWrapper bytes) {
+    bytes.writeUint32(ulLayerId);
+    rtpc.write(bytes);
+    bytes.writeUint32(rtpcId);
+    bytes.writeUint8(rtpcType);
+    bytes.writeUint32(ulNumAssoc);
+    for (var i = 0; i < ulNumAssoc; i++)
+      childData[i].write(bytes);
+  }
+
+  int calcChunkSize() {
+    return (
+      4 + // ulLayerId
+      rtpc.calcChunkSize() + // rtpc
+      4 + // rtpcId
+      1 + // rtpcType
+      4 + // ulNumAssoc
+      childData.fold<int>(0, (sum, c) => sum + c.calcChunkSize()) // childData
+    );
+  }
+}
+
+class BnkAssociatedChildData {
+  late int ulAssociatedChildID;
+  late int ulCurveSize;
+  late List<BnkRtpcGraphPoint> graphPoints;
+
+  BnkAssociatedChildData(this.ulAssociatedChildID, this.ulCurveSize, this.graphPoints);
+
+  BnkAssociatedChildData.read(ByteDataWrapper bytes) {
+    ulAssociatedChildID = bytes.readUint32();
+    ulCurveSize = bytes.readUint32();
+    graphPoints = List.generate(ulCurveSize, (index) => BnkRtpcGraphPoint.read(bytes));
+  }
+
+  void write(ByteDataWrapper bytes) {
+    bytes.writeUint32(ulAssociatedChildID);
+    bytes.writeUint32(ulCurveSize);
+    for (var i = 0; i < ulCurveSize; i++)
+      graphPoints[i].write(bytes);
+  }
+
+  int calcChunkSize() {
+    return (
+      4 + // ulAssociatedChildID
+      4 + // ulCurveSize
+      graphPoints.fold<int>(0, (sum, g) => sum + g.calcChunkSize()) // graphPoints
     );
   }
 }
@@ -784,15 +1157,47 @@ class BnkMusicTransitionRule {
 
 class BnkMusicTransSrcRule {
   late BnkFadeParams fadeParam;
+  late int eSyncType;
+  late int uCueFilterHash;
+  late int bPlayPostExit;
+
+  BnkMusicTransSrcRule(this.fadeParam, this.eSyncType, this.uCueFilterHash, this.bPlayPostExit);
+
+  BnkMusicTransSrcRule.read(ByteDataWrapper bytes) {
+    fadeParam = BnkFadeParams.read(bytes);
+    eSyncType = bytes.readUint32();
+    uCueFilterHash = bytes.readUint32();
+    bPlayPostExit = bytes.readUint8();
+  }
+
+  void write(ByteDataWrapper bytes) {
+    fadeParam.write(bytes);
+    bytes.writeUint32(eSyncType);
+    bytes.writeUint32(uCueFilterHash);
+    bytes.writeUint8(bPlayPostExit);
+  }
+
+  int calcChunkSize() {
+    return (
+      fadeParam.calcChunkSize() + // fadeParam
+      4 + // eSyncType
+      4 + // uCueFilterHash
+      1 // bPlayPostExit
+    );
+  }
+}
+
+class BnkMusicTransDstRule {
+  late BnkFadeParams fadeParam;
   late int uCueFilterHash;
   late int uJumpToID;
   late int eEntryType;
   late int bPlayPreEntry;
   late int bDestMatchSourceCueName;
 
-  BnkMusicTransSrcRule(this.fadeParam, this.uCueFilterHash, this.uJumpToID, this.eEntryType, this.bPlayPreEntry, this.bDestMatchSourceCueName);
+  BnkMusicTransDstRule(this.fadeParam, this.uCueFilterHash, this.uJumpToID, this.eEntryType, this.bPlayPreEntry, this.bDestMatchSourceCueName);
 
-  BnkMusicTransSrcRule.read(ByteDataWrapper bytes) {
+  BnkMusicTransDstRule.read(ByteDataWrapper bytes) {
     fadeParam = BnkFadeParams.read(bytes);
     uCueFilterHash = bytes.readUint32();
     uJumpToID = bytes.readUint32();
@@ -818,38 +1223,6 @@ class BnkMusicTransSrcRule {
       2 + // eEntryType
       1 + // bPlayPreEntry
       1 // bDestMatchSourceCueName
-    );
-  }
-}
-
-class BnkMusicTransDstRule {
-  late BnkFadeParams fadeParam;
-  late int eSyncType;
-  late int uCueFilterHash;
-  late int bPlayPostExit;
-
-  BnkMusicTransDstRule(this.fadeParam, this.eSyncType, this.uCueFilterHash, this.bPlayPostExit);
-
-  BnkMusicTransDstRule.read(ByteDataWrapper bytes) {
-    fadeParam = BnkFadeParams.read(bytes);
-    eSyncType = bytes.readUint32();
-    uCueFilterHash = bytes.readUint32();
-    bPlayPostExit = bytes.readUint8();
-  }
-
-  void write(ByteDataWrapper bytes) {
-    fadeParam.write(bytes);
-    bytes.writeUint32(eSyncType);
-    bytes.writeUint32(uCueFilterHash);
-    bytes.writeUint8(bPlayPostExit);
-  }
-
-  int calcChunkSize() {
-    return (
-      fadeParam.calcChunkSize() + // fadeParam
-      4 + // eSyncType
-      4 + // uCueFilterHash
-      1 // bPlayPostExit
     );
   }
 }
