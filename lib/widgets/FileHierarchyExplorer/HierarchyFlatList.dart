@@ -1,11 +1,15 @@
 
-import 'package:flutter/widgets.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart' show Key, ListView, ScrollController, State, Widget, BuildContext, FocusScope, Focus;
 
+import '../../keyboardEvents/BetterShortcuts.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/FileHierarchy.dart';
 import '../../stateManagement/HierarchyEntryTypes.dart';
 import '../misc/SmoothScrollBuilder.dart';
+import '../misc/onHoverBuilder.dart';
 import 'HierarchyEntryWidget.dart';
+import 'HierarchyShortcuts.dart';
 
 class HierarchyFlatList extends ChangeNotifierWidget {
   HierarchyFlatList({super.key}) : super(notifier: openHierarchyManager.treeViewIsDirty);
@@ -17,6 +21,7 @@ class HierarchyFlatList extends ChangeNotifierWidget {
 class _HierarchyFlatListState extends ChangeNotifierState<HierarchyFlatList> {
   final scrollController = ScrollController();
   List<IndentedHierarchyEntry> cachedFlatTree = [];
+  bool isCursorInside = false;
 
   @override
   void initState() {
@@ -29,24 +34,31 @@ class _HierarchyFlatListState extends ChangeNotifierState<HierarchyFlatList> {
     if (openHierarchyManager.treeViewIsDirty.value)
       regenerateFlatTree();
 
-    return SmoothScrollBuilder(
-      controller: scrollController,
-      builder: (context, controller, physics) {
-        return ListView.builder(
-          controller: controller,
-          physics: physics,
-          itemCount: cachedFlatTree.length,
-          prototypeItem: cachedFlatTree.isNotEmpty ? HierarchyEntryWidget(entry: cachedFlatTree.first.entry) : null,
-          itemBuilder: (context, index) {
-            var entry = cachedFlatTree[index];
-            return HierarchyEntryWidget(
-              key: Key(entry.uuidPath.join(", ")),
-              entry: entry.entry,
-              depth: entry.depth
-            );
-          }
-        );
-      }
+    return shortcutsWrapper(
+      child: OnHoverBuilder(
+        builder: (context, isHovering) {
+          isCursorInside = isHovering;
+          return SmoothScrollBuilder(
+            controller: scrollController,
+            builder: (context, controller, physics) {
+              return ListView.builder(
+                controller: controller,
+                physics: physics,
+                itemCount: cachedFlatTree.length,
+                prototypeItem: cachedFlatTree.isNotEmpty ? HierarchyEntryWidget(entry: cachedFlatTree.first.entry) : null,
+                itemBuilder: (context, index) {
+                  var entry = cachedFlatTree[index];
+                  return HierarchyEntryWidget(
+                    key: Key(entry.uuidPath.join(", ")),
+                    entry: entry.entry,
+                    depth: entry.depth
+                  );
+                }
+              );
+            }
+          );
+        }
+      ),
     );
   }
 
@@ -66,6 +78,115 @@ class _HierarchyFlatListState extends ChangeNotifierState<HierarchyFlatList> {
     if (!entry.isCollapsed.value) {
       for (var child in entry)
         _regenerateFlatTree(child, depth + 1, uuidPath);
+    }
+  }
+
+  Widget shortcutsWrapper({required Widget child}) {
+    return BetterShortcuts(
+      shortcuts: {
+        const KeyCombo(LogicalKeyboardKey.arrowUp, {}, true): ArrowUpShortcut(() => moveSelectionVertically(-1)),
+        const KeyCombo(LogicalKeyboardKey.arrowDown, {}, true): ArrowDownShortcut(() => moveSelectionVertically(1)),
+        const KeyCombo(LogicalKeyboardKey.arrowLeft): ArrowLeftShortcut(() => onArrowLeft()),
+        const KeyCombo(LogicalKeyboardKey.arrowRight): ArrowRightShortcut(() => onArrowRight()),
+        const KeyCombo(LogicalKeyboardKey.enter): EnterShortcut(() => openCurrentFile()),
+      },
+      actions: {
+        ArrowUpShortcut: CallbackAction(),
+        ArrowDownShortcut: CallbackAction(),
+        ArrowLeftShortcut: CallbackAction(),
+        ArrowRightShortcut: CallbackAction(),
+        EnterShortcut: CallbackAction(),
+      },
+      child: child,
+    );
+  }
+
+  void moveSelectionVertically(int direction) {
+    if (!isCursorInside)
+      return;
+    if (openHierarchyManager.selectedEntry == null) {
+      if (cachedFlatTree.isNotEmpty)
+        openHierarchyManager.selectedEntry = cachedFlatTree.first.entry;
+      return;
+    }
+    var currentIndex = cachedFlatTree.indexWhere((e) => e.entry == openHierarchyManager.selectedEntry);
+    if (currentIndex == -1)
+      return;
+    var newIndex = currentIndex + direction;
+    if (newIndex < 0 || newIndex >= cachedFlatTree.length)
+      return;
+    unfocusCurrent();
+    openHierarchyManager.selectedEntry = cachedFlatTree[newIndex].entry;
+    scrollToSelectedEntry();
+  }
+
+  void onArrowLeft() {
+    if (!isCursorInside)
+      return;
+    if (openHierarchyManager.selectedEntry == null)
+      return;
+    unfocusCurrent();
+    if (openHierarchyManager.selectedEntry!.isCollapsed.value || openHierarchyManager.selectedEntry!.isEmpty) {
+      var parent = openHierarchyManager.parentOf(openHierarchyManager.selectedEntry!);
+      if (parent is HierarchyEntry)
+        openHierarchyManager.selectedEntry = parent;
+    }
+    else {
+      openHierarchyManager.selectedEntry!.isCollapsed.value = true;
+    }
+    scrollToSelectedEntry();
+  }
+
+  void onArrowRight() {
+    if (!isCursorInside)
+      return;
+    if (openHierarchyManager.selectedEntry == null)
+      return;
+    unfocusCurrent();
+    if (openHierarchyManager.selectedEntry!.isCollapsed.value) {
+      openHierarchyManager.selectedEntry!.isCollapsed.value = false;
+    }
+    else {
+      var firstChild = openHierarchyManager.selectedEntry!.firstOrNull;
+      if (firstChild != null)
+        openHierarchyManager.selectedEntry = firstChild;
+    }
+    scrollToSelectedEntry();
+  }
+
+  void openCurrentFile() {
+    if (!isCursorInside)
+      return;
+    if (openHierarchyManager.selectedEntry == null)
+      return;
+    if (openHierarchyManager.selectedEntry is FileHierarchyEntry)
+      openHierarchyManager.selectedEntry!.onOpen();
+  }
+
+  void unfocusCurrent() {
+    if (FocusScope.of(context).focusedChild?.hasFocus == true)
+      print("unfocusing");
+    FocusScope.of(context).focusedChild?.unfocus();
+  }
+
+  void scrollToSelectedEntry() {
+    return;
+    if (openHierarchyManager.selectedEntry == null)
+      return;
+    var currentIndex = cachedFlatTree.indexWhere((e) => e.entry == openHierarchyManager.selectedEntry);
+    if (currentIndex == -1)
+      return;
+    var currentEntry = cachedFlatTree[currentIndex];
+    var currentEntryTop = currentEntry.depth * 20.0;
+    var currentEntryBottom = currentEntryTop + 20.0;
+    var currentEntryCenter = (currentEntryTop + currentEntryBottom) / 2;
+    var currentEntryCenterInViewport = currentEntryCenter - scrollController.offset;
+    var viewportHeight = scrollController.position.viewportDimension;
+    if (currentEntryCenterInViewport < 0) {
+      scrollController.jumpTo(scrollController.offset + currentEntryCenterInViewport);
+    }
+    else if (currentEntryCenterInViewport > viewportHeight) {
+      scrollController.jumpTo(scrollController.offset + currentEntryCenterInViewport - viewportHeight);
     }
   }
 }
