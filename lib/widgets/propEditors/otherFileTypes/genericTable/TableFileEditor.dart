@@ -26,14 +26,14 @@ class _TableFileEditorState extends ChangeNotifierState<TableFileEditor> {
   Widget build(BuildContext context) {
     return widget.file.loadingState == LoadingState.loaded
       ? TableEditor(config: widget.getTableConfig())
-      : Column(
-        children: const [
+      : const Column(
+        children: [
           SizedBox(height: 35),
           SizedBox(
             height: 2,
             child: LinearProgressIndicator(backgroundColor: Colors.transparent,)
           ),
         ],
-      );
+    );
   }
 }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../stateManagement/openFileTypes.dart';
 import '../../stateManagement/preferencesData.dart';
 import '../misc/preferencesEditor.dart';
+import '../propEditors/otherFileTypes/EstFileEditor.dart';
 import '../propEditors/otherFileTypes/SaveSlotDataEditor.dart';
 import '../propEditors/otherFileTypes/bnkPlaylistEditor/BnkPlaylistEditor.dart';
 import '../propEditors/otherFileTypes/ftbEditor.dart';
@@ -27,6 +28,7 @@ enum FileType {
   bnkPlaylist,
   saveSlotData,
   wta,
+  est,
 }
 
 Widget makeFileEditor(OpenFileData content) {
@@ -52,7 +54,9 @@ Widget makeFileEditor(OpenFileData content) {
     case FileType.saveSlotData:
       return SaveSlotDataEditor(save: content as SaveSlotData);
     case FileType.wta:
-      return WtaWtpEditor(file: content as WtaWtpData,);
+      return WtaWtpEditor(file: content as WtaWtpData);
+    case FileType.est:
+      return EstFileEditor(file: content as EstFileData);
     case FileType.text:
       return TextFileEditor(key: Key(content.uuid), fileContent: content as TextFileData);
     default:

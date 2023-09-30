@@ -30,6 +30,7 @@ import 'hasUuid.dart';
 import 'miscValues.dart';
 import 'listNotifier.dart';
 import 'openFilesManager.dart';
+import 'otherFileTypes/EstFileData.dart';
 import 'otherFileTypes/FtbFileData.dart';
 import 'otherFileTypes/McdData.dart';
 import 'otherFileTypes/SlotDataDat.dart';
@@ -93,6 +94,8 @@ abstract class OpenFileData extends ChangeNotifier with HasUuid, Undoable {
       return SaveSlotData(name, path, secondaryName: secondaryName);
     else if (path.endsWith(".wta") || path.endsWith(".wtb"))
       return WtaWtpData(name, path, secondaryName: secondaryName, isWtb: path.endsWith(".wtb"));
+    else if (path.endsWith(".est"))
+      return EstFileData(name, path, secondaryName: secondaryName);
     else
       return TextFileData(name, path, secondaryName: secondaryName);
   }
@@ -120,6 +123,8 @@ abstract class OpenFileData extends ChangeNotifier with HasUuid, Undoable {
       return FileType.saveSlotData;
     else if (path.endsWith(".wta") || path.endsWith(".wtb"))
       return FileType.wta;
+    else if (path.endsWith(".est"))
+      return FileType.est;
     else
       return FileType.text;
   }
@@ -1799,6 +1804,62 @@ class WtaWtpData extends OpenFileData {
     textures?.restoreWith(content.textures!);
     name = content._name;
     path = content._path;
+    hasUnsavedChanges = content._unsavedChanges;
+  }
+}
+
+class EstFileData extends OpenFileData {
+  EstData estData;
+
+  EstFileData(super.name, super.path, { super.secondaryName, EstData? estData })
+    : estData = estData ?? EstData(ValueListNotifier([]))
+    , super(icon: Icons.subtitles);
+
+  @override
+  Future<void> load() async {
+    if (_loadingState != LoadingState.notLoaded)
+      return;
+    _loadingState = LoadingState.loading;
+
+    await estData.loadFromEstFile(path);
+    estData.onAnyChange.addListener(_onAnyChange);
+
+    await super.load();
+  }
+
+  @override
+  Future<void> save() async {
+    await estData.save(path);
+    var datDir = dirname(path);
+    changedDatFiles.add(datDir);
+    await super.save();
+  }
+
+  void _onAnyChange() {
+    hasUnsavedChanges = true;
+    undoHistoryManager.onUndoableEvent();
+  }
+
+  @override
+  void dispose() {
+    estData.dispose();
+    super.dispose();
+  }
+
+  @override
+  Undoable takeSnapshot() {
+    var snapshot = EstFileData(_name, _path, estData: estData.takeSnapshot() as EstData);
+    snapshot.optionalInfo = optionalInfo;
+    snapshot._unsavedChanges = _unsavedChanges;
+    snapshot._loadingState = _loadingState;
+    snapshot.overrideUuid(uuid);
+    return snapshot;
+  }
+
+  @override
+  void restoreWith(Undoable snapshot) {
+    var content = snapshot as EstFileData;
+    estData.restoreWith(content.estData);
     hasUnsavedChanges = content._unsavedChanges;
   }
 }

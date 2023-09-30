@@ -131,6 +131,10 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
           [".cpk"],
           () async => openCpkFile(filePath, parent: parent)
         ),
+        Tuple2(
+          [".est"],
+          () async => openGenericFile<EstHierarchyEntry>(filePath, parent, (n, p) => EstHierarchyEntry(n, p))
+        ),
       ];
 
       for (var preset in hierarchyPresets) {
