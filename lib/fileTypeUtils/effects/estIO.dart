@@ -93,13 +93,7 @@ class EstFile {
   late List<int> offsets;
   late List<List<EstTypeHeader>> typeHeaders;
   late List<List<EstTypeEntry>> records;
-
-  static const typeNames = [
-    "PART", "MOVE", "EMIF", "TEX ", "SZSA", "PSSA", "RTSA",
-    "FVWK", "FWK ", "EMMV", "EMSA", "EMPA", "EMRA", "EMFV",
-    "EMFW", "TSC ", "TSM ", "TSN ", "REND", "MJSG", "MJCM",
-    "MJNM", "MJMM", "MJDT", "MJFN", "MJCM", "MJVA",
-  ];
+  List<String> typeNames = [];
 
   EstFile.read(ByteDataWrapper bytes) {
     header = EstHeader.read(bytes);
@@ -116,6 +110,10 @@ class EstFile {
         typeHeadersForRecord.add(EstTypeHeader.read(bytes));
       }
       typeHeaders.add(typeHeadersForRecord);
+
+      if (typeNames.isEmpty && typeHeadersForRecord.isNotEmpty) {
+        typeNames = typeHeadersForRecord.map((e) => e.id).toList();
+      }
     }
 
     records = [];
@@ -135,7 +133,7 @@ class EstFile {
     }
   }
 
-  EstFile.fromRecords(this.records) {
+  EstFile.fromRecords(this.records, this.typeNames) {
     header = EstHeader();
     header.id = "EFF\x00";
     header.recordCount = records.length;

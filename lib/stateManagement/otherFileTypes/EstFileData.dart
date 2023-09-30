@@ -15,6 +15,7 @@ import '../undoable.dart';
 
 class EstData with HasUuid, Undoable {
   final ValueListNotifier<EstRecordWrapper> records;
+  List<String> typeNames = [];
   final onAnyChange = ChangeNotifier();
 
   EstData(this.records) {
@@ -29,6 +30,7 @@ class EstData with HasUuid, Undoable {
           type.map((record) => EstEntryWrapper(record)).toList()
         )))
     );
+    typeNames = est.typeNames;
   }
 
   Future<void> save(String savePath) async {
@@ -40,7 +42,8 @@ class EstData with HasUuid, Undoable {
           .map((entry) => entry.entry)
           .toList()
         )
-        .toList()
+        .toList(),
+      typeNames,
     );
     var bytes = ByteDataWrapper.allocate(est.calculateStructSize());
     est.write(bytes);

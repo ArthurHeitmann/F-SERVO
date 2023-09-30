@@ -3,7 +3,6 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 
-import '../../../fileTypeUtils/effects/estIO.dart';
 import '../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/listNotifier.dart';
@@ -86,6 +85,7 @@ class _EstFileEditorState extends ChangeNotifierState<EstFileEditor> {
             _EstRecordEditor(
               index: i,
               record: widget.file.estData.records[i],
+              typeNames: widget.file.estData.typeNames,
               onRemove: () => widget.file.estData.records.removeAt(i),
             ),
             const Divider(height: 1, thickness: 1,),
@@ -108,11 +108,13 @@ class _EstFileEditorState extends ChangeNotifierState<EstFileEditor> {
 class _EstRecordEditor extends ChangeNotifierWidget {
   final int index;
   final EstRecordWrapper record;
+  final List<String> typeNames;
   final VoidCallback onRemove;
 
   _EstRecordEditor({
     required this.index,
     required this.record,
+    required this.typeNames,
     required this.onRemove,
   }) : super(notifier: record.entries, key: Key(record.uuid));
 
@@ -150,8 +152,8 @@ class _EstRecordEditorState extends ChangeNotifierState<_EstRecordEditor> {
     }
     widget.record.entries.add(entry);
     widget.record.entries.sort((a, b) {
-      var aIdIndex = EstFile.typeNames.indexOf(a.entry.header.id);
-      var bIdIndex = EstFile.typeNames.indexOf(b.entry.header.id);
+      var aIdIndex = widget.typeNames.indexOf(a.entry.header.id);
+      var bIdIndex = widget.typeNames.indexOf(b.entry.header.id);
       return aIdIndex.compareTo(bIdIndex);
     });
   }
