@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../utils/utils.dart';
+import '../widgets/misc/TextFieldFocusNode.dart';
 import 'BetterShortcuts.dart';
 import 'actions.dart';
 import 'intents.dart';
@@ -41,6 +42,29 @@ Widget globalShortcutsWrapper(BuildContext context, { required Widget child }) {
       RedoIntent: RedoAction(),
       ChildKeyboardActionIntent: ChildKeyboardAction(),
     },
-    child: child
+    child: _arrowKeyEventsSuppressor(context, child: child),
+  );
+}
+
+Widget _arrowKeyEventsSuppressor(BuildContext context, { required Widget child }) {
+  return Focus(
+    onKey: (node, event) {
+      if (event is! RawKeyDownEvent)
+        return KeyEventResult.ignored;
+      final arrowKeys = {
+        LogicalKeyboardKey.arrowDown,
+        LogicalKeyboardKey.arrowLeft,
+        LogicalKeyboardKey.arrowRight,
+        LogicalKeyboardKey.arrowUp,
+      };
+      bool isArrowKey = arrowKeys.contains(event.logicalKey);
+      bool isTextFieldFocused = FocusScope.of(context).focusedChild is! TextFieldFocusNode;
+      if (isArrowKey && isTextFieldFocused) {
+        print("Arrow key event suppressed");
+        return KeyEventResult.handled;
+      }
+      return KeyEventResult.ignored;
+    },
+    child: child,
   );
 }

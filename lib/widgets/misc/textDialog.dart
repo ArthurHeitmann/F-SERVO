@@ -6,10 +6,12 @@ import 'package:flutter/material.dart';
 import '../../utils/utils.dart';
 import '../../widgets/theme/customTheme.dart';
 import 'RowSeparated.dart';
+import 'TextFieldFocusNode.dart';
 
 Future<String?> textDialog(BuildContext context, { required String title, String? body, bool Function(String)? validator, String? initialValue }) {
   var result = Completer<String?>();
   var controller = TextEditingController(text: initialValue);
+  final focusNode = TextFieldFocusNode();
 
   void onSubmit() {
     if (validator != null && !validator(controller.text)) {
@@ -51,6 +53,7 @@ Future<String?> textDialog(BuildContext context, { required String title, String
                     ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 200),
                       child: TextField(
+                        focusNode: focusNode,
                         controller: controller,
                         autofocus: true,
                         onSubmitted: (_) => onSubmit(),

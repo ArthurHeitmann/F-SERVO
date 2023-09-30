@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 import '../../widgets/theme/customTheme.dart';
+import 'TextFieldFocusNode.dart';
 import 'SelectableListEntry.dart';
 import 'SmoothScrollBuilder.dart';
 import 'arrowNavigationList.dart';
@@ -60,6 +61,7 @@ class _SelectionContextMenuState extends State<_SelectionContextMenu> with Arrow
   static const maxPopupHeight = 210.0;
   static const entryHeight = 28.0;
   static const screenPadding = 10.0;
+  final focusNode = TextFieldFocusNode();
 
   final scrollController = ScrollController();
   String search = "";
@@ -127,6 +129,7 @@ class _SelectionContextMenuState extends State<_SelectionContextMenu> with Arrow
     return SizedBox(
       height: entryHeight,
       child: TextField(
+        focusNode: focusNode,
         autofocus: true,
         onChanged: (value) {
           setState(() {

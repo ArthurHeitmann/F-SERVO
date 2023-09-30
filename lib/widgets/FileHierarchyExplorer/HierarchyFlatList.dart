@@ -1,12 +1,13 @@
 
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart' show Key, ListView, ScrollController, State, Widget, BuildContext, FocusScope, Focus;
+import 'package:flutter/widgets.dart' show BuildContext, Focus, FocusNode, FocusScope, Key, ListView, ScrollController, State, Widget;
 
 import '../../keyboardEvents/BetterShortcuts.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';
 import '../../stateManagement/FileHierarchy.dart';
 import '../../stateManagement/HierarchyEntryTypes.dart';
 import '../misc/SmoothScrollBuilder.dart';
+import '../misc/TextFieldFocusNode.dart';
 import '../misc/onHoverBuilder.dart';
 import 'HierarchyEntryWidget.dart';
 import 'HierarchyShortcuts.dart';
@@ -102,7 +103,7 @@ class _HierarchyFlatListState extends ChangeNotifierState<HierarchyFlatList> {
   }
 
   void moveSelectionVertically(int direction) {
-    if (!isCursorInside)
+    if (shouldIgnoreKeyboardEvents())
       return;
     if (openHierarchyManager.selectedEntry == null) {
       if (cachedFlatTree.isNotEmpty)
@@ -121,7 +122,7 @@ class _HierarchyFlatListState extends ChangeNotifierState<HierarchyFlatList> {
   }
 
   void onArrowLeft() {
-    if (!isCursorInside)
+    if (shouldIgnoreKeyboardEvents())
       return;
     if (openHierarchyManager.selectedEntry == null)
       return;
@@ -138,7 +139,7 @@ class _HierarchyFlatListState extends ChangeNotifierState<HierarchyFlatList> {
   }
 
   void onArrowRight() {
-    if (!isCursorInside)
+    if (shouldIgnoreKeyboardEvents())
       return;
     if (openHierarchyManager.selectedEntry == null)
       return;
@@ -163,9 +164,15 @@ class _HierarchyFlatListState extends ChangeNotifierState<HierarchyFlatList> {
       openHierarchyManager.selectedEntry!.onOpen();
   }
 
+  bool shouldIgnoreKeyboardEvents() {
+    if (!isCursorInside)
+      return true;
+    if (FocusScope.of(context).focusedChild is TextFieldFocusNode)
+      return true;
+    return false;
+  }
+
   void unfocusCurrent() {
-    if (FocusScope.of(context).focusedChild?.hasFocus == true)
-      print("unfocusing");
     FocusScope.of(context).focusedChild?.unfocus();
   }
 

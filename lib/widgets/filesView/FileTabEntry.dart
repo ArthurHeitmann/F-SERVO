@@ -82,9 +82,12 @@ class _FileTabEntryState extends ChangeNotifierState<FileTabEntry> {
                       builder: (cxt, isHovering) => IconButton(
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
-                        icon: file.hasUnsavedChanges && !isHovering
-                                ? const Icon(Icons.circle, size: 11,)
-                                : const Icon(Icons.close),
+                        icon: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 150),
+                          child: file.hasUnsavedChanges && !isHovering
+                                ? const Icon(Icons.circle, key: ValueKey(1), size: 11,)
+                                : const Icon(Icons.close, key: ValueKey(2))
+                        ),
                         onPressed: () => widget.area.closeFile(file),
                         iconSize: 15,
                         splashRadius: 15,

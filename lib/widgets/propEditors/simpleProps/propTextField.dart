@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../utils/utils.dart';
+import '../../misc/TextFieldFocusNode.dart';
 import 'DoubleClickablePropTextField.dart';
 import 'UnderlinePropTextField.dart';
 import 'primaryPropTextField.dart';
@@ -130,7 +131,7 @@ abstract class PropTextField<P extends Prop> extends ChangeNotifierWidget {
 
 abstract class PropTextFieldState<P extends Prop> extends ChangeNotifierState<PropTextField<P>> {
   late final TextEditingController controller;
-  final FocusNode focusNode = FocusNode();
+  final FocusNode focusNode = TextFieldFocusNode();
   String? errorMsg;
 
   String _getDisplayText() => widget.prop.toString();
