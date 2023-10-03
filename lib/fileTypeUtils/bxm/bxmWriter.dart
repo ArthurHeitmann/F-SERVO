@@ -143,7 +143,7 @@ Future<void> xmlToBxm(XmlElement root, String savePath) async {
     bytes.writeUint8(0);
   }
   
-  await File(savePath).writeAsBytes(bytes.buffer.asUint8List());
+  await bytes.save(savePath);
 }
 
 Future<void> convertXmlToBxmFile(String xmlPath, String bxmPath) async {

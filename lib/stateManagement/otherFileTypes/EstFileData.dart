@@ -1,8 +1,6 @@
 
 // ignore_for_file: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
 
-import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 
 import '../../fileTypeUtils/effects/estIO.dart';
@@ -48,7 +46,7 @@ class EstData with HasUuid, Undoable {
     var bytes = ByteDataWrapper.allocate(est.calculateStructSize());
     est.write(bytes);
     await backupFile(savePath);
-    await File(savePath).writeAsBytes(bytes.buffer.asUint8List());
+    await bytes.save(savePath);
   }
 
   void _onListChange() {

@@ -38,7 +38,7 @@ Future<List<Tuple2<int, String>>> extractBnkWems(BnkFile bnk, String extractPath
       continue;
     var byteData = ByteDataWrapper.allocate(bytes.length);
     byteData.buffer.asUint8List().setAll(0, bytes);
-    await File(savePath).writeAsBytes(bytes);
+    await byteData.save(savePath);
   }
 
   return wems;

@@ -877,7 +877,7 @@ class WaiFileData extends OpenFileData {
     var bytes = ByteDataWrapper.allocate(fileSize);
     wai.write(bytes);
     await backupFile(path);
-    await File(path).writeAsBytes(bytes.buffer.asUint8List());
+    await bytes.save(path);
 
     // update metadata
     await AudioModsMetadata.lock();
@@ -1608,7 +1608,7 @@ class BnkFilePlaylistData extends OpenFileData {
       bytes = ByteDataWrapper.allocate(bnk.calculateSize());
       bnk.write(bytes);
       await backupFile(bnkPath);
-      await File(bnkPath).writeAsBytes(bytes.buffer.asUint8List());
+      await bytes.save(bnkPath);
       // await modsMetaData.toFile(metaDataPath);
     } finally {
       // AudioModsMetadata.unlock();
@@ -1679,7 +1679,7 @@ class SaveSlotData extends OpenFileData {
     var bytes = await ByteDataWrapper.fromFile(path);
     slotData!.write(bytes);
     await backupFile(path);
-    await File(path).writeAsBytes(bytes.buffer.asUint8List());
+    await bytes.save(path);
 
     await super.save();
   }

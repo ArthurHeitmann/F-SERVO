@@ -1,6 +1,4 @@
 
-import 'dart:io';
-
 import '../utils/ByteDataWrapper.dart';
 import 'tmdReader.dart';
 
@@ -15,6 +13,5 @@ Future<void> saveTmd(List<TmdEntry> entries, String path) async {
     bytes.writeString0P(entry.text, StringEncoding.utf16);
   }
 
-  var file = File(path);
-  await file.writeAsBytes(bytes.buffer.asUint8List());
+  await bytes.save(path);
 }

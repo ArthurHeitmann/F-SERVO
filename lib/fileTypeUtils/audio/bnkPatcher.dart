@@ -45,7 +45,7 @@ Future<void> patchBnk(String bnkPath, int wemId, String wemPath) async {
     // write to file
     bnkBytes = ByteDataWrapper.allocate(bnkBytes.length + sizeDiff);
     bnk.write(bnkBytes);
-    await File(bnkPath).writeAsBytes(bnkBytes.buffer.asUint8List());
+    await bnkBytes.save(bnkPath);
   } finally {
     _patchLocks[bnkPath]!.release();
   }

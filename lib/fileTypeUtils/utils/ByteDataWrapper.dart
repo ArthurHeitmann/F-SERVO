@@ -66,6 +66,10 @@ class ByteDataWrapper {
     }
   }
 
+  Future<void> save(String path) async {
+    await File(path).writeAsBytes(buffer.asUint8List());
+  }
+
   int get position => _position;
 
   set position(int value) {

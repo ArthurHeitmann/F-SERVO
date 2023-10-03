@@ -1,6 +1,4 @@
 
-import 'dart:io';
-
 import '../utils/ByteDataWrapper.dart';
 import 'smdReader.dart';
 
@@ -16,6 +14,5 @@ Future<void> saveSmd(List<SmdEntry> entries, String path) async {
     bytes.writeString(text, StringEncoding.utf16);
   }
 
-  var file = File(path);
-  await file.writeAsBytes(bytes.buffer.asUint8List());
+  await bytes.save(path);
 }

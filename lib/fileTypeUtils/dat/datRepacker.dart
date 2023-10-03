@@ -71,7 +71,6 @@ Future<void> repackDat(String datDir, String exportPath) async {
 
   // WRITE
   // Header
-  var datFile = File(exportPath);
   await Directory(path.dirname(exportPath)).create(recursive: true);
   var datSize = fileOffsets.last + fileSizes.last + 1;
   if (datSize % 16 != 0)
@@ -137,7 +136,7 @@ Future<void> repackDat(String datDir, String exportPath) async {
     datBytes.writeBytes(fileData);
   }
 
-  await datFile.writeAsBytes(datBytes.buffer.asUint8List());
+  await datBytes.save(exportPath);
 
   messageLog.add("Repacking ${path.basename(exportPath)} done");
 }

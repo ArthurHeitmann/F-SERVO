@@ -60,7 +60,6 @@ Widget _arrowKeyEventsSuppressor(BuildContext context, { required Widget child }
       bool isArrowKey = arrowKeys.contains(event.logicalKey);
       bool isTextFieldFocused = FocusScope.of(context).focusedChild is! TextFieldFocusNode;
       if (isArrowKey && isTextFieldFocused) {
-        print("Arrow key event suppressed");
         return KeyEventResult.handled;
       }
       return KeyEventResult.ignored;

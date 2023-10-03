@@ -212,7 +212,7 @@ Future<void> _patchWaiAndWspsAndWems(Map<int, AudioModChunkInfo> moddedWaiChunks
   // save new WAI
   var newWaiBytes = ByteDataWrapper.allocate(originalWai.size);
   originalWai.write(newWaiBytes);
-  await File(waiPath).writeAsBytes(newWaiBytes.buffer.asUint8List());
+  await newWaiBytes.save(waiPath);
 }
 
 Future<void> _patchWaiEvents(Map<int, AudioModChunkInfo> moddedWaiEvents, String tmpDir, String waiStreamPath, List<String> changedFiles) async {
@@ -239,7 +239,7 @@ Future<void> _patchWaiEvents(Map<int, AudioModChunkInfo> moddedWaiEvents, String
   // save new WAI
   var newWaiBytes = ByteDataWrapper.allocate(newWai.size);
   newWai.write(newWaiBytes);
-  await File(waiPath).writeAsBytes(newWaiBytes.buffer.asUint8List());
+  await newWaiBytes.save(waiPath);
 }
 
 Future<void> _extractWems(RandomAccessFile wsp, WaiFile wai, List<int> moddedWemIds, List<WemStruct> allWspWems, String extractDir, List<String> changedFiles) async {
@@ -306,5 +306,5 @@ Future<void> _patchBgmBnk(Map<int, AudioModChunkInfo> moddedBnkChunks, String tm
   // save new BNK
   var newBnkBytes = ByteDataWrapper.allocate(originalBnkBytes.length + sizeDiff);
   originalBnk.write(newBnkBytes);
-  await File(originalBnkPath).writeAsBytes(newBnkBytes.buffer.asUint8List());
+  await newBnkBytes.save(originalBnkPath);
 }

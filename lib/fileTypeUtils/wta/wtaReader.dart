@@ -1,18 +1,4 @@
 
-/*
-struct {
-    char    id[4]; //WTB\0
-    int32   unknown;
-    int32   numTex;
-    uint32  offsetTextureOffsets <format=hex>;
-    uint32  offsetTextureSizes <format=hex>;
-    uint32  offsetTextureFlags <format=hex>;
-    uint32  offsetTextureIdx <format=hex>;
-    uint32  offsetTextureInfo <format=hex>;
-} header;
-*/
-import 'dart:io';
-
 import '../../stateManagement/events/statusInfo.dart';
 import '../../utils/utils.dart';
 import '../utils/ByteDataWrapper.dart';
@@ -154,7 +140,7 @@ class WtaFile {
     for (var i = 0; i < textureInfo.length; i++)
       textureInfo[i].write(bytes);
 
-    await File(path).writeAsBytes(bytes.buffer.asUint8List());
+    await bytes.save(path);
   }
 
   void updateHeader() {

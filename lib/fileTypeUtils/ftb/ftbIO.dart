@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import '../utils/ByteDataWrapper.dart';
 
 class FtbFileHeader {
@@ -128,6 +126,6 @@ class FtbFile {
     var size = header.charsOffset + chars.length * 0xC;
     var bytes = ByteDataWrapper.allocate(size);
     write(bytes);
-    await File(path).writeAsBytes(bytes.buffer.asUint8List());
+    await bytes.save(path);
   }
 }

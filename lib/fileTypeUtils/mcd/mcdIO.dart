@@ -1,6 +1,4 @@
 
-import 'dart:io';
-
 import '../../utils/utils.dart';
 import '../utils/ByteDataWrapper.dart';
 
@@ -452,7 +450,7 @@ class McdFile {
     for (var event in events)
       event.write(bytes);
     
-    await File(path).writeAsBytes(bytes.buffer.asUint8List());
+    await bytes.save(path);
   }
 
   @override

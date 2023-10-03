@@ -102,8 +102,7 @@ Future<void> repackPak(String pakDir) async {
   var pakFileName = path.basename(pakDir);
   var pakFilePath = path.join(path.dirname(path.dirname(pakDir)), pakFileName);
   await backupFile(pakFilePath);
-  var pakFile = File(pakFilePath);
-  await pakFile.writeAsBytes(bytes.buffer.asUint8List());
+  await bytes.save(pakFilePath);
 
   print("Pak file $pakFileName created (${fileEntries.length} file repacked)");
   messageLog.add("Repacking ${path.basename(pakDir)} done");

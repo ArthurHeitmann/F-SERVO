@@ -88,8 +88,7 @@ Future<void> xmlFileToYaxFile(String xmlFilePath) async {
   var xml = XmlDocument.parse(xmlString);
   var yax = xmlToYax(xml.rootElement);
   var yaxFilePath = "${path.withoutExtension(xmlFilePath)}.yax";
-  var yaxFile = File(yaxFilePath);
-  await yaxFile.writeAsBytes(yax.buffer.asUint8List());
+  await yax.save(yaxFilePath);
   
   messageLog.add("Converting ${path.basename(xmlFilePath)} done");
 }
