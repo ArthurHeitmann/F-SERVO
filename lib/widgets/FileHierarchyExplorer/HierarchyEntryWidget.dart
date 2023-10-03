@@ -13,6 +13,7 @@ import 'wemPreviewButton.dart';
 class HierarchyEntryWidget extends ChangeNotifierWidget {
   final HierarchyEntry entry;
   final int depth;
+  static const height = 25.0;
 
   HierarchyEntryWidget({ required this.entry, Key? key, this.depth = 0 })
     : super(key: key ?? Key(entry.uuid), notifiers: [entry, shouldAutoTranslate, openHierarchySearch]);
@@ -84,7 +85,7 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
       child: optionallySetupSelectable(context,
         Container(
           padding: const EdgeInsets.symmetric(vertical: 3),
-          height: 25,
+          height: HierarchyEntryWidget.height,
           child: Row(
             children: [
               SizedBox(width: 15.0 * widget.depth,),

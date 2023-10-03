@@ -1,6 +1,6 @@
 
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart' show BuildContext, Focus, FocusNode, FocusScope, Key, ListView, ScrollController, State, Widget;
+import 'package:flutter/widgets.dart' show BuildContext, Curves, FocusScope, Key, ListView, ScrollController, State, Widget;
 
 import '../../keyboardEvents/BetterShortcuts.dart';
 import '../../stateManagement/ChangeNotifierWidget.dart';
@@ -177,23 +177,26 @@ class _HierarchyFlatListState extends ChangeNotifierState<HierarchyFlatList> {
   }
 
   void scrollToSelectedEntry() {
-    return;
     if (openHierarchyManager.selectedEntry == null)
       return;
     var currentIndex = cachedFlatTree.indexWhere((e) => e.entry == openHierarchyManager.selectedEntry);
     if (currentIndex == -1)
       return;
-    var currentEntry = cachedFlatTree[currentIndex];
-    var currentEntryTop = currentEntry.depth * 20.0;
-    var currentEntryBottom = currentEntryTop + 20.0;
-    var currentEntryCenter = (currentEntryTop + currentEntryBottom) / 2;
-    var currentEntryCenterInViewport = currentEntryCenter - scrollController.offset;
-    var viewportHeight = scrollController.position.viewportDimension;
-    if (currentEntryCenterInViewport < 0) {
-      scrollController.jumpTo(scrollController.offset + currentEntryCenterInViewport);
-    }
-    else if (currentEntryCenterInViewport > viewportHeight) {
-      scrollController.jumpTo(scrollController.offset + currentEntryCenterInViewport - viewportHeight);
+    var currentEntryTop = currentIndex * HierarchyEntryWidget.height;
+    var currentEntryBottom = currentEntryTop + HierarchyEntryWidget.height;
+    var scrollOffset = scrollController.offset;
+    var scrollBottom = scrollOffset + scrollController.position.viewportDimension;
+    double? scrollOffsetAfter;
+    if (currentEntryTop < scrollOffset)
+      scrollOffsetAfter = currentEntryTop;
+    else if (currentEntryBottom > scrollBottom)
+      scrollOffsetAfter = currentEntryBottom - scrollController.position.viewportDimension;
+    if (scrollOffsetAfter != null) {
+      scrollController.animateTo(
+        scrollOffsetAfter,
+        duration: const Duration(milliseconds: 150),
+        curve: Curves.easeOut,
+      );
     }
   }
 }
