@@ -19,10 +19,32 @@ BoxConstraints constraintsFromCount(int count, bool compactMode) {
     return const BoxConstraints(minWidth: 35, maxWidth: 60);
 }
 
+class VectorPropTFOptions extends PropTFOptions {
+  final List<String>? chars;
+  final List<Color>? colors;
+
+  const VectorPropTFOptions({
+    super.key,
+    super.constraints = const BoxConstraints(minWidth: 50),
+    super.isMultiline = false,
+    super.useIntrinsicWidth = true,
+    super.hintText,
+    super.autocompleteOptions,
+    this.chars,
+    this.colors,
+  });
+}
+
 class VectorPropEditor<T extends PropTextField> extends StatelessWidget {
   final VectorProp prop;
+  final PropTFOptions options;
+  final List<String> coordChars;
+  final List<Color> coordColors;
 
-  const VectorPropEditor({super.key, required this.prop});
+  VectorPropEditor({Key? key, required this.prop, this.options = const VectorPropTFOptions()}) :
+    coordChars = (options is VectorPropTFOptions ? options.chars : null) ?? _coordChars,
+    coordColors = (options is VectorPropTFOptions ? options.colors : null) ?? _coordColors,
+    super(key: options.key ?? key);
 
   @override
   Widget build(BuildContext context) {
@@ -43,15 +65,15 @@ class VectorPropEditor<T extends PropTextField> extends StatelessWidget {
                     Flexible(
                       child: NumberPropTextField<T>(
                         prop: prop[i],
-                        options: PropTFOptions(constraints: constraintsFromCount(prop.length, compact)),
+                        options: options.copyWith(constraints: constraintsFromCount(prop.length, compact)),
                         left: prop.length == 3 && !compact
                           ? Padding(
                             padding: const EdgeInsets.only(right: 4, left: 6),
                             child: Opacity(
                               opacity: 0.4,
                               child: Text(
-                                _coordChars[i], style: TextStyle(
-                                  color: _coordColors[i],
+                                coordChars[i], style: TextStyle(
+                                  color: coordColors[i],
                                   fontWeight: FontWeight.w900,
                                   fontSize: 13
                                 )
@@ -63,7 +85,7 @@ class VectorPropEditor<T extends PropTextField> extends StatelessWidget {
                     ),
                 ],
               )
-              : PropTextField.make<T>(prop: prop);
+              : PropTextField.make<T>(prop: prop, options: options);
             }
           ),
         );

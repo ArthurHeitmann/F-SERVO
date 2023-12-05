@@ -1,8 +1,7 @@
 
-import 'dart:typed_data';
-
 import '../audio/bnkPatcher.dart';
 import '../utils/ByteDataWrapper.dart';
+import 'estEntryTypes.dart';
 
 class EstHeader {
   late String id;
@@ -67,25 +66,13 @@ abstract class EstTypeEntry {
   late EstTypeHeader header;
 
   static EstTypeEntry read(ByteDataWrapper bytes, EstTypeHeader header) {
+    var makeEntryFunc = estTypeFactories[header.id];
+    if (makeEntryFunc != null)
+      return makeEntryFunc(bytes, header);
     return EstUnknownTypeEntry.read(bytes, header);
   }
 
   void write(ByteDataWrapper bytes);
-}
-
-class EstUnknownTypeEntry extends EstTypeEntry {
-  late Uint8List data;
-
-  EstUnknownTypeEntry.read(ByteDataWrapper bytes, EstTypeHeader header) {
-    this.header = header;
-    data = bytes.asUint8List(header.size);
-  }
-
-  @override
-  void write(ByteDataWrapper bytes) {
-    for (var byte in data)
-      bytes.writeUint8(byte);
-  }
 }
 
 class EstFile {

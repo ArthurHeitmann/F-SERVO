@@ -3,16 +3,17 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 
-import '../../../stateManagement/ChangeNotifierWidget.dart';
-import '../../../stateManagement/Property.dart';
-import '../../../stateManagement/listNotifier.dart';
-import '../../../stateManagement/openFileTypes.dart';
-import '../../../stateManagement/otherFileTypes/EstFileData.dart';
-import '../../../utils/utils.dart';
-import '../../misc/SmoothScrollBuilder.dart';
-import '../../misc/onHoverBuilder.dart';
-import '../../theme/customTheme.dart';
-import '../simpleProps/boolPropCheckbox.dart';
+import '../../../../fileTypeUtils/effects/estEntryTypes.dart';
+import '../../../../stateManagement/ChangeNotifierWidget.dart';
+import '../../../../stateManagement/Property.dart';
+import '../../../../stateManagement/listNotifier.dart';
+import '../../../../stateManagement/openFileTypes.dart';
+import '../../../../stateManagement/otherFileTypes/EstFileData.dart';
+import '../../../../utils/utils.dart';
+import '../../../misc/SmoothScrollBuilder.dart';
+import '../../../misc/onHoverBuilder.dart';
+import '../../../theme/customTheme.dart';
+import '../../simpleProps/boolPropCheckbox.dart';
 
 
 class EstFileEditor extends ChangeNotifierWidget {
@@ -55,7 +56,8 @@ class _EstFileEditorState extends ChangeNotifierState<EstFileEditor> {
     }
     var entries = json.map((e) => EstEntryWrapper.fromJson(e));
     widget.file.estData.records.add(EstRecordWrapper(
-      ValueListNotifier(entries.toList())
+      ValueListNotifier(entries.toList()),
+      widget.file.uuid,
     ));
   }
 
@@ -86,7 +88,10 @@ class _EstFileEditorState extends ChangeNotifierState<EstFileEditor> {
               index: i,
               record: widget.file.estData.records[i],
               typeNames: widget.file.estData.typeNames,
-              onRemove: () => widget.file.estData.records.removeAt(i),
+              onRemove: () => widget.file.estData.removeRecord(widget.file.estData.records[i]),
+              selectedEntry: widget.file.estData.selectedEntry,
+              // initiallyCollapsed: widget.file.estData.records.length > 3,
+              initiallyCollapsed: false,
             ),
             const Divider(height: 1, thickness: 1,),
           ],
@@ -110,12 +115,16 @@ class _EstRecordEditor extends ChangeNotifierWidget {
   final EstRecordWrapper record;
   final List<String> typeNames;
   final VoidCallback onRemove;
+  final ValueNotifier<EstEntryWrapper?> selectedEntry;
+  final bool initiallyCollapsed;
 
   _EstRecordEditor({
     required this.index,
     required this.record,
     required this.typeNames,
     required this.onRemove,
+    required this.selectedEntry,
+    required this.initiallyCollapsed,
   }) : super(notifier: record.entries, key: Key(record.uuid));
 
   @override
@@ -123,7 +132,13 @@ class _EstRecordEditor extends ChangeNotifierWidget {
 }
 
 class _EstRecordEditorState extends ChangeNotifierState<_EstRecordEditor> {
-  bool isCollapsed = true;
+  late bool isCollapsed;
+
+  @override
+  void initState() {
+    isCollapsed = widget.initiallyCollapsed;
+    super.initState();
+  }
 
   void pasteEntry() async {
     var jsonStr = await getClipboardText();
@@ -202,7 +217,8 @@ class _EstRecordEditorState extends ChangeNotifierState<_EstRecordEditor> {
           for (var entry in widget.record.entries)
             _EstEntryWidget(
               entry: entry,
-              onRemove: () => widget.record.entries.remove(entry),
+              onRemove: () => widget.record.removeEntry(entry),
+              selectedEntry: widget.selectedEntry,
             ),
           Padding(
             padding: const EdgeInsets.all(8.0),
@@ -219,43 +235,63 @@ class _EstRecordEditorState extends ChangeNotifierState<_EstRecordEditor> {
   }
 }
 
-class _EstEntryWidget extends StatefulWidget {
+class _EstEntryWidget extends ChangeNotifierWidget {
   final EstEntryWrapper entry;
   final VoidCallback onRemove;
+  final ValueNotifier<EstEntryWrapper?> selectedEntry;
 
-  const _EstEntryWidget({
+  _EstEntryWidget({
     required this.entry,
     required this.onRemove,
-  });
+    required this.selectedEntry,
+  }) : super(notifier: selectedEntry);
 
   @override
   State<_EstEntryWidget> createState() => _EstEntryWidgetState();
 }
 
-class _EstEntryWidgetState extends State<_EstEntryWidget> {
+class _EstEntryWidgetState extends ChangeNotifierState<_EstEntryWidget> {
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 25,
-      padding: const EdgeInsets.only(left: 10),
-      child: Row(
-        children: [
-          Text(" - ${widget.entry.entry.header.id}"),
-          const SizedBox(width: 10),
-          _EntryIconButton(
-            onPressed: () => _copyJson(widget.entry.toJson()),
-            icon: Icons.copy,
+    return GestureDetector(
+      onTap: () => widget.selectedEntry.value = widget.entry,
+      child: OnHoverBuilder(
+        builder: (context, isHovering) => AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          color: _getBackgroundColor(isHovering),
+          height: 25,
+          padding: const EdgeInsets.only(left: 10),
+          child: Row(
+            children: [
+              ConstrainedBox(
+                constraints: const BoxConstraints(minWidth: 325),
+                child: Text(" - ${widget.entry.entry.header.id} / ${estTypeFullNames[widget.entry.entry.header.id]}")
+              ),
+              const SizedBox(width: 10),
+              _EntryIconButton(
+                onPressed: () => _copyJson(widget.entry.toJson()),
+                icon: Icons.copy,
+              ),
+              _EntryCheckbox(prop: widget.entry.isEnabled),
+              const SizedBox(width: 5),
+              _EntryIconButton(
+                onPressed: widget.onRemove,
+                icon: Icons.delete,
+                iconSize: 15,
+              ),
+            ],
           ),
-          _EntryCheckbox(prop: widget.entry.isEnabled),
-          const SizedBox(width: 5),
-          _EntryIconButton(
-            onPressed: widget.onRemove,
-            icon: Icons.delete,
-            iconSize: 15,
-          ),
-        ],
+        )
       ),
     );
+  }
+
+  Color _getBackgroundColor(bool isHovering) {
+    if (widget.entry == widget.selectedEntry.value)
+      return getTheme(context).textColor!.withOpacity(0.15);
+    if (isHovering)
+      return getTheme(context).textColor!.withOpacity(0.05);
+    return Colors.transparent;
   }
 }
 

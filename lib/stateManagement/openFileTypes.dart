@@ -1809,11 +1809,12 @@ class WtaWtpData extends OpenFileData {
 }
 
 class EstFileData extends OpenFileData {
-  EstData estData;
+  late final EstData estData;
 
   EstFileData(super.name, super.path, { super.secondaryName, EstData? estData })
-    : estData = estData ?? EstData(ValueListNotifier([]))
-    , super(icon: Icons.subtitles);
+    : super(icon: Icons.subtitles) {
+    this.estData = estData ?? EstData(ValueListNotifier([]), uuid);
+  }
 
   @override
   Future<void> load() async {

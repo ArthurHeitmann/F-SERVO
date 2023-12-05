@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../stateManagement/Property.dart';
+import 'FloatPropTextField.dart';
 import 'HexPropTextField.dart';
 import 'NumberPropTextField.dart';
 import 'VectorPropEditor.dart';
@@ -15,8 +16,10 @@ Widget makePropEditor<T extends PropTextField>(Prop prop, [PropTFOptions options
       return HexPropTextField<T>(prop: prop as HexProp, options: options);
     case PropType.number:
       return NumberPropTextField<T>(prop: prop as NumberProp, options: options);
+    case PropType.float:
+      return FloatPropTextField<T>(prop: prop as FloatProp, options: options);
     case PropType.vector:
-      return VectorPropEditor<T>(prop: prop as VectorProp);
+      return VectorPropEditor<T>(prop: prop as VectorProp, options: options,);
     case PropType.bool:
       return BoolPropCheckbox(prop: prop as BoolProp);
     default:

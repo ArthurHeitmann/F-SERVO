@@ -10,7 +10,7 @@ import 'miscValues.dart';
 import 'undoable.dart';
 
 enum PropType {
-  number, hexInt, vector, string, bool
+  number, hexInt, vector, string, bool, float
 }
 
 mixin Prop<T> implements Listenable, Undoable {
@@ -133,6 +133,28 @@ class NumberProp extends ValueProp<num> {
   @override
   Undoable takeSnapshot() {
     var prop = NumberProp(value, isInteger);
+    prop.overrideUuid(uuid);
+    return prop;
+  }
+}
+
+class FloatProp extends ValueProp<double> {
+  @override
+  final PropType type = PropType.float;
+
+  FloatProp(super.value);
+
+  @override
+  String toString() => doubleToStr(value);
+  
+  @override
+  void updateWith(String str) {
+    value = double.parse(str);
+  }
+
+  @override
+  Undoable takeSnapshot() {
+    var prop = FloatProp(value);
     prop.overrideUuid(uuid);
     return prop;
   }

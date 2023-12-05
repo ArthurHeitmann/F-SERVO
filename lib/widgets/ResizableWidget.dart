@@ -37,6 +37,7 @@ class ResizableWidget extends StatefulWidget {
 
 class _ResizableWidgetState extends State<ResizableWidget> {
   final List<double> percentages = [];
+  final Map<int, List<double>> prevPercentages = {};
 
   @override
   void initState() {
@@ -123,7 +124,11 @@ class _ResizableWidgetState extends State<ResizableWidget> {
   void _updatePercentageFromParent() {
     if (widget.percentages.length == percentages.length)
       return;
+    prevPercentages[percentages.length] = percentages.toList();
     percentages.clear();
-    percentages.addAll(widget.percentages);
+    if (prevPercentages.containsKey(widget.percentages.length))
+      percentages.addAll(prevPercentages[widget.percentages.length]!);
+    else
+      percentages.addAll(widget.percentages);
   }
 }

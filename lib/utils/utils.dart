@@ -460,6 +460,7 @@ const Map<String, String> _nameStartToFolder = {
   "q": "quest",
   "core": "core",
   "credit": "credit",
+  "ev": "event",
   "Debug": "debug",
   "font": "font",
   "misctex": "misctex",
@@ -467,6 +468,8 @@ const Map<String, String> _nameStartToFolder = {
   "txt": "txtmess",
 };
 String getDatFolder(String datName) {
+  if (datName.endsWith(".eff"))
+    return "effect";
   var c2 = datName.substring(0, 2);
   if (_basicFolders.contains(c2))
     return c2;
