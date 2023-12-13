@@ -9,6 +9,7 @@ import '../../stateManagement/xmlProps/xmlProp.dart';
 import '../misc/Selectable.dart';
 import '../misc/SmoothScrollBuilder.dart';
 import '../propEditors/otherFileTypes/effect/EstEntryDetailsEditor.dart';
+import '../propEditors/otherFileTypes/effect/EstRecordDetailsEditor.dart';
 import '../propEditors/xmlActions/XmlPropDetails.dart';
 
 class FileDetailsEditor extends ChangeNotifierWidget {
@@ -89,8 +90,12 @@ class _FileDetailsEditorState extends ChangeNotifierState<FileDetailsEditor> {
     if (prop != null)
       return XmlPropDetails(key: ValueKey(prop), prop: prop);
     var currentFile = areasManager.activeArea?.currentFile;
-    if (currentFile is EstFileData && currentFile.estData.selectedEntry.value != null)
-      return EstEntryDetailsEditor(entry: currentFile.estData.selectedEntry.value!);
+    if (currentFile is EstFileData) {
+      if (currentFile.estData.selectedEntry.value?.record != null)
+        return EstRecordDetailsEditor(record: currentFile.estData.selectedEntry.value!.record!);
+      if (currentFile.estData.selectedEntry.value?.entry != null)
+        return EstEntryDetailsEditor(entry: currentFile.estData.selectedEntry.value!.entry!);
+    }
     return Container();
   }
 }

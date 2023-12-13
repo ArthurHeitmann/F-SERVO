@@ -14,6 +14,8 @@ import '../../../misc/SmoothScrollBuilder.dart';
 import '../../../misc/onHoverBuilder.dart';
 import '../../../theme/customTheme.dart';
 import '../../simpleProps/boolPropCheckbox.dart';
+import 'EstTexturePreview.dart';
+import 'RgbPropEditor.dart';
 
 
 class EstFileEditor extends ChangeNotifierWidget {
@@ -115,7 +117,7 @@ class _EstRecordEditor extends ChangeNotifierWidget {
   final EstRecordWrapper record;
   final List<String> typeNames;
   final VoidCallback onRemove;
-  final ValueNotifier<EstEntryWrapper?> selectedEntry;
+  final ValueNotifier<SelectedEffectItem?> selectedEntry;
   final bool initiallyCollapsed;
 
   _EstRecordEditor({
@@ -125,7 +127,7 @@ class _EstRecordEditor extends ChangeNotifierWidget {
     required this.onRemove,
     required this.selectedEntry,
     required this.initiallyCollapsed,
-  }) : super(notifier: record.entries, key: Key(record.uuid));
+  }) : super(notifiers: [record.entries, selectedEntry], key: Key(record.uuid));
 
   @override
   State<_EstRecordEditor> createState() => _EstRecordEditorState();
@@ -186,13 +188,14 @@ class _EstRecordEditorState extends ChangeNotifierState<_EstRecordEditor> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        InkWell(
-          onTap: () => setState(() => isCollapsed = !isCollapsed),
+        _SelectableEffectItem(
+          item: SelectedEffectItem(record: widget.record),
+          selectedItem: widget.selectedEntry,
           child: SizedBox(
-            height: 30,
+            height: 35,
             child: Row(
               children: [
-                Icon(isCollapsed ? Icons.keyboard_arrow_right_rounded : Icons.keyboard_arrow_down_rounded, size: 20,),
+                // Icon(isCollapsed ? Icons.keyboard_arrow_right_rounded : Icons.keyboard_arrow_down_rounded, size: 20,),
                 Text("Record ${widget.index}"),
                 const SizedBox(width: 10),
                 _EntryIconButton(
@@ -238,7 +241,7 @@ class _EstRecordEditorState extends ChangeNotifierState<_EstRecordEditor> {
 class _EstEntryWidget extends ChangeNotifierWidget {
   final EstEntryWrapper entry;
   final VoidCallback onRemove;
-  final ValueNotifier<EstEntryWrapper?> selectedEntry;
+  final ValueNotifier<SelectedEffectItem?> selectedEntry;
 
   _EstEntryWidget({
     required this.entry,
@@ -253,45 +256,88 @@ class _EstEntryWidget extends ChangeNotifierWidget {
 class _EstEntryWidgetState extends ChangeNotifierState<_EstEntryWidget> {
   @override
   Widget build(BuildContext context) {
+    return _SelectableEffectItem(
+      item: SelectedEffectItem(entry: widget.entry),
+      selectedItem: widget.selectedEntry,
+      child: SizedBox(
+        height: 25,
+        child: Row(
+          children: [
+            const SizedBox(width: 15),
+            ConstrainedBox(
+              constraints: const BoxConstraints(minWidth: 325),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text("${widget.entry.entry.header.id} / ${estTypeFullNames[widget.entry.entry.header.id]}"),
+                  const SizedBox(width: 10),
+                  if (widget.entry is EstMoveEntryWrapper)
+                    RgbPropEditor(
+                      prop: (widget.entry as EstMoveEntryWrapper).rgb,
+                      showTextFields: false,
+                    ),
+                  if (widget.entry is EstTexEntryWrapper)
+                    EstTexturePreview(
+                      textureFileId: (widget.entry as EstTexEntryWrapper).textureFileId,
+                      textureFileTextureIndex: (widget.entry as EstTexEntryWrapper).textureFileTextureIndex,
+                    ),
+                ],
+              )
+            ),
+            const SizedBox(width: 10),
+            _EntryIconButton(
+              onPressed: () => _copyJson(widget.entry.toJson()),
+              icon: Icons.copy,
+            ),
+            _EntryCheckbox(prop: widget.entry.isEnabled),
+            const SizedBox(width: 5),
+            _EntryIconButton(
+              onPressed: widget.onRemove,
+              icon: Icons.delete,
+              iconSize: 15,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SelectableEffectItem extends StatelessWidget {
+  final ValueNotifier<SelectedEffectItem?> selectedItem;
+  final SelectedEffectItem item;
+  final Widget child;
+
+  const _SelectableEffectItem({required this.item, required this.selectedItem, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => widget.selectedEntry.value = widget.entry,
+      onTap: _select,
       child: OnHoverBuilder(
         builder: (context, isHovering) => AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          color: _getBackgroundColor(isHovering),
-          height: 25,
+          duration: const Duration(milliseconds: 100),
+          color: _getBackgroundColor(context, isHovering),
           padding: const EdgeInsets.only(left: 10),
-          child: Row(
-            children: [
-              ConstrainedBox(
-                constraints: const BoxConstraints(minWidth: 325),
-                child: Text(" - ${widget.entry.entry.header.id} / ${estTypeFullNames[widget.entry.entry.header.id]}")
-              ),
-              const SizedBox(width: 10),
-              _EntryIconButton(
-                onPressed: () => _copyJson(widget.entry.toJson()),
-                icon: Icons.copy,
-              ),
-              _EntryCheckbox(prop: widget.entry.isEnabled),
-              const SizedBox(width: 5),
-              _EntryIconButton(
-                onPressed: widget.onRemove,
-                icon: Icons.delete,
-                iconSize: 15,
-              ),
-            ],
-          ),
+          child: child,
         )
       ),
     );
   }
 
-  Color _getBackgroundColor(bool isHovering) {
-    if (widget.entry == widget.selectedEntry.value)
+  Color _getBackgroundColor(BuildContext context, bool isHovering) {
+    if (item == selectedItem.value)
       return getTheme(context).textColor!.withOpacity(0.15);
     if (isHovering)
       return getTheme(context).textColor!.withOpacity(0.05);
     return Colors.transparent;
+  }
+
+  void _select() {
+    if (selectedItem.value == item && (isCtrlPressed() || isShiftPressed()))
+      selectedItem.value = null;
+    else
+      selectedItem.value = item;
   }
 }
 
@@ -352,4 +398,3 @@ void _copyJson(Object json) {
   var jsonStr = jsonEncode(json);
   copyToClipboard(jsonStr);
 }
- 

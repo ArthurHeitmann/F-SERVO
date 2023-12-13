@@ -557,7 +557,7 @@ void revealFileInExplorer(String path) {
   }
 }
 
-const datExtensions = { ".dat", ".dtt", ".evn", ".eff" };
+const datExtensions = { ".dat", ".dtt", ".evn", ".eff", ".eft" };
 
 bool strEndsWithDat(String str) {
   for (var ext in datExtensions) {

@@ -95,38 +95,42 @@ class EstUnknownTypeEntry extends EstTypeEntry {
 /*
 typedef struct {
 	int16   u_a;
-	int16   u_b;
+	int16   effect_length;
 	uint32  u_c <format=hex>;
 	uint32  u_d;
-	int16   u_e[8];
+	int16   anchor_bone;
+	int16   u_e[7];
 	uint32  uf[9];
 } part_s; 
 */
 /// EffectParticleGenerationData
 class EstTypePartEntry extends EstTypeEntry {
   late int u_a;
-  late int u_b;
+  late int effect_length;
   late int u_c;
   late int u_d;
+  late int anchor_bone;
   late List<int> u_e;
   late List<int> uf;
 
   EstTypePartEntry.read(ByteDataWrapper bytes, EstTypeHeader header) {
     this.header = header;
     u_a = bytes.readInt16();
-    u_b = bytes.readInt16();
+    effect_length = bytes.readInt16();
     u_c = bytes.readUint32();
     u_d = bytes.readUint32();
-    u_e = bytes.asInt16List(8);
+    anchor_bone = bytes.readInt16();
+    u_e = bytes.asInt16List(7);
     uf = bytes.asUint32List(9);
   }
 
   @override
   void write(ByteDataWrapper bytes) {
     bytes.writeInt16(u_a);
-    bytes.writeInt16(u_b);
+    bytes.writeInt16(effect_length);
     bytes.writeUint32(u_c);
     bytes.writeUint32(u_d);
+    bytes.writeInt16(anchor_bone);
     for (var e in u_e)
       bytes.writeInt16(e);
     for (var f in uf)
@@ -136,37 +140,38 @@ class EstTypePartEntry extends EstTypeEntry {
 
 /*
 typedef struct {
-	uint32  u_a;
-	float   offset_x;
-	float   offset_y;
-	float   offset_z;
-	float   unk_1;
-	float   top_pos_1;
-	float   right_pos_1;
-	float   move_speed_x;
-	float   move_speed_y;
-	float   move_speed_z;
-	float   move_small_speed_x;
-	float   move_small_speed_y;
-	float   move_small_speed_z;
-	float   u_b_1[6];
-	float   angle;
-	float   u_b_2[13];
-	float   scale;
-	float   u_c[16];
-	float   red;
-	float   green;
-	float   blue;
-	float   alpha;//intensity?
-		float   u_d_1[4];
-	int16   unk_2;
-	int16   SmoothAppearance;
+	uint32 u_a;
+	float offset_x;
+	float offset_y;
+	float offset_z;
+	float spawn_area_width;
+	float spawn_area_height;
+	float spawn_area_depth;
+	float move_speed_x;
+	float move_speed_y;
+	float move_speed_z;
+	float move_small_speed_x;
+	float move_small_speed_y;
+	float move_small_speed_z;
+	float u_b_1[6];
+	float angle;
+	float u_b_2[12];
+	float scale1;
+	float scale2;
+	float scale3;
+	float u_c[15];
+	float red;
+	float green;
+	float blue;
+	float alpha;
+	float u_d_1[4];
+	float fadeInSpeed;
 	float effect_size_limit_1;
 	float effect_size_limit_2;
 	float effect_size_limit_3;
 	float effect_size_limit_4;
-	float SmoothDisappearance;
-	float   u_d_2[32];
+	float fadeOutSpeed;
+	float u_d_2[32];
 } move_s;
 */
 /// EffectMoveData
@@ -175,9 +180,9 @@ class EstTypeMoveEntry extends EstTypeEntry {
   late double offset_x;
   late double offset_y;
   late double offset_z;
-  late double unk_1;
-  late double top_pos_1;
-  late double right_pos_1;
+  late double spawn_area_width;
+  late double spawn_area_height;
+  late double spawn_area_depth;
   late double move_speed_x;
   late double move_speed_y;
   late double move_speed_z;
@@ -187,21 +192,21 @@ class EstTypeMoveEntry extends EstTypeEntry {
   late List<double> u_b_1;
   late double angle;
   late List<double> u_b_2;
-  late double scaleX;
-  late double scaleY;
-  late double scaleZ;
+  late double scale1;
+  late double scale2;
+  late double scale3;
   late List<double> u_c;
   late double red;
   late double green;
   late double blue;
   late double alpha;
   late List<double> u_d_1;
-  late double smoothAppearance;
+  late double fadeInSpeed;
   late double effect_size_limit_1;
   late double effect_size_limit_2;
   late double effect_size_limit_3;
   late double effect_size_limit_4;
-  late double smoothDisappearance;
+  late double fadeOutSpeed;
   late List<double> u_d_2;
 
   EstTypeMoveEntry.read(ByteDataWrapper bytes, EstTypeHeader header) {
@@ -210,9 +215,9 @@ class EstTypeMoveEntry extends EstTypeEntry {
     offset_x = bytes.readFloat32();
     offset_y = bytes.readFloat32();
     offset_z = bytes.readFloat32();
-    unk_1 = bytes.readFloat32();
-    top_pos_1 = bytes.readFloat32();
-    right_pos_1 = bytes.readFloat32();
+    spawn_area_width = bytes.readFloat32();
+    spawn_area_height = bytes.readFloat32();
+    spawn_area_depth = bytes.readFloat32();
     move_speed_x = bytes.readFloat32();
     move_speed_y = bytes.readFloat32();
     move_speed_z = bytes.readFloat32();
@@ -222,21 +227,21 @@ class EstTypeMoveEntry extends EstTypeEntry {
     u_b_1 = bytes.readFloat32List(6);
     angle = bytes.readFloat32();
     u_b_2 = bytes.readFloat32List(12);
-    scaleX = bytes.readFloat32();
-    scaleY = bytes.readFloat32();
-    scaleZ = bytes.readFloat32();
+    scale1 = bytes.readFloat32();
+    scale2 = bytes.readFloat32();
+    scale3 = bytes.readFloat32();
     u_c = bytes.readFloat32List(15);
     red = bytes.readFloat32();
     green = bytes.readFloat32();
     blue = bytes.readFloat32();
     alpha = bytes.readFloat32();
     u_d_1 = bytes.readFloat32List(4);
-    smoothAppearance = bytes.readFloat32();
+    fadeInSpeed = bytes.readFloat32();
     effect_size_limit_1 = bytes.readFloat32();
     effect_size_limit_2 = bytes.readFloat32();
     effect_size_limit_3 = bytes.readFloat32();
     effect_size_limit_4 = bytes.readFloat32();
-    smoothDisappearance = bytes.readFloat32();
+    fadeOutSpeed = bytes.readFloat32();
     u_d_2 = bytes.readFloat32List(32);
   }
 
@@ -246,9 +251,9 @@ class EstTypeMoveEntry extends EstTypeEntry {
     bytes.writeFloat32(offset_x);
     bytes.writeFloat32(offset_y);
     bytes.writeFloat32(offset_z);
-    bytes.writeFloat32(unk_1);
-    bytes.writeFloat32(top_pos_1);
-    bytes.writeFloat32(right_pos_1);
+    bytes.writeFloat32(spawn_area_width);
+    bytes.writeFloat32(spawn_area_height);
+    bytes.writeFloat32(spawn_area_depth);
     bytes.writeFloat32(move_speed_x);
     bytes.writeFloat32(move_speed_y);
     bytes.writeFloat32(move_speed_z);
@@ -260,9 +265,9 @@ class EstTypeMoveEntry extends EstTypeEntry {
     bytes.writeFloat32(angle);
     for (var b in u_b_2)
       bytes.writeFloat32(b);
-    bytes.writeFloat32(scaleX);
-    bytes.writeFloat32(scaleY);
-    bytes.writeFloat32(scaleZ);
+    bytes.writeFloat32(scale1);
+    bytes.writeFloat32(scale2);
+    bytes.writeFloat32(scale3);
     for (var c in u_c)
       bytes.writeFloat32(c);
     bytes.writeFloat32(red);
@@ -271,12 +276,12 @@ class EstTypeMoveEntry extends EstTypeEntry {
     bytes.writeFloat32(alpha);
     for (var d in u_d_1)
       bytes.writeFloat32(d);
-    bytes.writeFloat32(smoothAppearance);
+    bytes.writeFloat32(fadeInSpeed);
     bytes.writeFloat32(effect_size_limit_1);
     bytes.writeFloat32(effect_size_limit_2);
     bytes.writeFloat32(effect_size_limit_3);
     bytes.writeFloat32(effect_size_limit_4);
-    bytes.writeFloat32(smoothDisappearance);
+    bytes.writeFloat32(fadeOutSpeed);
     for (var d in u_d_2)
       bytes.writeFloat32(d);
   }
@@ -337,130 +342,170 @@ class EstTypeEmifEntry extends EstTypeEntry {
 
 /*
 typedef struct {
-	float speed;
-	int16 coreeff_texture_file;
+	float u_a;
+	int16 texture_file_id;
 	int16 u_c;
-	float size;
-	float u_d[3];
-	struct {
-		float u_d1;
-		int16 u_e;
-		byte  coreeff_texture_file_index;
-		byte  u_f;
-		float u_g;
-		char  u_h[4];
-		float u_i[15];
-	} substruct[2];
+	float u_d1;
+	float u_d2;
+	float u_d3;
+	float u_d4;
+	float u_d5;
+	int16 video_fps_maybe;
+	byte  texture_file_texture_index;
+	byte  is_single_frame;
+	float u_g;
+	int16  frame_offset;
+	int16  u_h;
+	float distortion_effect_strength;
+	uint16 mesh_id<format=hex>;
+	uint16 mesh_i1<format=hex>;
+	float u_i2[8];
+	uint32 u_i3<format=hex>;
+	float u_i4[4];
+	float u_j;
+	float brightness;
+	float u_n;
+	float u_o;
+	uint32 u_p<format=hex>;
+	uint32 u_q<format=hex>;
+	uint32 u_r<format=hex>;
+	float u_s[12];
 } tex_s;
 */
 /// EffectTextureInfoData
 class EstTypeTexEntry extends EstTypeEntry {
   late double speed;
-  late int coreeff_texture_file;
+  late int texture_file_id;
   late int u_c;
   late double size;
-  late List<double> u_d;
-  late List<EstTypeTexSubEntry> substruct;
+  late double u_d2;
+  late double u_d3;
+  late double u_d4;
+  late double u_d5;
+  late int video_fps_maybe;
+  late int texture_file_texture_index;
+  late int is_single_frame;
+  late double u_g;
+  late int frame_offset;
+  late int u_h;
+  late double distortion_effect_strength;
+  late int mesh_id;
+  late int mesh_i1;
+  late List<double> u_i2;
+  late int u_i3;
+  late List<double> u_i4;
+  late double u_j;
+  late double brightness;
+  late double u_n;
+  late double u_o;
+  late int u_p;
+  late int u_q;
+  late int u_r;
+  late List<double> u_s;
 
   EstTypeTexEntry.read(ByteDataWrapper bytes, EstTypeHeader header) {
     this.header = header;
     speed = bytes.readFloat32();
-    coreeff_texture_file = bytes.readInt16();
+    texture_file_id = bytes.readInt16();
     u_c = bytes.readInt16();
     size = bytes.readFloat32();
-    u_d = bytes.readFloat32List(3);
-    substruct = [];
-    for (var i = 0; i < 2; i++) {
-      substruct.add(EstTypeTexSubEntry.read(bytes));
-    }
+    u_d2 = bytes.readFloat32();
+    u_d3 = bytes.readFloat32();
+    u_d4 = bytes.readFloat32();
+    u_d5 = bytes.readFloat32();
+    video_fps_maybe = bytes.readInt16();
+    texture_file_texture_index = bytes.readUint8();
+    is_single_frame = bytes.readUint8();
+    u_g = bytes.readFloat32();
+    frame_offset = bytes.readInt16();
+    u_h = bytes.readInt16();
+    distortion_effect_strength = bytes.readFloat32();
+    mesh_id = bytes.readUint16();
+    mesh_i1 = bytes.readUint16();
+    u_i2 = bytes.readFloat32List(8);
+    u_i3 = bytes.readUint32();
+    u_i4 = bytes.readFloat32List(4);
+    u_j = bytes.readFloat32();
+    brightness = bytes.readFloat32();
+    u_n = bytes.readFloat32();
+    u_o = bytes.readFloat32();
+    u_p = bytes.readUint32();
+    u_q = bytes.readUint32();
+    u_r = bytes.readUint32();
+    u_s = bytes.readFloat32List(12);
   }
 
   @override
   void write(ByteDataWrapper bytes) {
     bytes.writeFloat32(speed);
-    bytes.writeInt16(coreeff_texture_file);
+    bytes.writeInt16(texture_file_id);
     bytes.writeInt16(u_c);
     bytes.writeFloat32(size);
-    for (var d in u_d)
-      bytes.writeFloat32(d);
-    for (var sub in substruct)
-      sub.write(bytes);
-  }
-}
-class EstTypeTexSubEntry {
-  late double u_d1;
-  late int u_e;
-  late int coreeff_texture_file_index;
-  late int u_f;
-  late double u_g;
-  late List<int> u_h;
-  late List<double> u_i;
-
-  EstTypeTexSubEntry.read(ByteDataWrapper bytes) {
-    u_d1 = bytes.readFloat32();
-    u_e = bytes.readInt16();
-    coreeff_texture_file_index = bytes.readUint8();
-    u_f = bytes.readUint8();
-    u_g = bytes.readFloat32();
-    u_h = bytes.asUint8List(4);
-    u_i = bytes.readFloat32List(15);
-  }
-
-  void write(ByteDataWrapper bytes) {
-    bytes.writeFloat32(u_d1);
-    bytes.writeInt16(u_e);
-    bytes.writeUint8(coreeff_texture_file_index);
-    bytes.writeUint8(u_f);
+    bytes.writeFloat32(u_d2);
+    bytes.writeFloat32(u_d3);
+    bytes.writeFloat32(u_d4);
+    bytes.writeFloat32(u_d5);
+    bytes.writeInt16(video_fps_maybe);
+    bytes.writeUint8(texture_file_texture_index);
+    bytes.writeUint8(is_single_frame);
     bytes.writeFloat32(u_g);
-    for (var h in u_h)
-      bytes.writeUint8(h);
-    for (var i in u_i)
+    bytes.writeInt16(frame_offset);
+    bytes.writeInt16(u_h);
+    bytes.writeFloat32(distortion_effect_strength);
+    bytes.writeUint16(mesh_id);
+    bytes.writeUint16(mesh_i1);
+    for (var i in u_i2)
       bytes.writeFloat32(i);
+    bytes.writeUint32(u_i3);
+    for (var i in u_i4)
+      bytes.writeFloat32(i);
+    bytes.writeFloat32(u_j);
+    bytes.writeFloat32(brightness);
+    bytes.writeFloat32(u_n);
+    bytes.writeFloat32(u_o);
+    bytes.writeUint32(u_p);
+    bytes.writeUint32(u_q);
+    bytes.writeUint32(u_r);
+    for (var s in u_s)
+      bytes.writeFloat32(s);
   }
 }
 
 /*
 typedef struct {
-	int16 effect_id_on_objects;
-	int16 tex_num1;
-	int16 tex_num2;
-	int16 tex_num3;
-	int16 left_pos_1;
-	int16 left_pos_2;
+	int16 u_a0;
+	int16 u_a1;
+	int16 imported_effect_id;
+	int16 u_b[3];
 	int32 u_c[5];
 } fwk_s;
 */
 /// EffectFreeWork
 class EstTypeFwkEntry extends EstTypeEntry {
-  late int effect_id_on_objects;
-  late int tex_num1;
-  late int tex_num2;
-  late int tex_num3;
-  late int left_pos_1;
-  late int left_pos_2;
+  late int u_a0;
+  late int u_a1;
+  late int imported_effect_id;
+  late List<int> u_b;
   late List<int> u_c;
 
   EstTypeFwkEntry.read(ByteDataWrapper bytes, EstTypeHeader header) {
     this.header = header;
-    effect_id_on_objects = bytes.readInt16();
-    tex_num1 = bytes.readInt16();
-    tex_num2 = bytes.readInt16();
-    tex_num3 = bytes.readInt16();
-    left_pos_1 = bytes.readInt16();
-    left_pos_2 = bytes.readInt16();
-    u_c = bytes.asUint32List(5);
+    u_a0 = bytes.readInt16();
+    u_a1 = bytes.readInt16();
+    imported_effect_id = bytes.readInt16();
+    u_b = bytes.asInt16List(3);
+    u_c = bytes.asInt32List(5);
   }
 
   @override
   void write(ByteDataWrapper bytes) {
-    bytes.writeInt16(effect_id_on_objects);
-    bytes.writeInt16(tex_num1);
-    bytes.writeInt16(tex_num2);
-    bytes.writeInt16(tex_num3);
-    bytes.writeInt16(left_pos_1);
-    bytes.writeInt16(left_pos_2);
+    bytes.writeInt16(u_a0);
+    bytes.writeInt16(u_a1);
+    bytes.writeInt16(imported_effect_id);
+    for (var b in u_b)
+      bytes.writeInt16(b);
     for (var c in u_c)
-      bytes.writeUint32(c);
+      bytes.writeInt32(c);
   }
 }
 

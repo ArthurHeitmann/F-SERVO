@@ -48,6 +48,7 @@ app.*.map.json
 
 .vscode
 assets/bins
+assets/effect
 assets/mcdFonts
 assets/entityThumbnails
 assets/wavToWemTemplate_*.zip

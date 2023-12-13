@@ -127,7 +127,10 @@ class NumberProp extends ValueProp<num> {
   
   @override
   void updateWith(String str) {
-    value = double.parse(str);
+    if (isInteger)
+      value = int.parse(str);
+    else
+      value = double.parse(str);
   }
 
   @override

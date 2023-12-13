@@ -1,5 +1,5 @@
 
-import '../audio/bnkPatcher.dart';
+import '../../utils/utils.dart';
 import '../utils/ByteDataWrapper.dart';
 import 'estEntryTypes.dart';
 
@@ -162,9 +162,9 @@ class EstFile {
 
   void updateHeaders() {
     header.recordCount = records.length;
-    header.recordOffsetsOffset = alignTo16Bytes(EstHeader.structSize);
-    header.typesOffset = alignTo16Bytes(header.recordOffsetsOffset + 4 * header.recordCount);
-    header.recordsOffset = alignTo16Bytes(header.typesOffset + header.recordCount * header.typeNumber * EstTypeHeader.structSize);
+    header.recordOffsetsOffset = alignTo(EstHeader.structSize, 16);
+    header.typesOffset = alignTo(header.recordOffsetsOffset + 4 * header.recordCount, 16);
+    header.recordsOffset = alignTo(header.typesOffset + header.recordCount * header.typeNumber * EstTypeHeader.structSize, 16);
 
     offsets = List.filled(records.length, 0);
     offsets[0] = header.recordsOffset;

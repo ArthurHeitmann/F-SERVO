@@ -94,7 +94,7 @@ abstract class OpenFileData extends ChangeNotifier with HasUuid, Undoable {
       return SaveSlotData(name, path, secondaryName: secondaryName);
     else if (path.endsWith(".wta") || path.endsWith(".wtb"))
       return WtaWtpData(name, path, secondaryName: secondaryName, isWtb: path.endsWith(".wtb"));
-    else if (path.endsWith(".est"))
+    else if (path.endsWith(".est") || path.endsWith(".sst"))
       return EstFileData(name, path, secondaryName: secondaryName);
     else
       return TextFileData(name, path, secondaryName: secondaryName);
@@ -123,7 +123,7 @@ abstract class OpenFileData extends ChangeNotifier with HasUuid, Undoable {
       return FileType.saveSlotData;
     else if (path.endsWith(".wta") || path.endsWith(".wtb"))
       return FileType.wta;
-    else if (path.endsWith(".est"))
+    else if (path.endsWith(".est") || path.endsWith(".sst"))
       return FileType.est;
     else
       return FileType.text;

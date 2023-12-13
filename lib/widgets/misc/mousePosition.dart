@@ -8,6 +8,7 @@ class MousePosition extends StatelessWidget {
   static Offset _mousePos = const Offset(0, 0);
   static final List<MousePoseChangeCallback> _dragListeners = [];
   static final List<VoidCallback> _dragEndListeners = [];
+  static final List<MousePoseChangeCallback> _moveListeners = [];
 
   const MousePosition({super.key, required this.child});
 
@@ -29,11 +30,21 @@ class MousePosition extends StatelessWidget {
     _dragEndListeners.remove(callback);
   }
 
+  static void addMoveListener(MousePoseChangeCallback callback) {
+    _moveListeners.add(callback);
+  }
+
+  static void removeMoveListener(MousePoseChangeCallback callback) {
+    _moveListeners.remove(callback);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Listener(
       onPointerHover: (event) {
         _mousePos = event.position;
+        for (var listener in _moveListeners.toList())
+          listener(_mousePos);
       },
       onPointerMove: (e) {
         _mousePos = e.position;

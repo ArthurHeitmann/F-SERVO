@@ -1,13 +1,11 @@
 
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 
-import '../../../../stateManagement/ChangeNotifierWidget.dart';
 import '../../../../stateManagement/Property.dart';
 import '../../../../stateManagement/otherFileTypes/EstFileData.dart';
-import '../../simpleProps/VectorPropEditor.dart';
 import '../../simpleProps/propEditorFactory.dart';
+import 'EstTexturePreview.dart';
+import 'RgbPropEditor.dart';
 
 class EstEntryDetailsEditor extends StatefulWidget {
   final EstEntryWrapper entry;
@@ -23,13 +21,16 @@ class _EstEntryDetailsEditorState extends State<EstEntryDetailsEditor> {
   @override
   Widget build(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: _getWidgets(),
     );
   }
 
   List<Widget> _getWidgets() {
     var entry = widget.entry;
-    if (entry is EstMoveEntryWrapper)
+    if (entry is EstPartEntryWrapper)
+      return _getPartWidgets(entry);
+    else if (entry is EstMoveEntryWrapper)
       return _getMoveWidgets(entry);
     else if (entry is EstEmifEntryWrapper)
       return _getEmifWidgets(entry);
@@ -40,22 +41,28 @@ class _EstEntryDetailsEditorState extends State<EstEntryDetailsEditor> {
     else
       return [];
   }
+
+  List<Widget> _getPartWidgets(EstPartEntryWrapper entry) {
+    return [
+      _EntryPropEditor(label: "Unknown", prop: entry.unknown),
+      _EntryPropEditor(label: "Anchor bone ID", prop: entry.anchorBone),
+    ];
+  }
   
   List<Widget> _getMoveWidgets(EstMoveEntryWrapper entry) {
     return [
       _EntryPropEditor(label: "Offset", prop: entry.offset),
-      _EntryPropEditor(label: "Top pos 1", prop: entry.topPos1),
-      _EntryPropEditor(label: "Right pos 1", prop: entry.rightPos1),
+      _EntryPropEditor(label: "Spawn box size", prop: entry.spawnBoxSize),
       _EntryPropEditor(label: "Move speed", prop: entry.moveSpeed),
       _EntryPropEditor(label: "Move small speed", prop: entry.moveSmallSpeed),
-      _EntryPropEditor(label: "Angle (°)", prop: entry.angle),
+      _EntryPropEditor(label: "Rotation (°)", prop: entry.angle),
       _EntryPropEditor(label: "Scale (main)", prop: entry.scaleY),
       _EntryPropEditor(label: "Scale (secondary)", prop: entry.scaleX),
       _EntryPropEditor(label: "Scale (?)", prop: entry.scaleZ),
-      _EntryPropEditor(label: "Color", child: _RgbPropEditor(prop: entry.rgb)),
+      _EntryPropEditor(label: "Color", child: RgbPropEditor(prop: entry.rgb)),
       _EntryPropEditor(label: "Alpha", prop: entry.alpha),
-      _EntryPropEditor(label: "Fade in speed", prop: entry.smoothAppearance),
-      _EntryPropEditor(label: "Fade out speed", prop: entry.smoothDisappearance),
+      _EntryPropEditor(label: "Fade in speed", prop: entry.fadeInSpeed),
+      _EntryPropEditor(label: "Fade out speed", prop: entry.fadeOutSpeed),
       _EntryPropEditor(label: "Effect size limit 1", prop: entry.effectSizeLimit1),
       _EntryPropEditor(label: "Effect size limit 2", prop: entry.effectSizeLimit2),
       _EntryPropEditor(label: "Effect size limit 3", prop: entry.effectSizeLimit3),
@@ -76,20 +83,32 @@ class _EstEntryDetailsEditorState extends State<EstEntryDetailsEditor> {
     return [
       _EntryPropEditor(label: "Speed", prop: entry.speed),
       _EntryPropEditor(label: "Size", prop: entry.size),
-      _EntryPropEditor(label: "coreeff texture file", prop: entry.coreeffTextureFile),
-      _EntryPropEditor(label: "coreff tex file index 1", prop: entry.coreeffTextureFileIndex1),
-      _EntryPropEditor(label: "coreff tex file index 2 (?)", prop: entry.coreeffTextureFileIndex2),
+      Row(
+        children: [
+          Expanded(
+            child: Column(
+              children: [
+                _EntryPropEditor(label: "Texture file ID", prop: entry.textureFileId),
+                _EntryPropEditor(label: "Texture index", prop: entry.textureFileTextureIndex),
+              ],
+            ),
+          ),
+          EstTexturePreview(
+            textureFileId: (widget.entry as EstTexEntryWrapper).textureFileId,
+            textureFileTextureIndex: (widget.entry as EstTexEntryWrapper).textureFileTextureIndex,
+            size: 50,
+          ),
+        ],
+      ),
+      _EntryPropEditor(label: "Mesh ID", prop: entry.meshId),
+      _EntryPropEditor(label: "Is single frame", prop: entry.isSingleFrame),
+      _EntryPropEditor(label: "Video FPS (?)", prop: entry.videoFps),
     ];
   }
 
   List<Widget> _getFwkWidgets(EstFwkEntryWrapper entry) {
     return [
-      _EntryPropEditor(label: "Effect ID on objects", prop: entry.effectIdOnObjects),
-      _EntryPropEditor(label: "Tex num 1", prop: entry.texNum1),
-      _EntryPropEditor(label: "Tex num 2", prop: entry.texNum2),
-      _EntryPropEditor(label: "Tex num 3", prop: entry.texNum3),
-      _EntryPropEditor(label: "Left pos 1", prop: entry.leftPos1),
-      _EntryPropEditor(label: "Left pos 2", prop: entry.leftPos2),
+      _EntryPropEditor(label: "Imported effect EST index", prop: entry.importedEffectId),
     ];
   }
 }
@@ -110,54 +129,6 @@ class _EntryPropEditor extends StatelessWidget {
         Flexible(
           child: child ?? makePropEditor(prop!),
         ),
-      ],
-    );
-  }
-}
-
-class _RgbPropEditor extends StatelessWidget {
-  final VectorProp prop;
-
-  const _RgbPropEditor({super.key, required this.prop});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        ChangeNotifierBuilder(
-          notifier: prop,
-          builder: (context) {
-            double maxVal = prop
-              .map((e) => e.value.toDouble())
-              .reduce(max);
-            maxVal = max(maxVal, 1.0);
-            return Container(
-              width: 20,
-              height: 20,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(5),
-                color: Color.fromARGB(
-                  255,
-                  (prop[0].value.toDouble() / maxVal * 255).toInt(),
-                  (prop[1].value.toDouble() / maxVal * 255).toInt(),
-                  (prop[2].value.toDouble() / maxVal * 255).toInt(),
-                ),
-                border: Border.all(
-                  color: Colors.black,
-                ),
-              ),
-            );
-          }
-        ),
-        const SizedBox(width: 10),
-        Flexible(
-          child: makePropEditor(
-            prop,
-            const VectorPropTFOptions(
-              chars: ["R", "G", "B"],
-            )
-          ),
-        )
       ],
     );
   }

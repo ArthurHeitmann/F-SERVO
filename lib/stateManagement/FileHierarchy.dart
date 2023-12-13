@@ -132,7 +132,7 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
           () async => openCpkFile(filePath, parent: parent)
         ),
         Tuple2(
-          [".est"],
+          [".est", ".sst"],
           () async => openGenericFile<EstHierarchyEntry>(filePath, parent, (n, p) => EstHierarchyEntry(n, p))
         ),
       ];
@@ -194,7 +194,7 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
     List<Future<void>> futures = [];
     datFilePaths ??= await getDatFileList(datExtractDir);
     RubyScriptGroupHierarchyEntry? rubyScriptGroup;
-    const supportedFileEndings = { ".pak", "_scp.bin", ".tmd", ".smd", ".mcd", ".ftb", ".bnk", ".bxm", ".wta", ".wtb", ".est" };
+    const supportedFileEndings = { ".pak", "_scp.bin", ".tmd", ".smd", ".mcd", ".ftb", ".bnk", ".bxm", ".wta", ".wtb", ".est", ".sst" };
     for (var file in datFilePaths) {
       if (supportedFileEndings.every((ending) => !file.endsWith(ending)))
         continue;
