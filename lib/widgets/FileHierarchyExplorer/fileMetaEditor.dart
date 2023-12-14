@@ -1,12 +1,12 @@
 
 import 'package:flutter/material.dart';
 
-import '../../stateManagement/HierarchyEntryTypes.dart';
+import '../../stateManagement/hierarchy/HierarchyEntryTypes.dart';
 import '../../widgets/theme/customTheme.dart';
-import '../../stateManagement/ChangeNotifierWidget.dart';
-import '../../stateManagement/FileHierarchy.dart';
-import '../../stateManagement/openFileTypes.dart';
-import '../../stateManagement/openFilesManager.dart';
+import '../misc/ChangeNotifierWidget.dart';
+import '../../stateManagement/hierarchy/FileHierarchy.dart';
+import '../../stateManagement/openFiles/openFileTypes.dart';
+import '../../stateManagement/openFiles/openFilesManager.dart';
 import '../../stateManagement/xmlProps/xmlProp.dart';
 import '../../utils/utils.dart';
 import '../misc/SmoothScrollBuilder.dart';

@@ -5,10 +5,10 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../../../stateManagement/ChangeNotifierWidget.dart';
+import '../../../misc/ChangeNotifierWidget.dart';
 import '../../../../stateManagement/listNotifier.dart';
-import '../../../../stateManagement/openFileTypes.dart';
-import '../../../../stateManagement/openFilesManager.dart';
+import '../../../../stateManagement/openFiles/openFileTypes.dart';
+import '../../../../stateManagement/openFiles/openFilesManager.dart';
 import '../../../../utils/utils.dart';
 import '../../../theme/customTheme.dart';
 import 'BnkPlaylistEditorInheritedData.dart';

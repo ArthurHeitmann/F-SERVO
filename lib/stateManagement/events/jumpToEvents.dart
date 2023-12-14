@@ -1,7 +1,7 @@
 
 import 'dart:async';
 
-import '../openFileTypes.dart';
+import '../openFiles/openFileTypes.dart';
 
 class JumpToEvent {
   final OpenFileData file;

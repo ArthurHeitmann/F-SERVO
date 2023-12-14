@@ -7,7 +7,7 @@ import 'package:xml/xml.dart';
 
 import '../../../main.dart';
 import '../../../stateManagement/Property.dart';
-import '../../../stateManagement/openFilesManager.dart';
+import '../../../stateManagement/openFiles/openFilesManager.dart';
 import '../../../stateManagement/xmlProps/xmlActionProp.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
 import '../../../utils/paramPresets.dart';

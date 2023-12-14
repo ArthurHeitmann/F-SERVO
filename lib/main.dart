@@ -10,7 +10,7 @@ import 'package:window_manager/window_manager.dart';
 
 import 'background/IdLookup.dart';
 import 'background/wemFilesIndexer.dart';
-import 'stateManagement/ChangeNotifierWidget.dart';
+import 'widgets/misc/ChangeNotifierWidget.dart';
 import 'stateManagement/otherFileTypes/beforeExitCleanup.dart';
 import 'utils/loggingWrapper.dart';
 import 'utils/utils.dart';

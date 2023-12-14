@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../../stateManagement/Property.dart';
 import '../../stateManagement/events/jumpToEvents.dart';
-import '../../stateManagement/openFilesManager.dart';
+import '../../stateManagement/openFiles/openFilesManager.dart';
 import '../../utils/utils.dart';
 import '../../utils/xmlLineParser.dart';
 

@@ -5,9 +5,9 @@ import 'package:path/path.dart';
 import 'dart:io';
 
 import '../../../fileTypeUtils/audio/wemToWavConverter.dart';
-import '../../../stateManagement/ChangeNotifierWidget.dart';
-import '../../../stateManagement/openFileTypes.dart';
-import '../../../stateManagement/openFilesManager.dart';
+import '../../misc/ChangeNotifierWidget.dart';
+import '../../../stateManagement/openFiles/openFileTypes.dart';
+import '../../../stateManagement/openFiles/openFilesManager.dart';
 import '../../../utils/utils.dart';
 import '../../misc/ColumnSeparated.dart';
 import '../../theme/customTheme.dart';

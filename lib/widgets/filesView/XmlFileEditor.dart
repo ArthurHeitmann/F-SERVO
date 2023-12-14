@@ -1,9 +1,9 @@
 
 import 'package:flutter/material.dart';
 
-import '../../stateManagement/ChangeNotifierWidget.dart';
+import '../misc/ChangeNotifierWidget.dart';
 import '../../stateManagement/charNamesXmlWrapper.dart';
-import '../../stateManagement/openFileTypes.dart';
+import '../../stateManagement/openFiles/openFileTypes.dart';
 import '../../stateManagement/xmlProps/xmlProp.dart';
 import '../../utils/assetDirFinder.dart';
 import '../../utils/utils.dart';

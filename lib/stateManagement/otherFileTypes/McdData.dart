@@ -21,7 +21,7 @@ import '../Property.dart';
 import '../events/statusInfo.dart';
 import '../hasUuid.dart';
 import '../listNotifier.dart';
-import '../openFilesManager.dart';
+import '../openFiles/openFilesManager.dart';
 import '../preferencesData.dart';
 import '../undoable.dart';
 

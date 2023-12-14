@@ -9,14 +9,14 @@ import 'package:path/path.dart';
 
 import '../../background/IdsIndexer.dart';
 import '../../background/searchService.dart';
-import '../../stateManagement/ChangeNotifierWidget.dart';
-import '../../stateManagement/FileHierarchy.dart';
-import '../../stateManagement/HierarchyEntryTypes.dart';
+import '../misc/ChangeNotifierWidget.dart';
+import '../../stateManagement/hierarchy/FileHierarchy.dart';
+import '../../stateManagement/hierarchy/HierarchyEntryTypes.dart';
 import '../../stateManagement/Property.dart';
 import '../../stateManagement/events/jumpToEvents.dart';
 import '../../stateManagement/events/searchPanelEvents.dart';
 import '../../stateManagement/listNotifier.dart';
-import '../../stateManagement/openFilesManager.dart';
+import '../../stateManagement/openFiles/openFilesManager.dart';
 import '../../stateManagement/preferencesData.dart';
 import '../../utils/utils.dart';
 import '../misc/RowSeparated.dart';

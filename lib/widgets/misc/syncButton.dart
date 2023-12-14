@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
 
-import '../../stateManagement/ChangeNotifierWidget.dart';
+import 'ChangeNotifierWidget.dart';
 import '../../stateManagement/sync/syncObjects.dart';
 import '../../stateManagement/sync/syncServer.dart';
 import 'onHoverBuilder.dart';

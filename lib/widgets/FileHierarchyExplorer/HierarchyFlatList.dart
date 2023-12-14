@@ -3,9 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart' show BuildContext, Curves, FocusScope, Key, ListView, ScrollController, State, Widget;
 
 import '../../keyboardEvents/BetterShortcuts.dart';
-import '../../stateManagement/ChangeNotifierWidget.dart';
-import '../../stateManagement/FileHierarchy.dart';
-import '../../stateManagement/HierarchyEntryTypes.dart';
+import '../misc/ChangeNotifierWidget.dart';
+import '../../stateManagement/hierarchy/FileHierarchy.dart';
+import '../../stateManagement/hierarchy/HierarchyEntryTypes.dart';
 import '../misc/SmoothScrollBuilder.dart';
 import '../misc/TextFieldFocusNode.dart';
 import '../misc/onHoverBuilder.dart';

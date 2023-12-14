@@ -6,7 +6,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../../../stateManagement/Property.dart';
-import '../../../../stateManagement/openFileTypes.dart';
+import '../../../../stateManagement/openFiles/openFileTypes.dart';
 import '../../../../utils/utils.dart';
 
 abstract class PlaybackController {

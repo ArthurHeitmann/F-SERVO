@@ -2,8 +2,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../background/IdLookup.dart';
-import '../../../stateManagement/ChangeNotifierWidget.dart';
-import '../../../stateManagement/openFilesManager.dart';
+import '../../misc/ChangeNotifierWidget.dart';
+import '../../../stateManagement/openFiles/openFilesManager.dart';
 import '../../../utils/paramPresets.dart';
 import '../../../utils/utils.dart';
 import '../../../widgets/theme/customTheme.dart';

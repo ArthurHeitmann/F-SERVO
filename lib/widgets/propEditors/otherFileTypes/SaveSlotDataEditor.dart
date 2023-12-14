@@ -9,7 +9,7 @@ import 'package:tuple/tuple.dart';
 import '../../../background/IdLookup.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/listNotifier.dart';
-import '../../../stateManagement/openFileTypes.dart';
+import '../../../stateManagement/openFiles/openFileTypes.dart';
 import '../../../stateManagement/otherFileTypes/SlotDataDat.dart';
 import '../../../stateManagement/otherFileTypes/itemIdsToNames.dart';
 import '../../theme/customTheme.dart';

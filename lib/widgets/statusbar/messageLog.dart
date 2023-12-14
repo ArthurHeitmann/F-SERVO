@@ -3,7 +3,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import '../../stateManagement/ChangeNotifierWidget.dart';
+import '../misc/ChangeNotifierWidget.dart';
 import '../../stateManagement/events/statusInfo.dart';
 import '../../utils/utils.dart';
 import '../theme/customTheme.dart';

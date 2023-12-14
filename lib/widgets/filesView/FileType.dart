@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../stateManagement/openFileTypes.dart';
+import '../../stateManagement/openFiles/openFileTypes.dart';
 import '../../stateManagement/preferencesData.dart';
 import '../misc/preferencesEditor.dart';
 import '../propEditors/otherFileTypes/effect/EstFileEditor.dart';

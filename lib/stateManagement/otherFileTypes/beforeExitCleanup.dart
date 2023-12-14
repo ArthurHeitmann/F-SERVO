@@ -2,7 +2,7 @@
 import '../../main.dart';
 import '../../utils/utils.dart';
 import '../../widgets/misc/confirmCancelDialog.dart';
-import '../openFilesManager.dart';
+import '../openFiles/openFilesManager.dart';
 import 'audioResourceManager.dart';
 
 Future<bool> beforeExitConfirmation() async {

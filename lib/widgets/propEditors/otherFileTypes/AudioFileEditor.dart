@@ -6,7 +6,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
-import '../../../stateManagement/openFileTypes.dart';
+import '../../../stateManagement/openFiles/openFileTypes.dart';
 import '../../../utils/utils.dart';
 import '../../misc/mousePosition.dart';
 import '../../theme/customTheme.dart';

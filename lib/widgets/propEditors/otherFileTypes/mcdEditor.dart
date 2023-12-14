@@ -4,10 +4,10 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:tuple/tuple.dart';
 
-import '../../../stateManagement/ChangeNotifierWidget.dart';
+import '../../misc/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/listNotifier.dart';
-import '../../../stateManagement/openFileTypes.dart';
+import '../../../stateManagement/openFiles/openFileTypes.dart';
 import '../../../stateManagement/otherFileTypes/McdData.dart';
 import '../../../utils/utils.dart';
 import '../../misc/onHoverBuilder.dart';

@@ -8,13 +8,13 @@ import 'package:cross_file/cross_file.dart';
 import 'package:path/path.dart' as path;
 import 'package:window_manager/window_manager.dart';
 
-import '../../stateManagement/FileHierarchy.dart';
-import '../../stateManagement/openFileTypes.dart';
+import '../../stateManagement/hierarchy/FileHierarchy.dart';
+import '../../stateManagement/openFiles/openFileTypes.dart';
 import '../../stateManagement/events/statusInfo.dart';
 import 'FileTabEntry.dart';
 import 'FileType.dart';
-import '../../stateManagement/ChangeNotifierWidget.dart';
-import '../../stateManagement/openFilesManager.dart';
+import '../misc/ChangeNotifierWidget.dart';
+import '../../stateManagement/openFiles/openFilesManager.dart';
 import '../../widgets/theme/customTheme.dart';
 import '../../utils/utils.dart';
 

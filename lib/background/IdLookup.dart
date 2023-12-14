@@ -4,11 +4,11 @@ import 'dart:async';
 import 'package:path/path.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../stateManagement/FileHierarchy.dart';
-import '../stateManagement/HierarchyEntryTypes.dart';
+import '../stateManagement/hierarchy/FileHierarchy.dart';
+import '../stateManagement/hierarchy/HierarchyEntryTypes.dart';
 import '../stateManagement/miscValues.dart';
-import '../stateManagement/openFileTypes.dart';
-import '../stateManagement/openFilesManager.dart';
+import '../stateManagement/openFiles/openFileTypes.dart';
+import '../stateManagement/openFiles/openFilesManager.dart';
 import '../stateManagement/preferencesData.dart';
 import '../utils/utils.dart';
 import 'IdsIndexer.dart';

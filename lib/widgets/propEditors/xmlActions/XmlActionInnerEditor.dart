@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
 
-import '../../../stateManagement/ChangeNotifierWidget.dart';
+import '../../misc/ChangeNotifierWidget.dart';
 import '../../../stateManagement/xmlProps/xmlActionProp.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
 import '../../theme/customTheme.dart';

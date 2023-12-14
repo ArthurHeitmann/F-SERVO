@@ -3,16 +3,16 @@ import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as path;
 
-import '../main.dart';
-import '../utils/utils.dart';
-import '../widgets/misc/confirmCancelDialog.dart';
-import 'changesExporter.dart';
-import 'miscValues.dart';
-import 'listNotifier.dart';
+import '../../main.dart';
+import '../../utils/utils.dart';
+import '../../widgets/misc/confirmCancelDialog.dart';
+import '../changesExporter.dart';
+import '../miscValues.dart';
+import '../listNotifier.dart';
 import 'openFileTypes.dart';
-import 'preferencesData.dart';
-import 'events/statusInfo.dart';
-import 'undoable.dart';
+import '../preferencesData.dart';
+import '../events/statusInfo.dart';
+import '../undoable.dart';
 
 typedef OpenFileId = String;
 class FilesAreaManager extends ListNotifier<OpenFileData> implements Undoable {

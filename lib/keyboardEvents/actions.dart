@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 
 import '../main.dart';
-import '../stateManagement/openFilesManager.dart';
+import '../stateManagement/openFiles/openFilesManager.dart';
 import '../stateManagement/undoable.dart';
 import '../utils/utils.dart';
 import '../widgets/misc/Selectable.dart';

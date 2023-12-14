@@ -8,8 +8,8 @@ import '../fileTypeUtils/pak/pakRepacker.dart';
 import '../fileTypeUtils/ruby/pythonRuby.dart';
 import '../fileTypeUtils/yax/xmlToYax.dart';
 import '../utils/utils.dart';
-import 'openFileTypes.dart';
-import 'openFilesManager.dart';
+import 'openFiles/openFileTypes.dart';
+import 'openFiles/openFilesManager.dart';
 import 'preferencesData.dart';
 
 List<XmlFileData> changedXmlFiles = [];

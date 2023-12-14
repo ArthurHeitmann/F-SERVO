@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
 
-import '../../../stateManagement/openFileTypes.dart';
+import '../../../stateManagement/openFiles/openFileTypes.dart';
 import '../../misc/SmoothScrollBuilder.dart';
 import 'wemFileEditor.dart';
 

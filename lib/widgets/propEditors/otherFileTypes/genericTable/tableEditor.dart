@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../../../misc/SmoothScrollBuilder.dart';
 import '../../../theme/customTheme.dart';
-import '../../../../stateManagement/ChangeNotifierWidget.dart';
+import '../../../misc/ChangeNotifierWidget.dart';
 import '../../../../stateManagement/Property.dart';
 import '../../../misc/nestedContextMenu.dart';
 import '../../simpleProps/UnderlinePropTextField.dart';

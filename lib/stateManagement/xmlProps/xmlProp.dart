@@ -7,7 +7,7 @@ import '../../utils/utils.dart';
 import '../Property.dart';
 import '../charNamesXmlWrapper.dart';
 import '../listNotifier.dart';
-import '../openFilesManager.dart';
+import '../openFiles/openFilesManager.dart';
 import '../undoable.dart';
 import 'xmlActionProp.dart';
 

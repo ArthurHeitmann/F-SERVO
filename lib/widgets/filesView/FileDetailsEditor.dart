@@ -2,9 +2,9 @@
 
 import 'package:flutter/material.dart';
 
-import '../../stateManagement/ChangeNotifierWidget.dart';
-import '../../stateManagement/openFileTypes.dart';
-import '../../stateManagement/openFilesManager.dart';
+import '../misc/ChangeNotifierWidget.dart';
+import '../../stateManagement/openFiles/openFileTypes.dart';
+import '../../stateManagement/openFiles/openFilesManager.dart';
 import '../../stateManagement/xmlProps/xmlProp.dart';
 import '../misc/Selectable.dart';
 import '../misc/SmoothScrollBuilder.dart';

@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import '../../stateManagement/changesExporter.dart';
 import '../../utils/utils.dart';
 import '../../widgets/theme/customTheme.dart';
-import '../../stateManagement/ChangeNotifierWidget.dart';
-import '../../stateManagement/openFileTypes.dart';
-import '../../stateManagement/openFilesManager.dart';
+import '../misc/ChangeNotifierWidget.dart';
+import '../../stateManagement/openFiles/openFileTypes.dart';
+import '../../stateManagement/openFiles/openFilesManager.dart';
 import '../misc/onHoverBuilder.dart';
 
 

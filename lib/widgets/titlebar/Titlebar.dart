@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../../widgets/theme/customTheme.dart';
-import '../../stateManagement/ChangeNotifierWidget.dart';
+import '../misc/ChangeNotifierWidget.dart';
 import '../../stateManagement/miscValues.dart';
-import '../../stateManagement/openFilesManager.dart';
+import '../../stateManagement/openFiles/openFilesManager.dart';
 import '../../stateManagement/undoable.dart';
 import '../../utils/utils.dart';
 import 'TitlebarButton.dart';

@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import '../../utils/assetDirFinder.dart';
 import '../../utils/utils.dart';
 import '../../widgets/theme/customTheme.dart';
-import '../../stateManagement/ChangeNotifierWidget.dart';
+import 'ChangeNotifierWidget.dart';
 import '../../stateManagement/preferencesData.dart';
 import '../propEditors/simpleProps/boolPropSwitch.dart';
 import '../propEditors/simpleProps/primaryPropTextField.dart';

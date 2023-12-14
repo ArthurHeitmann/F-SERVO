@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../widgets/theme/customTheme.dart';
-import '../../../stateManagement/ChangeNotifierWidget.dart';
+import '../../misc/ChangeNotifierWidget.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
 import 'XmlPropEditorFactory.dart';
 import 'propEditorFactory.dart';

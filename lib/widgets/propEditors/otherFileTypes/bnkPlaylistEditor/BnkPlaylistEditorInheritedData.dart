@@ -4,8 +4,8 @@ import 'package:flutter/services.dart';
 
 import '../../../../stateManagement/Property.dart';
 import '../../../../stateManagement/listNotifier.dart';
-import '../../../../stateManagement/openFileTypes.dart';
-import '../../../../stateManagement/openFilesManager.dart';
+import '../../../../stateManagement/openFiles/openFileTypes.dart';
+import '../../../../stateManagement/openFiles/openFilesManager.dart';
 import '../../../misc/mousePosition.dart';
 import 'audioSequenceController.dart';
 

@@ -9,7 +9,7 @@ import '../utils/utils.dart';
 import '../widgets/propEditors/otherFileTypes/genericTable/tableEditor.dart';
 import 'Property.dart';
 import 'hasUuid.dart';
-import 'openFilesManager.dart';
+import 'openFiles/openFilesManager.dart';
 import 'undoable.dart';
 import 'xmlProps/xmlProp.dart';
 

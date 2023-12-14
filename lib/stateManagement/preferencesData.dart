@@ -7,7 +7,7 @@ import '../widgets/theme/darkTheme.dart';
 import '../widgets/theme/nierTheme.dart';
 import 'Property.dart';
 import 'listNotifier.dart';
-import 'openFileTypes.dart';
+import 'openFiles/openFileTypes.dart';
 import 'undoable.dart';
 
 enum ThemeType {

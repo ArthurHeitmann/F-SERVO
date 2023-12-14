@@ -10,7 +10,7 @@ import '../../utils/utils.dart';
 import '../Property.dart';
 import '../hasUuid.dart';
 import '../listNotifier.dart';
-import '../openFilesManager.dart';
+import '../openFiles/openFilesManager.dart';
 import '../undoable.dart';
 
 class EstData with HasUuid, Undoable {

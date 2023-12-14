@@ -2,10 +2,10 @@
 import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 
-import '../../stateManagement/HierarchyEntryTypes.dart';
+import '../../stateManagement/hierarchy/HierarchyEntryTypes.dart';
 import '../../widgets/theme/customTheme.dart';
-import '../../stateManagement/ChangeNotifierWidget.dart';
-import '../../stateManagement/FileHierarchy.dart';
+import '../misc/ChangeNotifierWidget.dart';
+import '../../stateManagement/hierarchy/FileHierarchy.dart';
 import '../../stateManagement/miscValues.dart';
 import '../../utils/utils.dart';
 import 'wemPreviewButton.dart';

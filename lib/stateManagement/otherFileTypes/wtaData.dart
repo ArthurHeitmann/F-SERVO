@@ -9,8 +9,8 @@ import '../Property.dart';
 import '../events/statusInfo.dart';
 import '../hasUuid.dart';
 import '../listNotifier.dart';
-import '../openFileTypes.dart';
-import '../openFilesManager.dart';
+import '../openFiles/openFileTypes.dart';
+import '../openFiles/openFilesManager.dart';
 import '../undoable.dart';
 
 class WtaTextureEntry with HasUuid, Undoable {

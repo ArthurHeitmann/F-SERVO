@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../widgets/theme/customTheme.dart';
-import '../../../stateManagement/ChangeNotifierWidget.dart';
+import '../../misc/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
 import '../../../utils/utils.dart';

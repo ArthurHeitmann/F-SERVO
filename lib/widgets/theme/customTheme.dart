@@ -3,7 +3,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
-import '../../stateManagement/HierarchyEntryTypes.dart';
+import '../../stateManagement/hierarchy/HierarchyEntryTypes.dart';
 
 class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
   final Color? editorBackgroundColor;

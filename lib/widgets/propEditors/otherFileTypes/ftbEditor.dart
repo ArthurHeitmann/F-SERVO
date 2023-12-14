@@ -1,8 +1,8 @@
 
 import 'package:flutter/material.dart';
 
-import '../../../stateManagement/ChangeNotifierWidget.dart';
-import '../../../stateManagement/openFileTypes.dart';
+import '../../misc/ChangeNotifierWidget.dart';
+import '../../../stateManagement/openFiles/openFileTypes.dart';
 import '../../../stateManagement/otherFileTypes/McdData.dart';
 import 'FontsManager.dart';
 import 'McdFontDebugger.dart';

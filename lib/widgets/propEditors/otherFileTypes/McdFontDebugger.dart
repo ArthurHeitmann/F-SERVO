@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 
 import '../../../utils/assetDirFinder.dart';
 import '../../../utils/utils.dart';
-import '../../../stateManagement/ChangeNotifierWidget.dart';
+import '../../misc/ChangeNotifierWidget.dart';
 import '../../../stateManagement/otherFileTypes/McdData.dart';
 
 

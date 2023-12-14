@@ -17,9 +17,9 @@ import 'package:highlight/languages/xml.dart';
 import 'package:path/path.dart';
 
 import '../../main.dart';
-import '../../stateManagement/ChangeNotifierWidget.dart';
+import '../misc/ChangeNotifierWidget.dart';
 import '../../stateManagement/events/jumpToEvents.dart';
-import '../../stateManagement/openFileTypes.dart';
+import '../../stateManagement/openFiles/openFileTypes.dart';
 import '../../stateManagement/undoable.dart';
 import '../../utils/assetDirFinder.dart';
 import '../../utils/utils.dart';
