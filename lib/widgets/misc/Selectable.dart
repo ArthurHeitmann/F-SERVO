@@ -45,7 +45,7 @@ class _Selectable {
       if (active.value?.uuid == prop.uuid)
         active.value = null;
     }, onKeyboardAction);
-    if (id == areasManager.activeArea?.currentFile?.uuid)
+    if (id == areasManager.activeArea.value?.currentFile.value?.uuid)
       active.value = _selectedData[id];
     active.value = _selectedData[id];
   }
@@ -61,7 +61,7 @@ class _Selectable {
       return;
     _selectedData[id]?.dispose();
     _selectedData[id] = null;
-    if (id == areasManager.activeArea?.currentFile?.uuid)
+    if (id == areasManager.activeArea.value?.currentFile.value?.uuid)
       active.value = null;
   }
 
@@ -75,7 +75,7 @@ class _Selectable {
   bool isSelected(String uuid) => _selectedData.values.any((e) => e?.uuid == uuid);
 
   void _onAreaChanges() {
-    var id = areasManager.activeArea?.currentFile?.uuid;
+    var id = areasManager.activeArea.value?.currentFile.value?.uuid;
     if (id == null)
       active.value = null;
     else

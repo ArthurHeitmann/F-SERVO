@@ -1,249 +1,47 @@
+// ignore_for_file: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
+
 import 'dart:collection';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as path;
 
-import '../../main.dart';
 import '../../utils/utils.dart';
-import '../../widgets/misc/confirmCancelDialog.dart';
 import '../changesExporter.dart';
+import '../hasUuid.dart';
 import '../miscValues.dart';
 import '../listNotifier.dart';
+import 'filesAreaManager.dart';
 import 'openFileTypes.dart';
 import '../preferencesData.dart';
 import '../events/statusInfo.dart';
 import '../undoable.dart';
 
 typedef OpenFileId = String;
-class FilesAreaManager extends ListNotifier<OpenFileData> implements Undoable {
-  OpenFileData? _currentFile;
 
-  FilesAreaManager() : super([]);
 
-  OpenFileData? get currentFile => _currentFile;
-  
-  set currentFile(OpenFileData? value) {
-    assert(value == null || contains(value));
-    if (value == _currentFile) return;
-    _currentFile = value;
-    notifyListeners();
-    
-    if (this == areasManager.activeArea)
-      windowTitle.value = currentFile?.displayName ?? "";
-    
-    undoHistoryManager.onUndoableEvent();
-  }
-
-  void switchToClosestFile() {
-    if (length <= 1) {
-      currentFile = null;
-      return;
-    }
-
-    var index = indexOf(currentFile!);
-    if (index + 1 == length)
-      index--;
-    else
-      index++;
-    currentFile = this[index];
-  }
-
-  Future<void> closeFile(OpenFileData file, { bool releaseHidden = false }) async {
-    if (file.hasUnsavedChanges) {
-      var answer = await confirmOrCancelDialog(
-        getGlobalContext(),
-        title: "Save changes?",
-        body: "${file.name} has unsaved changes",
-        yesText: "Save",
-        noText: "Discard",
-      );
-      if (answer == true)
-        await file.save();
-      else if (answer == false) {
-        file.hasUnsavedChanges = false;
-        try {
-          await file.reload();
-        } catch (e, stackTrace) {
-          print("Error reloading file: $e");
-          print(stackTrace);
-        }
-      } else if (answer == null)
-        return;
-    }
-    if (file.keepOpenAsHidden && !releaseHidden)
-      areasManager.hiddenArea.add(file);
-    else if (releaseHidden) {
-      areasManager.hiddenArea.remove(file);
-      // TODO remove from areasManager
-    }
-
-    if (currentFile == file)
-      switchToClosestFile();
-    if (!releaseHidden || this != areasManager.hiddenArea)
-      remove(file);
-
-    if (length == 0 && areasManager.length > 1)
-      areasManager.remove(this);
-    
-    undoHistoryManager.onUndoableEvent();
-  }
-
-  void closeAll() {
-    var listCopy = List.from(this);
-    for (var file in listCopy)
-      closeFile(file);
-  }
-
-  void closeOthers(OpenFileData file) {
-    var listCopy = List.from(this);
-    for (var otherFile in listCopy)
-      if (otherFile != file)
-        closeFile(otherFile);
-  }
-
-  void closeToTheLeft(OpenFileData file) {
-    var listCopy = List.from(this);
-    int index = listCopy.indexOf(file);
-    for (int i = 0; i < index; i++)
-      closeFile(listCopy[i]);
-  }
-
-  void closeToTheRight(OpenFileData file) {
-    var listCopy = List.from(this);
-    int index = listCopy.indexOf(file);
-    for (int i = index + 1; i < listCopy.length; i++)
-      closeFile(listCopy[i]);
-  }
-
-  void moveToRightView(OpenFileData file) {
-    if (currentFile == file)
-      switchToClosestFile();
-      
-    int areaIndex = areasManager.indexOf(this);
-    FilesAreaManager rightArea;
-    if (areaIndex >= areasManager.length - 1) {
-      rightArea = FilesAreaManager();
-      areasManager.add(rightArea);
-    }
-    else {
-      rightArea = areasManager[areaIndex + 1];
-    }
-    rightArea.add(file);
-    remove(file);
-    rightArea.currentFile = file;
-    
-    if (length == 0) {
-      areasManager.remove(this);
-    }
-
-    undoHistoryManager.onUndoableEvent();
-  }
-
-  void moveToLeftView(OpenFileData file) {
-    if (currentFile == file)
-      switchToClosestFile();
-    
-    int areaIndex = areasManager.indexOf(this);
-    int leftAreaIndex = areaIndex - 1;
-    FilesAreaManager leftArea;
-    if (leftAreaIndex < 0 || leftAreaIndex >= areasManager.length) {
-      leftArea = FilesAreaManager();
-      areasManager.insert(clamp(leftAreaIndex, 0, areasManager.length), leftArea);
-    }
-    else {
-      leftArea = areasManager[leftAreaIndex];
-    }
-    leftArea.add(file);
-    remove(file);
-    leftArea.currentFile = file;
-    
-    if (length == 0) {
-      areasManager.remove(this);
-    }
-    
-    undoHistoryManager.onUndoableEvent();
-  }
-
-  void switchToNextFile() {
-    if (length <= 1) return;
-    int nextIndex = (indexOf(currentFile!) + 1) % length;
-    currentFile = this[nextIndex];
-  }
-
-  void switchToPreviousFile() {
-    if (length <= 1) return;
-    int nextIndex = (indexOf(currentFile!) - 1) % length;
-    if (nextIndex < 0)
-      nextIndex += length;
-    currentFile = this[nextIndex];
-  }
-  
-  Future<void> saveAll() async {
-    try {
-      await Future.wait(
-        where((file) => file.hasUnsavedChanges)
-        .map((file) => file.save()));
-    } catch (e) {
-      print("Error while saving all files");
-      rethrow;
-    }
-  }
-
-  @override
-  void remove(OpenFileData child) {
-    super.remove(child);
-    if (areasManager.getAreaOfFile(child, true) == null)
-      child.dispose();
-  }
-
-  @override
-  void dispose() {
-    for (var file in toList())
-      remove(file);
-    super.dispose();
-  }
-
-  @override
-  Undoable takeSnapshot() {
-    var snapshot = FilesAreaManager();
-    snapshot.overrideUuid(uuid);
-    snapshot.replaceWith(map((entry) => entry.takeSnapshot() as OpenFileData).toList());
-    snapshot._currentFile = _currentFile != null ? snapshot[indexOf(_currentFile!)] : null;
-    return snapshot;
-  }
-  
-  @override
-  void restoreWith(Undoable snapshot) {
-    var entry = snapshot as FilesAreaManager;
-    updateOrReplaceWith(entry.toList(), (obj) => obj.takeSnapshot() as OpenFileData);
-    if (entry._currentFile != null)
-      currentFile = where((file) => file.uuid == entry._currentFile!.uuid).first;
-    else
-      currentFile = null;
-  }
-}
-
-class OpenFilesAreasManager extends ListNotifier<FilesAreaManager> {
-  FilesAreaManager? _activeArea;
+class OpenFilesAreasManager with HasUuid, Undoable {
+  final ListNotifier<FilesAreaManager> _areas = ValueListNotifier([]);
+  IterableNotifier<FilesAreaManager> get areas => _areas;
+  final ValueNotifier<FilesAreaManager?> _activeArea = ValueNotifier(null);
+  ValueListenable<FilesAreaManager?> get activeArea => _activeArea;
   final FilesAreaManager hiddenArea;
   final ChangeNotifier subEvents = ChangeNotifier();
   final ChangeNotifier onSaveAll = ChangeNotifier();
   final Map<OpenFileId, OpenFileData> _filesMap = HashMap<OpenFileId, OpenFileData>();
 
   OpenFilesAreasManager([FilesAreaManager? hiddenArea])
-    : hiddenArea = hiddenArea ?? FilesAreaManager(),
-    super([]) {
-    addListener(subEvents.notifyListeners);
+    : hiddenArea = hiddenArea ?? FilesAreaManager() {
+    areas.addListener(subEvents.notifyListeners);
   }
 
   bool isFileOpened(String path) {
-    for (var area in this) {
-      for (var file in area) {
+    for (var area in areas) {
+      for (var file in area.files) {
         if (file.path == path)
           return true;
       }
     }
-    for (var file in hiddenArea) {
+    for (var file in hiddenArea.files) {
       if (file.path == path)
         return true;
     }
@@ -251,13 +49,13 @@ class OpenFilesAreasManager extends ListNotifier<FilesAreaManager> {
   }
 
   OpenFileData? getFile(String path) {
-    for (var area in this) {
-      for (var file in area) {
+    for (var area in areas) {
+      for (var file in area.files) {
         if (file.path == path)
           return file;
       }
     }
-    for (var file in hiddenArea) {
+    for (var file in hiddenArea.files) {
       if (file.path == path)
         return file;
     }
@@ -267,15 +65,16 @@ class OpenFilesAreasManager extends ListNotifier<FilesAreaManager> {
   OpenFileData? fromId(OpenFileId? id) {
     return _filesMap[id];
   }
+
   FilesAreaManager? getAreaOfFileId(OpenFileId searchFile, [bool includeHidden = true]) {
-    for (var area in this) {
-      for (var file in area) {
+    for (var area in areas) {
+      for (var file in area.files) {
         if (file.uuid == searchFile)
           return area;
       }
     }
     if (includeHidden) {
-      for (var file in hiddenArea) {
+      for (var file in hiddenArea.files) {
         if (file.uuid == searchFile)
           return hiddenArea;
       }
@@ -291,24 +90,21 @@ class OpenFilesAreasManager extends ListNotifier<FilesAreaManager> {
     return _filesMap.containsKey(id);
   }
 
-  FilesAreaManager? get activeArea => _activeArea;
-
-  set activeArea(FilesAreaManager? value) {
-    assert(value == null || contains(value));
-    if (value == _activeArea)
+  setActiveArea(FilesAreaManager? value) {
+    assert(value == null || areas.contains(value));
+    if (value == _activeArea.value)
       return;
-    _activeArea = value;
-    notifyListeners();
+    _activeArea.value = value;
 
-    windowTitle.value = value?.currentFile?.displayName ?? "";
+    windowTitle.value = value?.currentFile.value?.displayName ?? "";
     
     undoHistoryManager.onUndoableEvent();
   }
 
   void ensureFileIsVisible(OpenFileData file) {
     var area = getAreaOfFile(file)!;
-    if (area.currentFile != file)
-      area.currentFile = file;
+    if (area.currentFile.value != file)
+      area.setCurrentFile(file);
   }
 
   OpenFileData openFile(
@@ -318,16 +114,16 @@ class OpenFilesAreasManager extends ListNotifier<FilesAreaManager> {
     String? secondaryName,
     OptionalFileInfo? optionalInfo,
   }) {
-    toArea ??= activeArea ?? this[0];
+    toArea ??= activeArea.value ?? areas[0];
 
     if (isFileOpened(filePath)) {
       var openFile = getFile(filePath)!;
-      if (hiddenArea.contains(openFile)) {
-        toArea.add(openFile);
-        hiddenArea.remove(openFile);
+      if (hiddenArea.files.contains(openFile)) {
+        toArea.addFile(openFile);
+        hiddenArea.removeFile(openFile);
       }
       if (focusIfOpen)
-        getAreaOfFile(openFile)!.currentFile = openFile;
+        getAreaOfFile(openFile)!.setCurrentFile(openFile);
       return openFile;
     }
 
@@ -337,8 +133,8 @@ class OpenFilesAreasManager extends ListNotifier<FilesAreaManager> {
       secondaryName: secondaryName,
       optionalInfo: optionalInfo,
     );
-    toArea.add(file);
-    toArea.currentFile = file;
+    toArea.addFile(file);
+    toArea.setCurrentFile(file);
     _filesMap[file.uuid] = file;
 
     undoHistoryManager.onUndoableEvent();
@@ -357,22 +153,22 @@ class OpenFilesAreasManager extends ListNotifier<FilesAreaManager> {
       optionalInfo: optionalInfo,
     );
     file.keepOpenAsHidden = true;
-    hiddenArea.add(file);
+    hiddenArea.addFile(file);
     _filesMap[file.uuid] = file;
     return file;
   }
 
   void releaseHiddenFile(String filePath) {
-    var file = hiddenArea.where((file) => file.path == filePath);
+    var file = hiddenArea.files.where((file) => file.path == filePath);
     if (file.isNotEmpty) {
-      hiddenArea.remove(file.first);
+      hiddenArea.removeFile(file.first);
       _filesMap.remove(file.first.uuid);
     }
   }
 
   void releaseFile(String filePath) {
-    for (var area in [...this, hiddenArea]) {
-      var files = area.where((file) => file.path == filePath);
+    for (var area in areas.followedBy([hiddenArea])) {
+      var files = area.files.where((file) => file.path == filePath);
       if (files.isNotEmpty) {
         var file = files.first;
         area.closeFile(file, releaseHidden: true);
@@ -384,65 +180,67 @@ class OpenFilesAreasManager extends ListNotifier<FilesAreaManager> {
 
   Future<void> openPreferences() async {
     PreferencesData? prefs;
-    for (var area in this) {
-      prefs = area.find((file) => file is PreferencesData) as PreferencesData?;
+    for (var area in areas) {
+      prefs = area.files.find((file) => file is PreferencesData) as PreferencesData?;
       if (prefs != null)
         break;
     }
     if (prefs != null) {
-      activeArea = getAreaOfFile(prefs)!;
-      activeArea!.currentFile = prefs;
+      _activeArea.value = getAreaOfFile(prefs)!;
+      activeArea.value!.setCurrentFile(prefs);
     }
     else {
       prefs = PreferencesData();
       await prefs.prefsFuture;
-      activeArea!.add(prefs);
-      activeArea!.currentFile = prefs;
+      activeArea.value!.addFile(prefs);
+      activeArea.value!.setCurrentFile(prefs);
       _filesMap[prefs.uuid] = prefs;
     }
   }
 
-  @override
-  void add(FilesAreaManager child) {
-    super.add(child);
-    activeArea ??= child;
-    child.addListener(subEvents.notifyListeners);
+  void addArea(FilesAreaManager child) {
+    _areas.add(child);
+    _activeArea.value ??= child;
+    child.files.addListener(subEvents.notifyListeners);
   }
 
-  @override
-  void remove(child) {
-    child.removeListener(subEvents.notifyListeners);
+  void insertArea(int index, FilesAreaManager child) {
+    _areas.insert(index, child);
+    _activeArea.value ??= child;
+    child.files.addListener(subEvents.notifyListeners);
+  }
+
+  void removeArea(FilesAreaManager child) {
     child.dispose();
-    super.remove(child);
-    if (child == _activeArea)
-      _activeArea = isNotEmpty ? this[0] : null;
+    _areas.remove(child);
+    if (child == _activeArea.value)
+      _activeArea.value = areas.isNotEmpty ? areas[0] : null;
+    child.files.removeListener(subEvents.notifyListeners);
   }
 
-  @override
-  FilesAreaManager removeAt(int index) {
-    this[index].removeListener(subEvents.notifyListeners);
-    var ret = super.removeAt(index);
+  FilesAreaManager removeAreaAt(int index) {
+    var ret = _areas.removeAt(index);
     ret.dispose();
-    if (ret == _activeArea)
-      _activeArea = isNotEmpty ? this[0] : null;
+    if (ret == _activeArea.value)
+      _activeArea.value = areas.isNotEmpty ? areas[0] : null;
+    ret.files.removeListener(subEvents.notifyListeners);
     return ret;
   }
 
-  @override
-  void clear() {
-    _activeArea = null;
-    for (var area in this) {
-      area.removeListener(subEvents.notifyListeners);
+  void clearAreas() {
+    _activeArea.value = null;
+    for (var area in areas) {
+      area.files.removeListener(subEvents.notifyListeners);
       area.dispose();
     }
-    super.clear();
+    _areas.clear();
   }
   
   Future<void> saveAll() async {
     isLoadingStatus.pushIsLoading();
     try {
       await Future.wait([
-        ...map((area) => area.saveAll()),
+        ...areas.map((area) => area.saveAll()),
         hiddenArea.saveAll()
       ]);
       onSaveAll.notifyListeners();
@@ -460,27 +258,33 @@ class OpenFilesAreasManager extends ListNotifier<FilesAreaManager> {
   Undoable takeSnapshot() {
     var snapshot = OpenFilesAreasManager(hiddenArea.takeSnapshot() as FilesAreaManager);
     snapshot.overrideUuid(uuid);
-    snapshot.replaceWith(map((area) => area.takeSnapshot() as FilesAreaManager).toList());
-    snapshot._activeArea = _activeArea != null ? snapshot[indexOf(_activeArea!)] : null;
+    snapshot._areas.replaceWith(areas.map((area) => area.takeSnapshot() as FilesAreaManager).toList());
+    snapshot._activeArea.value = _activeArea.value != null ? snapshot.areas[areas.indexOf(_activeArea.value!)] : null;
     return snapshot;
   }
   
   @override
   void restoreWith(Undoable snapshot) {
     var entry = snapshot as OpenFilesAreasManager;
-    updateOrReplaceWith(entry.toList(), (obj) => obj.takeSnapshot() as FilesAreaManager);
+    _areas.updateOrReplaceWith(entry.areas.toList(), (obj) => obj.takeSnapshot() as FilesAreaManager);
     hiddenArea.restoreWith(entry.hiddenArea);
-    if (entry._activeArea != null)
-      activeArea = where((area) => area.uuid == entry._activeArea!.uuid).first;
+    if (entry._activeArea.value != null)
+      _activeArea.value = areas.where((area) => area.uuid == entry._activeArea.value!.uuid).first;
     else
-      activeArea = null;
+      _activeArea.value = null;
     // regenerate files map
     _filesMap.clear();
-    for (var area in this) {
-      for (var file in area) {
+    for (var area in areas) {
+      for (var file in area.files) {
         _filesMap[file.uuid] = file;
       }
     }
+  }
+
+  void dispose() {
+    areas.dispose();
+    _activeArea.dispose();
+    subEvents.dispose();
   }
 }
 

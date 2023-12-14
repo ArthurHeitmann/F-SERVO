@@ -117,8 +117,8 @@ class IdLookup with Initializable {
 
   void _onFilesAddedOrRemoved() {
     // search for new files
-    for (var area in areasManager) {
-      for (var file in area) {
+    for (var area in areasManager.areas) {
+      for (var file in area.files) {
         if (!file.path.endsWith(".xml"))
           continue;
         if (_openFiles.contains(file.uuid))

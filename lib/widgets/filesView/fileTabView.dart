@@ -9,6 +9,7 @@ import 'package:path/path.dart' as path;
 import 'package:window_manager/window_manager.dart';
 
 import '../../stateManagement/hierarchy/FileHierarchy.dart';
+import '../../stateManagement/openFiles/filesAreaManager.dart';
 import '../../stateManagement/openFiles/openFileTypes.dart';
 import '../../stateManagement/events/statusInfo.dart';
 import 'FileTabEntry.dart';
@@ -23,7 +24,7 @@ class FileTabView extends ChangeNotifierWidget {
   final FilesAreaManager viewArea;
   
   FileTabView(this.viewArea, {Key? key}) : 
-    super(key: key, notifier: viewArea);
+    super(key: key, notifiers: [viewArea.files, viewArea.currentFile]);
 
   @override
   State<FileTabView> createState() => _FileTabViewState();
@@ -36,7 +37,7 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
 
   @override
   void onNotified() {
-    var newActiveUuid = widget.viewArea.currentFile?.uuid;
+    var newActiveUuid = widget.viewArea.currentFile.value?.uuid;
     if (prevActiveUuid != newActiveUuid && newActiveUuid != null)
       scrollTabIntoView(newActiveUuid);
     prevActiveUuid = newActiveUuid;
@@ -48,8 +49,8 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
     const tabWidth = 200.0;
     var viewWidth = (context.findRenderObject() as RenderBox).size.width;
     
-    var fileData = widget.viewArea.firstWhere((f) => f.uuid == uuid);
-    var index = widget.viewArea.indexOf(fileData);
+    var fileData = widget.viewArea.files.firstWhere((f) => f.uuid == uuid);
+    var index = widget.viewArea.files.indexOf(fileData);
     var tabPos = max(0.0, index * tabWidth - 15);
     var tabEnd = tabPos + tabWidth + 30;
 
@@ -79,7 +80,7 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
       firstFile ??= newFileData;
     }
     if (firstFile != null)
-      widget.viewArea.currentFile = firstFile;
+      widget.viewArea.setCurrentFile(firstFile);
     windowManager.focus();
     setState(() {});
 
@@ -99,7 +100,7 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
         child: Stack(
           children: [
             Positioned.fill(
-              child: widget.viewArea.currentFile != null
+              child: widget.viewArea.currentFile.value != null
                 ? makeFilesStack(context)
                 : makeEmptyTab(context),
             ),
@@ -113,15 +114,15 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
   Widget setupShortcuts({ required Widget child }) {
     return Listener(
       // onTapDown: (_) => areasManager.activeArea = widget.viewArea,
-      onPointerDown: (_) => areasManager.activeArea = widget.viewArea,
+      onPointerDown: (_) => areasManager.setActiveArea(widget.viewArea),
       child: child,
     );
   }
 
   Widget makeFilesStack(BuildContext context) {
     return IndexedStack(
-      index: widget.viewArea.indexOf(widget.viewArea.currentFile!),
-      children: widget.viewArea.map((file) => 
+      index: widget.viewArea.files.indexOf(widget.viewArea.currentFile.value!),
+      children: widget.viewArea.files.map((file) =>
         ConstrainedBox(
           key: Key(file.uuid),
           constraints: const BoxConstraints.expand(),
@@ -187,18 +188,18 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
               onReorder: (int oldIndex, int newIndex) {
                 if (newIndex - 1 > oldIndex)
                   newIndex--;
-                if (oldIndex < 0 || oldIndex >= widget.viewArea.length || newIndex < 0 || newIndex >= widget.viewArea.length) {
-                  print("Invalid reorder: $oldIndex -> $newIndex (length: ${widget.viewArea.length})");
+                if (oldIndex < 0 || oldIndex >= widget.viewArea.files.length || newIndex < 0 || newIndex >= widget.viewArea.files.length) {
+                  print("Invalid reorder: $oldIndex -> $newIndex (length: ${widget.viewArea.files.length})");
                   return;
                 }
-                widget.viewArea.move(oldIndex, newIndex);
+                widget.viewArea.moveFile(oldIndex, newIndex);
               },
               buildDefaultDragHandles: false,
               physics: const NeverScrollableScrollPhysics(),
-              children: widget.viewArea
+              children: widget.viewArea.files
                 .map((file) => ReorderableDragStartListener(
                   key: Key(file.uuid),
-                  index: widget.viewArea.indexOf(file),
+                  index: widget.viewArea.files.indexOf(file),
                   child: FileTabEntry(
                     file: file,
                     area: widget.viewArea

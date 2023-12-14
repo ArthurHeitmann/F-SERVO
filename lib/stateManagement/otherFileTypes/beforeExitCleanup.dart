@@ -7,8 +7,9 @@ import 'audioResourceManager.dart';
 
 Future<bool> beforeExitConfirmation() async {
   var unsavedFiles = areasManager
+    .areas
     .followedBy([areasManager.hiddenArea])
-    .expand((area) => area)
+    .expand((area) => area.files)
     .map((f) => f.hasUnsavedChanges ? 1 : 0)
     .fold<int>(0, (a, b) => a + b);
   

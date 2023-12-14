@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../stateManagement/openFiles/filesAreaManager.dart';
 import 'fileTabView.dart';
 import '../misc/ChangeNotifierWidget.dart';
 import '../../stateManagement/openFiles/openFilesManager.dart';
@@ -9,9 +10,9 @@ import '../../widgets/ResizableWidget.dart';
 
 class OpenFilesAreas extends ChangeNotifierWidget {
   OpenFilesAreas({Key? key})
-    : super(key: key, notifier: areasManager) {
-    if (areasManager.isEmpty)
-      areasManager.add(FilesAreaManager());
+    : super(key: key, notifier: areasManager.areas) {
+    if (areasManager.areas.isEmpty)
+      areasManager.addArea(FilesAreaManager());
   }
 
   @override
@@ -28,7 +29,7 @@ class _OpenFilesAreasState extends ChangeNotifierState<OpenFilesAreas> {
       child: ResizableWidget(
         axis: Axis.horizontal,
         draggableThickness: 5,
-        children: areasManager.map((area) => 
+        children: areasManager.areas.map((area) =>
           FileTabView(area, key: Key(area.uuid))
         ).toList(),
       )

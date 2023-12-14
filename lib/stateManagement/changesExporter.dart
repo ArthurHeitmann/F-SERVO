@@ -90,7 +90,7 @@ Future<void> processChangedFiles() async {
   }
 
   // save WAI
-  await Future.wait(areasManager.hiddenArea
+  await Future.wait(areasManager.hiddenArea.files
     .whereType<WaiFileData>()
     .map((wai) => wai.processPendingPatches()));
 

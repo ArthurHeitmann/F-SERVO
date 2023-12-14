@@ -629,7 +629,7 @@ class WemFileData extends OpenFileData with AudioFileData {
     resource = await audioResourcesManager.getAudioResource(path);
 
     // related bnk playlists
-    var waiRes = areasManager.hiddenArea.whereType<WaiFileData>();
+    var waiRes = areasManager.hiddenArea.files.whereType<WaiFileData>();
     if (waiRes.isNotEmpty && wemInfo?.source == WemSource.wsp) {
       var wai = waiRes.first;
       if (wai.wemIdsToBnkPlaylists.isNotEmpty) {
@@ -657,7 +657,7 @@ class WemFileData extends OpenFileData with AudioFileData {
     var wemIdStr = RegExp(r"(\d+)\.wem").firstMatch(name)!.group(1)!;
     var wemId = int.parse(wemIdStr);
     if (wemInfo?.source == WemSource.wsp) {
-      var wai = areasManager.hiddenArea.whereType<WaiFileData>().first;
+      var wai = areasManager.hiddenArea.files.whereType<WaiFileData>().first;
       wai.pendingPatches.add(WemPatch(path, wemId));
     } else if (wemInfo?.source == WemSource.bnk) {
       await patchBnk(wemInfo!.bnkPath, wemId, path);      

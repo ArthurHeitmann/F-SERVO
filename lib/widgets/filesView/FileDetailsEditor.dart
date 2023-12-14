@@ -14,7 +14,7 @@ import '../propEditors/xmlActions/XmlPropDetails.dart';
 
 class FileDetailsEditor extends ChangeNotifierWidget {
   FileDetailsEditor({super.key})
-    : super(notifiers: [selectable.active, areasManager]);
+    : super(notifiers: [selectable.active, areasManager.activeArea]);
 
   @override
   State<FileDetailsEditor> createState() => _FileDetailsEditorState();
@@ -70,10 +70,10 @@ class _FileDetailsEditorState extends ChangeNotifierState<FileDetailsEditor> {
     return ChangeNotifierBuilder(
       notifier: areasManager.activeArea,
       builder: (context) => ChangeNotifierBuilder(
-        key: Key(areasManager.activeArea?.uuid ?? ""),
-        notifier: areasManager.activeArea?.currentFile,
+        key: Key(areasManager.activeArea.value?.uuid ?? ""),
+        notifier: areasManager.activeArea.value?.currentFile,
         builder: (context) {
-          var currentFile = areasManager.activeArea?.currentFile;
+          var currentFile = areasManager.activeArea.value?.currentFile.value;
           return ChangeNotifierBuilder(
             key: Key(currentFile?.uuid ?? ""),
             notifier: currentFile is EstFileData
@@ -89,7 +89,7 @@ class _FileDetailsEditorState extends ChangeNotifierState<FileDetailsEditor> {
   Widget _getDetailsEditor(XmlProp? prop) {
     if (prop != null)
       return XmlPropDetails(key: ValueKey(prop), prop: prop);
-    var currentFile = areasManager.activeArea?.currentFile;
+    var currentFile = areasManager.activeArea.value?.currentFile.value;
     if (currentFile is EstFileData) {
       if (currentFile.estData.selectedEntry.value?.record != null)
         return EstRecordDetailsEditor(record: currentFile.estData.selectedEntry.value!.record!);

@@ -16,7 +16,7 @@ import '../propEditors/simpleProps/propTextField.dart';
 import 'FileType.dart';
 
 class Outliner extends ChangeNotifierWidget {
-  Outliner({super.key}) : super(notifier: areasManager);
+  Outliner({super.key}) : super(notifier: areasManager.activeArea);
 
   @override
   State<Outliner> createState() => _OutlinerState();
@@ -43,8 +43,8 @@ class _OutlinerState extends ChangeNotifierState<Outliner> {
     // several listeners are needed to get the current and loaded file
     // active area, active file, file state
     return ChangeNotifierBuilder(
-        key: Key(areasManager.activeArea!.uuid),
-        notifier: areasManager.activeArea!,
+        key: Key(areasManager.activeArea.value!.uuid),
+        notifier: areasManager.activeArea,
         builder: (context) => Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -52,14 +52,14 @@ class _OutlinerState extends ChangeNotifierState<Outliner> {
             makeTopRow(),
             const Divider(height: 1),
             Expanded(
-              child: areasManager.activeArea?.currentFile?.type == FileType.xml
+              child: areasManager.activeArea.value?.currentFile.value?.type == FileType.xml
                 ? ChangeNotifierBuilder(
-                  key: Key(areasManager.activeArea!.currentFile!.uuid),
-                  notifiers: [areasManager.activeArea!.currentFile!, search],
+                  key: Key(areasManager.activeArea.value!.currentFile.value!.uuid),
+                  notifiers: [areasManager.activeArea.value!.currentFile.value!, search],
                   builder: (context) {
                     XmlProp? xmlProp = 
-                    areasManager.activeArea?.currentFile?.type == FileType.xml
-                      ? (areasManager.activeArea!.currentFile! as XmlFileData).root
+                    areasManager.activeArea.value?.currentFile.value?.type == FileType.xml
+                      ? (areasManager.activeArea.value!.currentFile.value! as XmlFileData).root
                       : null;
                     return xmlProp != null ? SmoothSingleChildScrollView(
                       stepSize: 60,
@@ -101,7 +101,7 @@ class _OutlinerState extends ChangeNotifierState<Outliner> {
   }
 
   Widget makeOutliner() {
-    var xmlProp = (areasManager.activeArea!.currentFile! as XmlFileData).root!;
+    var xmlProp = (areasManager.activeArea.value!.currentFile.value! as XmlFileData).root!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: xmlProp

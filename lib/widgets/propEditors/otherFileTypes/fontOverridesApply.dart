@@ -13,8 +13,8 @@ class FontOverridesApplyButton extends StatelessWidget {
     isLoadingStatus.pushIsLoading();
     messageLog.add("Saving MCD...");
     try {
-      var savableFiles = areasManager
-        .expand((area) => area)
+      var savableFiles = areasManager.areas
+        .expand((area) => area.files)
         .where((file) => file is McdFileData || file is FtbFileData);
       await Future.wait(savableFiles.map((f) => f.save()));
       messageLog.add("Done :>");

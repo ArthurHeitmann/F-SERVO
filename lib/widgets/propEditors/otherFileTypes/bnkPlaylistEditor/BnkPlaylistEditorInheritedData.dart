@@ -197,7 +197,7 @@ mixin AudioPlayingWidget<T extends StatefulWidget> on State<T> {
       return false;
     if (event.logicalKey != LogicalKeyboardKey.space)
       return false;
-    if (fileId != areasManager.activeArea?.currentFile?.uuid)
+    if (fileId != areasManager.activeArea.value?.currentFile.value?.uuid)
       return false;
 
     togglePlayback();

@@ -6,15 +6,15 @@ import '../utils/utils.dart';
 import 'hasUuid.dart';
 import 'undoable.dart';
 
-abstract class ListNotifier<T> extends ChangeNotifier with IterableMixin<T>, HasUuid, Undoable {
+abstract class IterableNotifier<T> extends ChangeNotifier with IterableMixin<T>, HasUuid, Undoable {
   final List<T> _children;
   late final ChangeNotifier onDisposed;
   bool _debugDisposed = false;
 
-  ListNotifier(List<T> children)
+  IterableNotifier(List<T> children)
     : _children = children,
     onDisposed = ChangeNotifier();
-    
+
   @override
   Iterator<T> get iterator => _children.iterator;
 
@@ -68,6 +68,31 @@ abstract class ListNotifier<T> extends ChangeNotifier with IterableMixin<T>, Has
     }
     return result;
   }
+
+  @override
+  void dispose() {
+    assert(() {
+      if (_debugDisposed) {
+        throw FlutterError(
+            "A $runtimeType was used after being disposed.\n"
+                "Once you have called dispose() on a $runtimeType, it can no longer be used."
+        );
+      }
+      _debugDisposed = true;
+      return true;
+    }());
+    for (var child in _children) {
+      if (child is ChangeNotifier)
+        child.dispose();
+    }
+    super.dispose();
+    onDisposed.notifyListeners();
+    onDisposed.dispose();
+  }
+}
+abstract class ListNotifier<T> extends IterableNotifier<T> {
+
+  ListNotifier(List<T> children) : super(children);
 
   void add(T child) {
     _children.add(child);
@@ -213,27 +238,6 @@ abstract class ListNotifier<T> extends ChangeNotifier with IterableMixin<T>, Has
 
     if (hasChanged)
       notifyListeners();
-  }
-
-  @override
-  void dispose() {
-    assert(() {
-      if (_debugDisposed) {
-        throw FlutterError(
-          "A $runtimeType was used after being disposed.\n"
-          "Once you have called dispose() on a $runtimeType, it can no longer be used."
-        );
-      }
-      _debugDisposed = true;
-      return true;
-    }());
-    for (var child in _children) {
-      if (child is ChangeNotifier)
-        child.dispose();
-    }
-    super.dispose();
-    onDisposed.notifyListeners();
-    onDisposed.dispose();
   }
 }
 

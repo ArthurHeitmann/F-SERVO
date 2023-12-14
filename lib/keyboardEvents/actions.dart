@@ -14,9 +14,9 @@ class TabChangeAction extends Action<TabChangeIntent> {
   @override
   void invoke(TabChangeIntent intent) {
     if (intent.direction == HorizontalDirection.right)
-      areasManager.activeArea?.switchToNextFile();
+      areasManager.activeArea.value?.switchToNextFile();
     else
-      areasManager.activeArea?.switchToPreviousFile();
+      areasManager.activeArea.value?.switchToPreviousFile();
   }
 }
 
@@ -25,8 +25,8 @@ class CloseTabAction extends Action<CloseTabIntent> {
 
   @override
   void invoke(CloseTabIntent intent) {
-    if (areasManager.activeArea?.currentFile != null)
-      areasManager.activeArea?.closeFile(areasManager.activeArea!.currentFile!);
+    if (areasManager.activeArea.value?.currentFile != null)
+      areasManager.activeArea.value?.closeFile(areasManager.activeArea.value!.currentFile.value!);
   }
 }
 

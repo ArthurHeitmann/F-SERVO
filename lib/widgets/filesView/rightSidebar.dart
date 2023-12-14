@@ -11,7 +11,7 @@ import 'sidebar.dart';
 
 class RightSidebar extends ChangeNotifierWidget {
   RightSidebar({super.key})
-    : super(notifier: areasManager);
+    : super(notifier: areasManager.activeArea);
 
   @override
   State<RightSidebar> createState() => _RightSidebarState();
@@ -26,7 +26,7 @@ class _RightSidebarState extends ChangeNotifierState<RightSidebar> {
         // const displayForFileTypes = [FileType.xml, FileType.bnkPlaylist, FileType.est];
         // if (!displayForFileTypes.contains(areasManager.activeArea?.currentFile?.type))
         //   return const SizedBox();
-        bool showOutliner = areasManager.activeArea?.currentFile?.type == FileType.xml;
+        bool showOutliner = areasManager.activeArea.value?.currentFile.value?.type == FileType.xml;
         return Sidebar(
           initialWidth: MediaQuery.of(context).size.width * 0.25,
           switcherPosition: SidebarSwitcherPosition.right,

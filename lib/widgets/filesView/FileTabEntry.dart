@@ -2,6 +2,7 @@ import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 
 import '../../stateManagement/changesExporter.dart';
+import '../../stateManagement/openFiles/filesAreaManager.dart';
 import '../../utils/utils.dart';
 import '../../widgets/theme/customTheme.dart';
 import '../misc/ChangeNotifierWidget.dart';
@@ -56,7 +57,7 @@ class _FileTabEntryState extends ChangeNotifierState<FileTabEntry> {
               ],
             ),
             child: Material(
-              color: widget.file == widget.area.currentFile?.uuid ? getTheme(context).tabSelectedColor : getTheme(context).tabColor,
+              color: widget.file == widget.area.currentFile.value?.uuid ? getTheme(context).tabSelectedColor : getTheme(context).tabColor,
               borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(10), bottomRight: Radius.circular(10)),
               child: Padding(
                 padding: const EdgeInsets.only(left: 10, right: 5),
@@ -174,7 +175,7 @@ class _FileTabEntryState extends ChangeNotifierState<FileTabEntry> {
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
         child: GestureDetector(
-          onTap: () => widget.area.currentFile = areasManager.fromId(widget.file)!,
+          onTap: () => widget.area.setCurrentFile(areasManager.fromId(widget.file)!),
           onTertiaryTapUp: (_) => widget.area.closeFile(areasManager.fromId(widget.file)!),
           child: child,
         ),
