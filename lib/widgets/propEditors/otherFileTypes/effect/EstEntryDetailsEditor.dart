@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../../stateManagement/Property.dart';
 import '../../../../stateManagement/otherFileTypes/EstFileData.dart';
 import '../../simpleProps/propEditorFactory.dart';
+import 'EstModelPreview.dart';
 import 'EstTexturePreview.dart';
 import 'RgbPropEditor.dart';
 
@@ -100,7 +101,15 @@ class _EstEntryDetailsEditorState extends State<EstEntryDetailsEditor> {
           ),
         ],
       ),
-      _EntryPropEditor(label: "Mesh ID", prop: entry.meshId),
+      Row(
+        children: [
+          Expanded(child: _EntryPropEditor(label: "Mesh ID", prop: entry.meshId)),
+          EstModelPreview(
+            modelId: (widget.entry as EstTexEntryWrapper).meshId,
+            size: 35,
+          ),
+        ],
+      ),
       _EntryPropEditor(label: "Is single frame", prop: entry.isSingleFrame),
       _EntryPropEditor(label: "Video FPS (?)", prop: entry.videoFps),
     ];

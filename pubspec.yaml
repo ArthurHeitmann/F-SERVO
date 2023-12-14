@@ -61,7 +61,8 @@ flutter:
     - assets/bins/
     - assets/bins/vgmStream/
     - assets/effect/
-    - assets/effect/textures/
+    - assets/effect/model_thumbnails/
+    - assets/effect/texture_thumbnails/
     - assets/images/
     - assets/mcdFonts/
     - assets/mcdFonts/1/

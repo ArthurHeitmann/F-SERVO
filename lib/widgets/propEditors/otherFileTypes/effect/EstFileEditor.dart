@@ -14,6 +14,7 @@ import '../../../misc/SmoothScrollBuilder.dart';
 import '../../../misc/onHoverBuilder.dart';
 import '../../../theme/customTheme.dart';
 import '../../simpleProps/boolPropCheckbox.dart';
+import 'EstModelPreview.dart';
 import 'EstTexturePreview.dart';
 import 'RgbPropEditor.dart';
 
@@ -276,11 +277,16 @@ class _EstEntryWidgetState extends ChangeNotifierState<_EstEntryWidget> {
                       prop: (widget.entry as EstMoveEntryWrapper).rgb,
                       showTextFields: false,
                     ),
-                  if (widget.entry is EstTexEntryWrapper)
+                  if (widget.entry is EstTexEntryWrapper) ...[
                     EstTexturePreview(
                       textureFileId: (widget.entry as EstTexEntryWrapper).textureFileId,
                       textureFileTextureIndex: (widget.entry as EstTexEntryWrapper).textureFileTextureIndex,
                     ),
+                    const SizedBox(width: 10),
+                    EstModelPreview(
+                      modelId: (widget.entry as EstTexEntryWrapper).meshId,
+                    ),
+                  ]
                 ],
               )
             ),

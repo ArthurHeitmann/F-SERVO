@@ -6,34 +6,31 @@ import '../../../../stateManagement/Property.dart';
 import '../../../misc/expandOnHover.dart';
 import '../../../theme/customTheme.dart';
 
-class EstTexturePreview extends ChangeNotifierWidget {
-  final NumberProp textureFileId;
-  final NumberProp textureFileTextureIndex;
+class EstModelPreview extends ChangeNotifierWidget {
+  final NumberProp modelId;
   final double size;
 
-  EstTexturePreview({
-    required this.textureFileId,
-    required this.textureFileTextureIndex,
+  EstModelPreview({
+    required this.modelId,
     this.size = 20,
   })
     : super(
-      key: Key(textureFileId.uuid + textureFileTextureIndex.uuid),
-      notifiers: [textureFileId, textureFileTextureIndex]
+      key: Key("Model_${modelId.uuid}"),
+      notifier: modelId
     );
 
   @override
-  State<EstTexturePreview> createState() => _EstTexturePreviewState();
+  State<EstModelPreview> createState() => _EstModelPreviewState();
 }
 
-class _EstTexturePreviewState extends ChangeNotifierState<EstTexturePreview> {
+class _EstModelPreviewState extends ChangeNotifierState<EstModelPreview> {
   @override
   Widget build(BuildContext context) {
-    var texFileId = widget.textureFileId.value;
-    var texFileIndex = widget.textureFileTextureIndex.value;
-    // if (texFileId == 0 && texFileIndex == 0)
-    //   return SizedBox(width: widget.size, height: widget.size);
-    var imgName = "${texFileId.toString().padLeft(3, "0")}.wtp_$texFileIndex.png";
-    var imgPath = "assets/effect/texture_thumbnails/$imgName";
+    var modelId = widget.modelId.value.toInt();
+    if (modelId == 0)
+      return SizedBox(width: widget.size, height: widget.size);
+    var imgName = "${modelId.toRadixString(16).padLeft(4, "0")}.png";
+    var imgPath = "assets/effect/model_thumbnails/$imgName";
     return ExpandOnHover(
       size: widget.size,
       child: ClipRRect(
