@@ -3,7 +3,6 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
-import 'package:path/path.dart' as path;
 import 'package:path/path.dart';
 import 'package:tuple/tuple.dart';
 import 'package:xml/xml.dart';
@@ -26,9 +25,9 @@ import '../../widgets/misc/confirmCancelDialog.dart';
 import '../../widgets/misc/confirmDialog.dart';
 import '../../widgets/misc/fileSelectionDialog.dart';
 import '../../widgets/propEditors/xmlActions/XmlActionPresets.dart';
+import '../hasUuid.dart';
 import 'HierarchyEntryTypes.dart';
 import '../Property.dart';
-import '../listNotifier.dart';
 import '../../fileTypeUtils/pak/pakExtractor.dart';
 import '../openFiles/openFileTypes.dart';
 import '../openFiles/openFilesManager.dart';
@@ -38,14 +37,15 @@ import '../undoable.dart';
 import '../xmlProps/xmlProp.dart';
 
 
-class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
-  HierarchyEntry? _selectedEntry;
+class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase {
+  final ValueNotifier<HierarchyEntry?> _selectedEntry = ValueNotifier(null);
+  ValueListenable<HierarchyEntry?> get selectedEntry => _selectedEntry;
   ValueNotifier<bool> treeViewIsDirty = ValueNotifier(false);
 
-  OpenHierarchyManager() : super([]);
+  OpenHierarchyManager();
 
-  ListNotifier parentOf(HierarchyEntry entry) {
-    return findRecWhere((e) => e.contains(entry)) ?? this;
+  HierarchyEntryBase parentOf(HierarchyEntryBase entry) {
+    return (children.findRecWhere((e) => e.children.contains(entry)) ?? this) as HierarchyEntryBase;
   }
 
   Future<HierarchyEntry?> openFile(String filePath, { HierarchyEntry? parent }) async {
@@ -157,14 +157,14 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
   }
 
   Future<HierarchyEntry> openDat(String datPath, { HierarchyEntry? parent }) async {
-    var existing = findRecWhere((entry) => entry is DatHierarchyEntry && entry.path == datPath);
+    var existing = children.findRecWhere((entry) => entry is DatHierarchyEntry && entry.path == datPath);
     if (existing != null)
       return existing;
 
     // get DAT infos
-    var fileName = path.basename(datPath);
-    var datFolder = path.dirname(datPath);
-    var datExtractDir = path.join(datFolder, "nier2blender_extracted", fileName);
+    var fileName = basename(datPath);
+    var datFolder = dirname(datPath);
+    var datExtractDir = join(datFolder, "nier2blender_extracted", fileName);
     List<String>? datFilePaths;
     if (!await Directory(datExtractDir).exists()) {
       await extractDatFiles(datPath, shouldExtractPakFiles: true);
@@ -185,8 +185,8 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
     else
       add(datEntry);
 
-    var existingEntries = findAllRecWhere((entry) => 
-      entry is PakHierarchyEntry && entry.path.startsWith(datExtractDir));
+    var existingEntries = children.findAllRecWhere((entry) =>
+      entry is FileHierarchyEntry && entry.path.startsWith(datExtractDir));
     for (var entry in existingEntries)
       parentOf(entry).remove(entry);
 
@@ -217,8 +217,8 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
     await Future.wait(futures);
 
     if (rubyScriptGroup != null) {
-      rubyScriptGroup.name.value += " (${rubyScriptGroup.length})";
-      if (rubyScriptGroup.length > 8)
+      rubyScriptGroup.name.value += " (${rubyScriptGroup.children.length})";
+      if (rubyScriptGroup.children.length > 8)
         rubyScriptGroup.isCollapsed.value = true;
     }
 
@@ -226,8 +226,8 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
   }
 
   Future<HierarchyEntry> openExtractedDat(String datDirPath, { HierarchyEntry? parent }) {
-    var srcDatDir = path.dirname(path.dirname(datDirPath));
-    var srcDatPath = path.join(srcDatDir, path.basename(datDirPath));
+    var srcDatDir = dirname(dirname(datDirPath));
+    var srcDatPath = join(srcDatDir, basename(datDirPath));
     return openDat(srcDatPath, parent: parent);
   }
   
@@ -236,29 +236,29 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
     if (match == null)
       return null;
     var groupId = int.parse(match.group(1)!, radix: 16);
-    var parentGroup = findRecWhere((entry) => entry is HapGroupHierarchyEntry && entry.id == groupId) as HapGroupHierarchyEntry?;
+    var parentGroup = children.findRecWhere((entry) => entry is HapGroupHierarchyEntry && entry.id == groupId) as HapGroupHierarchyEntry?;
     return parentGroup;
   }
 
   Future<HierarchyEntry> openPak(String pakPath, { HierarchyEntry? parent }) async {
-    var existing = findRecWhere((entry) => entry is PakHierarchyEntry && entry.path == pakPath);
+    var existing = children.findRecWhere((entry) => entry is PakHierarchyEntry && entry.path == pakPath);
     if (existing != null)
       return existing;
 
-    var pakFolder = path.dirname(pakPath);
-    var pakExtractDir = path.join(pakFolder, "pakExtracted", path.basename(pakPath));
+    var pakFolder = dirname(pakPath);
+    var pakExtractDir = join(pakFolder, "pakExtracted", basename(pakPath));
     if (!await Directory(pakExtractDir).exists()) {
       await extractPakFiles(pakPath, yaxToXml: true);
     }
     var pakEntry = PakHierarchyEntry(StringProp(pakPath.split(Platform.pathSeparator).last), pakPath, pakExtractDir);
-    var parentEntry = findPakParentGroup(path.basename(pakPath)) ?? parent;
+    var parentEntry = findPakParentGroup(basename(pakPath)) ?? parent;
     if (parentEntry != null)
       parentEntry.add(pakEntry);
     else
       add(pakEntry);
-    await pakEntry.readGroups(path.join(pakExtractDir, "0.xml"), parent);
+    await pakEntry.readGroups(join(pakExtractDir, "0.xml"), parent);
 
-    var existingEntries = findAllRecWhere((entry) =>
+    var existingEntries = children.findAllRecWhere((entry) =>
       entry is XmlScriptHierarchyEntry && entry.path.startsWith(pakExtractDir));
     for (var childXml in existingEntries)
       parentOf(childXml).remove(childXml);
@@ -266,7 +266,7 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
     var pakInfoJson = await getPakInfoData(pakExtractDir);
     for (var yaxFile in pakInfoJson) {
       var xmlFile = yaxFile["name"].replaceAll(".yax", ".xml");
-      var xmlFilePath = path.join(pakExtractDir, xmlFile);
+      var xmlFilePath = join(pakExtractDir, xmlFile);
       int existingEntryI = existingEntries.indexWhere((entry) => (entry as FileHierarchyEntry).path == xmlFilePath);
       if (existingEntryI != -1) {
         pakEntry.add(existingEntries[existingEntryI]);
@@ -279,8 +279,8 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
       var xmlEntry = XmlScriptHierarchyEntry(StringProp(xmlFile), xmlFilePath);
       if (await File(xmlFilePath).exists())
         await xmlEntry.readMeta();
-      else if (await File(path.join(pakExtractDir, yaxFile["name"])).exists()) {
-        await yaxFileToXmlFile(path.join(pakExtractDir, yaxFile["name"]));
+      else if (await File(join(pakExtractDir, yaxFile["name"])).exists()) {
+        await yaxFileToXmlFile(join(pakExtractDir, yaxFile["name"]));
         await xmlEntry.readMeta();
       }
       else
@@ -292,8 +292,8 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
   }
 
   Future<HierarchyEntry> openExtractedPak(String pakDirPath, { HierarchyEntry? parent }) {
-    var srcPakDir = path.dirname(path.dirname(pakDirPath));
-    var srcPakPath = path.join(srcPakDir, path.basename(pakDirPath));
+    var srcPakDir = dirname(dirname(pakDirPath));
+    var srcPakPath = join(srcPakDir, basename(pakDirPath));
     return openPak(srcPakPath, parent: parent);
   }
 
@@ -306,10 +306,10 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
   }
 
   HierarchyEntry openGenericFile<T extends FileHierarchyEntry>(String filePath, HierarchyEntry? parent, T Function(StringProp n, String p) make) {
-    var existing = findRecWhere((entry) => entry is T && entry.path == filePath);
+    var existing = children.findRecWhere((entry) => entry is T && entry.path == filePath);
     if (existing != null)
       return existing;
-    var entry = make(StringProp(path.basename(filePath)), filePath);
+    var entry = make(StringProp(basename(filePath)), filePath);
     if (parent != null)
       parent.add(entry);
     else
@@ -321,7 +321,7 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
   Future<HierarchyEntry> openBinMrbScript(String binFilePath, { HierarchyEntry? parent }) async {
     var rbPath = "$binFilePath.rb";
 
-    var existing = findRecWhere((entry) => entry is RubyScriptHierarchyEntry && entry.path == rbPath);
+    var existing = children.findRecWhere((entry) => entry is RubyScriptHierarchyEntry && entry.path == rbPath);
     if (existing != null)
       return existing;
 
@@ -333,7 +333,7 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
   }
 
   Future<HierarchyEntry> openWaiFile(String waiPath) async {
-    var existing = findRecWhere((entry) => entry is WaiHierarchyEntry && entry.path == waiPath);
+    var existing = children.findRecWhere((entry) => entry is WaiHierarchyEntry && entry.path == waiPath);
     if (existing != null)
       return existing;
     
@@ -356,12 +356,12 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
     var waiData = areasManager.openFileAsHidden(waiPath) as WaiFileData;
     await waiData.load();
     
-    var waiEntry = WaiHierarchyEntry(StringProp(path.basename(waiPath)), waiPath, waiExtractDir, waiData.uuid);
+    var waiEntry = WaiHierarchyEntry(StringProp(basename(waiPath)), waiPath, waiExtractDir, waiData.uuid);
     add(waiEntry);
 
     // create EXTRACTION_COMPLETED file, to mark as extract dir
     bool noExtract = true;
-    var extractedFile = File(path.join(waiExtractDir, "EXTRACTION_COMPLETED"));
+    var extractedFile = File(join(waiExtractDir, "EXTRACTION_COMPLETED"));
     if (!await extractedFile.exists())
       noExtract = false;
     var wai = await waiData.loadWai();
@@ -390,7 +390,7 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
   }
 
   Future<HierarchyEntry> openBnkFile(String bnkPath, { HierarchyEntry? parent }) async {
-    var existing = findRecWhere((entry) => entry is BnkHierarchyEntry && entry.path == bnkPath);
+    var existing = children.findRecWhere((entry) => entry is BnkHierarchyEntry && entry.path == bnkPath);
     if (existing != null)
       return existing;
     
@@ -713,7 +713,7 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
             var parent = hircEntries[parentId];
             if (parent == null) {
               entry.value.parentIds.remove(parentId);
-            } else if (!parent.contains(entry.value)) {
+            } else if (!parent.children.contains(entry.value)) {
               var child = entry.value;
               child.usages++;
               if (child.usages > 1)
@@ -754,7 +754,7 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
   }
 
   Future<HierarchyEntry> openBxmFile(String bxmPath, { HierarchyEntry? parent }) async {
-    var existing = findRecWhere((entry) => entry is BxmHierarchyEntry && entry.path == bxmPath);
+    var existing = children.findRecWhere((entry) => entry is BxmHierarchyEntry && entry.path == bxmPath);
     if (existing != null)
       return existing;
     
@@ -771,7 +771,7 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
   }
 
   Future<HierarchyEntry> openWtaFile(String wtaPath, { HierarchyEntry? parent }) async {
-    var existing = findRecWhere((entry) => entry is WtaHierarchyEntry && entry.path == wtaPath);
+    var existing = children.findRecWhere((entry) => entry is WtaHierarchyEntry && entry.path == wtaPath);
     if (existing != null)
       return existing;
     
@@ -800,7 +800,7 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
   }
 
   Future<HierarchyEntry> openWtbFile(String wtaPath, { HierarchyEntry? parent }) async {
-    var existing = findRecWhere((entry) => entry is WtaHierarchyEntry && entry.path == wtaPath);
+    var existing = children.findRecWhere((entry) => entry is WtaHierarchyEntry && entry.path == wtaPath);
     if (existing != null)
       return existing;
 
@@ -821,28 +821,16 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
   }
 
   @override
-  void add(HierarchyEntry child) {
-    super.add(child);
-    treeViewIsDirty.value = true;
-  }
-
-  @override
-  void addAll(Iterable<HierarchyEntry> children) {
-    super.addAll(children);
-    treeViewIsDirty.value = true;
-  }
-
-  @override
   void remove(HierarchyEntry child) {
     _removeRec(child);
     super.remove(child);
-    treeViewIsDirty.value = true;
   }
 
   @override
   void clear() {
-    if (isEmpty) return;
-    for (var child in this)
+    if (children.isEmpty)
+      return;
+    for (var child in children)
       _removeRec(child);
     super.clear();
     treeViewIsDirty.value = true;
@@ -856,10 +844,10 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
   void _removeRec(HierarchyEntry entry) {
     if (entry is FileHierarchyEntry)
       areasManager.releaseFile(entry.path);
-    if (entry == _selectedEntry)
-      selectedEntry = null;
+    if (entry == _selectedEntry.value)
+      _selectedEntry.value = null;
       
-    for (var child in entry) {
+    for (var child in entry.children) {
       _removeRec(child);
     }
   }
@@ -878,7 +866,7 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
         .map((e) => int.parse(e.group(1)!))
         .fold<int>(0, (prev, e) => max(prev, e)) + 1;
       var newFileName = "$newIndex.xml";
-      filePath = path.join(parentPath, newFileName);
+      filePath = join(parentPath, newFileName);
       if (await File(filePath).exists())
         filePath = "${randomId()}.xml";
     }
@@ -935,31 +923,28 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
   }
 
   void expandAll() {
-    for (var entry in this)
+    for (var entry in children)
       entry.setCollapsedRecursive(false, true);
   }
   
   void collapseAll() {
-    for (var entry in this)
+    for (var entry in children)
       entry.setCollapsedRecursive(true, true);
   }
 
-  HierarchyEntry? get selectedEntry => _selectedEntry;
-
-  set selectedEntry(HierarchyEntry? value) {
-    if (value == _selectedEntry)
+  setSelectedEntry(HierarchyEntry? value) {
+    if (value == _selectedEntry.value)
       return;
-    _selectedEntry?.isSelected.value = false;
+    _selectedEntry.value?.isSelected.value = false;
     // assert(value == null || value.isSelectable);
-    _selectedEntry = value;
-    _selectedEntry?.isSelected.value = true;
-    notifyListeners();
+    _selectedEntry.value = value;
+    _selectedEntry.value?.isSelected.value = true;
   }
 
   Map<HierarchyEntry, HierarchyEntry?> generateTmpParentMap() {
     Map<HierarchyEntry, HierarchyEntry?> parentMap = {};
     void generateTmpParentMapRec(HierarchyEntry entry) {
-      for (var child in entry) {
+      for (var child in entry.children) {
         if (parentMap.containsKey(child)) {
           print("Duplicate parent-child relationship: ${parentMap[child]!.name.value} -> ${child.name.value} (child of ${entry.name.value})");
           continue;
@@ -968,7 +953,7 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
         generateTmpParentMapRec(child);
       }
     }
-    for (var entry in this) {
+    for (var entry in children) {
       parentMap[entry] = null;
       generateTmpParentMapRec(entry);
     }
@@ -979,26 +964,32 @@ class OpenHierarchyManager extends ListNotifier<HierarchyEntry> with Undoable {
   Undoable takeSnapshot() {
     var snapshot = OpenHierarchyManager();
     snapshot.overrideUuid(uuid);
-    snapshot.replaceWith(map((e) => e.takeSnapshot() as HierarchyEntry).toList());
-    snapshot._selectedEntry = _selectedEntry != null ? _selectedEntry?.takeSnapshot() as HierarchyEntry : null;
+    snapshot.replaceWith(children.map((e) => e.takeSnapshot() as HierarchyEntry).toList());
+    snapshot._selectedEntry.value = _selectedEntry.value != null ? _selectedEntry.value?.takeSnapshot() as HierarchyEntry : null;
     return snapshot;
   }
   
   @override
   void restoreWith(Undoable snapshot) {
     var entry = snapshot as OpenHierarchyManager;
-    updateOrReplaceWith(entry.toList(), (obj) => obj.takeSnapshot() as HierarchyEntry);
-    if (entry.selectedEntry != null)
-      selectedEntry = findRecWhere((e) => entry.selectedEntry!.uuid == e.uuid);
+    updateOrReplaceWith(entry.children.toList(), (obj) => obj.takeSnapshot() as HierarchyEntry);
+    if (entry.selectedEntry.value != null)
+      _selectedEntry.value = children.findRecWhere((e) => entry.selectedEntry.value!.uuid == e.uuid);
     else
-      selectedEntry = null;
+      _selectedEntry.value = null;
+  }
+
+  @override
+  void dispose() {
+    _selectedEntry.dispose();
+    treeViewIsDirty.dispose();
   }
 }
 
 final openHierarchyManager = OpenHierarchyManager();
 final StringProp openHierarchySearch = StringProp("")
   ..addListener(() {
-    for (var entry in openHierarchyManager) {
+    for (var entry in openHierarchyManager.children) {
       entry.setIsVisibleWithSearchRecursive(false);
       entry.computeIsVisibleWithSearchFilter();
       entry.propagateVisibility(openHierarchyManager.generateTmpParentMap());

@@ -69,9 +69,9 @@ class _SearchPanelState extends State<SearchPanel> {
   @override
   void initState() {
     updateSearchStream = debounce(_updateSearchStream, 750);
-    openHierarchyManager.addListener(_onHierarchyChange);
+    openHierarchyManager.children.addListener(_onHierarchyChange);
     onSearchPathChangeSubscription = onSearchPathChange.listen(_onSearchPathChange);
-    prevOpenFileUuids = openHierarchyManager.map((e) => e.uuid).toSet();
+    prevOpenFileUuids = openHierarchyManager.children.map((e) => e.uuid).toSet();
     extensions.addListener(updateSearchStream);
     path.addListener(updateSearchStream);
     path.addListener(_saveLastPath);
@@ -95,7 +95,7 @@ class _SearchPanelState extends State<SearchPanel> {
 
   @override
   void dispose() {
-    openHierarchyManager.removeListener(_onHierarchyChange);
+    openHierarchyManager.children.removeListener(_onHierarchyChange);
     onSearchPathChangeSubscription?.cancel();
     extensions.dispose();
     path.dispose();
@@ -403,10 +403,10 @@ class _SearchPanelState extends State<SearchPanel> {
     // auto fill search path with opened file
     if (path.value.isNotEmpty || query.value.isNotEmpty && extensions.value.isNotEmpty)
       return;
-    var curOpenFileUuids = openHierarchyManager.map((e) => e.uuid).toSet();
+    var curOpenFileUuids = openHierarchyManager.children.map((e) => e.uuid).toSet();
     var newlyAddedUuids = curOpenFileUuids.difference(prevOpenFileUuids);
     for (var newUuid in newlyAddedUuids) {
-      var entry = openHierarchyManager.firstWhere((e) => e.uuid == newUuid);
+      var entry = openHierarchyManager.children.firstWhere((e) => e.uuid == newUuid);
       if (entry is! ExtractableHierarchyEntry)
         continue;
       path.value = entry.extractedPath;

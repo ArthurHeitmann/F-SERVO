@@ -250,9 +250,10 @@ class XmlFileData extends OpenFileData {
     secondaryName = xmlName;
 
     var hierarchyEntry = openHierarchyManager
-                        .findRecWhere((entry) => entry is XmlScriptHierarchyEntry && entry.path == path) as XmlScriptHierarchyEntry?;
+      .children
+      .findRecWhere((entry) => entry is XmlScriptHierarchyEntry && entry.path == path) as XmlScriptHierarchyEntry?;
     if (hierarchyEntry != null)
-      hierarchyEntry.hapName = xmlName;
+      hierarchyEntry.hapName.value = xmlName;
   }
 
   @override
@@ -756,12 +757,12 @@ class WspFileData extends OpenFileData {
       return;
     _loadingState = LoadingState.loading;
 
-    var wspHierarchyEntry = openHierarchyManager.findRecWhere((e) => e is WspHierarchyEntry && e.path == path);
+    var wspHierarchyEntry = openHierarchyManager.children.findRecWhere((e) => e is WspHierarchyEntry && e.path == path);
     if (wspHierarchyEntry == null) {
       showToast("WSP hierarchy entry not found");
       throw Exception("WSP hierarchy entry not found for $path");
     }
-    wems = wspHierarchyEntry
+    wems = wspHierarchyEntry.children
       .map((e) => e as WemHierarchyEntry)
       .map((e) => WemFileData(
         e.name.value,

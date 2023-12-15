@@ -65,7 +65,7 @@ class _HierarchyFlatListState extends ChangeNotifierState<HierarchyFlatList> {
 
   void regenerateFlatTree() {
     cachedFlatTree = [];
-    for (var entry in openHierarchyManager) {
+    for (var entry in openHierarchyManager.children) {
       _regenerateFlatTree(entry, 0);
     }
     openHierarchyManager.treeViewIsDirty.value = false;
@@ -77,7 +77,7 @@ class _HierarchyFlatListState extends ChangeNotifierState<HierarchyFlatList> {
     var uuidPath = [...parentUuidPath, entry.uuid];
     cachedFlatTree.add(IndentedHierarchyEntry(entry, uuidPath, depth));
     if (!entry.isCollapsed.value) {
-      for (var child in entry)
+      for (var child in entry.children)
         _regenerateFlatTree(child, depth + 1, uuidPath);
     }
   }
@@ -105,35 +105,35 @@ class _HierarchyFlatListState extends ChangeNotifierState<HierarchyFlatList> {
   void moveSelectionVertically(int direction) {
     if (shouldIgnoreKeyboardEvents())
       return;
-    if (openHierarchyManager.selectedEntry == null) {
+    if (openHierarchyManager.selectedEntry.value == null) {
       if (cachedFlatTree.isNotEmpty)
-        openHierarchyManager.selectedEntry = cachedFlatTree.first.entry;
+        openHierarchyManager.setSelectedEntry(cachedFlatTree.first.entry);
       return;
     }
-    var currentIndex = cachedFlatTree.indexWhere((e) => e.entry == openHierarchyManager.selectedEntry);
+    var currentIndex = cachedFlatTree.indexWhere((e) => e.entry == openHierarchyManager.selectedEntry.value);
     if (currentIndex == -1)
       return;
     var newIndex = currentIndex + direction;
     if (newIndex < 0 || newIndex >= cachedFlatTree.length)
       return;
     unfocusCurrent();
-    openHierarchyManager.selectedEntry = cachedFlatTree[newIndex].entry;
+    openHierarchyManager.setSelectedEntry(cachedFlatTree[newIndex].entry);
     scrollToSelectedEntry();
   }
 
   void onArrowLeft() {
     if (shouldIgnoreKeyboardEvents())
       return;
-    if (openHierarchyManager.selectedEntry == null)
+    if (openHierarchyManager.selectedEntry.value == null)
       return;
     unfocusCurrent();
-    if (openHierarchyManager.selectedEntry!.isCollapsed.value || openHierarchyManager.selectedEntry!.isEmpty) {
-      var parent = openHierarchyManager.parentOf(openHierarchyManager.selectedEntry!);
+    if (openHierarchyManager.selectedEntry.value!.isCollapsed.value || openHierarchyManager.selectedEntry.value!.children.isEmpty) {
+      var parent = openHierarchyManager.parentOf(openHierarchyManager.selectedEntry.value!);
       if (parent is HierarchyEntry)
-        openHierarchyManager.selectedEntry = parent;
+        openHierarchyManager.setSelectedEntry(parent);
     }
     else {
-      openHierarchyManager.selectedEntry!.isCollapsed.value = true;
+      openHierarchyManager.selectedEntry.value!.isCollapsed.value = true;
     }
     scrollToSelectedEntry();
   }
@@ -141,16 +141,16 @@ class _HierarchyFlatListState extends ChangeNotifierState<HierarchyFlatList> {
   void onArrowRight() {
     if (shouldIgnoreKeyboardEvents())
       return;
-    if (openHierarchyManager.selectedEntry == null)
+    if (openHierarchyManager.selectedEntry.value == null)
       return;
     unfocusCurrent();
-    if (openHierarchyManager.selectedEntry!.isCollapsed.value) {
-      openHierarchyManager.selectedEntry!.isCollapsed.value = false;
+    if (openHierarchyManager.selectedEntry.value!.isCollapsed.value) {
+      openHierarchyManager.selectedEntry.value!.isCollapsed.value = false;
     }
     else {
-      var firstChild = openHierarchyManager.selectedEntry!.firstOrNull;
+      var firstChild = openHierarchyManager.selectedEntry.value!.children.firstOrNull;
       if (firstChild != null)
-        openHierarchyManager.selectedEntry = firstChild;
+        openHierarchyManager.setSelectedEntry(firstChild);
     }
     scrollToSelectedEntry();
   }
@@ -158,10 +158,10 @@ class _HierarchyFlatListState extends ChangeNotifierState<HierarchyFlatList> {
   void openCurrentFile() {
     if (!isCursorInside)
       return;
-    if (openHierarchyManager.selectedEntry == null)
+    if (openHierarchyManager.selectedEntry.value == null)
       return;
-    if (openHierarchyManager.selectedEntry is FileHierarchyEntry)
-      openHierarchyManager.selectedEntry!.onOpen();
+    if (openHierarchyManager.selectedEntry.value is FileHierarchyEntry)
+      openHierarchyManager.selectedEntry.value!.onOpen();
   }
 
   bool shouldIgnoreKeyboardEvents() {
@@ -177,9 +177,9 @@ class _HierarchyFlatListState extends ChangeNotifierState<HierarchyFlatList> {
   }
 
   void scrollToSelectedEntry() {
-    if (openHierarchyManager.selectedEntry == null)
+    if (openHierarchyManager.selectedEntry.value == null)
       return;
-    var currentIndex = cachedFlatTree.indexWhere((e) => e.entry == openHierarchyManager.selectedEntry);
+    var currentIndex = cachedFlatTree.indexWhere((e) => e.entry == openHierarchyManager.selectedEntry.value);
     if (currentIndex == -1)
       return;
     var currentEntryTop = currentIndex * HierarchyEntryWidget.height;

@@ -48,9 +48,51 @@ class HierarchyEntryAction {
   const HierarchyEntryAction({ required this.name, this.icon, this.iconScale = 1.0, required this.action });
 }
 
-abstract class HierarchyEntry extends ListNotifier<HierarchyEntry> with Undoable {
+mixin HierarchyEntryBase {
+  final ListNotifier<HierarchyEntry> _children = ValueListNotifier([]);
+  IterableNotifier<HierarchyEntry> get children => _children;
+
+  void add(HierarchyEntry child) {
+    _children.add(child);
+    openHierarchyManager.treeViewIsDirty.value = true;
+  }
+
+  void addAll(Iterable<HierarchyEntry> children) {
+    _children.addAll(children);
+    openHierarchyManager.treeViewIsDirty.value = true;
+  }
+
+  void insert(int index, HierarchyEntry child) {
+    _children.insert(index, child);
+    openHierarchyManager.treeViewIsDirty.value = true;
+  }
+
+  void remove(HierarchyEntry child) {
+    _children.remove(child);
+    openHierarchyManager.treeViewIsDirty.value = true;
+  }
+
+  void clear() {
+    _children.clear();
+    openHierarchyManager.treeViewIsDirty.value = true;
+  }
+
+  void replaceWith(List<HierarchyEntry> newChildren) {
+    _children.replaceWith(newChildren);
+  }
+
+  void updateOrReplaceWith(List<HierarchyEntry> newChildren, HierarchyEntry Function(Undoable) copy) {
+    _children.updateOrReplaceWith(newChildren, copy);
+  }
+
+  void dispose() {
+    _children.dispose();
+  }
+}
+
+abstract class HierarchyEntry with HasUuid, Undoable, HierarchyEntryBase {
   OptionalFileInfo? optionalFileInfo;
-  StringProp name;
+  final StringProp name;
   final bool isSelectable;
   final ValueNotifier<bool> isSelected = ValueNotifier(false);
   final bool isCollapsible;
@@ -58,17 +100,18 @@ abstract class HierarchyEntry extends ListNotifier<HierarchyEntry> with Undoable
   final bool isOpenable;
   final ValueNotifier<bool> isVisibleWithSearch = ValueNotifier(true);
 
-  HierarchyEntry(this.name, this.isSelectable, this.isCollapsible, this.isOpenable)
-    : super([]) {
-    addListener(onTreeViewChanged);
+  HierarchyEntry(this.name, this.isSelectable, this.isCollapsible, this.isOpenable) {
     isCollapsed.addListener(onTreeViewChanged);
     isVisibleWithSearch.addListener(onTreeViewChanged);
   }
 
   @override
   void dispose() {
-    name.dispose();
     super.dispose();
+    name.dispose();
+    isSelected.dispose();
+    isCollapsed.dispose();
+    isVisibleWithSearch.dispose();
   }
 
   void onTreeViewChanged() {
@@ -87,7 +130,7 @@ abstract class HierarchyEntry extends ListNotifier<HierarchyEntry> with Undoable
 
   List<HierarchyEntryAction> getContextMenuActions() {
     return [
-      if (isNotEmpty) ...[
+      if (children.isNotEmpty) ...[
         HierarchyEntryAction(
           name: "Collapse all",
           icon: Icons.unfold_less,
@@ -101,7 +144,7 @@ abstract class HierarchyEntry extends ListNotifier<HierarchyEntry> with Undoable
           action: () => setCollapsedRecursive(false)
         ),
       ],
-      if (openHierarchyManager.contains(this)) ...[
+      if (openHierarchyManager.children.contains(this)) ...[
         HierarchyEntryAction(
           name: "Close",
           icon: Icons.close,
@@ -123,7 +166,7 @@ abstract class HierarchyEntry extends ListNotifier<HierarchyEntry> with Undoable
   void setCollapsedRecursive(bool value, [bool setSelf = false]) {
     if (setSelf)
       isCollapsed.value = value;
-    for (var child in this) {
+    for (var child in children) {
       child.setCollapsedRecursive(value, true);
     }
   }
@@ -135,7 +178,7 @@ abstract class HierarchyEntry extends ListNotifier<HierarchyEntry> with Undoable
   //   3. propagate visibility to parents and children (if an entry is visible, all its parents and children are visible)
   void setIsVisibleWithSearchRecursive(bool value) {
     isVisibleWithSearch.value = value;
-    for (var child in this) {
+    for (var child in children) {
       child.setIsVisibleWithSearchRecursive(value);
     }
   }
@@ -147,13 +190,13 @@ abstract class HierarchyEntry extends ListNotifier<HierarchyEntry> with Undoable
       isVisibleWithSearch.value = true;
     else
       isVisibleWithSearch.value = false;
-    for (var child in this) {
+    for (var child in children) {
       child.computeIsVisibleWithSearchFilter();
     }
   }
   void propagateVisibility(Map<HierarchyEntry, HierarchyEntry?> parentMap) {
     if (!isVisibleWithSearch.value) {
-      for (var child in this)
+      for (var child in children)
         child.propagateVisibility(parentMap);
       return;
     }
@@ -217,7 +260,7 @@ abstract class GenericFileHierarchyEntry extends FileHierarchyEntry {
     entry.overrideUuid(uuid);
     entry.isSelected.value = isSelected.value;
     entry.isCollapsed.value = isCollapsed.value;
-    entry.replaceWith(map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
+    entry.replaceWith(children.map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
     return entry;
   }
 
@@ -226,7 +269,7 @@ abstract class GenericFileHierarchyEntry extends FileHierarchyEntry {
     var entry = snapshot as HierarchyEntry;
     isSelected.value = entry.isSelected.value;
     isCollapsed.value = entry.isCollapsed.value;
-    updateOrReplaceWith(entry.toList(), (entry) => entry.takeSnapshot() as HierarchyEntry);
+    updateOrReplaceWith(entry.children.toList(), (entry) => entry.takeSnapshot() as HierarchyEntry);
   }
 }
 
@@ -259,7 +302,7 @@ class DatHierarchyEntry extends ExtractableHierarchyEntry {
     entry.overrideUuid(uuid);
     entry.isSelected.value = isSelected.value;
     entry.isCollapsed.value = isCollapsed.value;
-    entry.replaceWith(map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
+    entry.replaceWith(children.map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
     return entry;
   }
 
@@ -269,18 +312,18 @@ class DatHierarchyEntry extends ExtractableHierarchyEntry {
     name.restoreWith(entry.name);
     isSelected.value = entry.isSelected.value;
     isCollapsed.value = entry.isCollapsed.value;
-    updateOrReplaceWith(entry.toList(), (entry) => entry.takeSnapshot() as HierarchyEntry);
+    updateOrReplaceWith(entry.children.toList(), (entry) => entry.takeSnapshot() as HierarchyEntry);
   }
 
   Future<void> addNewRubyScript() async {
     if (await confirmDialog(getGlobalContext(), title: "Add new Ruby Script?") != true)
       return;
-    var scriptGroup = firstWhere(
+    var scriptGroup = children.firstWhere(
       (entry) => entry is RubyScriptGroupHierarchyEntry,
       orElse: () => RubyScriptGroupHierarchyEntry()
     ) as RubyScriptGroupHierarchyEntry;
-    scriptGroup.name.value = "Ruby Scripts (${scriptGroup.length + 1})";
-    if (!contains(scriptGroup))
+    scriptGroup.name.value = "Ruby Scripts (${scriptGroup.children.length + 1})";
+    if (!children.contains(scriptGroup))
       add(scriptGroup);
     await scriptGroup.addNewRubyScript(path, extractedPath);
   }
@@ -364,7 +407,7 @@ class PakHierarchyEntry extends ExtractableHierarchyEntry {
     if (parent is! DatHierarchyEntry)
       return;
     
-    var childPak = parent.findRecWhere((entry) {
+    var childPak = parent.children.findRecWhere((entry) {
       if (entry is! PakHierarchyEntry)
         return false;
       var pakGroupId = pakGroupIdMatcher.firstMatch(entry.name.value);
@@ -398,7 +441,7 @@ class PakHierarchyEntry extends ExtractableHierarchyEntry {
     snapshot.isSelected.value = isSelected.value;
     snapshot.isCollapsed.value = isCollapsed.value;
     snapshot._flatGroups.addAll(_flatGroups);
-    snapshot.replaceWith(map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
+    snapshot.replaceWith(children.map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
     return snapshot;
   }
   
@@ -408,7 +451,7 @@ class PakHierarchyEntry extends ExtractableHierarchyEntry {
     name.restoreWith(entry.name);
     isSelected.value = entry.isSelected.value;
     isCollapsed.value = entry.isCollapsed.value;
-    updateOrReplaceWith(entry.toList(), (obj) => obj.takeSnapshot() as HierarchyEntry);
+    updateOrReplaceWith(entry.children.toList(), (obj) => obj.takeSnapshot() as HierarchyEntry);
   }
 
   @override
@@ -484,10 +527,10 @@ class HapGroupHierarchyEntry extends FileHierarchyEntry {
     xmlRoot.insert(insertIndex, newGroupProp);
 
     var ownInsertIndex = 0;
-    var ownChildGroups = whereType<HapGroupHierarchyEntry>();
+    var ownChildGroups = children.whereType<HapGroupHierarchyEntry>();
     if (ownChildGroups.isNotEmpty) {
       var lastChild = ownChildGroups.last;
-      var lastIndex = indexOf(lastChild);
+      var lastIndex = children.indexOf(lastChild);
       ownInsertIndex = lastIndex + 1;
     }
 
@@ -518,7 +561,7 @@ class HapGroupHierarchyEntry extends FileHierarchyEntry {
     snapshot.overrideUuid(uuid);
     snapshot.isSelected.value = isSelected.value;
     snapshot.isCollapsed.value = isCollapsed.value;
-    snapshot.replaceWith(map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
+    snapshot.replaceWith(children.map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
     return snapshot;
   }
   
@@ -529,7 +572,7 @@ class HapGroupHierarchyEntry extends FileHierarchyEntry {
     isSelected.value = entry.isSelected.value;
     isCollapsed.value = entry.isCollapsed.value;
     prop.restoreWith(entry.prop);
-    updateOrReplaceWith(entry.toList(), (obj) => obj.takeSnapshot() as HierarchyEntry);
+    updateOrReplaceWith(entry.children.toList(), (obj) => obj.takeSnapshot() as HierarchyEntry);
   }
 
   @override
@@ -545,7 +588,7 @@ class HapGroupHierarchyEntry extends FileHierarchyEntry {
         icon: Icons.workspaces,
         action: addChild,
       ),
-      if (isEmpty)
+      if (children.isEmpty)
         HierarchyEntryAction(
           name: "Remove",
           icon: Icons.remove,
@@ -567,28 +610,20 @@ class HapGroupHierarchyEntry extends FileHierarchyEntry {
 class XmlScriptHierarchyEntry extends FileHierarchyEntry {
   int groupId = -1;
   bool _hasReadMeta = false;
-  String _hapName = "";
+  final StringProp hapName = StringProp("");
 
   XmlScriptHierarchyEntry(StringProp name, String path, { bool? preferVsCode })
     : super(name, path, false, true)
   {
     this.name.transform = (str) {
-      if (_hapName.isNotEmpty)
-        return "$str - ${tryToTranslate(_hapName)}";
+      if (hapName.value.isNotEmpty)
+        return "$str - ${tryToTranslate(hapName.value)}";
       return str;
     };
     supportsVsCodeEditing = preferVsCode ?? basename(path) == "0.xml";
   }
   
   bool get hasReadMeta => _hasReadMeta;
-
-  String get hapName => _hapName;
-
-  set hapName(String value) {
-    if (value == _hapName) return;
-    _hapName = value;
-    notifyListeners();
-  }
 
   Future<void> readMeta() async {
     if (_hasReadMeta) return;
@@ -602,7 +637,7 @@ class XmlScriptHierarchyEntry extends FileHierarchyEntry {
     
     var name = xmlRoot.findElements("name");
     if (name.isNotEmpty)
-      _hapName = name.first.text;
+      hapName.value = name.first.text;
     
     _hasReadMeta = true;
   }
@@ -614,7 +649,7 @@ class XmlScriptHierarchyEntry extends FileHierarchyEntry {
       return;
     }
 
-    String? secondaryName = tryToTranslate(hapName);
+    String? secondaryName = tryToTranslate(hapName.value);
     areasManager.openFile(path, secondaryName: secondaryName, optionalInfo: optionalFileInfo);
   }
   
@@ -625,9 +660,9 @@ class XmlScriptHierarchyEntry extends FileHierarchyEntry {
     snapshot.isSelected.value = isSelected.value;
     snapshot.isCollapsed.value = isCollapsed.value;
     snapshot._hasReadMeta = _hasReadMeta;
-    snapshot._hapName = _hapName;
+    snapshot.hapName.value = hapName.value;
     snapshot.groupId = groupId;
-    snapshot.replaceWith(map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
+    snapshot.replaceWith(children.map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
     return snapshot;
   }
   
@@ -638,8 +673,8 @@ class XmlScriptHierarchyEntry extends FileHierarchyEntry {
     isSelected.value = entry.isSelected.value;
     isCollapsed.value = entry.isCollapsed.value;
     _hasReadMeta = entry._hasReadMeta;
-    hapName = entry.hapName;
-    updateOrReplaceWith(entry.toList(), (obj) => obj.takeSnapshot() as HierarchyEntry);
+    hapName.value = entry.hapName.value;
+    updateOrReplaceWith(entry.children.toList(), (obj) => obj.takeSnapshot() as HierarchyEntry);
   }
 
   @override
@@ -675,7 +710,7 @@ class RubyScriptGroupHierarchyEntry extends HierarchyEntry {
     snapshot.overrideUuid(uuid);
     snapshot.isSelected.value = isSelected.value;
     snapshot.isCollapsed.value = isCollapsed.value;
-    snapshot.replaceWith(map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
+    snapshot.replaceWith(children.map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
     return snapshot;
   }
   
@@ -683,7 +718,7 @@ class RubyScriptGroupHierarchyEntry extends HierarchyEntry {
   void restoreWith(Undoable snapshot) {
     var entry = snapshot as RubyScriptGroupHierarchyEntry;
     isCollapsed.value = entry.isCollapsed.value;
-    updateOrReplaceWith(entry.toList(), (obj) => obj.takeSnapshot() as HierarchyEntry);
+    updateOrReplaceWith(entry.children.toList(), (obj) => obj.takeSnapshot() as HierarchyEntry);
   }
   
   Future<void> addNewRubyScript(String datPath, String datExtractedPath) async {
@@ -901,7 +936,7 @@ class WaiHierarchyEntry extends ExtractableHierarchyEntry {
     snapshot.isSelected.value = isSelected.value;
     snapshot.isCollapsed.value = isCollapsed.value;
     snapshot.structure = structure;
-    snapshot.replaceWith(map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
+    snapshot.replaceWith(children.map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
     return snapshot;
   }
   
@@ -911,7 +946,7 @@ class WaiHierarchyEntry extends ExtractableHierarchyEntry {
     name.restoreWith(entry.name);
     isSelected.value = entry.isSelected.value;
     isCollapsed.value = entry.isCollapsed.value;
-    updateOrReplaceWith(entry.toList(), (entry) => entry.takeSnapshot() as HierarchyEntry);
+    updateOrReplaceWith(entry.children.toList(), (entry) => entry.takeSnapshot() as HierarchyEntry);
   }
 
   @override
@@ -958,7 +993,7 @@ class WaiFolderHierarchyEntry extends GenericFileHierarchyEntry {
     : bgmBnkPath = other.bgmBnkPath,
       super(other.name.takeSnapshot() as StringProp, other.path, true, false) {
     isCollapsed.value = other.isCollapsed.value;
-    addAll(other.map((entry) => (entry as GenericFileHierarchyEntry).clone()));
+    addAll(other.children.map((entry) => (entry as GenericFileHierarchyEntry).clone()));
   }
   
   @override
@@ -990,13 +1025,13 @@ class WspHierarchyEntry extends GenericFileHierarchyEntry {
     var wspDir = join(saveDir, basename(path));
     await Directory(wspDir).create(recursive: true);
     await Future.wait(
-      whereType<WemHierarchyEntry>()
+      children.whereType<WemHierarchyEntry>()
       .map((e) => e.exportAsWav(
         wavPath:  join(wspDir, "${basenameWithoutExtension(e.path)}.wav"),
         displayToast: false,
       )),
     );
-    showToast("Saved $length WEMs");
+    showToast("Saved ${children.length} WEMs");
   }
 
   @override
@@ -1109,7 +1144,7 @@ class BnkSubCategoryParentHierarchyEntry extends HierarchyEntry {
     entry.overrideUuid(uuid);
     entry.isSelected.value = isSelected.value;
     entry.isCollapsed.value = isCollapsed.value;
-    entry.replaceWith(map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
+    entry.replaceWith(children.map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
     return entry;
   }
 
@@ -1118,7 +1153,7 @@ class BnkSubCategoryParentHierarchyEntry extends HierarchyEntry {
     var entry = snapshot as HierarchyEntry;
     isSelected.value = entry.isSelected.value;
     isCollapsed.value = entry.isCollapsed.value;
-    updateOrReplaceWith(entry.toList(), (entry) => entry.takeSnapshot() as HierarchyEntry);
+    updateOrReplaceWith(entry.children.toList(), (entry) => entry.takeSnapshot() as HierarchyEntry);
   }
 }
 

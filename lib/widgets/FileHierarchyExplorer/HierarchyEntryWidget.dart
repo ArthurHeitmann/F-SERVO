@@ -16,7 +16,7 @@ class HierarchyEntryWidget extends ChangeNotifierWidget {
   static const height = 25.0;
 
   HierarchyEntryWidget({ required this.entry, Key? key, this.depth = 0 })
-    : super(key: key ?? Key(entry.uuid), notifiers: [entry, shouldAutoTranslate, openHierarchySearch]);
+    : super(key: key ?? Key(entry.uuid), notifiers: [entry.isCollapsed, entry.isSelected, entry.name, openHierarchyManager.selectedEntry, shouldAutoTranslate, openHierarchySearch]);
 
   @override
   State<HierarchyEntryWidget> createState() => _HierarchyEntryState();
@@ -186,10 +186,10 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
   }
 
   void onSelected() {
-    if ((isShiftPressed() || isCtrlPressed()) && openHierarchyManager.selectedEntry == widget.entry)
-      openHierarchyManager.selectedEntry = null;
+    if ((isShiftPressed() || isCtrlPressed()) && openHierarchyManager.selectedEntry.value == widget.entry)
+      openHierarchyManager.setSelectedEntry(null);
     else
-      openHierarchyManager.selectedEntry = widget.entry;
+      openHierarchyManager.setSelectedEntry(widget.entry);
   }
 
   void toggleCollapsed() {

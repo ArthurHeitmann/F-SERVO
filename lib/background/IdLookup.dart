@@ -38,7 +38,7 @@ class IdLookup with Initializable {
     
     areasManager.subEvents.addListener(_onFilesAddedOrRemoved);
     areasManager.onSaveAll.addListener(_onFilesSaved);
-    openHierarchyManager.addListener(_onHierarchyFilesAddedOrRemoved);
+    openHierarchyManager.children.addListener(_onHierarchyFilesAddedOrRemoved);
 
     completeInitialization();
   }
@@ -148,7 +148,7 @@ class IdLookup with Initializable {
     var prefs = PreferencesData();
     var lvl4Paths = prefs.indexingPaths?.map((p) => p.value).toList() ?? [];
     // search for new files
-    for (var file in openHierarchyManager) {
+    for (var file in openHierarchyManager.children) {
       if (file is! FileHierarchyEntry)
         continue;
       if (_openHierarchyFiles.contains(file))
@@ -162,7 +162,7 @@ class IdLookup with Initializable {
     }
     // search for removed files
     for (var i = _openHierarchyFiles.length - 1; i >= 0; i--) {
-      if (openHierarchyManager.contains(_openHierarchyFiles[i]))
+      if (openHierarchyManager.children.contains(_openHierarchyFiles[i]))
         continue;
       var file = _openHierarchyFiles[i];
       if (file is ExtractableHierarchyEntry) {

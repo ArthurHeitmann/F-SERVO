@@ -14,7 +14,7 @@ import '../propEditors/simpleProps/propTextField.dart';
 import 'HierarchyFlatList.dart';
 
 class FileExplorer extends ChangeNotifierWidget {
-  FileExplorer({super.key}) : super(notifiers: [openHierarchyManager, openHierarchySearch]);
+  FileExplorer({super.key}) : super(notifiers: [openHierarchyManager.children, openHierarchySearch]);
 
   @override
   State<FileExplorer> createState() => _FileExplorerState();
@@ -74,7 +74,7 @@ class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
             child: Stack(
               children: [
                 HierarchyFlatList(),
-                if (openHierarchyManager.isEmpty)
+                if (openHierarchyManager.children.isEmpty)
                   const Center(
                     child: Text("No files open"),
                   ),

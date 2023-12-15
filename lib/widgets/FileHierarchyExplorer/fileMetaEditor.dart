@@ -32,7 +32,7 @@ const _editorTypeNames = {
 };
 
 class FileMetaEditor extends ChangeNotifierWidget {
-  FileMetaEditor({super.key}) : super(notifier: openHierarchyManager);
+  FileMetaEditor({super.key}) : super(notifier: openHierarchyManager.selectedEntry);
 
   @override
   State<FileMetaEditor> createState() => _FileMetaEditorState();
@@ -42,7 +42,7 @@ class _FileMetaEditorState extends ChangeNotifierState<FileMetaEditor> {
   final scrollController = ScrollController();
 
   _EditorType get editorType {
-    var file = openHierarchyManager.selectedEntry;
+    var file = openHierarchyManager.selectedEntry.value;
     if (file == null)
       return _EditorType.none;
     if (file is HapGroupHierarchyEntry)
@@ -69,7 +69,7 @@ class _FileMetaEditorState extends ChangeNotifierState<FileMetaEditor> {
 
   @override
   Widget build(BuildContext context) {
-    var entry = openHierarchyManager.selectedEntry;
+    var entry = openHierarchyManager.selectedEntry.value;
     return FocusTraversalGroup(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -77,7 +77,7 @@ class _FileMetaEditorState extends ChangeNotifierState<FileMetaEditor> {
           makeTopRow(),
           const Divider(height: 1),
           Expanded(
-            key: Key(openHierarchyManager.selectedEntry?.uuid ?? "noGroup"),
+            key: Key(openHierarchyManager.selectedEntry.value?.uuid ?? "noGroup"),
             child: SmoothSingleChildScrollView(
               stepSize: 60,
               controller: scrollController,
