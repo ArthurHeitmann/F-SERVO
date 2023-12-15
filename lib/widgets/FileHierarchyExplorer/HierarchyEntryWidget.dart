@@ -3,6 +3,15 @@ import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 
 import '../../stateManagement/hierarchy/HierarchyEntryTypes.dart';
+import '../../stateManagement/hierarchy/types/BnkHierarchyEntry.dart';
+import '../../stateManagement/hierarchy/types/DatHierarchyEntry.dart';
+import '../../stateManagement/hierarchy/types/McdHierarchyEntry.dart';
+import '../../stateManagement/hierarchy/types/PakHierarchyEntry.dart';
+import '../../stateManagement/hierarchy/types/RubyScriptHierarchyEntry.dart';
+import '../../stateManagement/hierarchy/types/SaveSlotDataHierarchyEntry.dart';
+import '../../stateManagement/hierarchy/types/SmdHierarchyEntry.dart';
+import '../../stateManagement/hierarchy/types/TmdHierarchyEntry.dart';
+import '../../stateManagement/hierarchy/types/WaiHierarchyEntries.dart';
 import '../../widgets/theme/customTheme.dart';
 import '../misc/ChangeNotifierWidget.dart';
 import '../../stateManagement/hierarchy/FileHierarchy.dart';

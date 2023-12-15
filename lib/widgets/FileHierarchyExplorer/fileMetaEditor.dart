@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 
 import '../../stateManagement/hierarchy/HierarchyEntryTypes.dart';
+import '../../stateManagement/hierarchy/types/XmlScriptHierarchyEntry.dart';
 import '../../widgets/theme/customTheme.dart';
 import '../misc/ChangeNotifierWidget.dart';
 import '../../stateManagement/hierarchy/FileHierarchy.dart';
@@ -16,6 +17,8 @@ import '../propEditors/simpleProps/XmlPropEditorFactory.dart';
 import '../propEditors/simpleProps/optionalPropEditor.dart';
 import '../propEditors/simpleProps/propEditorFactory.dart';
 import '../propEditors/xmlActions/xmlArrayEditor.dart';
+import '../../stateManagement/hierarchy/types/BnkHierarchyEntry.dart';
+import '../../stateManagement/hierarchy/types/PakHierarchyEntry.dart';
 
 enum _EditorType {
   none,

@@ -4,6 +4,13 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import '../../stateManagement/hierarchy/HierarchyEntryTypes.dart';
+import '../../stateManagement/hierarchy/types/BnkHierarchyEntry.dart';
+import '../../stateManagement/hierarchy/types/DatHierarchyEntry.dart';
+import '../../stateManagement/hierarchy/types/PakHierarchyEntry.dart';
+import '../../stateManagement/hierarchy/types/RubyScriptHierarchyEntry.dart';
+import '../../stateManagement/hierarchy/types/TmdHierarchyEntry.dart';
+import '../../stateManagement/hierarchy/types/WaiHierarchyEntries.dart';
+import '../../stateManagement/hierarchy/types/XmlScriptHierarchyEntry.dart';
 
 class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
   final Color? editorBackgroundColor;

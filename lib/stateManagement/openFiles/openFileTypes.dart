@@ -27,6 +27,8 @@ import '../Property.dart';
 import '../changesExporter.dart';
 import '../events/statusInfo.dart';
 import '../hasUuid.dart';
+import '../hierarchy/types/WaiHierarchyEntries.dart';
+import '../hierarchy/types/XmlScriptHierarchyEntry.dart';
 import '../miscValues.dart';
 import '../listNotifier.dart';
 import 'openFilesManager.dart';

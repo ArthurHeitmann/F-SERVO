@@ -35,6 +35,21 @@ import '../events/statusInfo.dart';
 import '../preferencesData.dart';
 import '../undoable.dart';
 import '../xmlProps/xmlProp.dart';
+import 'types/BnkHierarchyEntry.dart';
+import 'types/BxmHierarchyEntry.dart';
+import 'types/DatHierarchyEntry.dart';
+import 'types/EstHierarchyEntry.dart';
+import 'types/FtbHierarchyEntry.dart';
+import 'types/McdHierarchyEntry.dart';
+import 'types/PakHierarchyEntry.dart';
+import 'types/RubyScriptHierarchyEntry.dart';
+import 'types/SaveSlotDataHierarchyEntry.dart';
+import 'types/SmdHierarchyEntry.dart';
+import 'types/TmdHierarchyEntry.dart';
+import 'types/WaiHierarchyEntries.dart';
+import 'types/WtaHierarchyEntry.dart';
+import 'types/WtbHierarchyEntry.dart';
+import 'types/XmlScriptHierarchyEntry.dart';
 
 
 class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase {
