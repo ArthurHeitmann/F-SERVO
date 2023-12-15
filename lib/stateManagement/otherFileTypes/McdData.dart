@@ -33,7 +33,7 @@ abstract class _McdFilePart with HasUuid, Undoable {
   void onDataChanged() {
     var file = areasManager.fromId(this.file);
     file?.contentNotifier.notifyListeners();
-    file?.hasUnsavedChanges = true;
+    file?.setHasUnsavedChanges(true);
   }
 
   void dispose() {

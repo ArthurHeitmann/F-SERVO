@@ -29,7 +29,6 @@ class XmlProp extends ListNotifier<XmlProp> {
   XmlProp._fromXml(XmlElement root, { required this.file, required this.parentTags }) :
     tagId = crc32(root.localName),
     tagName = root.localName,
-    // TODO check if number is always int
     value = Prop.fromString(root.childElements.isEmpty ? root.text : "", tagName: root.localName),
     super(root.childElements
       .map((XmlElement child) => XmlProp.fromXml(child, file: file, parentTags: [...parentTags, root.localName]))
@@ -117,7 +116,7 @@ class XmlProp extends ListNotifier<XmlProp> {
   void _onValueChange() {
     if (file != null) {
       var file = areasManager.fromId(this.file);
-      file?.hasUnsavedChanges = true;
+      file?.setHasUnsavedChanges(true);
       file?.contentNotifier.notifyListeners();
     }
     undoHistoryManager.onUndoableEvent();

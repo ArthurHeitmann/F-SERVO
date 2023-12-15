@@ -1,7 +1,10 @@
 
+// ignore_for_file: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
+
 import 'dart:io';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 import 'package:tuple/tuple.dart';
@@ -52,25 +55,27 @@ abstract class OptionalFileInfo {
   const OptionalFileInfo();
 }
 
-abstract class OpenFileData extends ChangeNotifier with HasUuid, Undoable {
+abstract class OpenFileData with HasUuid, Undoable {
   OptionalFileInfo? optionalInfo;
   final IconData? icon;
   final Color? iconColor;
   late final FileType type;
-  String _name;
-  String? _secondaryName;
-  String _path;
-  bool _unsavedChanges = false;
-  LoadingState _loadingState = LoadingState.notLoaded;
-  LoadingState get loadingState => _loadingState;
+  final ValueNotifier<String> name;
+  final ValueNotifier<String?> secondaryName;
+  final String path;
+  final ValueNotifier<bool> _hasUnsavedChanges = ValueNotifier(false);
+  ValueListenable<bool> get hasUnsavedChanges => _hasUnsavedChanges;
+  final ValueNotifier<LoadingState> _loadingState = ValueNotifier(LoadingState.notLoaded);
+  ValueListenable<LoadingState> get loadingState => _loadingState;
   bool keepOpenAsHidden = false;
   final ChangeNotifier contentNotifier = ChangeNotifier();
   final ScrollController scrollController = ScrollController();
   bool canBeReloaded = true;
 
-  OpenFileData(this._name, this._path, { String? secondaryName, this.icon, this.iconColor })
-    : type = OpenFileData.getFileType(_path),
-    _secondaryName = secondaryName;
+  OpenFileData(String name, this.path, { String? secondaryName, this.icon, this.iconColor }) :
+    name = ValueNotifier(name),
+    secondaryName = ValueNotifier(secondaryName),
+    type = OpenFileData.getFileType(path);
 
   factory OpenFileData.from(String name, String path, { String? secondaryName, OptionalFileInfo? optionalInfo }) {
     if (path.endsWith(".xml"))
@@ -130,81 +135,57 @@ abstract class OpenFileData extends ChangeNotifier with HasUuid, Undoable {
       return FileType.text;
   }
 
-  String get name => _name;
-  String get displayName => _secondaryName == null ? _name : "$_name - $_secondaryName";
-  String get path => _path;
-  bool get hasUnsavedChanges => _unsavedChanges;
+  String get displayName => secondaryName.value == null ? name.value : "${name.value} - ${secondaryName.value}";
 
-  set name(String value) {
-    if (value == _name) return;
-    _name = value;
-    notifyListeners();
-  }
-  set secondaryName(String value) {
-    if (value == _secondaryName) return;
-    _secondaryName = value;
-    notifyListeners();
-  }
-  set path(String value) {
-    if (value == _path) return;
-    _path = value;
-    notifyListeners();
-  }
-  set hasUnsavedChanges(bool value) {
-    if (value == _unsavedChanges) return;
-    if (disableFileChanges) return;
-    _unsavedChanges = value;
-    notifyListeners();
+  setHasUnsavedChanges(bool value) {
+    if (value == _hasUnsavedChanges.value)
+      return;
+    if (disableFileChanges)
+      return;
+    _hasUnsavedChanges.value = value;
   }
 
   Future<void> load() async {
-    _loadingState = LoadingState.loaded;
-    hasUnsavedChanges = false;
+    _loadingState.value = LoadingState.loaded;
+    setHasUnsavedChanges(false);
     undoHistoryManager.onUndoableEvent();
-    notifyListeners();
   }
 
   Future<void> reload() async {
     if (!canBeReloaded) return;
-    _loadingState = LoadingState.notLoaded;
+    _loadingState.value = LoadingState.notLoaded;
     await load();
   }
 
   Future<void> save() async {
-    hasUnsavedChanges = false;
+    setHasUnsavedChanges(false);
   }
   
-  @override
   void dispose() {
+    name.dispose();
+    secondaryName.dispose();
+    _hasUnsavedChanges.dispose();
     contentNotifier.dispose();
     scrollController.dispose();
-    super.dispose();
   }
 }
 
 class TextFileData extends OpenFileData {
-  String _text = "Loading...";
+  ValueNotifier<String> text = ValueNotifier("Loading...");
+  int cursorOffset = 0;
 
   TextFileData(super.name, super.path, { super.secondaryName, IconData? icon, Color? iconColor })
     : super(icon: icon ?? Icons.text_fields, iconColor: iconColor);
   
-  String get text => _text;
-
-  set text(String value) {
-    if (value == _text) return;
-    _text = value;
-    notifyListeners();
-  }
-
   @override
   Future<void> load() async {
-    if (_loadingState != LoadingState.notLoaded)
+    if (_loadingState.value != LoadingState.notLoaded)
       return;
-    _loadingState = LoadingState.loading;
+    _loadingState.value = LoadingState.loading;
     try {
-      _text = await File(path).readAsString();
+      text.value = await File(path).readAsString();
     } catch (e) {
-      _text = "[Error loading file]";
+      text.value = "[Error loading file]";
       print(e);
     }
     await super.load();
@@ -212,17 +193,22 @@ class TextFileData extends OpenFileData {
 
   @override
   Future<void> save() async {
-    await File(path).writeAsString(_text);
-    hasUnsavedChanges = false;
+    await File(path).writeAsString(text.value);
+    setHasUnsavedChanges(false);
+  }
+
+  TextFileData _copyBase() {
+    return TextFileData(name.value, path);
   }
 
   @override
   Undoable takeSnapshot() {
-    var snapshot = TextFileData(_name, _path);
+    var snapshot = _copyBase();
     snapshot.optionalInfo = optionalInfo;
-    snapshot._unsavedChanges = _unsavedChanges;
-    snapshot._loadingState = _loadingState;
-    snapshot._text = _text;
+    snapshot.setHasUnsavedChanges(hasUnsavedChanges.value);
+    snapshot._loadingState.value = _loadingState.value;
+    snapshot.text.value = text.value;
+    snapshot.cursorOffset = cursorOffset;
     snapshot.overrideUuid(uuid);
     return snapshot;
   }
@@ -230,10 +216,10 @@ class TextFileData extends OpenFileData {
   @override
   void restoreWith(Undoable snapshot) {
     var content = snapshot as TextFileData;
-    name = content._name;
-    path = content._path;
-    hasUnsavedChanges = content._unsavedChanges;
-    text = content._text;
+    name.value = content.name.value;
+    setHasUnsavedChanges(content.hasUnsavedChanges.value);
+    text.value = content.text.value;
+    cursorOffset = content.cursorOffset;
   }
 }
 
@@ -248,7 +234,7 @@ class XmlFileData extends OpenFileData {
   void _onNameChange() {
     var xmlName = _root!.get("name")!.value.toString();
 
-    secondaryName = xmlName;
+    secondaryName.value = xmlName;
 
     var hierarchyEntry = openHierarchyManager
       .children
@@ -259,18 +245,17 @@ class XmlFileData extends OpenFileData {
 
   @override
   Future<void> load() async {
-    if (_loadingState != LoadingState.notLoaded)
+    if (_loadingState.value != LoadingState.notLoaded)
       return;
-    _loadingState = LoadingState.loading;
+    _loadingState.value = LoadingState.loading;
     var text = await File(path).readAsString();
     var doc = XmlDocument.parse(text);
     _root?.dispose();
     _root = XmlProp.fromXml(doc.firstElementChild!, file: uuid, parentTags: []);
-    _root!.addListener(notifyListeners);
     var nameProp = _root!.get("name");
     if (nameProp != null) {
       nameProp.value.addListener(_onNameChange);
-      secondaryName = nameProp.value.toString();
+      secondaryName.value = nameProp.value.toString();
     }
     
     var pakInfoFileData = await getPakInfoFileData(path);
@@ -309,7 +294,6 @@ class XmlFileData extends OpenFileData {
 
   @override
   void dispose() {
-    _root?.removeListener(notifyListeners);
     _root?.dispose();
     _root?.get("name")?.value.removeListener(_onNameChange);
     pakType?.removeListener(updatePakType);
@@ -319,10 +303,10 @@ class XmlFileData extends OpenFileData {
 
   @override
   Undoable takeSnapshot() {
-    var snapshot = XmlFileData(_name, _path);
+    var snapshot = XmlFileData(name.value, path);
     snapshot.optionalInfo = optionalInfo;
-    snapshot._unsavedChanges = _unsavedChanges;
-    snapshot._loadingState = _loadingState;
+    snapshot.setHasUnsavedChanges(hasUnsavedChanges.value);
+    snapshot._loadingState.value = _loadingState.value;
     snapshot._root = _root != null ? _root!.takeSnapshot() as XmlProp : null;
     snapshot.overrideUuid(uuid);
     return snapshot;
@@ -331,9 +315,8 @@ class XmlFileData extends OpenFileData {
   @override
   void restoreWith(Undoable snapshot) {
     var content = snapshot as XmlFileData;
-    name = content._name;
-    path = content._path;
-    hasUnsavedChanges = content._unsavedChanges;
+    name.value = content.name.value;
+    setHasUnsavedChanges(content.hasUnsavedChanges.value);
     if (content._root != null)
       _root?.restoreWith(content._root as Undoable);
   }
@@ -348,6 +331,11 @@ class RubyFileData extends TextFileData {
     await super.save();
     changedRbFiles.add(path);
   }
+
+  @override
+  TextFileData _copyBase() {
+    return RubyFileData(name.value, path);
+  }
 }
 
 class TmdFileData extends OpenFileData {
@@ -358,15 +346,15 @@ class TmdFileData extends OpenFileData {
 
   @override
   Future<void> load() async {
-    if (_loadingState != LoadingState.notLoaded)
+    if (_loadingState.value != LoadingState.notLoaded)
       return;
-    _loadingState = LoadingState.loading;
+    _loadingState.value = LoadingState.loading;
 
     var tmdEntries = await readTmdFile(path);
     tmdData?.dispose();
     tmdData = TmdData.from(tmdEntries, basenameWithoutExtension(path));
     tmdData!.fileChangeNotifier.addListener(() {
-      hasUnsavedChanges = true;
+      setHasUnsavedChanges(true);
     });
 
     await super.load();
@@ -384,10 +372,10 @@ class TmdFileData extends OpenFileData {
 
   @override
   Undoable takeSnapshot() {
-    var snapshot = TmdFileData(_name, _path);
+    var snapshot = TmdFileData(name.value, path);
     snapshot.optionalInfo = optionalInfo;
-    snapshot._unsavedChanges = _unsavedChanges;
-    snapshot._loadingState = _loadingState;
+    snapshot.setHasUnsavedChanges(hasUnsavedChanges.value);
+    snapshot._loadingState.value = _loadingState.value;
     snapshot.tmdData = tmdData?.takeSnapshot() as TmdData?;
     snapshot.overrideUuid(uuid);
     return snapshot;
@@ -396,9 +384,8 @@ class TmdFileData extends OpenFileData {
   @override
   void restoreWith(Undoable snapshot) {
     var content = snapshot as TmdFileData;
-    name = content._name;
-    path = content._path;
-    hasUnsavedChanges = content._unsavedChanges;
+    name.value = content.name.value;
+    setHasUnsavedChanges(content.hasUnsavedChanges.value);
     if (content.tmdData != null)
       tmdData?.restoreWith(content.tmdData as Undoable);
   }
@@ -418,15 +405,15 @@ class SmdFileData extends OpenFileData {
 
   @override
   Future<void> load() async {
-    if (_loadingState != LoadingState.notLoaded)
+    if (_loadingState.value != LoadingState.notLoaded)
       return;
-    _loadingState = LoadingState.loading;
+    _loadingState.value = LoadingState.loading;
 
     var smdEntries = await readSmdFile(path);
     smdData?.dispose();
     smdData = SmdData.from(smdEntries, basenameWithoutExtension(path));
     smdData!.fileChangeNotifier.addListener(() {
-      hasUnsavedChanges = true;
+      setHasUnsavedChanges(true);
     });
 
     await super.load();
@@ -450,10 +437,10 @@ class SmdFileData extends OpenFileData {
 
   @override
   Undoable takeSnapshot() {
-    var snapshot = SmdFileData(_name, _path);
-    snapshot._unsavedChanges = _unsavedChanges;
+    var snapshot = SmdFileData(name.value, path);
+    snapshot.setHasUnsavedChanges(hasUnsavedChanges.value);
     snapshot.optionalInfo = optionalInfo;
-    snapshot._loadingState = _loadingState;
+    snapshot._loadingState.value = _loadingState.value;
     snapshot.smdData = smdData?.takeSnapshot() as SmdData?;
     snapshot.overrideUuid(uuid);
     return snapshot;
@@ -462,9 +449,8 @@ class SmdFileData extends OpenFileData {
   @override
   void restoreWith(Undoable snapshot) {
     var content = snapshot as SmdFileData;
-    name = content._name;
-    path = content._path;
-    hasUnsavedChanges = content._unsavedChanges;
+    name.value = content.name.value;
+    setHasUnsavedChanges(content.hasUnsavedChanges.value);
     if (content.smdData != null)
       smdData?.restoreWith(content.smdData as Undoable);
   }
@@ -478,9 +464,9 @@ class McdFileData extends OpenFileData {
 
   @override
   Future<void> load() async {
-    if (_loadingState != LoadingState.notLoaded)
+    if (_loadingState.value != LoadingState.notLoaded)
       return;
-    _loadingState = LoadingState.loading;
+    _loadingState.value = LoadingState.loading;
 
     mcdData?.dispose();
     mcdData = await McdData.fromMcdFile(uuid, path);
@@ -504,10 +490,10 @@ class McdFileData extends OpenFileData {
 
   @override
   Undoable takeSnapshot() {
-    var snapshot = McdFileData(_name, _path);
+    var snapshot = McdFileData(name.value, path);
     snapshot.optionalInfo = optionalInfo;
-    snapshot._unsavedChanges = _unsavedChanges;
-    snapshot._loadingState = _loadingState;
+    snapshot.setHasUnsavedChanges(hasUnsavedChanges.value);
+    snapshot._loadingState.value = _loadingState.value;
     snapshot.mcdData = mcdData?.takeSnapshot() as McdData?;
     snapshot.overrideUuid(uuid);
     return snapshot;
@@ -516,9 +502,8 @@ class McdFileData extends OpenFileData {
   @override
   void restoreWith(Undoable snapshot) {
     var content = snapshot as McdFileData;
-    name = content._name;
-    path = content._path;
-    hasUnsavedChanges = content._unsavedChanges;
+    name.value = content.name.value;
+    setHasUnsavedChanges(content.hasUnsavedChanges.value);
     if (content.mcdData != null)
       mcdData?.restoreWith(content.mcdData as Undoable);
   }
@@ -532,9 +517,9 @@ class FtbFileData extends OpenFileData {
 
   @override
   Future<void> load() async {
-    if (_loadingState != LoadingState.notLoaded)
+    if (_loadingState.value != LoadingState.notLoaded)
       return;
-    _loadingState = LoadingState.loading;
+    _loadingState.value = LoadingState.loading;
 
     ftbData?.dispose();
     ftbData = await FtbData.fromFtbFile(path);
@@ -568,30 +553,33 @@ class FtbFileData extends OpenFileData {
   }
 }
 
-mixin AudioFileData on ChangeNotifier, HasUuid {
+mixin AudioFileData on HasUuid {
   AudioResource? resource;
   bool cuePointsStartAt1 = false;
-  abstract String name;
+  abstract final ValueNotifier<String> name;
 
   Future<void> load();
+
+  void dispose();
 }
-class WavFileData with ChangeNotifier, HasUuid, AudioFileData {
+class WavFileData with HasUuid, AudioFileData {
   @override
-  String name;
+  final ValueNotifier<String> name;
   String path;
 
-  WavFileData(this.path) : name = basename(path);
+  WavFileData(this.path)
+    : name = ValueNotifier(basename(path));
 
   @override
   Future<void> load() async {
     resource = await audioResourcesManager.getAudioResource(path, makeCopy: true);
-    notifyListeners();
   }
 
   @override
   void dispose() {
     resource?.dispose();
-    super.dispose();
+    resource = null;
+    name.dispose();
   }
 }
 
@@ -606,12 +594,12 @@ class OptionalWemData extends OptionalFileInfo {
 }
 
 class WemFileData extends OpenFileData with AudioFileData {
-  ValueNotifier<WavFileData?> overrideData = ValueNotifier(null);
+  final ValueNotifier<WavFileData?> overrideData = ValueNotifier(null);
   bool usesSeekTable = false;
-  BoolProp usesLoudnessNormalization = BoolProp(false);
-  ChangeNotifier onOverrideApplied = ChangeNotifier();
-  bool isReplacing = false;
-  Set<int> relatedBnkPlaylistIds = {};
+  final BoolProp usesLoudnessNormalization = BoolProp(false);
+  final ChangeNotifier onOverrideApplied = ChangeNotifier();
+  final ValueNotifier<bool> isReplacing = ValueNotifier(false);
+  final Set<int> relatedBnkPlaylistIds = {};
 
   OptionalWemData? get wemInfo => super.optionalInfo as OptionalWemData?;
   
@@ -622,9 +610,9 @@ class WemFileData extends OpenFileData with AudioFileData {
 
   @override
   Future<void> load([bool superReload = true]) async {
-    if (_loadingState != LoadingState.notLoaded && resource != null)
+    if (_loadingState.value != LoadingState.notLoaded && resource != null)
       return;
-    _loadingState = LoadingState.loading;
+    _loadingState.value = LoadingState.loading;
 
     // extract wav
     await resource?.dispose();
@@ -635,12 +623,12 @@ class WemFileData extends OpenFileData with AudioFileData {
     if (waiRes.isNotEmpty && wemInfo?.source == WemSource.wsp) {
       var wai = waiRes.first;
       if (wai.wemIdsToBnkPlaylists.isNotEmpty) {
-        var wemId = int.parse(RegExp(r"(\d+)\.wem").firstMatch(name)!.group(1)!);
+        var wemId = int.parse(RegExp(r"(\d+)\.wem").firstMatch(name.value)!.group(1)!);
         relatedBnkPlaylistIds.addAll(wai.wemIdsToBnkPlaylists[wemId] ?? []);
       }
     } else if (wemInfo?.source == WemSource.bnk) {
       var wemIdsToBnkPlaylists = await _getWemIdsToBnkPlaylists(wemInfo!.bnkPath);
-      var wemId = int.parse(RegExp(r"(\d+)\.wem").firstMatch(name)!.group(1)!);
+      var wemId = int.parse(RegExp(r"(\d+)\.wem").firstMatch(name.value)!.group(1)!);
       relatedBnkPlaylistIds.addAll(wemIdsToBnkPlaylists[wemId] ?? []);
     }
 
@@ -656,7 +644,7 @@ class WemFileData extends OpenFileData with AudioFileData {
 
   @override
   Future<void> save() async {
-    var wemIdStr = RegExp(r"(\d+)\.wem").firstMatch(name)!.group(1)!;
+    var wemIdStr = RegExp(r"(\d+)\.wem").firstMatch(name.value)!.group(1)!;
     var wemId = int.parse(wemIdStr);
     if (wemInfo?.source == WemSource.wsp) {
       var wai = areasManager.hiddenArea.files.whereType<WaiFileData>().first;
@@ -688,8 +676,7 @@ class WemFileData extends OpenFileData with AudioFileData {
     if (overrideData.value == null)
       throw Exception("No override data");
     
-    isReplacing = true;
-    notifyListeners();
+    isReplacing.value = true;
 
     try {
       await backupFile(path);
@@ -700,15 +687,14 @@ class WemFileData extends OpenFileData with AudioFileData {
 
       // reload
       await audioResourcesManager.reloadAudioResource(resource!);
-      _loadingState = LoadingState.notLoaded;
+      _loadingState.value = LoadingState.notLoaded;
       await load(false);
-      _loadingState = LoadingState.loaded;
+      _loadingState.value = LoadingState.loaded;
 
       onOverrideApplied.notifyListeners();
     } finally {
-      hasUnsavedChanges = true;
-      isReplacing = false;
-      notifyListeners();
+      setHasUnsavedChanges(true);
+      isReplacing.value = false;
     }
   }
 
@@ -718,17 +704,16 @@ class WemFileData extends OpenFileData with AudioFileData {
 
     overrideData.value!.dispose();
     overrideData.value = null;
-    notifyListeners();
   }
 
   @override
   Undoable takeSnapshot() {
     var snapshot = WemFileData(
-      _name, _path, secondaryName: _secondaryName, wemInfo: wemInfo
+      name.value, path, secondaryName: secondaryName.value, wemInfo: wemInfo
     );
     snapshot.optionalInfo = optionalInfo;
-    snapshot._unsavedChanges = _unsavedChanges;
-    snapshot._loadingState = _loadingState;
+    snapshot.setHasUnsavedChanges(hasUnsavedChanges.value);
+    snapshot._loadingState.value = _loadingState.value;
     snapshot.usesSeekTable = usesSeekTable;
     snapshot.usesLoudnessNormalization.value = usesLoudnessNormalization.value;
     snapshot.overrideUuid(uuid);
@@ -738,11 +723,10 @@ class WemFileData extends OpenFileData with AudioFileData {
   @override
   void restoreWith(Undoable snapshot) {
     var content = snapshot as WemFileData;
-    name = content._name;
-    path = content._path;
+    name.value = content.name.value;
     usesSeekTable = content.usesSeekTable;
     usesLoudnessNormalization.value = content.usesLoudnessNormalization.value;
-    hasUnsavedChanges = content._unsavedChanges;
+    setHasUnsavedChanges(content.hasUnsavedChanges.value);
   }
 }
 
@@ -754,9 +738,9 @@ class WspFileData extends OpenFileData {
 
   @override
   Future<void> load() async {
-    if (_loadingState != LoadingState.notLoaded)
+    if (_loadingState.value != LoadingState.notLoaded)
       return;
-    _loadingState = LoadingState.loading;
+    _loadingState.value = LoadingState.loading;
 
     var wspHierarchyEntry = openHierarchyManager.children.findRecWhere((e) => e is WspHierarchyEntry && e.path == path);
     if (wspHierarchyEntry == null) {
@@ -786,11 +770,11 @@ class WspFileData extends OpenFileData {
 
   @override
   Undoable takeSnapshot() {
-    var snapshot = WspFileData(_name, _path, bgmBnkPath);
+    var snapshot = WspFileData(name.value, path, bgmBnkPath);
     snapshot.optionalInfo = optionalInfo;
     snapshot.wems = wems.map((w) => w.takeSnapshot() as WemFileData).toList();
-    snapshot._unsavedChanges = _unsavedChanges;
-    snapshot._loadingState = _loadingState;
+    snapshot.setHasUnsavedChanges(hasUnsavedChanges.value);
+    snapshot._loadingState.value = _loadingState.value;
     snapshot.overrideUuid(uuid);
     return snapshot;
   }
@@ -798,9 +782,8 @@ class WspFileData extends OpenFileData {
   @override
   void restoreWith(Undoable snapshot) {
     var content = snapshot as WspFileData;
-    name = content._name;
-    path = content._path;
-    hasUnsavedChanges = content._unsavedChanges;
+    name.value = content.name.value;
+    setHasUnsavedChanges(content.hasUnsavedChanges.value);
     for (var i = 0; i < wems.length; i++)
       wems[i].restoreWith(content.wems[i]);
   }
@@ -847,9 +830,9 @@ class WaiFileData extends OpenFileData {
 
   @override
   Future<void> load() async {
-    if (_loadingState != LoadingState.notLoaded)
+    if (_loadingState.value != LoadingState.notLoaded)
       return;
-    _loadingState = LoadingState.loading;
+    _loadingState.value = LoadingState.loading;
 
     var bnkPath = join(dirname(path), "bgm", "BGM.bnk");
     if (await File(bnkPath).exists()) {
@@ -901,10 +884,10 @@ class WaiFileData extends OpenFileData {
 
   @override
   Undoable takeSnapshot() {
-    var snapshot = WaiFileData(_name, _path);
+    var snapshot = WaiFileData(name.value, path);
     snapshot.optionalInfo = optionalInfo;
-    snapshot._unsavedChanges = _unsavedChanges;
-    snapshot._loadingState = _loadingState;
+    snapshot.setHasUnsavedChanges(hasUnsavedChanges.value);
+    snapshot._loadingState.value = _loadingState.value;
     snapshot.overrideUuid(uuid);
     return snapshot;
   }
@@ -912,9 +895,8 @@ class WaiFileData extends OpenFileData {
   @override
   void restoreWith(Undoable snapshot) {
     var content = snapshot as WaiFileData;
-    name = content._name;
-    path = content._path;
-    hasUnsavedChanges = content._unsavedChanges;
+    name.value = content.name.value;
+    setHasUnsavedChanges(content.hasUnsavedChanges.value);
   }
 }
 
@@ -966,7 +948,7 @@ class BnkClipRtpcPoint with HasUuid, Undoable {
     y.addListener(_onPropChanged);
   }
   void _onPropChanged() {
-    areasManager.fromId(file)!.hasUnsavedChanges = true;
+    areasManager.fromId(file)!.setHasUnsavedChanges(true);
   }
   
   void dispose() {
@@ -1071,7 +1053,7 @@ class BnkTrackClip with HasUuid, Undoable {
     srcDuration.addListener(_onPropChanged);
   }
   void _onPropChanged() {
-    areasManager.fromId(file)!.hasUnsavedChanges = true;
+    areasManager.fromId(file)!.setHasUnsavedChanges(true);
   }
   
   void dispose() {
@@ -1210,7 +1192,7 @@ class BnkTrackData with HasUuid, Undoable {
     clips.addListener(_onPropChanged);
   }
   void _onPropChanged() {
-    areasManager.fromId(file)!.hasUnsavedChanges = true;
+    areasManager.fromId(file)!.setHasUnsavedChanges(true);
     undoHistoryManager.onUndoableEvent();
   }
   
@@ -1344,7 +1326,7 @@ class BnkSegmentMarker with HasUuid, Undoable {
     pos.addListener(_onPropChanged);
   }
   void _onPropChanged() {
-    areasManager.fromId(file)!.hasUnsavedChanges = true;
+    areasManager.fromId(file)!.setHasUnsavedChanges(true);
   }
   
   void dispose() {
@@ -1388,7 +1370,7 @@ class BnkSegmentData with HasUuid, Undoable {
     duration.addListener(_onPropChanged);
   }
   void _onPropChanged() {
-    areasManager.fromId(file)!.hasUnsavedChanges = true;
+    areasManager.fromId(file)!.setHasUnsavedChanges(true);
   }
   
   void dispose() {
@@ -1567,9 +1549,9 @@ class BnkFilePlaylistData extends OpenFileData {
 
   @override
   Future<void> load() async {
-    if (_loadingState != LoadingState.notLoaded)
+    if (_loadingState.value != LoadingState.notLoaded)
       return;
-    _loadingState = LoadingState.loading;
+    _loadingState.value = LoadingState.loading;
 
     var bytes = await ByteDataWrapper.fromFile(path.split("#").first);
     var bnk = BnkFile.read(bytes);
@@ -1589,7 +1571,7 @@ class BnkFilePlaylistData extends OpenFileData {
 
   @override
   Future<void> save() async {
-    if (_loadingState != LoadingState.loaded)
+    if (_loadingState.value != LoadingState.loaded)
       return;
     
     var bnkPath = path.split("#").first;
@@ -1627,11 +1609,11 @@ class BnkFilePlaylistData extends OpenFileData {
 
   @override
   Undoable takeSnapshot() {
-    var snapshot = BnkFilePlaylistData(_name, _path);
+    var snapshot = BnkFilePlaylistData(name.value, path);
     snapshot.optionalInfo = optionalInfo;
     snapshot.rootChild = rootChild?.takeSnapshot() as BnkPlaylistChild?;
-    snapshot._unsavedChanges = _unsavedChanges;
-    snapshot._loadingState = _loadingState;
+    snapshot.setHasUnsavedChanges(hasUnsavedChanges.value);
+    snapshot._loadingState.value = _loadingState.value;
     snapshot.overrideUuid(uuid);
     return snapshot;
   }
@@ -1640,9 +1622,8 @@ class BnkFilePlaylistData extends OpenFileData {
   void restoreWith(Undoable snapshot) {
     var content = snapshot as BnkFilePlaylistData;
     rootChild?.restoreWith(content.rootChild!);
-    name = content._name;
-    path = content._path;
-    hasUnsavedChanges = content._unsavedChanges;
+    name.value = content.name.value;
+    setHasUnsavedChanges(content.hasUnsavedChanges.value);
   }
 }
 
@@ -1656,9 +1637,9 @@ class SaveSlotData extends OpenFileData {
 
   @override
   Future<void> load() async {
-    if (_loadingState != LoadingState.notLoaded)
+    if (_loadingState.value != LoadingState.notLoaded)
       return;
-    _loadingState = LoadingState.loading;
+    _loadingState.value = LoadingState.loading;
 
     var bytes = await ByteDataWrapper.fromFile(path);
     slotData?.dispose();
@@ -1670,12 +1651,12 @@ class SaveSlotData extends OpenFileData {
   }
 
   void _onPropChanged() {
-    hasUnsavedChanges = true;
+    setHasUnsavedChanges(true);
   }
 
   @override
   Future<void> save() async {
-    if (_loadingState != LoadingState.loaded)
+    if (_loadingState.value != LoadingState.loaded)
       return;
     
     var bytes = await ByteDataWrapper.fromFile(path);
@@ -1694,11 +1675,11 @@ class SaveSlotData extends OpenFileData {
 
   @override
   Undoable takeSnapshot() {
-    var snapshot = SaveSlotData(_name, _path);
+    var snapshot = SaveSlotData(name.value, path);
     snapshot.optionalInfo = optionalInfo;
     snapshot.slotData = slotData?.takeSnapshot() as SlotDataDat?;
-    snapshot._unsavedChanges = _unsavedChanges;
-    snapshot._loadingState = _loadingState;
+    snapshot.setHasUnsavedChanges(hasUnsavedChanges.value);
+    snapshot._loadingState.value = _loadingState.value;
     snapshot.overrideUuid(uuid);
     return snapshot;
   }
@@ -1708,9 +1689,8 @@ class SaveSlotData extends OpenFileData {
     var content = snapshot as SaveSlotData;
     if (content.slotData != null)
       slotData?.restoreWith(content.slotData!);
-    name = content._name;
-    path = content._path;
-    hasUnsavedChanges = content._unsavedChanges;
+    name.value = content.name.value;
+    setHasUnsavedChanges(content.hasUnsavedChanges.value);
   }
 }
 
@@ -1730,9 +1710,9 @@ class WtaWtpData extends OpenFileData {
 
   @override
   Future<void> load() async {
-    if (_loadingState != LoadingState.notLoaded)
+    if (_loadingState.value != LoadingState.notLoaded)
       return;
-    _loadingState = LoadingState.loading;
+    _loadingState.value = LoadingState.loading;
 
     // find wtp
     var datDir = dirname(path);
@@ -1771,7 +1751,7 @@ class WtaWtpData extends OpenFileData {
 
   @override
   Future<void> save() async {
-    if (_loadingState != LoadingState.loaded)
+    if (_loadingState.value != LoadingState.loaded)
       return;
     
     await textures!.save();
@@ -1780,7 +1760,7 @@ class WtaWtpData extends OpenFileData {
   }
 
   void onPropChanged() {
-    hasUnsavedChanges = true;
+    setHasUnsavedChanges(true);
   }
 
   @override
@@ -1791,11 +1771,11 @@ class WtaWtpData extends OpenFileData {
 
   @override
   Undoable takeSnapshot() {
-    var snapshot = WtaWtpData(_name, _path, optionalInfo: wtpPath != null ? WtaWtpOptionalInfo(wtpPath: wtpPath!) : null);
+    var snapshot = WtaWtpData(name.value, path, optionalInfo: wtpPath != null ? WtaWtpOptionalInfo(wtpPath: wtpPath!) : null);
     snapshot.optionalInfo = optionalInfo;
     snapshot.textures = textures?.takeSnapshot() as WtaWtpTextures?;
-    snapshot._unsavedChanges = _unsavedChanges;
-    snapshot._loadingState = _loadingState;
+    snapshot.setHasUnsavedChanges(hasUnsavedChanges.value);
+    snapshot._loadingState.value = _loadingState.value;
     snapshot.overrideUuid(uuid);
     return snapshot;
   }
@@ -1804,9 +1784,8 @@ class WtaWtpData extends OpenFileData {
   void restoreWith(Undoable snapshot) {
     var content = snapshot as WtaWtpData;
     textures?.restoreWith(content.textures!);
-    name = content._name;
-    path = content._path;
-    hasUnsavedChanges = content._unsavedChanges;
+    name.value = content.name.value;
+    setHasUnsavedChanges(content.hasUnsavedChanges.value);
   }
 }
 
@@ -1820,9 +1799,9 @@ class EstFileData extends OpenFileData {
 
   @override
   Future<void> load() async {
-    if (_loadingState != LoadingState.notLoaded)
+    if (_loadingState.value != LoadingState.notLoaded)
       return;
-    _loadingState = LoadingState.loading;
+    _loadingState.value = LoadingState.loading;
 
     await estData.loadFromEstFile(path);
     estData.onAnyChange.addListener(_onAnyChange);
@@ -1839,7 +1818,7 @@ class EstFileData extends OpenFileData {
   }
 
   void _onAnyChange() {
-    hasUnsavedChanges = true;
+    setHasUnsavedChanges(true);
     undoHistoryManager.onUndoableEvent();
   }
 
@@ -1851,10 +1830,10 @@ class EstFileData extends OpenFileData {
 
   @override
   Undoable takeSnapshot() {
-    var snapshot = EstFileData(_name, _path, estData: estData.takeSnapshot() as EstData);
+    var snapshot = EstFileData(name.value, path, estData: estData.takeSnapshot() as EstData);
     snapshot.optionalInfo = optionalInfo;
-    snapshot._unsavedChanges = _unsavedChanges;
-    snapshot._loadingState = _loadingState;
+    snapshot.setHasUnsavedChanges(hasUnsavedChanges.value);
+    snapshot._loadingState.value = _loadingState.value;
     snapshot.overrideUuid(uuid);
     return snapshot;
   }
@@ -1863,6 +1842,6 @@ class EstFileData extends OpenFileData {
   void restoreWith(Undoable snapshot) {
     var content = snapshot as EstFileData;
     estData.restoreWith(content.estData);
-    hasUnsavedChanges = content._unsavedChanges;
+    setHasUnsavedChanges(content.hasUnsavedChanges.value);
   }
 }

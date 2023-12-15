@@ -15,7 +15,7 @@ import 'XmlActionsEditor.dart';
 class XmlFileEditor extends ChangeNotifierWidget {
   late final XmlFileData fileContent;
 
-  XmlFileEditor({Key? key, required this.fileContent}) : super(key: key, notifier: fileContent);
+  XmlFileEditor({Key? key, required this.fileContent}) : super(key: key, notifier: fileContent.root);
 
   @override
   ChangeNotifierState<XmlFileEditor> createState() => _XmlEditorState();
@@ -35,8 +35,8 @@ class _XmlEditorState extends ChangeNotifierState<XmlFileEditor> {
   Widget build(BuildContext context) {
     return widget.fileContent.root != null
       ? _makeXmlEditor(widget.fileContent.root!)
-      : Column(
-        children: const [
+      : const Column(
+        children: [
           SizedBox(height: 35),
           SizedBox(
             height: 2,

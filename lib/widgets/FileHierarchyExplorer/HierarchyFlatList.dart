@@ -1,8 +1,6 @@
 
-import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart' show BuildContext, Curves, FocusScope, Key, ListView, ScrollController, State, Widget;
 
-import '../../keyboardEvents/BetterShortcuts.dart';
 import '../../stateManagement/hierarchy/FileHierarchy.dart';
 import '../../stateManagement/hierarchy/HierarchyEntryTypes.dart';
 import '../misc/ChangeNotifierWidget.dart';
@@ -10,7 +8,6 @@ import '../misc/SmoothScrollBuilder.dart';
 import '../misc/TextFieldFocusNode.dart';
 import '../misc/onHoverBuilder.dart';
 import 'HierarchyEntryWidget.dart';
-import 'HierarchyShortcuts.dart';
 
 class HierarchyFlatList extends ChangeNotifierWidget {
   HierarchyFlatList({super.key}) : super(notifier: openHierarchyManager.treeViewIsDirty);
@@ -83,23 +80,24 @@ class _HierarchyFlatListState extends ChangeNotifierState<HierarchyFlatList> {
   }
 
   Widget shortcutsWrapper({required Widget child}) {
-    return BetterShortcuts(
-      shortcuts: {
-        const KeyCombo(LogicalKeyboardKey.arrowUp, {}, true): ArrowUpShortcut(() => moveSelectionVertically(-1)),
-        const KeyCombo(LogicalKeyboardKey.arrowDown, {}, true): ArrowDownShortcut(() => moveSelectionVertically(1)),
-        const KeyCombo(LogicalKeyboardKey.arrowLeft): ArrowLeftShortcut(() => onArrowLeft()),
-        const KeyCombo(LogicalKeyboardKey.arrowRight): ArrowRightShortcut(() => onArrowRight()),
-        const KeyCombo(LogicalKeyboardKey.enter): EnterShortcut(() => openCurrentFile()),
-      },
-      actions: {
-        ArrowUpShortcut: CallbackAction(),
-        ArrowDownShortcut: CallbackAction(),
-        ArrowLeftShortcut: CallbackAction(),
-        ArrowRightShortcut: CallbackAction(),
-        EnterShortcut: CallbackAction(),
-      },
-      child: child,
-    );
+    return child;
+    // return BetterShortcuts(
+    //   shortcuts: {
+    //     const KeyCombo(LogicalKeyboardKey.arrowUp, {}, true): ArrowUpShortcut(() => moveSelectionVertically(-1)),
+    //     const KeyCombo(LogicalKeyboardKey.arrowDown, {}, true): ArrowDownShortcut(() => moveSelectionVertically(1)),
+    //     const KeyCombo(LogicalKeyboardKey.arrowLeft): ArrowLeftShortcut(() => onArrowLeft()),
+    //     const KeyCombo(LogicalKeyboardKey.arrowRight): ArrowRightShortcut(() => onArrowRight()),
+    //     const KeyCombo(LogicalKeyboardKey.enter): EnterShortcut(() => openCurrentFile()),
+    //   },
+    //   actions: {
+    //     ArrowUpShortcut: CallbackAction(),
+    //     ArrowDownShortcut: CallbackAction(),
+    //     ArrowLeftShortcut: CallbackAction(),
+    //     ArrowRightShortcut: CallbackAction(),
+    //     EnterShortcut: CallbackAction(),
+    //   },
+    //   child: child,
+    // );
   }
 
   void moveSelectionVertically(int direction) {

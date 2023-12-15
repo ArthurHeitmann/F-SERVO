@@ -20,7 +20,7 @@ class FilesAreaManager with HasUuid, Undoable {
 
   setCurrentFile(OpenFileData? value) {
     assert(value == null || files.contains(value));
-    if (value == _currentFile) return;
+    if (value == _currentFile.value) return;
     _currentFile.value = value;
 
     if (this == areasManager.activeArea.value)
@@ -44,7 +44,7 @@ class FilesAreaManager with HasUuid, Undoable {
   }
 
   Future<void> closeFile(OpenFileData file, { bool releaseHidden = false }) async {
-    if (file.hasUnsavedChanges) {
+    if (file.hasUnsavedChanges.value) {
       var answer = await confirmOrCancelDialog(
         getGlobalContext(),
         title: "Save changes?",
@@ -55,7 +55,7 @@ class FilesAreaManager with HasUuid, Undoable {
       if (answer == true)
         await file.save();
       else if (answer == false) {
-        file.hasUnsavedChanges = false;
+        file.setHasUnsavedChanges(false);
         try {
           await file.reload();
         } catch (e, stackTrace) {
@@ -176,7 +176,7 @@ class FilesAreaManager with HasUuid, Undoable {
   Future<void> saveAll() async {
     try {
       await Future.wait(
-          files.where((file) => file.hasUnsavedChanges)
+          files.where((file) => file.hasUnsavedChanges.value)
               .map((file) => file.save()));
     } catch (e) {
       print("Error while saving all files");

@@ -225,9 +225,9 @@ class _FileMetaEditorState extends ChangeNotifierState<FileMetaEditor> {
     var fileData = areasManager.openFileAsHidden(scriptEntry.path);
 
     return ChangeNotifierBuilder(
-      notifier: fileData,
+      notifier: fileData.loadingState,
       builder: (context) {
-        if (fileData.loadingState == LoadingState.notLoaded || fileData is! XmlFileData) {
+        if (fileData.loadingState.value == LoadingState.notLoaded || fileData is! XmlFileData) {
           fileData.load();
           return Container();
         }

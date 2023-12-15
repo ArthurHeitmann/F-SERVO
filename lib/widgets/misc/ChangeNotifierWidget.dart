@@ -1,6 +1,8 @@
 
 import 'package:flutter/material.dart';
 
+import '../../utils/utils.dart';
+
 abstract class ChangeNotifierWidget extends StatefulWidget {
   final List<Listenable> _notifiers = [];
   
@@ -13,7 +15,11 @@ abstract class ChangeNotifierWidget extends StatefulWidget {
 }
 
 abstract class ChangeNotifierState<T extends ChangeNotifierWidget> extends State<T> {
+  bool _isInitialized = false;
+
   void onNotified() {
+    if (!_isInitialized)
+      return;
     setState(() {});
   }
 
@@ -22,6 +28,7 @@ abstract class ChangeNotifierState<T extends ChangeNotifierWidget> extends State
     for (var notifier in widget._notifiers)
       notifier.addListener(onNotified);
     super.initState();
+    waitForNextFrame().then((_) => _isInitialized = true);
   }
 
   @override

@@ -73,8 +73,8 @@ void init() async {
           return Container(
             padding: EdgeInsets.all(padding),
             color: Colors.red.shade800,
-            child: Column(
-              children: const [
+            child: const Column(
+              children: [
                 Text(":(", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 Text("Something went wrong"),
               ],

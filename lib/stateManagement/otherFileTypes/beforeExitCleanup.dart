@@ -10,7 +10,7 @@ Future<bool> beforeExitConfirmation() async {
     .areas
     .followedBy([areasManager.hiddenArea])
     .expand((area) => area.files)
-    .map((f) => f.hasUnsavedChanges ? 1 : 0)
+    .map((f) => f.hasUnsavedChanges.value ? 1 : 0)
     .fold<int>(0, (a, b) => a + b);
   
   if (unsavedFiles > 0) {

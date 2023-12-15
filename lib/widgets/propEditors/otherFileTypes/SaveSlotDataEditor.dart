@@ -12,6 +12,7 @@ import '../../../stateManagement/listNotifier.dart';
 import '../../../stateManagement/openFiles/openFileTypes.dart';
 import '../../../stateManagement/otherFileTypes/SlotDataDat.dart';
 import '../../../stateManagement/otherFileTypes/itemIdsToNames.dart';
+import '../../misc/ChangeNotifierWidget.dart';
 import '../../theme/customTheme.dart';
 import '../simpleProps/UnderlinePropTextField.dart';
 import '../simpleProps/propEditorFactory.dart';
@@ -19,29 +20,30 @@ import '../simpleProps/propTextField.dart';
 import '../simpleProps/textFieldAutocomplete.dart';
 import 'genericTable/tableEditor.dart';
 
-class SaveSlotDataEditor extends StatefulWidget {
+class SaveSlotDataEditor extends ChangeNotifierWidget {
   final SaveSlotData save;
 
-  const SaveSlotDataEditor({ super.key, required this.save });
+  SaveSlotDataEditor({ super.key, required this.save })
+    : super(notifier: save.loadingState);
 
   @override
   State<SaveSlotDataEditor> createState() => _SaveSlotDataEditorState();
 }
 
-class _SaveSlotDataEditorState extends State<SaveSlotDataEditor> {
+class _SaveSlotDataEditorState extends ChangeNotifierState<SaveSlotDataEditor> {
   int activeTab = 0;
 
   @override
   void initState() {
-    widget.save.load().then((_) => setState(() {}));
+    widget.save.load();
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (widget.save.loadingState != LoadingState.loaded) {
-      return Column(
-        children: const [
+    if (widget.save.loadingState.value != LoadingState.loaded) {
+      return const Column(
+        children: [
           SizedBox(height: 35),
           SizedBox(
             height: 2,

@@ -98,7 +98,7 @@ class CharNamesXmlProp extends XmlProp with CustomTableConfig {
       }
       serialize();
       var file = areasManager.fromId(this.file);
-      file?.hasUnsavedChanges = true;
+      file?.setHasUnsavedChanges(true);
       file?.contentNotifier.notifyListeners();
       undoHistoryManager.onUndoableEvent();
     });

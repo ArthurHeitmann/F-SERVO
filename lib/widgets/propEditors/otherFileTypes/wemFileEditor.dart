@@ -22,7 +22,7 @@ class WemFileEditor extends ChangeNotifierWidget {
   final bool showOverride;
 
   WemFileEditor({ super.key, required this.wem, this.lockControls = false, this.topPadding = false, this.showOverride = true })
-    : super(notifier: wem);
+    : super(notifiers: [wem.loadingState, wem.isReplacing, wem.overrideData]);
 
   @override
   State<WemFileEditor> createState() => _WemFileEditorState();
@@ -33,19 +33,15 @@ class _WemFileEditorState extends ChangeNotifierState<WemFileEditor> {
 
   @override
   void initState() {
-    widget.wem.overrideData.addListener(_onOverrideChanged);
     widget.wem.onOverrideApplied.addListener(_onOverrideApplied);
     super.initState();
   }
 
   @override
   void dispose() {
-    widget.wem.overrideData.removeListener(_onOverrideChanged);
     widget.wem.onOverrideApplied.removeListener(_onOverrideApplied);
     super.dispose();
   }
-
-  void _onOverrideChanged() => setState(() {});
 
   void _onOverrideApplied() => setState(() => refreshKey = UniqueKey());
 
@@ -154,7 +150,7 @@ class _WemFileEditorState extends ChangeNotifierState<WemFileEditor> {
         ),
         AnimatedOpacity(
           duration: const Duration(milliseconds: 200),
-          opacity: widget.wem.isReplacing ? 1 : 0,
+          opacity: widget.wem.isReplacing.value ? 1 : 0,
           child: const SizedBox(
             height: 2,
             child: LinearProgressIndicator(backgroundColor: Colors.transparent),

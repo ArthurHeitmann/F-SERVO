@@ -20,7 +20,7 @@ class PreferencesEditor extends ChangeNotifierWidget {
   final PreferencesData prefs;
 
   PreferencesEditor({super.key, required this.prefs})
-    : super(notifiers: [prefs, prefs.indexingPaths!]);
+    : super(notifiers: [prefs.loadingState, prefs.indexingPaths!]);
 
   @override
   State<PreferencesEditor> createState() => _PreferencesEditorState();

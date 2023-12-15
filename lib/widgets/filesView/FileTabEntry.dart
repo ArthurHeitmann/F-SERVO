@@ -17,7 +17,7 @@ class FileTabEntry extends ChangeNotifierWidget {
   
   FileTabEntry({Key? key, required OpenFileData file, required this.area})
     : file = file.uuid,
-    super(key: key, notifier: file);
+    super(key: key, notifiers: [area.currentFile, file.name, file.secondaryName, file.hasUnsavedChanges]);
 
   @override
   State<FileTabEntry> createState() => _FileTabEntryState();
@@ -85,7 +85,7 @@ class _FileTabEntryState extends ChangeNotifierState<FileTabEntry> {
                         constraints: const BoxConstraints(),
                         icon: AnimatedSwitcher(
                           duration: const Duration(milliseconds: 150),
-                          child: file.hasUnsavedChanges && !isHovering
+                          child: file.hasUnsavedChanges.value && !isHovering
                                 ? const Icon(Icons.circle, key: ValueKey(1), size: 11,)
                                 : const Icon(Icons.close, key: ValueKey(2))
                         ),

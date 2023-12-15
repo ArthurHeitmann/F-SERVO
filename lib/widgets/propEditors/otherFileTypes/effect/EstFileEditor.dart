@@ -23,7 +23,7 @@ class EstFileEditor extends ChangeNotifierWidget {
   final EstFileData file;
 
   EstFileEditor({super.key, required this.file})
-    : super(notifiers: [file, file.estData.records]);
+    : super(notifiers: [file.loadingState, file.estData.records]);
 
   @override
   State<EstFileEditor> createState() => _EstFileEditorState();
@@ -67,7 +67,7 @@ class _EstFileEditorState extends ChangeNotifierState<EstFileEditor> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.file.loadingState != LoadingState.loaded) {
+    if (widget.file.loadingState.value != LoadingState.loaded) {
       return const Column(
         children: [
           SizedBox(height: 35),
@@ -80,34 +80,39 @@ class _EstFileEditorState extends ChangeNotifierState<EstFileEditor> {
     }
     return SmoothSingleChildScrollView(
       controller: scrollController,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 35),
-          for (int i = 0; i < widget.file.estData.records.length; i++) ...[
-            if (i == 0)
-              const Divider(height: 1, thickness: 1,),
-            _EstRecordEditor(
-              index: i,
-              record: widget.file.estData.records[i],
-              typeNames: widget.file.estData.typeNames,
-              onRemove: () => widget.file.estData.removeRecord(widget.file.estData.records[i]),
-              selectedEntry: widget.file.estData.selectedEntry,
-              // initiallyCollapsed: widget.file.estData.records.length > 3,
-              initiallyCollapsed: false,
-            ),
-            const Divider(height: 1, thickness: 1,),
-          ],
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: _EntryIconButton(
-              icon: Icons.paste,
-              onPressed: pasteEntries,
-              iconSize: 16,
-              splashRadius: 18,
-            ),
-          ),
-        ],
+      child: ChangeNotifierBuilder(
+        notifier: widget.file.estData.records,
+        builder: (context) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 35),
+              for (int i = 0; i < widget.file.estData.records.length; i++) ...[
+                if (i == 0)
+                  const Divider(height: 1, thickness: 1,),
+                _EstRecordEditor(
+                  index: i,
+                  record: widget.file.estData.records[i],
+                  typeNames: widget.file.estData.typeNames,
+                  onRemove: () => widget.file.estData.removeRecord(widget.file.estData.records[i]),
+                  selectedEntry: widget.file.estData.selectedEntry,
+                  // initiallyCollapsed: widget.file.estData.records.length > 3,
+                  initiallyCollapsed: false,
+                ),
+                const Divider(height: 1, thickness: 1,),
+              ],
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: _EntryIconButton(
+                  icon: Icons.paste,
+                  onPressed: pasteEntries,
+                  iconSize: 16,
+                  splashRadius: 18,
+                ),
+              ),
+            ],
+          );
+        }
       )
     );
   }

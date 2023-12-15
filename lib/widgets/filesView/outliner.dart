@@ -55,7 +55,7 @@ class _OutlinerState extends ChangeNotifierState<Outliner> {
               child: areasManager.activeArea.value?.currentFile.value?.type == FileType.xml
                 ? ChangeNotifierBuilder(
                   key: Key(areasManager.activeArea.value!.currentFile.value!.uuid),
-                  notifiers: [areasManager.activeArea.value!.currentFile.value!, search],
+                  notifiers: [areasManager.activeArea.value!.currentFile, search],
                   builder: (context) {
                     XmlProp? xmlProp = 
                     areasManager.activeArea.value?.currentFile.value?.type == FileType.xml

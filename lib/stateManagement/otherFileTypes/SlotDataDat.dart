@@ -168,14 +168,8 @@ class TreeEntry extends ListNotifier<TreeEntry> {
 
   TreeEntry(this.text, super.children, this.file) {
     text.addListener(() {
-      areasManager.fromId(file)?.hasUnsavedChanges = true;
+      areasManager.fromId(file)?.setHasUnsavedChanges(true);
     });
-  }
-
-  @override
-  void dispose() {
-    text.dispose();
-    super.dispose();
   }
 
   @override

@@ -9,7 +9,7 @@ class TableFileEditor extends ChangeNotifierWidget {
   final OpenFileData file;
   final CustomTableConfig Function() getTableConfig;
 
-  TableFileEditor({ super.key, required this.file, required this.getTableConfig }) : super(notifier: file);
+  TableFileEditor({ super.key, required this.file, required this.getTableConfig }) : super(notifier: file.loadingState);
 
   @override
   State<TableFileEditor> createState() => _TableFileEditorState();
@@ -24,7 +24,7 @@ class _TableFileEditorState extends ChangeNotifierState<TableFileEditor> {
 
   @override
   Widget build(BuildContext context) {
-    return widget.file.loadingState == LoadingState.loaded
+    return widget.file.loadingState.value == LoadingState.loaded
       ? TableEditor(config: widget.getTableConfig())
       : const Column(
         children: [

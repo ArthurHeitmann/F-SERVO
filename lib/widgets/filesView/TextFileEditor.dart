@@ -3,6 +3,7 @@ import 'dart:async';
 
 import 'package:code_text_field/code_text_field.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_highlight/themes/atom-one-dark.dart';
 import 'package:flutter_highlight/themes/atom-one-light.dart';
 import 'package:highlight/languages/bash.dart';
@@ -29,7 +30,7 @@ import '../misc/onHoverBuilder.dart';
 class TextFileEditor extends ChangeNotifierWidget {
   late final TextFileData fileContent;
 
-  TextFileEditor({Key? key, required this.fileContent}) : super(key: key, notifier: fileContent);
+  TextFileEditor({Key? key, required this.fileContent}) : super(key: key, notifier: fileContent.text);
 
   @override
   ChangeNotifierState<TextFileEditor> createState() => _TextFileEditorState();
@@ -76,7 +77,7 @@ class _TextFileEditorState extends ChangeNotifierState<TextFileEditor> {
   void onFileContentChange() {
     if (isOwnUpdate)
       return;
-    var newText = tabsToSpaces(widget.fileContent.text);
+    var newText = tabsToSpaces(widget.fileContent.text.value);
     if (controller!.text == newText)
       return;
     isExternalUpdate = true;
@@ -85,6 +86,20 @@ class _TextFileEditorState extends ChangeNotifierState<TextFileEditor> {
       selection: TextSelection.collapsed(offset: clamp(controller!.value.selection.baseOffset, 0, newText.length)),
     );
     isExternalUpdate = false;
+  }
+
+  void onControllerTextChanged(text) {
+    if (isExternalUpdate)
+      return;
+    text = spacesToTabs(text);
+    if (text == widget.fileContent.text.value)
+      return;
+    isOwnUpdate = true;
+    widget.fileContent.text.value = text;
+    widget.fileContent.setHasUnsavedChanges(true);
+    widget.fileContent.cursorOffset = controller!.selection.baseOffset;
+    undoHistoryManager.onUndoableEvent();
+    isOwnUpdate = false;
   }
 
   @override
@@ -100,25 +115,14 @@ class _TextFileEditorState extends ChangeNotifierState<TextFileEditor> {
     widget.fileContent.load()
       .then((_) {
         loadedCompleter.complete();
-        usesTabs = RegExp("^\t+", multiLine: true).hasMatch(widget.fileContent.text);
-        widget.fileContent.addListener(onFileContentChange);
+        usesTabs = RegExp("^\t+", multiLine: true).hasMatch(widget.fileContent.text.value);
+        widget.fileContent.text.addListener(onFileContentChange);
         controller = CodeController(
           theme: _customTheme,
           language: _highlightLanguages[extension(widget.fileContent.path)],
           params: const EditorParams(tabSpaces: 4),
-          text: tabsToSpaces(widget.fileContent.text),
-          onChange: (text) {
-            if (isExternalUpdate)
-              return;
-            text = spacesToTabs(text);
-            if (text == widget.fileContent.text)
-              return;
-            isOwnUpdate = true;
-            widget.fileContent.text = text;
-            widget.fileContent.hasUnsavedChanges = true;
-            undoHistoryManager.onUndoableEvent();
-            isOwnUpdate = false;
-          },
+          text: tabsToSpaces(widget.fileContent.text.value),
+          onChange: onControllerTextChanged,
         );
         setState(() { });
       });
@@ -126,7 +130,7 @@ class _TextFileEditorState extends ChangeNotifierState<TextFileEditor> {
 
   @override
   void dispose() {
-    widget.fileContent.removeListener(onFileContentChange);
+    widget.fileContent.text.removeListener(onFileContentChange);
     goToLineSubscription?.cancel();
     super.dispose();
   }
@@ -191,14 +195,16 @@ class _TextFileEditorState extends ChangeNotifierState<TextFileEditor> {
               ? Expanded(
                 child: SmoothSingleChildScrollView(
                   controller: scrollController,
-                  child: CodeField(
-                    controller: controller!,
-                    focusNode: focus,
-                    lineNumberBuilder: (line, style) => TextSpan(
-                      text: line.toString(),
-                      style: style?.copyWith(
-                        fontSize: 12,
-                        overflow: TextOverflow.clip,
+                  child: supressUndoRedo(
+                    child: CodeField(
+                      controller: controller!,
+                      focusNode: focus,
+                      lineNumberBuilder: (line, style) => TextSpan(
+                        text: line.toString(),
+                        style: style?.copyWith(
+                          fontSize: 12,
+                          overflow: TextOverflow.clip,
+                        ),
                       ),
                     ),
                   ),
@@ -232,6 +238,21 @@ class _TextFileEditorState extends ChangeNotifierState<TextFileEditor> {
           },
         ),
       ],
+    );
+  }
+
+  Widget supressUndoRedo({ required Widget child }) {
+    return Focus(
+      onKey: (node, event) {
+        if (event is! RawKeyDownEvent)
+          return KeyEventResult.ignored;
+        if (event.logicalKey == LogicalKeyboardKey.keyZ && event.isControlPressed)
+          return KeyEventResult.handled;
+        if (event.logicalKey == LogicalKeyboardKey.keyY && event.isControlPressed)
+          return KeyEventResult.handled;
+        return KeyEventResult.ignored;
+      },
+      child: child,
     );
   }
 }

@@ -42,7 +42,8 @@ Widget globalShortcutsWrapper(BuildContext context, { required Widget child }) {
       RedoIntent: RedoAction(),
       ChildKeyboardActionIntent: ChildKeyboardAction(),
     },
-    child: _arrowKeyEventsSuppressor(context, child: child),
+    // child: _arrowKeyEventsSuppressor(context, child: child),
+    child: child,
   );
 }
 

@@ -49,10 +49,6 @@ class _TexturesTableConfig with CustomTableConfig {
     textures.addListener(() => rowCount.value = textures.length);
   }
 
-  void dispose() {
-    rowCount.dispose();
-  }
-
   @override
   RowConfig rowPropsGenerator(int index) {
     return RowConfig(
@@ -166,16 +162,10 @@ class _WtaWtpEditorState extends State<WtaWtpEditor> {
   }
 
   @override
-  void dispose() {
-    _texturesTableConfig?.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     if (_texturesTableConfig == null) {
-      return Column(
-        children: const [
+      return const Column(
+        children: [
           SizedBox(height: 35),
           SizedBox(
             height: 2,

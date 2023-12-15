@@ -70,7 +70,8 @@ class _IsolateCommunicatorPrivate {
     loggingWrapper(() => _IsolateCommunicatorPrivate(sendPort));
   }
 
-  void handleMessage(dynamic message) {
+  void handleMessage(dynamic msg) {
+    var message = msg as Map;
     CommandTypes command = CommandTypes.values[message["command"]];
     String uuid = message["uuid"];
     switch (command) {
@@ -195,7 +196,8 @@ class IsolateCommunicator with Initializable {
     Isolate.spawn(_IsolateCommunicatorPrivate.entryPoint, _receivePort.sendPort);
   }
 
-  void handleMessage(dynamic message) {
+  void handleMessage(dynamic msg) {
+    var message = msg as Map;
     CommandTypes command = CommandTypes.values[message["command"]];
     String uuid = message["uuid"];
     switch (command) {

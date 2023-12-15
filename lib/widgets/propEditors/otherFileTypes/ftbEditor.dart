@@ -11,7 +11,7 @@ import 'fontOverridesApply.dart';
 class FtbEditor extends ChangeNotifierWidget {
   final FtbFileData file;
 
-  FtbEditor({ super.key, required this.file }) : super(notifiers: [file, McdData.fontChanges]);
+  FtbEditor({ super.key, required this.file }) : super(notifiers: [file.loadingState, McdData.fontChanges]);
 
   @override
   State<FtbEditor> createState() => _FtbEditorState();
@@ -28,9 +28,9 @@ class _FtbEditorState extends ChangeNotifierState<FtbEditor> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.file.loadingState != LoadingState.loaded) {
-      return Column(
-        children: const [
+    if (widget.file.loadingState.value != LoadingState.loaded) {
+      return const Column(
+        children: [
           SizedBox(height: 35),
           SizedBox(
             height: 2,

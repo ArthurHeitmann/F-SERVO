@@ -25,7 +25,10 @@ class _EstRecordDetailsEditorState extends ChangeNotifierState<EstRecordDetailsE
         for (var entry in widget.record.entries) ...[
           const Divider(height: 1),
           const SizedBox(height: 8),
-          Text("${entry.entry.header.id} / ${estTypeFullNames[entry.entry.header.id]}"),
+          Text(
+            "${entry.entry.header.id} / ${estTypeFullNames[entry.entry.header.id]}",
+            overflow: TextOverflow.ellipsis,
+          ),
           const SizedBox(height: 8),
           const Divider(height: 1),
           const SizedBox(height: 6),

@@ -860,7 +860,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase {
     if (entry is FileHierarchyEntry)
       areasManager.releaseFile(entry.path);
     if (entry == _selectedEntry.value)
-      _selectedEntry.value = null;
+      setSelectedEntry(null);
       
     for (var child in entry.children) {
       _removeRec(child);
@@ -989,9 +989,9 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase {
     var entry = snapshot as OpenHierarchyManager;
     updateOrReplaceWith(entry.children.toList(), (obj) => obj.takeSnapshot() as HierarchyEntry);
     if (entry.selectedEntry.value != null)
-      _selectedEntry.value = children.findRecWhere((e) => entry.selectedEntry.value!.uuid == e.uuid);
+      setSelectedEntry(children.findRecWhere((e) => entry.selectedEntry.value!.uuid == e.uuid));
     else
-      _selectedEntry.value = null;
+      setSelectedEntry(null);
   }
 
   @override

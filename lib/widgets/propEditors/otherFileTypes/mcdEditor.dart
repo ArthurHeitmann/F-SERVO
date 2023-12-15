@@ -27,7 +27,7 @@ const _itemsPerPage = 400;
 class McdEditor extends ChangeNotifierWidget {
   final McdFileData file;
 
-  McdEditor ({super.key, required this.file }) : super(notifier: file);
+  McdEditor ({super.key, required this.file }) : super(notifier: file.loadingState);
 
   @override
   State<McdEditor> createState() => _McdEditorState();
@@ -76,7 +76,7 @@ class _McdEditorState extends ChangeNotifierState<McdEditor> {
           Expanded(
             child: IndexedStack(
               index: activeTab,
-              children: widget.file.loadingState == LoadingState.loaded ? [
+              children: widget.file.loadingState.value == LoadingState.loaded ? [
                 _McdEditorBody(file: widget.file, mcd: widget.file.mcdData!),
                 FontsManager(mcd: widget.file.mcdData!),
                 if (widget.file.mcdData!.textureWtpPath != null)
