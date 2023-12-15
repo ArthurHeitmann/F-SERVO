@@ -2,9 +2,9 @@
 
 import 'package:flutter/material.dart';
 
+import '../../../stateManagement/xmlProps/xmlProp.dart';
 import '../../../widgets/theme/customTheme.dart';
 import '../../misc/ChangeNotifierWidget.dart';
-import '../../../stateManagement/xmlProps/xmlProp.dart';
 import 'XmlPropEditorFactory.dart';
 import 'propEditorFactory.dart';
 import 'propTextField.dart';

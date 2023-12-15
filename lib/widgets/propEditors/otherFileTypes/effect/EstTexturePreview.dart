@@ -1,8 +1,8 @@
 
 import 'package:flutter/material.dart';
 
-import '../../../misc/ChangeNotifierWidget.dart';
 import '../../../../stateManagement/Property.dart';
+import '../../../misc/ChangeNotifierWidget.dart';
 import '../../../misc/expandOnHover.dart';
 import '../../../theme/customTheme.dart';
 

@@ -5,24 +5,24 @@ import 'package:code_text_field/code_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_highlight/themes/atom-one-dark.dart';
 import 'package:flutter_highlight/themes/atom-one-light.dart';
+import 'package:highlight/languages/bash.dart';
 import 'package:highlight/languages/dart.dart';
 import 'package:highlight/languages/java.dart';
 import 'package:highlight/languages/javascript.dart';
 import 'package:highlight/languages/json.dart';
 import 'package:highlight/languages/markdown.dart';
 import 'package:highlight/languages/python.dart';
-import 'package:highlight/languages/bash.dart';
 import 'package:highlight/languages/ruby.dart';
 import 'package:highlight/languages/xml.dart';
 import 'package:path/path.dart';
 
 import '../../main.dart';
-import '../misc/ChangeNotifierWidget.dart';
 import '../../stateManagement/events/jumpToEvents.dart';
 import '../../stateManagement/openFiles/openFileTypes.dart';
 import '../../stateManagement/undoable.dart';
 import '../../utils/assetDirFinder.dart';
 import '../../utils/utils.dart';
+import '../misc/ChangeNotifierWidget.dart';
 import '../misc/SmoothScrollBuilder.dart';
 import '../misc/onHoverBuilder.dart';
 

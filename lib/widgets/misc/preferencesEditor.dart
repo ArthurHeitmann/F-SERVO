@@ -4,14 +4,14 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
+import '../../stateManagement/preferencesData.dart';
 import '../../utils/assetDirFinder.dart';
 import '../../utils/utils.dart';
 import '../../widgets/theme/customTheme.dart';
-import 'ChangeNotifierWidget.dart';
-import '../../stateManagement/preferencesData.dart';
 import '../propEditors/simpleProps/boolPropSwitch.dart';
 import '../propEditors/simpleProps/primaryPropTextField.dart';
 import '../propEditors/simpleProps/propTextField.dart';
+import 'ChangeNotifierWidget.dart';
 import 'RowSeparated.dart';
 import 'SmoothScrollBuilder.dart';
 import 'smallButton.dart';

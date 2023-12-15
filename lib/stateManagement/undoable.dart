@@ -2,8 +2,8 @@
 import 'package:flutter/material.dart';
 
 import '../utils/utils.dart';
-import 'hierarchy/FileHierarchy.dart';
 import 'hasUuid.dart';
+import 'hierarchy/FileHierarchy.dart';
 import 'miscValues.dart';
 import 'openFiles/openFilesManager.dart';
 

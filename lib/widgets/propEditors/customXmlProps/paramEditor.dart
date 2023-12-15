@@ -2,13 +2,13 @@
 import 'package:flutter/material.dart';
 
 import '../../../background/IdLookup.dart';
-import '../../misc/ChangeNotifierWidget.dart';
+import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/openFiles/openFilesManager.dart';
+import '../../../stateManagement/xmlProps/xmlProp.dart';
 import '../../../utils/paramPresets.dart';
 import '../../../utils/utils.dart';
 import '../../../widgets/theme/customTheme.dart';
-import '../../../stateManagement/Property.dart';
-import '../../../stateManagement/xmlProps/xmlProp.dart';
+import '../../misc/ChangeNotifierWidget.dart';
 import '../simpleProps/XmlPropEditor.dart';
 import '../simpleProps/propEditorFactory.dart';
 import '../simpleProps/propTextField.dart';

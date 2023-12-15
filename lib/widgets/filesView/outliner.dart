@@ -3,12 +3,12 @@ import 'package:flutter/material.dart';
 
 import '../../stateManagement/Property.dart';
 import '../../stateManagement/events/jumpToEvents.dart';
-import '../../widgets/theme/customTheme.dart';
-import '../misc/ChangeNotifierWidget.dart';
 import '../../stateManagement/openFiles/openFileTypes.dart';
 import '../../stateManagement/openFiles/openFilesManager.dart';
 import '../../stateManagement/xmlProps/xmlActionProp.dart';
 import '../../stateManagement/xmlProps/xmlProp.dart';
+import '../../widgets/theme/customTheme.dart';
+import '../misc/ChangeNotifierWidget.dart';
 import '../misc/SmoothScrollBuilder.dart';
 import '../propEditors/simpleProps/UnderlinePropTextField.dart';
 import '../propEditors/simpleProps/propEditorFactory.dart';

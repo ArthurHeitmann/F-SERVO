@@ -1,9 +1,9 @@
 
 import 'package:flutter/material.dart';
 
+import '../../stateManagement/events/statusInfo.dart';
 import '../../widgets/theme/customTheme.dart';
 import '../misc/ChangeNotifierWidget.dart';
-import '../../stateManagement/events/statusInfo.dart';
 import 'messageLog.dart';
 
 class Statusbar extends StatelessWidget {

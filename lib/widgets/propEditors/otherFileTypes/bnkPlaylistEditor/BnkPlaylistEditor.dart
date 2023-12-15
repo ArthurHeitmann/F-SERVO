@@ -5,11 +5,11 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../../misc/ChangeNotifierWidget.dart';
 import '../../../../stateManagement/listNotifier.dart';
 import '../../../../stateManagement/openFiles/openFileTypes.dart';
 import '../../../../stateManagement/openFiles/openFilesManager.dart';
 import '../../../../utils/utils.dart';
+import '../../../misc/ChangeNotifierWidget.dart';
 import '../../../theme/customTheme.dart';
 import 'BnkPlaylistEditorInheritedData.dart';
 import 'BnkSegmentEditor.dart';

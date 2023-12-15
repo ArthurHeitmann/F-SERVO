@@ -2,9 +2,9 @@
 import 'package:flutter/material.dart';
 
 import '../../../stateManagement/changesExporter.dart';
+import '../../../stateManagement/events/statusInfo.dart';
 import '../../../stateManagement/openFiles/openFileTypes.dart';
 import '../../../stateManagement/openFiles/openFilesManager.dart';
-import '../../../stateManagement/events/statusInfo.dart';
 
 class FontOverridesApplyButton extends StatelessWidget {
   const FontOverridesApplyButton({super.key});

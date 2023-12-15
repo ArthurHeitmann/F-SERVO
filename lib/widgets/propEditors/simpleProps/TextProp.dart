@@ -2,8 +2,8 @@
 
 import 'package:flutter/material.dart';
 
-import '../../misc/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
+import '../../misc/ChangeNotifierWidget.dart';
 
 class TextProp extends ChangeNotifierWidget {
   final Prop prop;

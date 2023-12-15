@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../../stateManagement/openFiles/filesAreaManager.dart';
-import 'fileTabView.dart';
-import '../misc/ChangeNotifierWidget.dart';
 import '../../stateManagement/openFiles/openFilesManager.dart';
-import '../../widgets/theme/customTheme.dart';
 import '../../widgets/ResizableWidget.dart';
+import '../../widgets/theme/customTheme.dart';
+import '../misc/ChangeNotifierWidget.dart';
+import 'fileTabView.dart';
 
 
 class OpenFilesAreas extends ChangeNotifierWidget {

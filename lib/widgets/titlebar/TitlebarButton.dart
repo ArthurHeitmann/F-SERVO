@@ -1,8 +1,8 @@
 
 import 'package:flutter/material.dart';
 
-import '../../widgets/theme/customTheme.dart';
 import '../../utils/utils.dart';
+import '../../widgets/theme/customTheme.dart';
 import '../misc/onHoverBuilder.dart';
 
 class TitleBarButton extends StatelessWidget {

@@ -1,23 +1,23 @@
 import 'dart:io';
 import 'dart:math';
 
+import 'package:cross_file/cross_file.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:cross_file/cross_file.dart';
 import 'package:path/path.dart' as path;
 import 'package:window_manager/window_manager.dart';
 
+import '../../stateManagement/events/statusInfo.dart';
 import '../../stateManagement/hierarchy/FileHierarchy.dart';
 import '../../stateManagement/openFiles/filesAreaManager.dart';
 import '../../stateManagement/openFiles/openFileTypes.dart';
-import '../../stateManagement/events/statusInfo.dart';
+import '../../stateManagement/openFiles/openFilesManager.dart';
+import '../../utils/utils.dart';
+import '../../widgets/theme/customTheme.dart';
+import '../misc/ChangeNotifierWidget.dart';
 import 'FileTabEntry.dart';
 import 'FileType.dart';
-import '../misc/ChangeNotifierWidget.dart';
-import '../../stateManagement/openFiles/openFilesManager.dart';
-import '../../widgets/theme/customTheme.dart';
-import '../../utils/utils.dart';
 
 
 class FileTabView extends ChangeNotifierWidget {

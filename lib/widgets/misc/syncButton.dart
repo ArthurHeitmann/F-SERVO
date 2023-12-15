@@ -1,9 +1,9 @@
 
 import 'package:flutter/material.dart';
 
-import 'ChangeNotifierWidget.dart';
 import '../../stateManagement/sync/syncObjects.dart';
 import '../../stateManagement/sync/syncServer.dart';
+import 'ChangeNotifierWidget.dart';
 import 'onHoverBuilder.dart';
 
 class SyncButton extends ChangeNotifierWidget {

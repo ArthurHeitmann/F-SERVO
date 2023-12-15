@@ -3,8 +3,8 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
-import '../../../misc/ChangeNotifierWidget.dart';
 import '../../../../stateManagement/Property.dart';
+import '../../../misc/ChangeNotifierWidget.dart';
 import '../../simpleProps/VectorPropEditor.dart';
 import '../../simpleProps/propEditorFactory.dart';
 

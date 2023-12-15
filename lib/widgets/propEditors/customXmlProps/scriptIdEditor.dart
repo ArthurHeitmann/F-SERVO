@@ -2,10 +2,10 @@
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 
-import '../../misc/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/openFiles/openFilesManager.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
+import '../../misc/ChangeNotifierWidget.dart';
 import '../../theme/customTheme.dart';
 import '../simpleProps/propEditorFactory.dart';
 import '../simpleProps/propTextField.dart';

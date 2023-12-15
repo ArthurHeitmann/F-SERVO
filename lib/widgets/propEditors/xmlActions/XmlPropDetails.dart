@@ -2,8 +2,8 @@
 
 import 'package:flutter/material.dart';
 
-import '../../misc/ChangeNotifierWidget.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
+import '../../misc/ChangeNotifierWidget.dart';
 import '../simpleProps/XmlPropEditorFactory.dart';
 
 class XmlPropDetails extends ChangeNotifierWidget {

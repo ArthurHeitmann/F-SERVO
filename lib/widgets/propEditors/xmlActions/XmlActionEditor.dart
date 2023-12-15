@@ -3,11 +3,11 @@
 import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 
-import '../../../widgets/theme/customTheme.dart';
-import '../../misc/ChangeNotifierWidget.dart';
 import '../../../stateManagement/xmlProps/xmlActionProp.dart';
 import '../../../utils/utils.dart';
+import '../../../widgets/theme/customTheme.dart';
 import '../../filesView/xmlJumpToLineEventWrapper.dart';
+import '../../misc/ChangeNotifierWidget.dart';
 import '../../misc/FlexReorderable.dart';
 import '../../misc/nestedContextMenu.dart';
 import '../../misc/puidDraggable.dart';

@@ -1,8 +1,8 @@
 
 import 'package:flutter/material.dart';
 
-import '../../../misc/ChangeNotifierWidget.dart';
 import '../../../../stateManagement/openFiles/openFileTypes.dart';
+import '../../../misc/ChangeNotifierWidget.dart';
 import 'tableEditor.dart';
 
 class TableFileEditor extends ChangeNotifierWidget {

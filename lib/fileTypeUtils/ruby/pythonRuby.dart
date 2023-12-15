@@ -5,8 +5,8 @@ import 'dart:io';
 import 'package:path/path.dart';
 
 import '../../stateManagement/events/statusInfo.dart';
-import '../../utils/utils.dart';
 import '../../utils/assetDirFinder.dart';
+import '../../utils/utils.dart';
 
 Future<bool> _processFile(String filePath) async {
   if (assetsDir == null) {

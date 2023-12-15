@@ -3,9 +3,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import '../misc/ChangeNotifierWidget.dart';
 import '../../stateManagement/events/statusInfo.dart';
 import '../../utils/utils.dart';
+import '../misc/ChangeNotifierWidget.dart';
 import '../theme/customTheme.dart';
 
 class MessageLog extends ChangeNotifierWidget {

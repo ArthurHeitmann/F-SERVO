@@ -1,10 +1,10 @@
 
 import 'package:flutter/material.dart';
 
-import '../../misc/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
 import '../../../utils/utils.dart';
+import '../../misc/ChangeNotifierWidget.dart';
 import '../../misc/nestedContextMenu.dart';
 import '../simpleProps/propEditorFactory.dart';
 import '../simpleProps/propTextField.dart';

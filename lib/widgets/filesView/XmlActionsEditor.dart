@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 
 import '../../stateManagement/openFiles/openFilesManager.dart';
 import '../../stateManagement/sync/syncListImplementations.dart';
-import '../../stateManagement/xmlProps/xmlProp.dart';
 import '../../stateManagement/xmlProps/xmlActionProp.dart';
+import '../../stateManagement/xmlProps/xmlProp.dart';
 import '../../utils/utils.dart';
 import '../misc/FlexReorderable.dart';
 import '../misc/Selectable.dart';

@@ -11,8 +11,8 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:path/path.dart';
-import 'package:uuid/uuid.dart';
 import 'package:path/path.dart' as path;
+import 'package:uuid/uuid.dart';
 import 'package:xml/xml.dart';
 
 import '../fileTypeUtils/dat/datExtractor.dart';

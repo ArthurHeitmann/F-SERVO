@@ -2,11 +2,11 @@
 import 'package:flutter/material.dart';
 
 import '../../keyboardEvents/intents.dart';
-import 'ChangeNotifierWidget.dart';
 import '../../stateManagement/openFiles/openFilesManager.dart';
 import '../../stateManagement/xmlProps/xmlProp.dart';
-import '../../widgets/theme/customTheme.dart';
 import '../../utils/utils.dart';
+import '../../widgets/theme/customTheme.dart';
+import 'ChangeNotifierWidget.dart';
 
 /*
 Per file[uuid] one or zero selected (has uuid + XmlProp)

@@ -6,10 +6,10 @@ import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 import 'package:xml/xml.dart';
 
-import '../../misc/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
 import '../../../utils/utils.dart';
+import '../../misc/ChangeNotifierWidget.dart';
 import '../../misc/nestedContextMenu.dart';
 import '../simpleProps/XmlPropEditorFactory.dart';
 import '../simpleProps/optionalPropEditor.dart';

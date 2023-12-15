@@ -6,8 +6,8 @@ import '../stateManagement/events/statusInfo.dart';
 import '../utils/loggingWrapper.dart';
 import '../utils/utils.dart';
 import 'IdsIndexer.dart';
-import 'Initializable.dart';
 import 'IndexingGroup.dart';
+import 'Initializable.dart';
 
 // class _IsolateCommunicatorPrivate is a background worker isolate 
 // class IsolateCommunicator is a wrapper for usage from the main isolate

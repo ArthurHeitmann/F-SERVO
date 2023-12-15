@@ -4,12 +4,12 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 
 import '../../../../fileTypeUtils/effects/estEntryTypes.dart';
-import '../../../misc/ChangeNotifierWidget.dart';
 import '../../../../stateManagement/Property.dart';
 import '../../../../stateManagement/listNotifier.dart';
 import '../../../../stateManagement/openFiles/openFileTypes.dart';
 import '../../../../stateManagement/otherFileTypes/EstFileData.dart';
 import '../../../../utils/utils.dart';
+import '../../../misc/ChangeNotifierWidget.dart';
 import '../../../misc/SmoothScrollBuilder.dart';
 import '../../../misc/onHoverBuilder.dart';
 import '../../../theme/customTheme.dart';

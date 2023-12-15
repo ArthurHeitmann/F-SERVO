@@ -2,11 +2,11 @@
 import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 
-import '../../misc/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/sync/syncListImplementations.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
 import '../../../utils/utils.dart';
+import '../../misc/ChangeNotifierWidget.dart';
 import '../../misc/nestedContextMenu.dart';
 import '../../misc/syncButton.dart';
 import '../customXmlProps/transformsEditor.dart';

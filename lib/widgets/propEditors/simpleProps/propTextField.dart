@@ -3,9 +3,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import '../../misc/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../utils/utils.dart';
+import '../../misc/ChangeNotifierWidget.dart';
 import '../../misc/TextFieldFocusNode.dart';
 import 'DoubleClickablePropTextField.dart';
 import 'UnderlinePropTextField.dart';

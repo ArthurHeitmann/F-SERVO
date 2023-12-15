@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
-import '../../widgets/theme/customTheme.dart';
-import '../misc/ChangeNotifierWidget.dart';
 import '../../stateManagement/miscValues.dart';
 import '../../stateManagement/openFiles/openFilesManager.dart';
 import '../../stateManagement/undoable.dart';
 import '../../utils/utils.dart';
+import '../../widgets/theme/customTheme.dart';
+import '../misc/ChangeNotifierWidget.dart';
 import 'TitlebarButton.dart';
 
 

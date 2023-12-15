@@ -2,8 +2,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../../fileTypeUtils/effects/estEntryTypes.dart';
-import '../../../misc/ChangeNotifierWidget.dart';
 import '../../../../stateManagement/otherFileTypes/EstFileData.dart';
+import '../../../misc/ChangeNotifierWidget.dart';
 import 'EstEntryDetailsEditor.dart';
 
 class EstRecordDetailsEditor extends ChangeNotifierWidget {

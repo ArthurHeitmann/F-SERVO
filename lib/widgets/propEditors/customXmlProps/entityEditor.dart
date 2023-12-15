@@ -2,12 +2,12 @@
 import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 
-import '../../../widgets/theme/customTheme.dart';
-import '../../misc/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
 import '../../../utils/utils.dart';
+import '../../../widgets/theme/customTheme.dart';
 import '../../filesView/xmlJumpToLineEventWrapper.dart';
+import '../../misc/ChangeNotifierWidget.dart';
 import '../../misc/nestedContextMenu.dart';
 import '../simpleProps/UnderlinePropTextField.dart';
 import '../simpleProps/XmlPropEditorFactory.dart';

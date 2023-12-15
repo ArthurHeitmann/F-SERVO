@@ -5,14 +5,14 @@ import 'package:flutter/material.dart';
 
 import '../../../background/IdLookup.dart';
 import '../../../background/IdsIndexer.dart';
-import '../../../stateManagement/events/jumpToEvents.dart';
-import '../../../utils/puidPresets.dart';
-import '../../../widgets/theme/customTheme.dart';
-import '../../misc/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
+import '../../../stateManagement/events/jumpToEvents.dart';
 import '../../../stateManagement/openFiles/openFilesManager.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
+import '../../../utils/puidPresets.dart';
 import '../../../utils/utils.dart';
+import '../../../widgets/theme/customTheme.dart';
+import '../../misc/ChangeNotifierWidget.dart';
 import '../../misc/nestedContextMenu.dart';
 import '../../misc/puidDraggable.dart';
 import '../simpleProps/UnderlinePropTextField.dart';

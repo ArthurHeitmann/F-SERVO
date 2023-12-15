@@ -3,8 +3,8 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
-import '../../misc/ChangeNotifierWidget.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
+import '../../misc/ChangeNotifierWidget.dart';
 import '../../misc/CustomIcons.dart';
 import '../../theme/customTheme.dart';
 import '../simpleProps/XmlPropEditorFactory.dart';

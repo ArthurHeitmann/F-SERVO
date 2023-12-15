@@ -6,11 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:xml/xml.dart';
 
 import '../../../keyboardEvents/intents.dart';
-import '../../../widgets/theme/customTheme.dart';
-import '../../misc/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
 import '../../../utils/utils.dart';
+import '../../../widgets/theme/customTheme.dart';
+import '../../misc/ChangeNotifierWidget.dart';
 import '../../misc/FlexReorderable.dart';
 import '../../misc/Selectable.dart';
 import '../../misc/nestedContextMenu.dart';

@@ -1,9 +1,9 @@
 
 import 'package:flutter/material.dart';
 
-import '../misc/ChangeNotifierWidget.dart';
 import '../../stateManagement/openFiles/openFilesManager.dart';
 import '../ResizableWidget.dart';
+import '../misc/ChangeNotifierWidget.dart';
 import 'FileDetailsEditor.dart';
 import 'FileType.dart';
 import 'outliner.dart';

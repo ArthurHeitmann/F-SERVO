@@ -6,10 +6,10 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
+import '../../../stateManagement/otherFileTypes/McdData.dart';
 import '../../../utils/assetDirFinder.dart';
 import '../../../utils/utils.dart';
 import '../../misc/ChangeNotifierWidget.dart';
-import '../../../stateManagement/otherFileTypes/McdData.dart';
 
 
 class McdFontDebugger extends ChangeNotifierWidget {

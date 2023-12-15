@@ -7,14 +7,14 @@ import 'package:path/path.dart' as path;
 
 import '../../utils/utils.dart';
 import '../changesExporter.dart';
+import '../events/statusInfo.dart';
 import '../hasUuid.dart';
-import '../miscValues.dart';
 import '../listNotifier.dart';
+import '../miscValues.dart';
+import '../preferencesData.dart';
+import '../undoable.dart';
 import 'filesAreaManager.dart';
 import 'openFileTypes.dart';
-import '../preferencesData.dart';
-import '../events/statusInfo.dart';
-import '../undoable.dart';
 
 typedef OpenFileId = String;
 

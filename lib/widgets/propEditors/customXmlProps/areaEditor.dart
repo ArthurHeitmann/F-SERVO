@@ -1,11 +1,11 @@
 
 import 'package:flutter/material.dart';
 
-import '../../../widgets/theme/customTheme.dart';
-import '../../misc/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
 import '../../../utils/utils.dart';
+import '../../../widgets/theme/customTheme.dart';
+import '../../misc/ChangeNotifierWidget.dart';
 import '../../misc/CustomIcons.dart';
 import '../../misc/selectionPopup.dart';
 import '../simpleProps/XmlPropEditorFactory.dart';

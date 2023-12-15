@@ -21,17 +21,15 @@ import '../../fileTypeUtils/tmd/tmdWriter.dart';
 import '../../fileTypeUtils/utils/ByteDataWrapper.dart';
 import '../../utils/utils.dart';
 import '../../widgets/filesView/FileType.dart';
-import '../hierarchy/FileHierarchy.dart';
-import '../hierarchy/HierarchyEntryTypes.dart';
 import '../Property.dart';
 import '../changesExporter.dart';
 import '../events/statusInfo.dart';
 import '../hasUuid.dart';
+import '../hierarchy/FileHierarchy.dart';
 import '../hierarchy/types/WaiHierarchyEntries.dart';
 import '../hierarchy/types/XmlScriptHierarchyEntry.dart';
-import '../miscValues.dart';
 import '../listNotifier.dart';
-import 'openFilesManager.dart';
+import '../miscValues.dart';
 import '../otherFileTypes/EstFileData.dart';
 import '../otherFileTypes/FtbFileData.dart';
 import '../otherFileTypes/McdData.dart';
@@ -42,6 +40,7 @@ import '../otherFileTypes/audioResourceManager.dart';
 import '../otherFileTypes/wtaData.dart';
 import '../undoable.dart';
 import '../xmlProps/xmlProp.dart';
+import 'openFilesManager.dart';
 
 enum LoadingState {
   notLoaded,

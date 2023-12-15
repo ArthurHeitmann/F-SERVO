@@ -1,12 +1,12 @@
 
 import 'package:flutter/material.dart';
 
-import '../misc/ChangeNotifierWidget.dart';
 import '../../stateManagement/charNamesXmlWrapper.dart';
 import '../../stateManagement/openFiles/openFileTypes.dart';
 import '../../stateManagement/xmlProps/xmlProp.dart';
 import '../../utils/assetDirFinder.dart';
 import '../../utils/utils.dart';
+import '../misc/ChangeNotifierWidget.dart';
 import '../misc/onHoverBuilder.dart';
 import '../propEditors/otherFileTypes/genericTable/tableEditor.dart';
 import '../propEditors/simpleProps/XmlPropEditor.dart';

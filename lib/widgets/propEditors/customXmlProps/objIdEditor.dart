@@ -1,9 +1,9 @@
 
 import 'package:flutter/material.dart';
 
-import '../../misc/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
+import '../../misc/ChangeNotifierWidget.dart';
 import '../../misc/expandOnHover.dart';
 import '../../misc/puidDraggable.dart';
 import '../../theme/customTheme.dart';

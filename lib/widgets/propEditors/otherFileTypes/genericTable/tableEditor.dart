@@ -4,11 +4,11 @@ import 'dart:async';
 import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 
-import '../../../misc/SmoothScrollBuilder.dart';
-import '../../../theme/customTheme.dart';
-import '../../../misc/ChangeNotifierWidget.dart';
 import '../../../../stateManagement/Property.dart';
+import '../../../misc/ChangeNotifierWidget.dart';
+import '../../../misc/SmoothScrollBuilder.dart';
 import '../../../misc/nestedContextMenu.dart';
+import '../../../theme/customTheme.dart';
 import '../../simpleProps/UnderlinePropTextField.dart';
 import '../../simpleProps/propEditorFactory.dart';
 import '../../simpleProps/propTextField.dart';

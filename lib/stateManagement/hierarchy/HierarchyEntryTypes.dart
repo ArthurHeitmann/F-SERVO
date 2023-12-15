@@ -1,41 +1,19 @@
 
-import 'dart:convert';
-import 'dart:io';
-
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:path/path.dart';
-import 'package:xml/xml.dart';
 
-import '../../fileTypeUtils/audio/audioModPacker.dart';
-import '../../fileTypeUtils/audio/audioModsChangesUndo.dart';
-import '../../fileTypeUtils/audio/bnkIO.dart';
-import '../../fileTypeUtils/audio/modInstaller.dart';
-import '../../fileTypeUtils/audio/waiExtractor.dart';
-import '../../fileTypeUtils/audio/wemIdsToNames.dart';
-import '../../fileTypeUtils/audio/wemToWavConverter.dart';
-import '../../fileTypeUtils/bxm/bxmReader.dart';
-import '../../fileTypeUtils/bxm/bxmWriter.dart';
-import '../../fileTypeUtils/dat/datRepacker.dart';
-import '../../fileTypeUtils/pak/pakRepacker.dart';
-import '../../fileTypeUtils/ruby/pythonRuby.dart';
-import '../../fileTypeUtils/yax/xmlToYax.dart';
-import '../../fileTypeUtils/yax/yaxToXml.dart';
 import '../../main.dart';
 import '../../utils/assetDirFinder.dart';
 import '../../utils/utils.dart';
 import '../../widgets/misc/confirmCancelDialog.dart';
-import '../../widgets/misc/confirmDialog.dart';
-import 'FileHierarchy.dart';
 import '../Property.dart';
 import '../events/searchPanelEvents.dart';
 import '../hasUuid.dart';
+import '../listNotifier.dart';
 import '../openFiles/openFileTypes.dart';
 import '../openFiles/openFilesManager.dart';
 import '../preferencesData.dart';
 import '../undoable.dart';
-import '../listNotifier.dart';
-import '../xmlProps/xmlProp.dart';
+import 'FileHierarchy.dart';
 
 class HierarchyEntryAction {
   final String name;

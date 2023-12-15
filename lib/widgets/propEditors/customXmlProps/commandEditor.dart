@@ -2,12 +2,12 @@
 
 import 'package:flutter/material.dart';
 
-import '../../../utils/labelsPresets.dart';
-import '../../../widgets/theme/customTheme.dart';
-import '../../misc/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/xmlProps/xmlProp.dart';
+import '../../../utils/labelsPresets.dart';
 import '../../../utils/utils.dart';
+import '../../../widgets/theme/customTheme.dart';
+import '../../misc/ChangeNotifierWidget.dart';
 import '../../misc/nestedContextMenu.dart';
 import '../simpleProps/XmlPropEditorFactory.dart';
 import '../simpleProps/propEditorFactory.dart';

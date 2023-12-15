@@ -10,9 +10,9 @@ import 'package:xml/xml.dart';
 
 import '../../utils/utils.dart';
 import '../Property.dart';
+import '../events/statusInfo.dart';
 import '../hasUuid.dart';
 import '../listNotifier.dart';
-import '../events/statusInfo.dart';
 import '../xmlProps/xmlProp.dart';
 import 'syncServer.dart';
 

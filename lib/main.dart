@@ -10,19 +10,19 @@ import 'package:window_manager/window_manager.dart';
 
 import 'background/IdLookup.dart';
 import 'background/wemFilesIndexer.dart';
-import 'widgets/misc/ChangeNotifierWidget.dart';
-import 'stateManagement/otherFileTypes/beforeExitCleanup.dart';
-import 'utils/loggingWrapper.dart';
-import 'utils/utils.dart';
-import 'utils/assetDirFinder.dart';
-import 'widgets/splashScreen/splashScreen.dart';
-import 'widgets/theme/customTheme.dart';
 import 'keyboardEvents/globalShortcutsWrapper.dart';
+import 'stateManagement/otherFileTypes/beforeExitCleanup.dart';
 import 'stateManagement/preferencesData.dart';
 import 'stateManagement/sync/syncServer.dart';
+import 'utils/assetDirFinder.dart';
+import 'utils/loggingWrapper.dart';
+import 'utils/utils.dart';
 import 'widgets/EditorLayout.dart';
+import 'widgets/misc/ChangeNotifierWidget.dart';
 import 'widgets/misc/mousePosition.dart';
+import 'widgets/splashScreen/splashScreen.dart';
 import 'widgets/statusbar/statusbar.dart';
+import 'widgets/theme/customTheme.dart';
 import 'widgets/titlebar/Titlebar.dart';
 
 void main() {

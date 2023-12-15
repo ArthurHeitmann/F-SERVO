@@ -4,10 +4,10 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
 import '../../stateManagement/events/statusInfo.dart';
+import '../../stateManagement/hierarchy/FileHierarchy.dart';
 import '../../utils/utils.dart';
 import '../../widgets/theme/customTheme.dart';
 import '../misc/ChangeNotifierWidget.dart';
-import '../../stateManagement/hierarchy/FileHierarchy.dart';
 import '../propEditors/simpleProps/UnderlinePropTextField.dart';
 import '../propEditors/simpleProps/propEditorFactory.dart';
 import '../propEditors/simpleProps/propTextField.dart';

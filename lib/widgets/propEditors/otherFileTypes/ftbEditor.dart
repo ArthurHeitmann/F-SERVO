@@ -1,9 +1,9 @@
 
 import 'package:flutter/material.dart';
 
-import '../../misc/ChangeNotifierWidget.dart';
 import '../../../stateManagement/openFiles/openFileTypes.dart';
 import '../../../stateManagement/otherFileTypes/McdData.dart';
+import '../../misc/ChangeNotifierWidget.dart';
 import 'FontsManager.dart';
 import 'McdFontDebugger.dart';
 import 'fontOverridesApply.dart';

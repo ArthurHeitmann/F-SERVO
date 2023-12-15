@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 
 import '../../stateManagement/changesExporter.dart';
 import '../../stateManagement/openFiles/filesAreaManager.dart';
+import '../../stateManagement/openFiles/openFileTypes.dart';
+import '../../stateManagement/openFiles/openFilesManager.dart';
 import '../../utils/utils.dart';
 import '../../widgets/theme/customTheme.dart';
 import '../misc/ChangeNotifierWidget.dart';
-import '../../stateManagement/openFiles/openFileTypes.dart';
-import '../../stateManagement/openFiles/openFilesManager.dart';
 import '../misc/onHoverBuilder.dart';
 
 

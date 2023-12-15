@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import 'FileHierarchyExplorer/fileMetaEditor.dart';
-import 'filesView/OpenFilesAreas.dart';
 import 'FileHierarchyExplorer/FileExplorer.dart';
+import 'FileHierarchyExplorer/fileMetaEditor.dart';
 import 'ResizableWidget.dart';
+import 'filesView/OpenFilesAreas.dart';
 import 'filesView/rightSidebar.dart';
 import 'filesView/searchPanel.dart';
 import 'filesView/sidebar.dart';

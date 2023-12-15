@@ -4,22 +4,22 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:tuple/tuple.dart';
 
-import '../../misc/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/listNotifier.dart';
 import '../../../stateManagement/openFiles/openFileTypes.dart';
 import '../../../stateManagement/otherFileTypes/McdData.dart';
 import '../../../utils/utils.dart';
-import '../../misc/onHoverBuilder.dart';
-import '../simpleProps/boolPropIcon.dart';
-import 'FontsManager.dart';
-import 'McdFontDebugger.dart';
+import '../../misc/ChangeNotifierWidget.dart';
 import '../../misc/RowSeparated.dart';
 import '../../misc/SmoothScrollBuilder.dart';
+import '../../misc/onHoverBuilder.dart';
 import '../../theme/customTheme.dart';
 import '../simpleProps/UnderlinePropTextField.dart';
+import '../simpleProps/boolPropIcon.dart';
 import '../simpleProps/propEditorFactory.dart';
 import '../simpleProps/propTextField.dart';
+import 'FontsManager.dart';
+import 'McdFontDebugger.dart';
 import 'fontOverridesApply.dart';
 
 const _itemsPerPage = 400;

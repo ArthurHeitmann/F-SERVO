@@ -1,8 +1,8 @@
 
 import 'package:flutter/material.dart';
 
-import '../../misc/ChangeNotifierWidget.dart';
 import '../../../stateManagement/Property.dart';
+import '../../misc/ChangeNotifierWidget.dart';
 
 class BoolPropCheckbox extends ChangeNotifierWidget {
   final ValueProp<bool> prop;
