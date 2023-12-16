@@ -4,7 +4,7 @@ import 'package:path/path.dart';
 
 import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/openFiles/openFilesManager.dart';
-import '../../../stateManagement/xmlProps/xmlProp.dart';
+import '../../../stateManagement/openFiles/types/xml/xmlProps/xmlProp.dart';
 import '../../misc/ChangeNotifierWidget.dart';
 import '../../theme/customTheme.dart';
 import '../simpleProps/propEditorFactory.dart';

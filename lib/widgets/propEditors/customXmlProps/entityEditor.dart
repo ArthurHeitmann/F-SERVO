@@ -3,7 +3,7 @@ import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 
 import '../../../stateManagement/Property.dart';
-import '../../../stateManagement/xmlProps/xmlProp.dart';
+import '../../../stateManagement/openFiles/types/xml/xmlProps/xmlProp.dart';
 import '../../../utils/utils.dart';
 import '../../../widgets/theme/customTheme.dart';
 import '../../filesView/xmlJumpToLineEventWrapper.dart';

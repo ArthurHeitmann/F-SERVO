@@ -8,7 +8,7 @@ import '../../../background/IdsIndexer.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/events/jumpToEvents.dart';
 import '../../../stateManagement/openFiles/openFilesManager.dart';
-import '../../../stateManagement/xmlProps/xmlProp.dart';
+import '../../../stateManagement/openFiles/types/xml/xmlProps/xmlProp.dart';
 import '../../../utils/puidPresets.dart';
 import '../../../utils/utils.dart';
 import '../../../widgets/theme/customTheme.dart';

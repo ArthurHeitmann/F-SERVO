@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../stateManagement/openFiles/openFilesManager.dart';
 import '../../stateManagement/openFiles/types/EstFileData.dart';
-import '../../stateManagement/xmlProps/xmlProp.dart';
+import '../../stateManagement/openFiles/types/xml/xmlProps/xmlProp.dart';
 import '../misc/ChangeNotifierWidget.dart';
 import '../misc/Selectable.dart';
 import '../misc/SmoothScrollBuilder.dart';
@@ -77,7 +77,7 @@ class _FileDetailsEditorState extends ChangeNotifierState<FileDetailsEditor> {
           return ChangeNotifierBuilder(
             key: Key(currentFile?.uuid ?? ""),
             notifier: currentFile is EstFileData
-              ? currentFile.estData.selectedEntry
+              ? currentFile.selectedEntry
               : null,
             builder: builder,
           );
@@ -91,10 +91,10 @@ class _FileDetailsEditorState extends ChangeNotifierState<FileDetailsEditor> {
       return XmlPropDetails(key: ValueKey(prop), prop: prop);
     var currentFile = areasManager.activeArea.value?.currentFile.value;
     if (currentFile is EstFileData) {
-      if (currentFile.estData.selectedEntry.value?.record != null)
-        return EstRecordDetailsEditor(record: currentFile.estData.selectedEntry.value!.record!);
-      if (currentFile.estData.selectedEntry.value?.entry != null)
-        return EstEntryDetailsEditor(entry: currentFile.estData.selectedEntry.value!.entry!);
+      if (currentFile.selectedEntry.value?.record != null)
+        return EstRecordDetailsEditor(record: currentFile.selectedEntry.value!.record!);
+      if (currentFile.selectedEntry.value?.entry != null)
+        return EstEntryDetailsEditor(entry: currentFile.selectedEntry.value!.entry!);
     }
     return Container();
   }

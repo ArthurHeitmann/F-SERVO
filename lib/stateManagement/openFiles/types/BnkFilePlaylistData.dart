@@ -13,14 +13,14 @@ import '../../../utils/Disposable.dart';
 import '../../../utils/utils.dart';
 import '../../../widgets/filesView/FileType.dart';
 import '../../Property.dart';
+import '../../audioResourceManager.dart';
 import '../../events/statusInfo.dart';
 import '../../hasUuid.dart';
 import '../../listNotifier.dart';
-import '../../otherFileTypes/audioResourceManager.dart';
 import '../../undoable.dart';
-import '../../xmlProps/xmlProp.dart';
 import '../openFileTypes.dart';
 import '../openFilesManager.dart';
+import 'xml/xmlProps/xmlProp.dart';
 
 enum ClipAutomationType {
   volume(0, "Volume"),

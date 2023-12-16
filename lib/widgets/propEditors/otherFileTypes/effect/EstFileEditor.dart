@@ -8,7 +8,6 @@ import '../../../../stateManagement/Property.dart';
 import '../../../../stateManagement/listNotifier.dart';
 import '../../../../stateManagement/openFiles/openFileTypes.dart';
 import '../../../../stateManagement/openFiles/types/EstFileData.dart';
-import '../../../../stateManagement/otherFileTypes/EstFileData.dart';
 import '../../../../utils/utils.dart';
 import '../../../misc/ChangeNotifierWidget.dart';
 import '../../../misc/SmoothScrollBuilder.dart';
@@ -24,7 +23,7 @@ class EstFileEditor extends ChangeNotifierWidget {
   final EstFileData file;
 
   EstFileEditor({super.key, required this.file})
-    : super(notifiers: [file.loadingState, file.estData.records]);
+    : super(notifiers: [file.loadingState, file.records]);
 
   @override
   State<EstFileEditor> createState() => _EstFileEditorState();
@@ -59,7 +58,7 @@ class _EstFileEditorState extends ChangeNotifierState<EstFileEditor> {
       return;
     }
     var entries = json.map((e) => EstEntryWrapper.fromJson(e));
-    widget.file.estData.records.add(EstRecordWrapper(
+    widget.file.records.add(EstRecordWrapper(
       ValueListNotifier(entries.toList()),
       widget.file.uuid,
     ));
@@ -82,22 +81,22 @@ class _EstFileEditorState extends ChangeNotifierState<EstFileEditor> {
     return SmoothSingleChildScrollView(
       controller: scrollController,
       child: ChangeNotifierBuilder(
-        notifier: widget.file.estData.records,
+        notifier: widget.file.records,
         builder: (context) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 35),
-              for (int i = 0; i < widget.file.estData.records.length; i++) ...[
+              for (int i = 0; i < widget.file.records.length; i++) ...[
                 if (i == 0)
                   const Divider(height: 1, thickness: 1,),
                 _EstRecordEditor(
                   index: i,
-                  record: widget.file.estData.records[i],
-                  typeNames: widget.file.estData.typeNames,
-                  onRemove: () => widget.file.estData.removeRecord(widget.file.estData.records[i]),
-                  selectedEntry: widget.file.estData.selectedEntry,
-                  // initiallyCollapsed: widget.file.estData.records.length > 3,
+                  record: widget.file.records[i],
+                  typeNames: widget.file.typeNames,
+                  onRemove: () => widget.file.removeRecord(widget.file.records[i]),
+                  selectedEntry: widget.file.selectedEntry,
+                  // initiallyCollapsed: widget.file.records.length > 3,
                   initiallyCollapsed: false,
                 ),
                 const Divider(height: 1, thickness: 1,),

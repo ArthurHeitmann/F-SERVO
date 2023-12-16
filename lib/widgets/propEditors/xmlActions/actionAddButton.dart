@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../stateManagement/Property.dart';
-import '../../../stateManagement/xmlProps/xmlProp.dart';
+import '../../../stateManagement/openFiles/types/xml/xmlProps/xmlProp.dart';
 import '../../misc/showOnHover.dart';
 import 'XmlActionPresets.dart';
 

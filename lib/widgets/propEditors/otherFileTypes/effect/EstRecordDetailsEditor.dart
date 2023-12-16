@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../fileTypeUtils/effects/estEntryTypes.dart';
-import '../../../../stateManagement/otherFileTypes/EstFileData.dart';
+import '../../../../stateManagement/openFiles/types/EstFileData.dart';
 import '../../../misc/ChangeNotifierWidget.dart';
 import 'EstEntryDetailsEditor.dart';
 

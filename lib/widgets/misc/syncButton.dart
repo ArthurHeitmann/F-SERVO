@@ -1,8 +1,8 @@
 
 import 'package:flutter/material.dart';
 
-import '../../stateManagement/sync/syncObjects.dart';
-import '../../stateManagement/sync/syncServer.dart';
+import '../../stateManagement/openFiles/types/xml/sync/syncObjects.dart';
+import '../../stateManagement/openFiles/types/xml/sync/syncServer.dart';
 import 'ChangeNotifierWidget.dart';
 import 'onHoverBuilder.dart';
 

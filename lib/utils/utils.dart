@@ -10,8 +10,8 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:path/path.dart';
 import 'package:path/path.dart' as path;
+import 'package:path/path.dart';
 import 'package:uuid/uuid.dart';
 import 'package:xml/xml.dart';
 
@@ -23,7 +23,7 @@ import '../main.dart';
 import '../stateManagement/Property.dart';
 import '../stateManagement/events/statusInfo.dart';
 import '../stateManagement/miscValues.dart';
-import '../stateManagement/xmlProps/xmlProp.dart';
+import '../stateManagement/openFiles/types/xml/xmlProps/xmlProp.dart';
 import '../widgets/theme/customTheme.dart';
 
 const uuidGen = Uuid();

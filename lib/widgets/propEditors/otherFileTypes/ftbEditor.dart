@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../../stateManagement/openFiles/openFileTypes.dart';
 import '../../../stateManagement/openFiles/types/FtbFileData.dart';
-import '../../../stateManagement/otherFileTypes/McdData.dart';
+import '../../../stateManagement/openFiles/types/McdFileData.dart';
 import '../../misc/ChangeNotifierWidget.dart';
 import 'FontsManager.dart';
 import 'McdFontDebugger.dart';

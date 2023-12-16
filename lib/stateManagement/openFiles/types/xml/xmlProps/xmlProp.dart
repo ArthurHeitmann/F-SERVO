@@ -1,14 +1,14 @@
 
 import 'package:xml/xml.dart';
 
-import '../../fileTypeUtils/yax/hashToStringMap.dart';
-import '../../fileTypeUtils/yax/japToEng.dart';
-import '../../utils/utils.dart';
-import '../Property.dart';
-import '../charNamesXmlWrapper.dart';
-import '../listNotifier.dart';
-import '../openFiles/openFilesManager.dart';
-import '../undoable.dart';
+import '../../../../../fileTypeUtils/yax/hashToStringMap.dart';
+import '../../../../../fileTypeUtils/yax/japToEng.dart';
+import '../../../../../utils/utils.dart';
+import '../../../../Property.dart';
+import '../../../../charNamesXmlWrapper.dart';
+import '../../../../listNotifier.dart';
+import '../../../../undoable.dart';
+import '../../../openFilesManager.dart';
 import 'xmlActionProp.dart';
 
 class XmlProp extends ListNotifier<XmlProp> {

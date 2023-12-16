@@ -1,8 +1,8 @@
 
 
 
-import '../../utils/utils.dart';
-import '../Property.dart';
+import '../../../../../utils/utils.dart';
+import '../../../../Property.dart';
 import '../xmlProps/xmlActionProp.dart';
 import '../xmlProps/xmlProp.dart';
 import 'syncObjects.dart';

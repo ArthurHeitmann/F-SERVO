@@ -5,15 +5,15 @@ import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 import 'package:xml/xml.dart';
 
-import '../../../utils/utils.dart';
-import '../../../widgets/filesView/FileType.dart';
-import '../../Property.dart';
-import '../../changesExporter.dart';
-import '../../hierarchy/FileHierarchy.dart';
-import '../../hierarchy/types/XmlScriptHierarchyEntry.dart';
-import '../../undoable.dart';
-import '../../xmlProps/xmlProp.dart';
-import '../openFileTypes.dart';
+import '../../../../utils/utils.dart';
+import '../../../../widgets/filesView/FileType.dart';
+import '../../../Property.dart';
+import '../../../changesExporter.dart';
+import '../../../hierarchy/FileHierarchy.dart';
+import '../../../hierarchy/types/XmlScriptHierarchyEntry.dart';
+import '../../../undoable.dart';
+import '../../openFileTypes.dart';
+import 'xmlProps/xmlProp.dart';
 
 class XmlFileData extends OpenFileData {
   XmlProp? _root;

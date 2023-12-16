@@ -9,7 +9,7 @@ import '../stateManagement/hierarchy/HierarchyEntryTypes.dart';
 import '../stateManagement/miscValues.dart';
 import '../stateManagement/openFiles/openFileTypes.dart';
 import '../stateManagement/openFiles/openFilesManager.dart';
-import '../stateManagement/openFiles/types/XmlFileData.dart';
+import '../stateManagement/openFiles/types/xml/XmlFileData.dart';
 import '../stateManagement/preferencesData.dart';
 import '../utils/utils.dart';
 import 'IdsIndexer.dart';

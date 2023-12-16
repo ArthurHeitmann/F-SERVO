@@ -7,7 +7,7 @@ import 'package:xml/xml.dart';
 
 import '../../../keyboardEvents/intents.dart';
 import '../../../stateManagement/Property.dart';
-import '../../../stateManagement/xmlProps/xmlProp.dart';
+import '../../../stateManagement/openFiles/types/xml/xmlProps/xmlProp.dart';
 import '../../../utils/utils.dart';
 import '../../../widgets/theme/customTheme.dart';
 import '../../misc/ChangeNotifierWidget.dart';

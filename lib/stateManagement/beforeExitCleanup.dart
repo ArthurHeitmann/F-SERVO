@@ -1,9 +1,9 @@
 
-import '../../main.dart';
-import '../../utils/utils.dart';
-import '../../widgets/misc/confirmCancelDialog.dart';
-import '../openFiles/openFilesManager.dart';
+import '../main.dart';
+import '../utils/utils.dart';
+import '../widgets/misc/confirmCancelDialog.dart';
 import 'audioResourceManager.dart';
+import 'openFiles/openFilesManager.dart';
 
 Future<bool> beforeExitConfirmation() async {
   var unsavedFiles = areasManager

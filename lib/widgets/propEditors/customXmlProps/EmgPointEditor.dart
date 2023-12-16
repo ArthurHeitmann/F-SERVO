@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
 
-import '../../../stateManagement/xmlProps/xmlProp.dart';
+import '../../../stateManagement/openFiles/types/xml/xmlProps/xmlProp.dart';
 import '../../theme/customTheme.dart';
 import '../simpleProps/XmlPropEditorFactory.dart';
 import '../xmlActions/xmlArrayEditor.dart';

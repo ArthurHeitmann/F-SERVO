@@ -8,7 +8,6 @@ import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/listNotifier.dart';
 import '../../../stateManagement/openFiles/openFileTypes.dart';
 import '../../../stateManagement/openFiles/types/McdFileData.dart';
-import '../../../stateManagement/otherFileTypes/McdData.dart';
 import '../../../utils/utils.dart';
 import '../../misc/ChangeNotifierWidget.dart';
 import '../../misc/RowSeparated.dart';

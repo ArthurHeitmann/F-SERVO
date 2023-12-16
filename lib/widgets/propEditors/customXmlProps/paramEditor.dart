@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../background/IdLookup.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/openFiles/openFilesManager.dart';
-import '../../../stateManagement/xmlProps/xmlProp.dart';
+import '../../../stateManagement/openFiles/types/xml/xmlProps/xmlProp.dart';
 import '../../../utils/paramPresets.dart';
 import '../../../utils/utils.dart';
 import '../../../widgets/theme/customTheme.dart';

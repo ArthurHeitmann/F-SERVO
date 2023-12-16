@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
 
-import '../../../stateManagement/sync/syncListImplementations.dart';
+import '../../../stateManagement/openFiles/types/xml/sync/syncListImplementations.dart';
 import '../../misc/syncButton.dart';
 import 'XmlActionEditor.dart';
 

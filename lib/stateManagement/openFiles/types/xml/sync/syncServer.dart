@@ -5,7 +5,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
-import '../events/statusInfo.dart';
+import '../../../../events/statusInfo.dart';
 
 const _wsPort = 1547;
 

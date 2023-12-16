@@ -11,8 +11,8 @@ import '../widgets/propEditors/otherFileTypes/genericTable/tableEditor.dart';
 import 'Property.dart';
 import 'hasUuid.dart';
 import 'openFiles/openFilesManager.dart';
+import 'openFiles/types/xml/xmlProps/xmlProp.dart';
 import 'undoable.dart';
-import 'xmlProps/xmlProp.dart';
 
 class KeyValProp extends ChangeNotifier {
   StringProp key;

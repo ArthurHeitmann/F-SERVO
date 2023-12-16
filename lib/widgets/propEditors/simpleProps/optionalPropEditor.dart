@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 
-import '../../../stateManagement/xmlProps/xmlProp.dart';
+import '../../../stateManagement/openFiles/types/xml/xmlProps/xmlProp.dart';
 import '../../misc/onHoverBuilder.dart';
 import '../../misc/smallButton.dart';
 import 'XmlPropEditorFactory.dart';

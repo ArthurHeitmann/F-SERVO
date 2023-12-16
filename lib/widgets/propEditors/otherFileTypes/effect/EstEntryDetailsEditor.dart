@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../stateManagement/Property.dart';
-import '../../../../stateManagement/otherFileTypes/EstFileData.dart';
+import '../../../../stateManagement/openFiles/types/EstFileData.dart';
 import '../../simpleProps/propEditorFactory.dart';
 import 'EstModelPreview.dart';
 import 'EstTexturePreview.dart';

@@ -2,8 +2,8 @@
 import 'package:flutter/material.dart';
 
 import '../../stateManagement/charNamesXmlWrapper.dart';
-import '../../stateManagement/openFiles/types/XmlFileData.dart';
-import '../../stateManagement/xmlProps/xmlProp.dart';
+import '../../stateManagement/openFiles/types/xml/XmlFileData.dart';
+import '../../stateManagement/openFiles/types/xml/xmlProps/xmlProp.dart';
 import '../../utils/assetDirFinder.dart';
 import '../../utils/utils.dart';
 import '../misc/ChangeNotifierWidget.dart';

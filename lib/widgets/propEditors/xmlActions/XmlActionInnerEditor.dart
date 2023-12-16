@@ -1,8 +1,8 @@
 
 import 'package:flutter/material.dart';
 
-import '../../../stateManagement/xmlProps/xmlActionProp.dart';
-import '../../../stateManagement/xmlProps/xmlProp.dart';
+import '../../../stateManagement/openFiles/types/xml/xmlProps/xmlActionProp.dart';
+import '../../../stateManagement/openFiles/types/xml/xmlProps/xmlProp.dart';
 import '../../misc/ChangeNotifierWidget.dart';
 import '../../theme/customTheme.dart';
 import '../simpleProps/XmlPropEditorFactory.dart';

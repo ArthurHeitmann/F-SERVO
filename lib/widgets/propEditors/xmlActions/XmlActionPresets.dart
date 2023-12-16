@@ -2,8 +2,8 @@
 import 'package:xml/xml.dart';
 
 import '../../../main.dart';
-import '../../../stateManagement/xmlProps/xmlActionProp.dart';
-import '../../../stateManagement/xmlProps/xmlProp.dart';
+import '../../../stateManagement/openFiles/types/xml/xmlProps/xmlActionProp.dart';
+import '../../../stateManagement/openFiles/types/xml/xmlProps/xmlProp.dart';
 import '../../../utils/utils.dart';
 import '../../misc/selectionPopup.dart';
 import '../simpleProps/XmlPropEditorFactory.dart';

@@ -3,7 +3,7 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 
-import '../../stateManagement/otherFileTypes/audioResourceManager.dart';
+import '../../stateManagement/audioResourceManager.dart';
 import '../../utils/utils.dart';
 import '../theme/customTheme.dart';
 

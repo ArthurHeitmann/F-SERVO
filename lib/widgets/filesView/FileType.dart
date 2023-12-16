@@ -12,7 +12,7 @@ import '../../stateManagement/openFiles/types/TmdFileData.dart';
 import '../../stateManagement/openFiles/types/WemFileData.dart';
 import '../../stateManagement/openFiles/types/WspFileData.dart';
 import '../../stateManagement/openFiles/types/WtaWtpData.dart';
-import '../../stateManagement/openFiles/types/XmlFileData.dart';
+import '../../stateManagement/openFiles/types/xml/XmlFileData.dart';
 import '../../stateManagement/preferencesData.dart';
 import '../misc/preferencesEditor.dart';
 import '../propEditors/otherFileTypes/SaveSlotDataEditor.dart';

@@ -11,7 +11,7 @@ import '../utils/utils.dart';
 import 'events/statusInfo.dart';
 import 'openFiles/openFilesManager.dart';
 import 'openFiles/types/WaiFileData.dart';
-import 'openFiles/types/XmlFileData.dart';
+import 'openFiles/types/xml/XmlFileData.dart';
 import 'preferencesData.dart';
 
 List<XmlFileData> changedXmlFiles = [];

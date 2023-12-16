@@ -7,8 +7,8 @@ import 'package:mutex/mutex.dart';
 import 'package:path/path.dart';
 import 'package:tuple/tuple.dart';
 
-import '../../fileTypeUtils/audio/riffParser.dart';
-import '../../fileTypeUtils/audio/wemToWavConverter.dart';
+import '../fileTypeUtils/audio/riffParser.dart';
+import '../fileTypeUtils/audio/wemToWavConverter.dart';
 
 class AudioResource {
   String wavPath;

@@ -97,6 +97,7 @@ mixin CustomTableConfig {
   void onRowAdd();
   void onRowRemove(int index);
   void updateRowWith(int index, List<String?> values);
+
   @mustCallSuper
   void disposeConfig() {
     rowCount.dispose();

@@ -1,5 +1,5 @@
-import '../Property.dart';
-import '../undoable.dart';
+import '../../../../Property.dart';
+import '../../../../undoable.dart';
 import 'xmlProp.dart';
 
 class XmlActionProp extends XmlProp {

@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 
-import '../../../stateManagement/xmlProps/xmlProp.dart';
+import '../../../stateManagement/openFiles/types/xml/xmlProps/xmlProp.dart';
 import '../../../widgets/theme/customTheme.dart';
 import '../../misc/ChangeNotifierWidget.dart';
 import 'XmlPropEditorFactory.dart';

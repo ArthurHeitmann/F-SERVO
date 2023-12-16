@@ -22,7 +22,7 @@ import 'types/TmdFileData.dart';
 import 'types/WaiFileData.dart';
 import 'types/WemFileData.dart';
 import 'types/WtaWtpData.dart';
-import 'types/XmlFileData.dart';
+import 'types/xml/XmlFileData.dart';
 
 enum LoadingState {
   notLoaded,

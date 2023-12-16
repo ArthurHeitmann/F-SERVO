@@ -6,7 +6,7 @@ import 'dart:math';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
-import '../../../stateManagement/otherFileTypes/McdData.dart';
+import '../../../stateManagement/openFiles/types/McdFileData.dart';
 import '../../../utils/utils.dart';
 import '../../misc/ChangeNotifierWidget.dart';
 import '../../misc/ColumnSeparated.dart';

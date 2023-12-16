@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../stateManagement/Property.dart';
-import '../../../stateManagement/xmlProps/xmlProp.dart';
+import '../../../stateManagement/openFiles/types/xml/xmlProps/xmlProp.dart';
 import '../../filesView/xmlJumpToLineEventWrapper.dart';
 import '../../theme/customTheme.dart';
 import '../simpleProps/propEditorFactory.dart';
