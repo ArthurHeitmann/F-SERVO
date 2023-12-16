@@ -70,6 +70,7 @@ class NierDarkThemeExtension extends NierThemeExtension {
 
   static ThemeData makeTheme(BuildContext context) {
     return ThemeData(
+      useMaterial3: false,
       brightness: Brightness.dark,
       extensions: [NierDarkThemeExtension()],
       textTheme: Theme.of(context).textTheme.apply(

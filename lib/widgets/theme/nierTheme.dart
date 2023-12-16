@@ -88,6 +88,7 @@ class NierNierThemeExtension extends NierThemeExtension {
 
   static ThemeData makeTheme(BuildContext context) {
     return ThemeData(
+      useMaterial3: false,
       extensions: [NierNierThemeExtension()],
       textTheme: Theme.of(context).textTheme.apply(
         fontFamily: "FiraCode",
