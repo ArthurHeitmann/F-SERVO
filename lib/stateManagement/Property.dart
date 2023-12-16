@@ -8,6 +8,7 @@ import '../utils/Disposable.dart';
 import '../utils/utils.dart';
 import 'hasUuid.dart';
 import 'miscValues.dart';
+import 'openFiles/openFilesManager.dart';
 import 'undoable.dart';
 
 enum PropType {
@@ -16,20 +17,21 @@ enum PropType {
 
 mixin Prop<T> implements Listenable, Undoable, Disposable {
   abstract final PropType type;
+  abstract final OpenFileId? fileId;
 
   void updateWith(String str);
 
-  static Prop fromString(String str, { bool isInteger = false, String? tagName }) {
+  static Prop fromString(String str, { required OpenFileId? fileId, bool isInteger = false, String? tagName }) {
     if (tagName == "name")
-      return StringProp(str, true);
+      return StringProp(str, isTranslatable: true, fileId: fileId);
     else if (isHexInt(str))
-      return HexProp(int.parse(str));
+      return HexProp(int.parse(str), fileId: fileId);
     else if (isDouble(str))
-      return NumberProp(double.parse(str), isInteger);
+      return NumberProp(double.parse(str), isInteger, fileId: fileId);
     else if (isVector(str))
-      return VectorProp(str.split(" ").map((val) => double.parse(val)).toList());
+      return VectorProp(str.split(" ").map((val) => double.parse(val)).toList(), fileId: fileId);
     else
-      return StringProp(str, true);
+      return StringProp(str, isTranslatable: true, fileId: fileId);
   }
 
   @override
@@ -37,9 +39,11 @@ mixin Prop<T> implements Listenable, Undoable, Disposable {
 }
 
 abstract class ValueProp<T> extends ValueNotifier<T> with Prop<T>, HasUuid {
+  @override
+  final OpenFileId? fileId;
   bool changesUndoable = true;
 
-  ValueProp(super.value);
+  ValueProp(super.value, { required this.fileId });
 
   @override
   void restoreWith(Undoable snapshot) {
@@ -50,8 +54,8 @@ abstract class ValueProp<T> extends ValueNotifier<T> with Prop<T>, HasUuid {
   set value(T value) {
     if (value == this.value) return;
     super.value = value;
-    if (changesUndoable)
-      undoHistoryManager.onUndoableEvent();
+    if (changesUndoable && fileId != null)
+      areasManager.onFileIdUndoEvent(fileId!);
   }
 
   @override
@@ -64,7 +68,7 @@ class HexProp extends ValueProp<int> {
 
   String? _strVal;
 
-  HexProp(super.value) {
+  HexProp(super.value, { required super.fileId }) {
     _strVal = getReverseHash(value);
   }
 
@@ -103,7 +107,7 @@ class HexProp extends ValueProp<int> {
   
   @override
   Undoable takeSnapshot() {
-    var prop = HexProp(value);
+    var prop = HexProp(value, fileId: fileId);
     prop.overrideUuid(uuid);
     prop._strVal = _strVal;
     return prop;
@@ -122,7 +126,7 @@ class NumberProp extends ValueProp<num> {
   @override
   final PropType type = PropType.number;
 
-  NumberProp(super.value, this.isInteger);
+  NumberProp(super.value, this.isInteger, { required super.fileId });
 
   @override
   String toString() => doubleToStr(value);
@@ -137,7 +141,7 @@ class NumberProp extends ValueProp<num> {
 
   @override
   Undoable takeSnapshot() {
-    var prop = NumberProp(value, isInteger);
+    var prop = NumberProp(value, isInteger, fileId: fileId);
     prop.overrideUuid(uuid);
     return prop;
   }
@@ -147,7 +151,7 @@ class FloatProp extends ValueProp<double> {
   @override
   final PropType type = PropType.float;
 
-  FloatProp(super.value);
+  FloatProp(super.value, { required super.fileId });
 
   @override
   String toString() => doubleToStr(value);
@@ -159,7 +163,7 @@ class FloatProp extends ValueProp<double> {
 
   @override
   Undoable takeSnapshot() {
-    var prop = FloatProp(value);
+    var prop = FloatProp(value, fileId: fileId);
     prop.overrideUuid(uuid);
     return prop;
   }
@@ -167,11 +171,13 @@ class FloatProp extends ValueProp<double> {
 
 class VectorProp extends ChangeNotifier with Prop<List<num>>, IterableMixin<NumberProp>, HasUuid {
   @override
+  final OpenFileId? fileId;
+  @override
   final PropType type = PropType.vector;
   late final List<NumberProp> _values;
 
-  VectorProp(List<num> values)
-    : _values = List.from(values.map((v) => NumberProp(v, false)), growable: false)
+  VectorProp(List<num> values, { required this.fileId })
+    : _values = List.from(values.map((v) => NumberProp(v, false, fileId: fileId)), growable: false)
   {
     for (var prop in _values)
       prop.addListener(notifyListeners);
@@ -195,7 +201,8 @@ class VectorProp extends ChangeNotifier with Prop<List<num>>, IterableMixin<Numb
   void operator []=(int index, num value) {
     if (value == _values[index].value) return;
     _values[index].value = value;
-    undoHistoryManager.onUndoableEvent();
+    if (fileId != null)
+      areasManager.onFileIdUndoEvent(fileId!);
   }
 
   @override
@@ -207,12 +214,13 @@ class VectorProp extends ChangeNotifier with Prop<List<num>>, IterableMixin<Numb
     for (int i = 0; i < length; i++) {
       _values[i].value = newValues[i];
     }
-    undoHistoryManager.onUndoableEvent();
+    if (fileId != null)
+      areasManager.onFileIdUndoEvent(fileId!);
   }
 
   @override
   Undoable takeSnapshot() {
-    var prop = VectorProp(_values.map((p) => p.value).toList());
+    var prop = VectorProp(_values.map((p) => p.value).toList(), fileId: fileId);
     prop.overrideUuid(uuid);
     return prop;
   }
@@ -232,7 +240,7 @@ class StringProp extends ValueProp<String> {
   
   String Function(String)? transform;
 
-  StringProp(super.value, [ bool isTranslatable = false ]) {
+  StringProp(super.value, { required super.fileId, bool isTranslatable = false }) {
     if (isTranslatable) {
       transform = tryToTranslate;
       shouldAutoTranslate.addListener(notifyListeners);
@@ -256,7 +264,7 @@ class StringProp extends ValueProp<String> {
 
   @override
   Undoable takeSnapshot() {
-    var prop = StringProp(value, transform != null);
+    var prop = StringProp(value, isTranslatable: transform != null, fileId: fileId);
     prop.overrideUuid(uuid);
     return prop;
   }
@@ -266,7 +274,7 @@ class BoolProp extends ValueProp<bool> {
   @override
   final PropType type = PropType.bool;
 
-  BoolProp(super.value);
+  BoolProp(super.value, { required super.fileId });
 
   @override
   String toString() => value ? "true" : "false";
@@ -278,7 +286,7 @@ class BoolProp extends ValueProp<bool> {
 
   @override
   Undoable takeSnapshot() {
-    var prop = BoolProp(value);
+    var prop = BoolProp(value, fileId: fileId);
     prop.overrideUuid(uuid);
     return prop;
   }
@@ -290,7 +298,7 @@ class AudioSampleNumberProp extends ValueProp<int> {
   @override
   final PropType type = PropType.number;
 
-  AudioSampleNumberProp(super.value, this.samplesPerSecond);
+  AudioSampleNumberProp(super.value, this.samplesPerSecond, { required super.fileId });
 
   @override
   String toString() {
@@ -313,7 +321,7 @@ class AudioSampleNumberProp extends ValueProp<int> {
 
   @override
   Undoable takeSnapshot() {
-    var prop = AudioSampleNumberProp(value, samplesPerSecond);
+    var prop = AudioSampleNumberProp(value, samplesPerSecond, fileId: fileId);
     prop.overrideUuid(uuid);
     return prop;
   }

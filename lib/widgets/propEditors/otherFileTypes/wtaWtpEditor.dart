@@ -8,7 +8,6 @@ import 'package:path/path.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/listNotifier.dart';
 import '../../../stateManagement/openFiles/types/WtaWtpData.dart';
-import '../../../stateManagement/undoable.dart';
 import '../../../utils/utils.dart';
 import '../../theme/customTheme.dart';
 import 'genericTable/tableEditor.dart';
@@ -23,10 +22,11 @@ class WtaWtpEditor extends StatefulWidget {
 }
 
 class _TexturesTableConfig with CustomTableConfig {
+  final WtaWtpData file;
   final WtaWtpTextures texData;
   final ListNotifier<WtaTextureEntry> textures;
 
-  _TexturesTableConfig(String name, this.texData)
+  _TexturesTableConfig(this.file, String name, this.texData)
     : textures = texData.textures {
     this.name = name;
     columnNames = [
@@ -43,7 +43,7 @@ class _TexturesTableConfig with CustomTableConfig {
       if (!texData.useFlagsSimpleMode)
         2,
     ];
-    rowCount = NumberProp(textures.length, true)
+    rowCount = NumberProp(textures.length, true, fileId: file.uuid)
       ..changesUndoable = false;
     textures.addListener(() => rowCount.value = textures.length);
   }
@@ -93,18 +93,18 @@ class _TexturesTableConfig with CustomTableConfig {
   void onRowAdd() {
     textures.add(WtaTextureEntry(
       texData.file,
-      HexProp(randomId()),
-      StringProp(""),
-      isAlbedo: texData.useFlagsSimpleMode ? BoolProp(false) : null,
-      flag: texData.useFlagsSimpleMode ? null : HexProp(textures.isNotEmpty ? textures.last.flag!.value : 0),
+      HexProp(randomId(), fileId: file.uuid),
+      StringProp("", fileId: file.uuid),
+      isAlbedo: texData.useFlagsSimpleMode ? BoolProp(false, fileId: file.uuid) : null,
+      flag: texData.useFlagsSimpleMode ? null : HexProp(textures.isNotEmpty ? textures.last.flag!.value : 0, fileId: file.uuid),
     ));
-    undoHistoryManager.onUndoableEvent();
+    file.onUndoableEvent();
   }
 
   @override
   void onRowRemove(int index) {
     textures.removeAt(index);
-    undoHistoryManager.onUndoableEvent();
+    file.onUndoableEvent();
   }
 
   Future<void> patchImportFolder() async {
@@ -135,12 +135,12 @@ class _TexturesTableConfig with CustomTableConfig {
     }
     textures.addAll(ddsFilesOrdered.map((file) => WtaTextureEntry(
       texData.file,
-      HexProp(randomId()),
-      StringProp(file),
-      isAlbedo: texData.useFlagsSimpleMode ? BoolProp(false) : null,
-      flag: texData.useFlagsSimpleMode ? null : HexProp(textures.isNotEmpty ? textures.last.flag!.value : 0),
+      HexProp(randomId(), fileId: this.file.uuid),
+      StringProp(file, fileId: this.file.uuid),
+      isAlbedo: texData.useFlagsSimpleMode ? BoolProp(false, fileId: this.file.uuid) : null,
+      flag: texData.useFlagsSimpleMode ? null : HexProp(textures.isNotEmpty ? textures.last.flag!.value : 0, fileId: this.file.uuid),
     )));
-    undoHistoryManager.onUndoableEvent();
+    file.onUndoableEvent();
     showToast("Added ${ddsFilesOrdered.length} DDS files");
   }
 }
@@ -152,6 +152,7 @@ class _WtaWtpEditorState extends State<WtaWtpEditor> {
   void initState() {
     widget.file.load().then((_) {
       _texturesTableConfig = _TexturesTableConfig(
+        widget.file,
         basenameWithoutExtension(widget.file.path),
         widget.file.textures!
       );

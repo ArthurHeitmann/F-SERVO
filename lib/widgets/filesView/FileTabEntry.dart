@@ -15,9 +15,9 @@ class FileTabEntry extends ChangeNotifierWidget {
   final OpenFileId file;
   final FilesAreaManager area;
   
-  FileTabEntry({Key? key, required OpenFileData file, required this.area})
+  FileTabEntry({super.key, required OpenFileData file, required this.area})
     : file = file.uuid,
-    super(key: key, notifiers: [area.currentFile, file.name, file.secondaryName, file.hasUnsavedChanges]);
+    super(notifiers: [area.currentFile, file.name, file.secondaryName, file.hasUnsavedChanges]);
 
   @override
   State<FileTabEntry> createState() => _FileTabEntryState();

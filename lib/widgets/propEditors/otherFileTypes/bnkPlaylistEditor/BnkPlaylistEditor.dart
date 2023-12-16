@@ -31,7 +31,7 @@ class _BnkPlaylistEditorState extends State<BnkPlaylistEditor> {
   final playbackMarker = PlaybackMarker(ValueNotifier(null), ValueNotifier(0));
   final ValueNotifier<double> msPerPix = ValueNotifier(1);
   final ValueNotifier<double> xOff = ValueNotifier(0);
-  final selectedClipUuids = ValueListNotifier<String>([]);
+  final selectedClipUuids = ValueListNotifier<String>([], fileId: null);
   final scrollController = ScrollController();
 
   @override

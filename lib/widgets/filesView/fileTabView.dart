@@ -23,8 +23,8 @@ import 'FileType.dart';
 class FileTabView extends ChangeNotifierWidget {
   final FilesAreaManager viewArea;
   
-  FileTabView(this.viewArea, {Key? key}) : 
-    super(key: key, notifiers: [viewArea.files, viewArea.currentFile]);
+  FileTabView(this.viewArea, {super.key}) :
+    super(notifiers: [viewArea.files, viewArea.currentFile]);
 
   @override
   State<FileTabView> createState() => _FileTabViewState();

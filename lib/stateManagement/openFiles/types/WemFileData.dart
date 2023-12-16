@@ -62,8 +62,8 @@ class OptionalWemData extends OptionalFileInfo {
 
 class WemFileData extends OpenFileData with AudioFileData {
   final ValueNotifier<WavFileData?> overrideData = ValueNotifier(null);
+  late final BoolProp usesLoudnessNormalization;
   bool usesSeekTable = false;
-  final BoolProp usesLoudnessNormalization = BoolProp(false);
   final ChangeNotifier onOverrideApplied = ChangeNotifier();
   final ValueNotifier<bool> isReplacing = ValueNotifier(false);
   final Set<int> relatedBnkPlaylistIds = {};
@@ -72,6 +72,7 @@ class WemFileData extends OpenFileData with AudioFileData {
 
   WemFileData(super.name, super.path, { super.secondaryName, OptionalWemData? wemInfo }) :
         super(type: FileType.wem, icon: Icons.music_note) {
+    usesLoudnessNormalization = BoolProp(false, fileId: uuid);
     optionalInfo = wemInfo;
   }
 
@@ -183,6 +184,7 @@ class WemFileData extends OpenFileData with AudioFileData {
     snapshot.loadingState.value = loadingState.value;
     snapshot.usesSeekTable = usesSeekTable;
     snapshot.usesLoudnessNormalization.value = usesLoudnessNormalization.value;
+    snapshot.resource = resource?.newRef();
     snapshot.overrideUuid(uuid);
     return snapshot;
   }

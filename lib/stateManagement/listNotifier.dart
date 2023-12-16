@@ -6,14 +6,16 @@ import 'package:flutter/foundation.dart';
 import '../utils/Disposable.dart';
 import '../utils/utils.dart';
 import 'hasUuid.dart';
+import 'openFiles/openFilesManager.dart';
 import 'undoable.dart';
 
 abstract class IterableNotifier<T> extends ChangeNotifier with IterableMixin<T>, HasUuid, Undoable {
+  final OpenFileId? fileId;
   final List<T> _children;
   late final ChangeNotifier onDisposed;
   bool _debugDisposed = false;
 
-  IterableNotifier(List<T> children)
+  IterableNotifier(List<T> children, {this.fileId})
     : _children = children,
     onDisposed = ChangeNotifier();
 
@@ -44,6 +46,13 @@ abstract class IterableNotifier<T> extends ChangeNotifier with IterableMixin<T>,
   }
 
   @override
+  void notifyListeners() {
+    super.notifyListeners();
+    if (fileId != null)
+      areasManager.onFileIdUndoEvent(fileId!);
+  }
+
+  @override
   void dispose() {
     assert(() {
       if (_debugDisposed) {
@@ -67,8 +76,7 @@ abstract class IterableNotifier<T> extends ChangeNotifier with IterableMixin<T>,
   }
 }
 abstract class ListNotifier<T> extends IterableNotifier<T> {
-
-  ListNotifier(List<T> children) : super(children);
+  ListNotifier(super.children, { required super.fileId });
 
   void add(T child) {
     _children.add(child);
@@ -218,15 +226,15 @@ abstract class ListNotifier<T> extends IterableNotifier<T> {
 }
 
 class ValueListNotifier<T> extends ListNotifier<T> {
-  ValueListNotifier(super.children);
+  ValueListNotifier(super.children, { required super.fileId });
 
   @override
   Undoable takeSnapshot() {
     Undoable snapshot;
     if (isSubtype<T, Undoable>())
-      snapshot = ValueListNotifier(_children.map((e) => (e as Undoable).takeSnapshot() as T).toList());
+      snapshot = ValueListNotifier(_children.map((e) => (e as Undoable).takeSnapshot() as T).toList(), fileId: fileId);
     else
-      snapshot = ValueListNotifier<T>(toList());
+      snapshot = ValueListNotifier<T>(toList(), fileId: fileId);
     snapshot.overrideUuid(uuid);
     return snapshot;
   }

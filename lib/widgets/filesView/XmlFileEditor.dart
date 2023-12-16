@@ -1,8 +1,8 @@
 
 import 'package:flutter/material.dart';
 
-import '../../stateManagement/charNamesXmlWrapper.dart';
 import '../../stateManagement/openFiles/types/xml/XmlFileData.dart';
+import '../../stateManagement/openFiles/types/xml/xmlProps/charNamesXmlWrapper.dart';
 import '../../stateManagement/openFiles/types/xml/xmlProps/xmlProp.dart';
 import '../../utils/assetDirFinder.dart';
 import '../../utils/utils.dart';
@@ -15,7 +15,7 @@ import 'XmlActionsEditor.dart';
 class XmlFileEditor extends ChangeNotifierWidget {
   late final XmlFileData fileContent;
 
-  XmlFileEditor({Key? key, required this.fileContent}) : super(key: key, notifier: fileContent.root);
+  XmlFileEditor({super.key, required this.fileContent}) : super(notifier: fileContent.root);
 
   @override
   ChangeNotifierState<XmlFileEditor> createState() => _XmlEditorState();

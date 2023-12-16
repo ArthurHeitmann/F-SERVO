@@ -25,36 +25,37 @@ class DistEditor extends ChangeNotifierWidget {
 class _DistEditorState extends ChangeNotifierState<DistEditor> {
   @override
   Widget build(BuildContext context) {
+    var fileId = widget.dist.file;
     return NestedContextMenu(
       buttons: [
-        optionalValPropButtonConfig(widget.dist, "position", () => 0, () => VectorProp([0, 0, 0])),
+        optionalValPropButtonConfig(widget.dist, "position", () => 0, () => VectorProp([0, 0, 0], fileId: fileId)),
         optionalValPropButtonConfig(
           widget.dist, "rotation", () => getNextInsertIndexAfter(widget.dist, ["position"]),
-          () => VectorProp([0, 0, 0])
+          () => VectorProp([0, 0, 0], fileId: fileId)
         ),
         optionalValPropButtonConfig(
           widget.dist, "areaDist", () => getNextInsertIndexAfter(widget.dist, ["rotation", "position"]),
-          () => NumberProp(100, true)
+          () => NumberProp(100, true, fileId: fileId)
         ),
         optionalValPropButtonConfig(
           widget.dist, "resetDist", () => getNextInsertIndexAfter(widget.dist, ["areaDist", "rotation", "position"]),
-          () => NumberProp(120, true)
+          () => NumberProp(120, true, fileId: fileId)
         ),
         optionalValPropButtonConfig(
           widget.dist, "searchDist", () => getNextInsertIndexAfter(widget.dist, ["resetDist", "areaDist", "rotation", "position"]),
-          () => NumberProp(30, true)
+          () => NumberProp(30, true, fileId: fileId)
         ),
         optionalValPropButtonConfig(
           widget.dist, "guardSDist", () => getNextInsertIndexAfter(widget.dist, ["searchDist", "resetDist", "areaDist", "rotation", "position"]),
-          () => NumberProp(50, true)
+          () => NumberProp(50, true, fileId: fileId)
         ),
         optionalValPropButtonConfig(
           widget.dist, "guardLDist", () => getNextInsertIndexAfter(widget.dist, ["guardSDist", "searchDist", "resetDist", "areaDist", "rotation", "position"]),
-          () => NumberProp(60, true)
+          () => NumberProp(60, true, fileId: fileId)
         ),
         optionalValPropButtonConfig(
           widget.dist, "escapeDist", () => getNextInsertIndexAfter(widget.dist, ["guardLDist", "guardSDist", "searchDist", "resetDist", "areaDist", "rotation", "position"]),
-          () => NumberProp(70, true)
+          () => NumberProp(70, true, fileId: fileId)
         ),
       ],
       child: Column(

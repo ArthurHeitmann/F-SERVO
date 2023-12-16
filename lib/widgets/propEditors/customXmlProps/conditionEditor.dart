@@ -33,6 +33,7 @@ class _ConditionEditorState extends ChangeNotifierState<ConditionEditor> {
     var value = conditionState?.get("value");
     var args = widget.prop.get("args");
     var type = widget.prop.get("type");
+    var fileId = widget.prop.file;
 
     return Padding(
       padding: const EdgeInsets.all(4.0),
@@ -49,20 +50,20 @@ class _ConditionEditorState extends ChangeNotifierState<ConditionEditor> {
                 if (widget.showDetails)
                   optionalValPropButtonConfig(
                     widget.prop, "type", () => 0,
-                    () => NumberProp(0, true)
+                    () => NumberProp(0, true, fileId: fileId)
                   ),
                 if (label == null)
                   optionalValPropButtonConfig(
                     conditionState!, "label", () => 0,
-                    () => StringProp("conditionLabel")
+                    () => StringProp("conditionLabel", fileId: fileId)
                   ),
                 optionalValPropButtonConfig(
                   conditionState!, "value", () => conditionState.length,
-                  () => NumberProp(1, true)
+                  () => NumberProp(1, true, fileId: fileId)
                 ),
                 optionalValPropButtonConfig(
                   widget.prop, "args", () => widget.prop.length,
-                  () => StringProp("arg")
+                  () => StringProp("arg", fileId: fileId)
                 ),
               ],
               child: Material(

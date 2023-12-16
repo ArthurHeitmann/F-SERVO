@@ -10,6 +10,7 @@ import '../../../background/IdLookup.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/listNotifier.dart';
 import '../../../stateManagement/openFiles/openFileTypes.dart';
+import '../../../stateManagement/openFiles/openFilesManager.dart';
 import '../../../stateManagement/openFiles/types/SaveSlotData.dart';
 import '../../../stateManagement/openFiles/types/SaveSlotItemIdsToNames.dart';
 import '../../misc/ChangeNotifierWidget.dart';
@@ -75,7 +76,7 @@ class _SaveSlotDataEditorState extends ChangeNotifierState<SaveSlotDataEditor> {
               index: activeTab,
               children: [
                 _GeneralEditor(save: save),
-                _InventoryEditor(name: "Inventory", items: save.inventory),
+                _InventoryEditor(name: "Inventory", items: save.inventory, fileId: widget.save.uuid),
                 _InventoryEditor(
                   name: "Corpse Inventory",
                   items: save.corpseInventory,
@@ -84,10 +85,11 @@ class _SaveSlotDataEditorState extends ChangeNotifierState<SaveSlotDataEditor> {
                     _PropWithName(name: "Online Name", prop: save.corpseOnlineName),
                     _PropWithName(name: "Position", prop: save.corpsePosition.vec),
                   ],
+                  fileId: widget.save.uuid,
                 ),
                 _WeaponEditor(save: save),
-                _TogglesEditor(name: "Scene State", toggles: save.tree.where((e) => e.text.value == "SceneState").first),
-                _TogglesEditor(name: "Quests", toggles: save.tree.where((e) => e.text.value == "Quest").first),
+                _TogglesEditor(name: "Scene State", toggles: save.tree.where((e) => e.text.value == "SceneState").first, fileId: widget.save.uuid),
+                _TogglesEditor(name: "Quests", toggles: save.tree.where((e) => e.text.value == "Quest").first, fileId: widget.save.uuid),
               ],
             ),
           ),
@@ -185,11 +187,11 @@ class _GeneralEditor extends StatelessWidget {
 class _InventoryTableConfig with CustomTableConfig {
   final List<SaveInventoryItem> items;
 
-  _InventoryTableConfig(String name, this.items) {
+  _InventoryTableConfig(String name, this.items, OpenFileId fileId) {
     this.name = name;
     columnNames = ["i", "ID", "Count", "Is Active?"];
     columnFlex = [1, 2, 2, 1];
-    rowCount = NumberProp(items.length, true)
+    rowCount = NumberProp(items.length, true, fileId: fileId)
       ..changesUndoable = false;
     allowRowAddRemove = false;
   }
@@ -223,8 +225,9 @@ class _InventoryEditor extends StatefulWidget {
   final List<SaveInventoryItem> items;
   final String name;
   final List<_PropWithName> additionalProps;
+  final OpenFileId fileId;
 
-  const _InventoryEditor({ super.key, required this.items, required this.name, this.additionalProps = const [] });
+  const _InventoryEditor({ super.key, required this.items, required this.name, required this.fileId, this.additionalProps = const [] });
 
   @override
   State<_InventoryEditor> createState() => __InventoryEditorState();
@@ -235,7 +238,7 @@ class __InventoryEditorState extends State<_InventoryEditor> {
 
   @override
   void initState() {
-    tableConfig = _InventoryTableConfig(widget.name, widget.items);
+    tableConfig = _InventoryTableConfig(widget.name, widget.items, widget.fileId);
     super.initState();
   }
 
@@ -264,11 +267,11 @@ class __InventoryEditorState extends State<_InventoryEditor> {
 class _WeaponTableConfig with CustomTableConfig {
   final List<SaveWeapon> weapons;
 
-  _WeaponTableConfig(this.weapons) {
+  _WeaponTableConfig(this.weapons, OpenFileId fileId) {
     name = "Weapons";
     columnNames = ["Index", "ID", "Level", "Is New?", "Has New Story?", "Kills" ];
     columnFlex = [4, 3, 3, 2, 2, 2];
-    rowCount = NumberProp(weapons.length, true)
+    rowCount = NumberProp(weapons.length, true, fileId: fileId)
       ..changesUndoable = false;
     allowRowAddRemove = false;
   }
@@ -317,7 +320,7 @@ class __WeaponEditorState extends State<_WeaponEditor> {
 
   @override
   void initState() {
-    tableConfig = _WeaponTableConfig(widget.save.weapons);
+    tableConfig = _WeaponTableConfig(widget.save.weapons, widget.save.fileId);
     super.initState();
   }
 
@@ -370,14 +373,15 @@ Iterable<AutocompleteConfig> _getItemIdAutocomplete() {
 }
 
 class _StringListTableConfig with CustomTableConfig {
+  final OpenFileId fileId;
   final ListNotifier<TreeEntry> strings;
   final FutureOr<Iterable<AutocompleteConfig>> Function()? autocompleteOptions;
 
-  _StringListTableConfig(String name, this.strings, [this.autocompleteOptions]) {
+  _StringListTableConfig(String name, this.strings, this.fileId, [this.autocompleteOptions]) {
     this.name = name;
     columnNames = [name, ""];
     columnFlex = [5, 1];
-    rowCount = NumberProp(strings.length, true);
+    rowCount = NumberProp(strings.length, true, fileId: fileId);
     strings.addListener(_updateRowCount);
   }
 
@@ -406,7 +410,7 @@ class _StringListTableConfig with CustomTableConfig {
   
   @override
   void onRowAdd() {
-    strings.add(TreeEntry(StringProp("new $name entry"), [], strings.first.file));
+    strings.add(TreeEntry(StringProp("new $name entry", fileId: fileId), [], strings.first.file));
   }
 
   @override
@@ -427,10 +431,11 @@ class _StringListTableConfig with CustomTableConfig {
 }
 
 class _TogglesEditor extends StatefulWidget {
+  final OpenFileId fileId;
   final String name;
   final ListNotifier<TreeEntry> toggles;
 
-  const _TogglesEditor({ super.key, required this.name, required this.toggles });
+  const _TogglesEditor({ super.key, required this.name, required this.toggles, required this.fileId });
 
   @override
   State<_TogglesEditor> createState() => __TogglesEditorState();
@@ -449,7 +454,7 @@ class __TogglesEditorState extends State<_TogglesEditor> {
 
   @override
   void initState() {
-    tableConfig = _StringListTableConfig(widget.name, widget.toggles, getAutocompleteOptions);
+    tableConfig = _StringListTableConfig(widget.name, widget.toggles, widget.fileId, getAutocompleteOptions);
     super.initState();
   }
 

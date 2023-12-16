@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 
 import '../main.dart';
 import '../stateManagement/openFiles/openFilesManager.dart';
-import '../stateManagement/undoable.dart';
 import '../utils/utils.dart';
 import '../widgets/misc/Selectable.dart';
 import 'intents.dart';
@@ -44,7 +43,7 @@ class UndoAction extends Action<UndoIntent> {
 
   @override
   void invoke(UndoIntent intent) {
-    undoHistoryManager.undo();
+    areasManager.activeArea.value?.currentFile.value?.undo();
   }
 }
 
@@ -53,7 +52,7 @@ class RedoAction extends Action<RedoIntent> {
 
   @override
   void invoke(RedoIntent intent) {
-    undoHistoryManager.redo();
+    areasManager.activeArea.value?.currentFile.value?.redo();
   }
 }
 

@@ -26,7 +26,7 @@ class HierarchyEntryAction {
 }
 
 mixin HierarchyEntryBase implements Disposable {
-  final ListNotifier<HierarchyEntry> _children = ValueListNotifier([]);
+  final ListNotifier<HierarchyEntry> _children = ValueListNotifier([], fileId: null);
   IterableNotifier<HierarchyEntry> get children => _children;
 
   void add(HierarchyEntry child) {

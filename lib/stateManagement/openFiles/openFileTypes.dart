@@ -34,7 +34,7 @@ abstract class OptionalFileInfo {
   const OptionalFileInfo();
 }
 
-abstract class OpenFileData with HasUuid, Undoable implements Disposable {
+abstract class OpenFileData with HasUuid, Undoable, Disposable, HasUndoHistory {
   OptionalFileInfo? optionalInfo;
   final IconData? icon;
   final Color? iconColor;
@@ -52,7 +52,9 @@ abstract class OpenFileData with HasUuid, Undoable implements Disposable {
 
   OpenFileData(String name, this.path, { required this.type, String? secondaryName, this.icon, this.iconColor }) :
     name = ValueNotifier(name),
-    secondaryName = ValueNotifier(secondaryName);
+    secondaryName = ValueNotifier(secondaryName) {
+    initUndoHistory();
+  }
 
   factory OpenFileData.from(String name, String path, { String? secondaryName, OptionalFileInfo? optionalInfo }) {
     if (path.endsWith(".xml"))
@@ -91,12 +93,13 @@ abstract class OpenFileData with HasUuid, Undoable implements Disposable {
     if (disableFileChanges)
       return;
     _hasUnsavedChanges.value = value;
+    onUndoableEvent();
   }
 
   Future<void> load() async {
     loadingState.value = LoadingState.loaded;
     setHasUnsavedChanges(false);
-    undoHistoryManager.onUndoableEvent();
+    onUndoableEvent(immediate: true);
   }
 
   Future<void> reload() async {
@@ -107,10 +110,12 @@ abstract class OpenFileData with HasUuid, Undoable implements Disposable {
 
   Future<void> save() async {
     setHasUnsavedChanges(false);
+    onUndoableEvent();
   }
 
   @override
   void dispose() {
+    super.dispose();
     name.dispose();
     secondaryName.dispose();
     _hasUnsavedChanges.dispose();

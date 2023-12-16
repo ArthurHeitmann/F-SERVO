@@ -82,7 +82,7 @@ class McdFileData extends OpenFileData {
 }
 
 abstract class _McdFilePart with HasUuid, Undoable implements Disposable {
-  OpenFileId? file;
+  OpenFileId file;
 
   _McdFilePart(this.file);
 
@@ -215,15 +215,15 @@ class McdFontOverride with HasUuid implements Disposable {
   final BoolProp isFallbackOnly;
 
   McdFontOverride(int firstFontId) :
-        fontIds = ValueListNotifier([firstFontId]),
-        heightScale = NumberProp(1.0, false),
-        fontPath = StringProp(""),
-        scale = NumberProp(1.0, false),
-        letXPadding = NumberProp(0.0, true),
-        letYPadding = NumberProp(0.0, true),
-        xOffset = NumberProp(0.0, false),
-        yOffset = NumberProp(0.0, false),
-        isFallbackOnly = BoolProp(false);
+    fontIds = ValueListNotifier([firstFontId], fileId: null),
+    heightScale = NumberProp(1.0, false, fileId: null),
+    fontPath = StringProp("", fileId: null),
+    scale = NumberProp(1.0, false, fileId: null),
+    letXPadding = NumberProp(0.0, true, fileId: null),
+    letYPadding = NumberProp(0.0, true, fileId: null),
+    xOffset = NumberProp(0.0, false, fileId: null),
+    yOffset = NumberProp(0.0, false, fileId: null),
+    isFallbackOnly = BoolProp(false, fileId: null);
 
   @override
   void dispose() {
@@ -247,7 +247,7 @@ class McdLine extends _McdFilePart {
   }
 
   McdLine.fromMcd(super.file, McdFileLine mcdLine)
-      : text = StringProp(mcdLine.toString()) {
+      : text = StringProp(mcdLine.toString(), fileId: file) {
     text.addListener(onDataChanged);
   }
 
@@ -329,32 +329,31 @@ class McdParagraph extends _McdFilePart {
   }
 
   McdParagraph.fromMcd(super.file, McdFileParagraph paragraph, List<McdLocalFont> fonts) :
-        fontId = NumberProp(paragraph.fontId, true),
-        lines = ValueListNotifier(
-            paragraph.lines
-                .map((l) => McdLine.fromMcd(file, l))
-                .toList()
-        ) {
+    fontId = NumberProp(paragraph.fontId, true, fileId: file),
+    lines = ValueListNotifier(
+      paragraph.lines
+        .map((l) => McdLine.fromMcd(file, l))
+        .toList(),
+      fileId: file
+    ) {
     fontId.addListener(onDataChanged);
     lines.addListener(onDataChanged);
   }
 
   void addLine() {
-    lines.add(McdLine(file, StringProp("")));
-    undoHistoryManager.onUndoableEvent();
+    lines.add(McdLine(file, StringProp("", fileId: file)));
+    areasManager.onFileIdUndoEvent(file);
   }
 
   void removeLine(int index) {
     lines.removeAt(index)
         .dispose();
-    undoHistoryManager.onUndoableEvent();
+    areasManager.onFileIdUndoEvent(file);
   }
 
   @override
   void dispose() {
     fontId.dispose();
-    for (var line in lines)
-      line.dispose();
     lines.dispose();
     super.dispose();
   }
@@ -399,36 +398,35 @@ class McdEvent extends _McdFilePart {
   }
 
   McdEvent.fromMcd(super.file, McdFileEvent event, List<McdLocalFont> fonts) :
-        name = StringProp(event.name),
-        paragraphs = ValueListNotifier(
-            event.message.paragraphs
-                .map((p) => McdParagraph.fromMcd(file, p, fonts))
-                .toList()
-        ) {
+    name = StringProp(event.name, fileId: file),
+    paragraphs = ValueListNotifier(
+      event.message.paragraphs
+        .map((p) => McdParagraph.fromMcd(file, p, fonts))
+        .toList(),
+      fileId: file
+    ) {
     name.addListener(onDataChanged);
     paragraphs.addListener(onDataChanged);
   }
 
   void addParagraph(int fontId) {
     paragraphs.add(McdParagraph(
-        file,
-        NumberProp(fontId, true),
-        ValueListNotifier([])
+      file,
+      NumberProp(fontId, true, fileId: file),
+      ValueListNotifier([], fileId: file)
     ));
-    undoHistoryManager.onUndoableEvent();
+    areasManager.onFileIdUndoEvent(file);
   }
 
   void removeParagraph(int index) {
     paragraphs.removeAt(index)
         .dispose();
-    undoHistoryManager.onUndoableEvent();
+    areasManager.onFileIdUndoEvent(file);
   }
 
   @override
   void dispose() {
     name.dispose();
-    for (var paragraph in paragraphs)
-      paragraph.dispose();
     paragraphs.dispose();
     super.dispose();
   }
@@ -465,8 +463,8 @@ class McdEvent extends _McdFilePart {
 
 class McdData extends _McdFilePart {
   static Map<int, McdGlobalFont> availableFonts = {};
-  static ValueListNotifier<McdFontOverride> fontOverrides = ValueListNotifier([]);
-  static NumberProp fontAtlasLetterSpacing = NumberProp(0, true);
+  static ValueListNotifier<McdFontOverride> fontOverrides = ValueListNotifier([], fileId: null);
+  static NumberProp fontAtlasLetterSpacing = NumberProp(0, true, fileId: null);
   static ChangeNotifier fontChanges = ChangeNotifier();
 
   final StringProp? textureWtaPath;
@@ -504,7 +502,7 @@ class McdData extends _McdFilePart {
     return null;
   }
 
-  static Future<McdData> fromMcdFile(OpenFileId? file, String mcdPath) async {
+  static Future<McdData> fromMcdFile(OpenFileId file, String mcdPath) async {
     var datDir = dirname(mcdPath);
     var mcdName = basenameWithoutExtension(mcdPath);
     String? wtpPath = await searchForTexFile(datDir, mcdName, ".wtp");
@@ -524,11 +522,11 @@ class McdData extends _McdFilePart {
 
     return McdData(
         file,
-        wtaPath != null ? StringProp(wtaPath) : null,
-        wtpPath != null ? StringProp(wtpPath) : null,
+        wtaPath != null ? StringProp(wtaPath, fileId: file) : null,
+        wtpPath != null ? StringProp(wtpPath, fileId: file) : null,
         {for (var f in usedFonts) f.fontId: f},
         mcd.messages.first.seqNumber,
-        ValueListNotifier<McdEvent>(events)
+        ValueListNotifier<McdEvent>(events, fileId: file)
     );
   }
 
@@ -536,8 +534,6 @@ class McdData extends _McdFilePart {
   void dispose() {
     textureWtaPath?.dispose();
     textureWtpPath?.dispose();
-    for (var event in events)
-      event.dispose();
     events.dispose();
     super.dispose();
   }
@@ -563,16 +559,16 @@ class McdData extends _McdFilePart {
   void addEvent([String suffix = ""]) {
     events.add(McdEvent(
         file,
-        StringProp("NEW_EVENT_NAME${suffix.isNotEmpty ? "_$suffix" : ""}"),
-        ValueListNotifier([])
+        StringProp("NEW_EVENT_NAME${suffix.isNotEmpty ? "_$suffix" : ""}", fileId: file),
+        ValueListNotifier([], fileId: file)
     ));
-    undoHistoryManager.onUndoableEvent();
+    areasManager.onFileIdUndoEvent(file);
   }
 
   void removeEvent(int index) {
     events.removeAt(index)
         .dispose();
-    undoHistoryManager.onUndoableEvent();
+    areasManager.onFileIdUndoEvent(file);
   }
 
   static void addFontOverride() {
@@ -781,7 +777,7 @@ class McdData extends _McdFilePart {
     exportEvents.sort((a, b) => a.id.compareTo(b.id));
 
     var mcdFile = McdFile.fromParts(header, exportMessages, exportSymbols, exportGlyphs, exportFonts, exportEvents);
-    var openFile = areasManager.fromId(file!)!;
+    var openFile = areasManager.fromId(file)!;
     await mcdFile.writeToFile(openFile.path);
 
     print("Saved MCD file");

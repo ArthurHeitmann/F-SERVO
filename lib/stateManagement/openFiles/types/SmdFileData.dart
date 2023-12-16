@@ -13,6 +13,7 @@ import '../../hasUuid.dart';
 import '../../listNotifier.dart';
 import '../../undoable.dart';
 import '../openFileTypes.dart';
+import '../openFilesManager.dart';
 
 
 class SmdFileData extends OpenFileData {
@@ -29,7 +30,7 @@ class SmdFileData extends OpenFileData {
 
     var smdEntries = await readSmdFile(path);
     smdData?.dispose();
-    smdData = SmdData.from(smdEntries, basenameWithoutExtension(path));
+    smdData = SmdData.from(smdEntries, basenameWithoutExtension(path), uuid);
     smdData!.fileChangeNotifier.addListener(() {
       setHasUnsavedChanges(true);
     });
@@ -108,20 +109,20 @@ class SmdEntryData with HasUuid, Undoable {
 class SmdData extends ListNotifier<SmdEntryData> with CustomTableConfig, Undoable {
   final ChangeNotifier fileChangeNotifier;
 
-  SmdData(List<SmdEntryData> entries, String fileName, this.fileChangeNotifier)
-      : super(entries) {
+  SmdData(List<SmdEntryData> entries, String fileName, OpenFileId fileId, this.fileChangeNotifier)
+    : super(entries, fileId: fileId) {
     name = fileName;
     columnNames = ["ID", "Text"];
     columnFlex = [1, 2];
-    rowCount = NumberProp(entries.length, true);
+    rowCount = NumberProp(entries.length, true, fileId: fileId);
   }
 
-  SmdData.from(List<SmdEntry> rawEntries, String fileName)
-      : fileChangeNotifier = ChangeNotifier(),
-        super([]) {
+  SmdData.from(List<SmdEntry> rawEntries, String fileName, OpenFileId fileId)
+    : fileChangeNotifier = ChangeNotifier(),
+      super([], fileId: fileId) {
     addAll(rawEntries.map((e) {
-      var idProp = StringProp(e.id);
-      var textProp = StringProp(e.text);
+      var idProp = StringProp(e.id, fileId: fileId);
+      var textProp = StringProp(e.text, fileId: fileId);
       return SmdEntryData(
         id: idProp,
         text: textProp,
@@ -131,7 +132,7 @@ class SmdData extends ListNotifier<SmdEntryData> with CustomTableConfig, Undoabl
     name = fileName;
     columnNames = ["ID", "Text"];
     columnFlex = [1, 2];
-    rowCount = NumberProp(rawEntries.length, true);
+    rowCount = NumberProp(rawEntries.length, true, fileId: fileId);
   }
 
   List<SmdEntry> toEntries()
@@ -139,8 +140,8 @@ class SmdData extends ListNotifier<SmdEntryData> with CustomTableConfig, Undoabl
 
   @override
   void onRowAdd() {
-    var idProp = StringProp("ID");
-    var textProp = StringProp("Text");
+    var idProp = StringProp("ID", fileId: fileId);
+    var textProp = StringProp("Text", fileId: fileId);
     add(SmdEntryData(
       id: idProp,
       text: textProp,
@@ -173,8 +174,8 @@ class SmdData extends ListNotifier<SmdEntryData> with CustomTableConfig, Undoabl
   void updateRowWith(int index, List<String?> values) {
     if (index > length) {
       assert(index == length);
-      var idProp = StringProp(values[0]!);
-      var textProp = StringProp(values[1]!);
+      var idProp = StringProp(values[0]!, fileId: fileId);
+      var textProp = StringProp(values[1]!, fileId: fileId);
       add(SmdEntryData(
         id: idProp,
         text: textProp,
@@ -193,6 +194,7 @@ class SmdData extends ListNotifier<SmdEntryData> with CustomTableConfig, Undoabl
     var snapshot = SmdData(
       map((e) => e.takeSnapshot() as SmdEntryData).toList(),
       name,
+      fileId!,
       fileChangeNotifier,
     );
     snapshot.overrideUuid(uuid);

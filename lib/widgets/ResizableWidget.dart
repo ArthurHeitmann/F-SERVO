@@ -14,14 +14,14 @@ class ResizableWidget extends StatefulWidget {
   final Color? lineColor;
 
   ResizableWidget({
-    Key? key,
+    super.key,
     required this.children,
     List<double>? percentages,
     required this.axis,
     this.draggableThickness = 5,
     this.lineThickness = 1.5,
     this.lineColor
-  }) : super(key: key) {
+  }) {
     if (percentages == null)
       this.percentages = List.filled(children.length, 1 / children.length);
     else

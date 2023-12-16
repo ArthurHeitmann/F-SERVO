@@ -166,8 +166,6 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
         messageLog.add("${basename(filePath)} not opened");
         return null;
       }
-      
-      undoHistoryManager.onUndoableEvent();
     } finally {
       isLoadingStatus.popIsLoading();
     }
@@ -198,7 +196,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
       }
     }
 
-    var datEntry = DatHierarchyEntry(StringProp(fileName), datPath, datExtractDir);
+    var datEntry = DatHierarchyEntry(StringProp(fileName, fileId: null), datPath, datExtractDir);
     if (parent != null)
       parent.add(datEntry);
     else
@@ -269,7 +267,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
     if (!await Directory(pakExtractDir).exists()) {
       await extractPakFiles(pakPath, yaxToXml: true);
     }
-    var pakEntry = PakHierarchyEntry(StringProp(pakPath.split(Platform.pathSeparator).last), pakPath, pakExtractDir);
+    var pakEntry = PakHierarchyEntry(StringProp(pakPath.split(Platform.pathSeparator).last, fileId: null), pakPath, pakExtractDir);
     var parentEntry = findPakParentGroup(basename(pakPath)) ?? parent;
     if (parentEntry != null)
       parentEntry.add(pakEntry);
@@ -295,7 +293,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
         showToast("Failed to open $xmlFilePath");
       }
 
-      var xmlEntry = XmlScriptHierarchyEntry(StringProp(xmlFile), xmlFilePath);
+      var xmlEntry = XmlScriptHierarchyEntry(StringProp(xmlFile, fileId: null), xmlFilePath);
       if (await File(xmlFilePath).exists())
         await xmlEntry.readMeta();
       else if (await File(join(pakExtractDir, yaxFile["name"])).exists()) {
@@ -328,7 +326,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
     var existing = findRecWhere((entry) => entry is T && entry.path == filePath);
     if (existing != null)
       return existing;
-    var entry = make(StringProp(basename(filePath)), filePath);
+    var entry = make(StringProp(basename(filePath), fileId: null), filePath);
     if (parent != null)
       parent.add(entry);
     else
@@ -375,7 +373,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
     var waiData = areasManager.openFileAsHidden(waiPath) as WaiFileData;
     await waiData.load();
     
-    var waiEntry = WaiHierarchyEntry(StringProp(basename(waiPath)), waiPath, waiExtractDir, waiData.uuid);
+    var waiEntry = WaiHierarchyEntry(StringProp(basename(waiPath), fileId: null), waiPath, waiExtractDir, waiData.uuid);
     add(waiEntry);
 
     // create EXTRACTION_COMPLETED file, to mark as extract dir
@@ -397,8 +395,6 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
       structure.insert(i, topLevelFolders[i]);
     var bgmBnkPath = join(dirname(waiPath), "bgm", "BGM.bnk");
     waiEntry.addAll(structure.map((e) => makeWaiChildEntry(e, bgmBnkPath)));
-
-    undoHistoryManager.onUndoableEvent();
 
     return waiEntry;
   }
@@ -426,12 +422,12 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
     var wemFiles = await extractBnkWems(bnk, bnkExtractDir, noExtract);
     await extractedFile.writeAsString("Delete this file to re-extract files");
 
-    var bnkEntry = BnkHierarchyEntry(StringProp(basename(bnkPath)), bnkPath, bnkExtractDir);
+    var bnkEntry = BnkHierarchyEntry(StringProp(basename(bnkPath), fileId: null), bnkPath, bnkExtractDir);
 
     var wemParentEntry = BnkSubCategoryParentHierarchyEntry("WEM files");
     bnkEntry.add(wemParentEntry);
     wemParentEntry.addAll(wemFiles.map((e) => WemHierarchyEntry(
-      StringProp(basename(e.item2)),
+      StringProp(basename(e.item2), fileId: null),
       e.item2,
       e.item1,
       OptionalWemData(bnkPath, WemSource.bnk)
@@ -472,7 +468,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
           for (var stateGroup in baseParams.states.stateGroup) {
             var stateGroupId = randomId();
             var groupName = wemIdsToNames[stateGroup.ulStateGroupID] ?? stateGroup.ulStateGroupID.toString();
-            var stateGroupEntry = BnkHircHierarchyEntry(StringProp("StateGroup_$groupName"), "", stateGroupId, "StateGroup", [hirc.uid]);
+            var stateGroupEntry = BnkHircHierarchyEntry(StringProp("StateGroup_$groupName", fileId: null), "", stateGroupId, "StateGroup", [hirc.uid]);
             hircEntries[stateGroupId] = stateGroupEntry;
             for (var state in stateGroup.state) {
               var stateName = wemIdsToNames[state.ulStateID] ?? state.ulStateID.toString();
@@ -485,7 +481,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
                 childState.parentIds.add(stateGroupId);
               }
               else {
-                var stateEntry = BnkHircHierarchyEntry(StringProp("State_$stateName"), "", stateId, "State", [stateGroupId], [childId]);
+                var stateEntry = BnkHircHierarchyEntry(StringProp("State_$stateName", fileId: null), "", stateId, "State", [stateGroupId], [childId]);
                 hircEntries[stateId] = stateEntry;
               }
             }
@@ -502,7 +498,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
               child.parentIds.add(hirc.uid);
             }
             else {
-              var srcEntry = BnkHircHierarchyEntry(StringProp(srcName), path ?? "", srcId, "WEM", [hirc.uid]);
+              var srcEntry = BnkHircHierarchyEntry(StringProp(srcName, fileId: null), path ?? "", srcId, "WEM", [hirc.uid]);
               srcEntry.optionalFileInfo = OptionalWemData(bnkPath, WemSource.bnk);
               hircEntries[srcId] = srcEntry;
             }
@@ -529,7 +525,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
               // }
               var nodeId = randomId();
               var nodeName = "${groups[depth]}=${wemIdsToNames[node.key] ?? node.key.toString()}";
-              var nodeEntry = BnkHircHierarchyEntry(StringProp(nodeName), "", nodeId, "SwitchNode", [parentId], node.audioNodeId != null ? [node.audioNodeId!] : []);
+              var nodeEntry = BnkHircHierarchyEntry(StringProp(nodeName, fileId: null), "", nodeId, "SwitchNode", [parentId], node.audioNodeId != null ? [node.audioNodeId!] : []);
               hircEntries[nodeId] = nodeEntry;
               for (var child in node.children)
                 parseSwitchNode(nodeId, child, depth + 1);
@@ -569,7 +565,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
           if (hirc.initialParams.idExt != 0 && !hircEntries.containsKey(hirc.initialParams.idExt)) {
             var targetName = wemIdsToNames[hirc.initialParams.idExt] ?? "Target_${hirc.initialParams.idExt.toString()}";
             var targetId = randomId();
-            var child = BnkHircHierarchyEntry(StringProp(targetName), "", targetId, "ActionTarget", [hirc.uid]);
+            var child = BnkHircHierarchyEntry(StringProp(targetName, fileId: null), "", targetId, "ActionTarget", [hirc.uid]);
             hircEntries[targetId] = child;
           }
           if (uidNameStr.isEmpty)
@@ -634,7 +630,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
 
         var chunkType = hirc.runtimeType.toString().replaceFirst("Bnk", "");
         var entryName = "${hirc.uid}_$chunkType$uidNameStr";
-        var entry = BnkHircHierarchyEntry(StringProp(entryName), path, hirc.uid, chunkType, parentId, childIds, props);
+        var entry = BnkHircHierarchyEntry(StringProp(entryName, fileId: null), path, hirc.uid, chunkType, parentId, childIds, props);
 
         if (hirc is BnkEvent) {
           List<BnkHircHierarchyEntry> childActions = [];
@@ -642,7 +638,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
             var child = actionEntries[childId];
             if (child == null) {
               var childName = wemIdsToNames[childId] ?? "Action_$childId";
-              child = BnkHircHierarchyEntry(StringProp(childName), "", childId, "Action", [hirc.uid]);
+              child = BnkHircHierarchyEntry(StringProp(childName, fileId: null), "", childId, "Action", [hirc.uid]);
               actionEntries[childId] = child;
             }
             child.parentIds.add(hirc.uid);
@@ -665,7 +661,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
           else {
             var actionChildName = wemIdsToNames[hirc.initialParams.idExt] ?? "Target_${hirc.initialParams.idExt.toString()}";
             var actionChildId = randomId();
-            var actionChildEntry = BnkHircHierarchyEntry(StringProp(actionChildName), "", actionChildId, "ActionTarget", [hirc.uid]);
+            var actionChildEntry = BnkHircHierarchyEntry(StringProp(actionChildName, fileId: null), "", actionChildId, "ActionTarget", [hirc.uid]);
             hircEntries[actionChildId] = actionChildEntry;
             entry.add(actionChildEntry);
           }
@@ -702,12 +698,12 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
         var groupEntries = groupMap.entries.toList();
         groupEntries.sort((a, b) => a.key.toLowerCase().compareTo(b.key.toLowerCase()));
         for (var group in groupEntries) {
-          var groupEntry = BnkHircHierarchyEntry(StringProp(group.key), "", randomId(), groupName);
+          var groupEntry = BnkHircHierarchyEntry(StringProp(group.key, fileId: null), "", randomId(), groupName);
           groupParentEntry.add(groupEntry);
           var groupValues = group.value.toList();
           groupValues.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
           for (var entryName in groupValues) {
-            var entry = BnkHircHierarchyEntry(StringProp(entryName), "", randomId(), "Group Entry");
+            var entry = BnkHircHierarchyEntry(StringProp(entryName, fileId: null), "", randomId(), "Group Entry");
             groupEntry.add(entry);
           }
         }
@@ -718,7 +714,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
         var gameParameters = usedGameParameters.keys.toList();
         gameParameters.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
         for (var gameParam in gameParameters) {
-          var gameParamEntry = BnkHircHierarchyEntry(StringProp(gameParam), "", randomId(), "Game Parameter");
+          var gameParamEntry = BnkHircHierarchyEntry(StringProp(gameParam, fileId: null), "", randomId(), "Game Parameter");
           gameParamParentEntry.add(gameParamEntry);
         }
       }
@@ -777,7 +773,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
     if (existing != null)
       return existing;
     
-    var bxmEntry = BxmHierarchyEntry(StringProp(basename(bxmPath)), bxmPath);
+    var bxmEntry = BxmHierarchyEntry(StringProp(basename(bxmPath), fileId: null), bxmPath);
     if (parent != null)
       parent.add(bxmEntry);
     else
@@ -809,7 +805,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
       }
     }
 
-    var wtaEntry = WtaHierarchyEntry(StringProp(basename(wtaPath)), wtaPath, wtpPath);
+    var wtaEntry = WtaHierarchyEntry(StringProp(basename(wtaPath), fileId: null), wtaPath, wtpPath);
     if (parent != null)
       parent.add(wtaEntry);
     else
@@ -823,7 +819,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
     if (existing != null)
       return existing;
 
-    var wtaEntry = WtbHierarchyEntry(StringProp(basename(wtaPath)), wtaPath);
+    var wtaEntry = WtbHierarchyEntry(StringProp(basename(wtaPath), fileId: null), wtaPath);
     if (parent != null)
       parent.add(wtaEntry);
     else
@@ -919,7 +915,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
     await addPakInfoFileData(yaxPath, 3);
 
     // add to hierarchy
-    var entry = XmlScriptHierarchyEntry(StringProp(basename(filePath)), filePath);
+    var entry = XmlScriptHierarchyEntry(StringProp(basename(filePath), fileId: null), filePath);
     await entry.readMeta();
     parent.add(entry);
 
@@ -1009,7 +1005,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
 }
 
 final openHierarchyManager = OpenHierarchyManager();
-final StringProp openHierarchySearch = StringProp("")
+final StringProp openHierarchySearch = StringProp("", fileId: null)
   ..addListener(() {
     for (var entry in openHierarchyManager.children) {
       entry.setIsVisibleWithSearchRecursive(false);

@@ -53,7 +53,7 @@ class XmlFileData extends OpenFileData {
     pakType = null;
     if (pakInfoFileData != null) {
       pakType?.dispose();
-      pakType = NumberProp(pakInfoFileData["type"], true);
+      pakType = NumberProp(pakInfoFileData["type"], true, fileId: uuid);
       pakType!.addListener(updatePakType);
     }
 

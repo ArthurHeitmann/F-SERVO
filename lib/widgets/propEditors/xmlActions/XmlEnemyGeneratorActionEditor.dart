@@ -123,13 +123,13 @@ class _EnemyGeneratorEditorState extends XmlActionInnerEditorState<EnemyGenerato
       XmlProp(
         file: widget.action.file,
         tagId: crc32("min"), tagName: "min",
-        value: NumberProp(min, isInt),
+        value: NumberProp(min, isInt, fileId: widget.action.file),
         parentTags: widget.action.nextParents()
       ),
       XmlProp(
         file: widget.action.file,
         tagId: crc32("max"), tagName: "max",
-        value: NumberProp(max, isInt),
+        value: NumberProp(max, isInt, fileId: widget.action.file),
         parentTags: widget.action.nextParents()
       ),
     ];
@@ -139,7 +139,7 @@ class _EnemyGeneratorEditorState extends XmlActionInnerEditorState<EnemyGenerato
       buttons: [
         optionalValPropButtonConfig(
           widget.action, "cameraType", () => getNextInsertIndexBefore(widget.action, ["relativeLevel"]),
-          () => NumberProp(-1, true)
+          () => NumberProp(-1, true, fileId: widget.action.file)
         ),
       ],
       child: child,

@@ -13,6 +13,7 @@ import '../../hasUuid.dart';
 import '../../listNotifier.dart';
 import '../../undoable.dart';
 import '../openFileTypes.dart';
+import '../openFilesManager.dart';
 
 
 class TmdFileData extends OpenFileData {
@@ -29,7 +30,7 @@ class TmdFileData extends OpenFileData {
 
     var tmdEntries = await readTmdFile(path);
     tmdData?.dispose();
-    tmdData = TmdData.from(tmdEntries, basenameWithoutExtension(path));
+    tmdData = TmdData.from(tmdEntries, basenameWithoutExtension(path), uuid);
     tmdData!.fileChangeNotifier.addListener(() {
       setHasUnsavedChanges(true);
     });
@@ -107,20 +108,20 @@ class TmdEntryData with HasUuid, Undoable {
 class TmdData extends ListNotifier<TmdEntryData> with CustomTableConfig, Undoable {
   final ChangeNotifier fileChangeNotifier;
 
-  TmdData(List<TmdEntryData> entries, String fileName, this.fileChangeNotifier)
-      : super(entries) {
+  TmdData(List<TmdEntryData> entries, String fileName, OpenFileId fileId, this.fileChangeNotifier)
+      : super(entries, fileId: fileId) {
     name = fileName;
     columnNames = ["ID", "Text"];
     columnFlex = [1, 2];
-    rowCount = NumberProp(entries.length, true);
+    rowCount = NumberProp(entries.length, true, fileId: fileId);
   }
 
-  TmdData.from(List<TmdEntry> rawEntries, String fileName)
+  TmdData.from(List<TmdEntry> rawEntries, String fileName, OpenFileId fileId)
       : fileChangeNotifier = ChangeNotifier(),
-        super([]) {
+      super([], fileId: fileId) {
     addAll(rawEntries.map((e) {
-      var idProp = StringProp(e.id);
-      var textProp = StringProp(e.text);
+      var idProp = StringProp(e.id, fileId: fileId);
+      var textProp = StringProp(e.text, fileId: fileId);
       return TmdEntryData(
         id: idProp,
         text: textProp,
@@ -130,7 +131,7 @@ class TmdData extends ListNotifier<TmdEntryData> with CustomTableConfig, Undoabl
     name = fileName;
     columnNames = ["ID", "Text"];
     columnFlex = [1, 2];
-    rowCount = NumberProp(rawEntries.length, true);
+    rowCount = NumberProp(rawEntries.length, true, fileId: fileId);
   }
 
   List<TmdEntry> toEntries()
@@ -139,8 +140,8 @@ class TmdData extends ListNotifier<TmdEntryData> with CustomTableConfig, Undoabl
 
   @override
   void onRowAdd() {
-    var idProp = StringProp("ID");
-    var textProp = StringProp("Text");
+    var idProp = StringProp("ID", fileId: fileId);
+    var textProp = StringProp("Text", fileId: fileId);
     add(TmdEntryData(
       id: idProp,
       text: textProp,
@@ -173,8 +174,8 @@ class TmdData extends ListNotifier<TmdEntryData> with CustomTableConfig, Undoabl
   void updateRowWith(int index, List<String?> values) {
     if (index > length) {
       assert(index == length);
-      var idProp = StringProp(values[0]!);
-      var textProp = StringProp(values[1]!);
+      var idProp = StringProp(values[0]!, fileId: fileId);
+      var textProp = StringProp(values[1]!, fileId: fileId);
       add(TmdEntryData(
         id: idProp,
         text: textProp,
@@ -193,6 +194,7 @@ class TmdData extends ListNotifier<TmdEntryData> with CustomTableConfig, Undoabl
     var snapshot = TmdData(
       map((e) => e.takeSnapshot() as TmdEntryData).toList(),
       name,
+      fileId!,
       fileChangeNotifier,
     );
     snapshot.overrideUuid(uuid);

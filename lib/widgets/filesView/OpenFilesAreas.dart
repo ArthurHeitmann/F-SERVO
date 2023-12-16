@@ -9,8 +9,8 @@ import 'fileTabView.dart';
 
 
 class OpenFilesAreas extends ChangeNotifierWidget {
-  OpenFilesAreas({Key? key})
-    : super(key: key, notifier: areasManager.areas) {
+  OpenFilesAreas({super.key})
+    : super(notifier: areasManager.areas) {
     if (areasManager.areas.isEmpty)
       areasManager.addArea(FilesAreaManager());
   }

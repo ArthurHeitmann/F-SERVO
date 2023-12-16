@@ -22,7 +22,7 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
 
 class BnkSubCategoryParentHierarchyEntry extends HierarchyEntry {
   BnkSubCategoryParentHierarchyEntry(String name, { bool isCollapsed = false })
-      : super(StringProp(name), false, true, false) {
+      : super(StringProp(name, fileId: null), false, true, false) {
     this.isCollapsed.value = isCollapsed;
   }
 
@@ -90,7 +90,7 @@ class BnkHircHierarchyEntry extends GenericFileHierarchyEntry {
             BnkPropIds[propValues.pID[i]] ?? wemIdsToNames[propValues.pID[i]] ?? propValues.pID[i].toString(),
             msPropNames.contains(BnkPropIds[propValues.pID[i]]?.toLowerCase())
                 ? (propValues.values[i].number / 1000).toString()
-                : wemIdsToNames[propValues.values[i]] ?? propValues.values[i].toString()
+                : wemIdsToNames[propValues.values[i].i] ?? propValues.values[i].toString()
           ])
       ]);
     }

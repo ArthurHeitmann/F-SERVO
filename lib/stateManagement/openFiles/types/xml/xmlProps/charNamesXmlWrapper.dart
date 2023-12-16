@@ -4,15 +4,15 @@ import 'dart:math';
 import 'package:convert/convert.dart';
 import 'package:flutter/material.dart';
 
-import '../fileTypeUtils/utils/ByteDataWrapper.dart';
-import '../utils/Disposable.dart';
-import '../utils/utils.dart';
-import '../widgets/propEditors/otherFileTypes/genericTable/tableEditor.dart';
-import 'Property.dart';
-import 'hasUuid.dart';
-import 'openFiles/openFilesManager.dart';
-import 'openFiles/types/xml/xmlProps/xmlProp.dart';
-import 'undoable.dart';
+import '../../../../../fileTypeUtils/utils/ByteDataWrapper.dart';
+import '../../../../../utils/Disposable.dart';
+import '../../../../../utils/utils.dart';
+import '../../../../../widgets/propEditors/otherFileTypes/genericTable/tableEditor.dart';
+import '../../../../Property.dart';
+import '../../../../hasUuid.dart';
+import '../../../../undoable.dart';
+import '../../../openFilesManager.dart';
+import 'xmlProp.dart';
 
 class KeyValProp extends ChangeNotifier {
   StringProp key;
@@ -77,7 +77,7 @@ class CharNamesXmlProp extends XmlProp with CustomTableConfig {
   bool _hasPendingAnyChanges = false;
 
   CharNamesXmlProp({ super.file, super.children })
-    : super(tagId: _textHash, tagName: "root", value: StringProp(""), parentTags: []) {
+    : super(tagId: _textHash, tagName: "root", value: StringProp("", fileId: file), parentTags: []) {
     
     name = "Character Names";
     columnNames = [
@@ -88,7 +88,7 @@ class CharNamesXmlProp extends XmlProp with CustomTableConfig {
       1,
       ...List.filled(_nameKeys.length, 1)
     ];
-    rowCount = NumberProp(0, true);
+    rowCount = NumberProp(0, true, fileId: file);
     rowCount.changesUndoable = false;
     
     deserialize();
@@ -100,9 +100,11 @@ class CharNamesXmlProp extends XmlProp with CustomTableConfig {
       }
       serialize();
       var file = areasManager.fromId(this.file);
-      file?.setHasUnsavedChanges(true);
-      file?.contentNotifier.notifyListeners();
-      undoHistoryManager.onUndoableEvent();
+      if (file != null) {
+        file.setHasUnsavedChanges(true);
+        file.contentNotifier.notifyListeners();
+        file.onUndoableEvent();
+      }
     });
   }
 
@@ -153,15 +155,15 @@ class CharNamesXmlProp extends XmlProp with CustomTableConfig {
         var spaceIndex = line.indexOf(" ");
         var key = line.substring(0, spaceIndex);
         var val = line.substring(spaceIndex + 1);
-        var keyProp = StringProp(key);
-        var valProp = StringProp(val);
+        var keyProp = StringProp(key, fileId: file);
+        var valProp = StringProp(val, fileId: file);
         currentTranslations.add(KeyValProp(keyProp, valProp));
       }
       else {
         if (currentKey != "") {
           newNames.add(
             CharNameTranslations(
-              StringProp(currentKey),
+              StringProp(currentKey, fileId: file),
               currentTranslations,
               anyChangeNotifier
             )
@@ -173,7 +175,7 @@ class CharNamesXmlProp extends XmlProp with CustomTableConfig {
     }
     newNames.add(
       CharNameTranslations(
-        StringProp(currentKey),
+        StringProp(currentKey, fileId: file),
         currentTranslations,
         anyChangeNotifier
       )
@@ -258,14 +260,14 @@ class CharNamesXmlProp extends XmlProp with CustomTableConfig {
       tagId: _sizeHash,
       tagName: "size",
       parentTags: parentTags,
-      value: HexProp(bytesLength),
+      value: HexProp(bytesLength, fileId: file),
     ));
     textProp.addAll(rows.map((r) => XmlProp(
       file: file,
       tagId: _valueHash,
       tagName: "value",
       parentTags: parentTags,
-      value: StringProp(r),
+      value: StringProp(r, fileId: file),
     )));
   }
 
@@ -294,8 +296,8 @@ class CharNamesXmlProp extends XmlProp with CustomTableConfig {
   @override
   void onRowAdd() {
     names.add(CharNameTranslations(
-      StringProp(""),
-      _nameKeys.map((k) => KeyValProp(StringProp(k), StringProp(""))).toList(),
+      StringProp("", fileId: file),
+      _nameKeys.map((k) => KeyValProp(StringProp(k, fileId: file), StringProp("", fileId: file))).toList(),
       anyChangeNotifier
     ));
     rowCount.value++;
@@ -315,13 +317,13 @@ class CharNamesXmlProp extends XmlProp with CustomTableConfig {
     if (index > names.length) {
       assert(index == names.length);
       names.add(CharNameTranslations(
-        StringProp(values[0]!),
+        StringProp(values[0]!, fileId: file),
         List.generate(_nameKeys.length, (i) {
           if (values[i] == null)
             return null;
           return KeyValProp(
-            StringProp(_nameKeys[i]),
-            StringProp(values[i]!),
+            StringProp(_nameKeys[i], fileId: file),
+            StringProp(values[i]!, fileId: file),
           );
         })
         .whereType<KeyValProp>()
@@ -340,7 +342,7 @@ class CharNamesXmlProp extends XmlProp with CustomTableConfig {
       }
       else if (!name.translations.any((t) => t.key.value == _nameKeys[i])) {
         name.translations.add(
-          KeyValProp(StringProp(_nameKeys[i]), StringProp(values[i]!))
+          KeyValProp(StringProp(_nameKeys[i], fileId: file), StringProp(values[i]!, fileId: file))
         );
       }
       else {

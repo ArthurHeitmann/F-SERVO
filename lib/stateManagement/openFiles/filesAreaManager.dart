@@ -12,7 +12,7 @@ import 'openFileTypes.dart';
 import 'openFilesManager.dart';
 
 class FilesAreaManager with HasUuid, Undoable implements Disposable {
-  final ListNotifier<OpenFileData> _files = ValueListNotifier([]);
+  final ListNotifier<OpenFileData> _files = ValueListNotifier([], fileId: null);
   IterableNotifier<OpenFileData> get files => _files;
   final ValueNotifier<OpenFileData?> _currentFile = ValueNotifier(null);
   ValueListenable<OpenFileData?> get currentFile => _currentFile;
@@ -26,8 +26,6 @@ class FilesAreaManager with HasUuid, Undoable implements Disposable {
 
     if (this == areasManager.activeArea.value)
       windowTitle.value = currentFile.value?.displayName ?? "";
-
-    undoHistoryManager.onUndoableEvent();
   }
 
   void switchToClosestFile() {
@@ -49,7 +47,7 @@ class FilesAreaManager with HasUuid, Undoable implements Disposable {
       var answer = await confirmOrCancelDialog(
         getGlobalContext(),
         title: "Save changes?",
-        body: "${file.name} has unsaved changes",
+        body: "${file.name.value} has unsaved changes",
         yesText: "Save",
         noText: "Discard",
       );
@@ -80,8 +78,6 @@ class FilesAreaManager with HasUuid, Undoable implements Disposable {
 
     if (files.isEmpty && areasManager.areas.length > 1)
       areasManager.removeArea(this);
-
-    undoHistoryManager.onUndoableEvent();
   }
 
   void closeAll() {
@@ -131,8 +127,6 @@ class FilesAreaManager with HasUuid, Undoable implements Disposable {
     if (files.isEmpty) {
       areasManager.removeArea(this);
     }
-
-    undoHistoryManager.onUndoableEvent();
   }
 
   void moveToLeftView(OpenFileData file) {
@@ -156,8 +150,6 @@ class FilesAreaManager with HasUuid, Undoable implements Disposable {
     if (files.isEmpty) {
       areasManager.removeArea(this);
     }
-
-    undoHistoryManager.onUndoableEvent();
   }
 
   void switchToNextFile() {

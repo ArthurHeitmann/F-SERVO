@@ -4,15 +4,18 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import '../../../widgets/filesView/FileType.dart';
+import '../../Property.dart';
 import '../../undoable.dart';
 import '../openFileTypes.dart';
 
 class TextFileData extends OpenFileData {
-  ValueNotifier<String> text = ValueNotifier("Loading...");
+  late final StringProp text;
   int cursorOffset = 0;
 
-  TextFileData(super.name, super.path, { super.secondaryName, IconData? icon, Color? iconColor })
-      : super(type: FileType.text, icon: icon ?? Icons.text_fields, iconColor: iconColor);
+  TextFileData(super.name, super.path, { super.secondaryName, IconData? icon, super.iconColor })
+      : super(type: FileType.text, icon: icon ?? Icons.text_fields) {
+    text = StringProp("Loading...", fileId: uuid);
+  }
 
   @override
   Future<void> load() async {

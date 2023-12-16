@@ -22,7 +22,7 @@ class WaiHierarchyEntry extends ExtractableHierarchyEntry {
   List<WaiChild> structure = [];
 
   WaiHierarchyEntry(StringProp name, String path, String extractedPath, this.waiDataId)
-      : super(name, path, extractedPath, true, false);
+    : super(name, path, extractedPath, true, false);
 
   @override
   Undoable takeSnapshot() {
@@ -200,12 +200,12 @@ class WemHierarchyEntry extends GenericFileHierarchyEntry {
 HierarchyEntry makeWaiChildEntry(WaiChild child, String bgmBnkPath) {
   HierarchyEntry entry;
   if (child is WaiChildDir)
-    entry = WaiFolderHierarchyEntry(StringProp(child.name), child.path, child.children);
+    entry = WaiFolderHierarchyEntry(StringProp(child.name, fileId: null), child.path, child.children);
   else if (child is WaiChildWsp)
-    entry = WspHierarchyEntry(StringProp(child.name), child.path, child.children, bgmBnkPath);
+    entry = WspHierarchyEntry(StringProp(child.name, fileId: null), child.path, child.children, bgmBnkPath);
   else if (child is WaiChildWem)
     entry = WemHierarchyEntry(
-        StringProp(child.name),
+        StringProp(child.name, fileId: null),
         child.path,
         child.wemId,
         OptionalWemData(bgmBnkPath, WemSource.wsp)

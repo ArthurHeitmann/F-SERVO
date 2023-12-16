@@ -180,7 +180,7 @@ class WtaWtpTextures with HasUuid, Undoable implements Disposable {
   static Future<WtaWtpTextures> fromWtaWtp(OpenFileId file, String wtaPath, String? wtpPath, String extractDir, bool isWtb) async {
     var wta = await WtaFile.readFromFile(wtaPath);
     var wtpFile = await File(isWtb ? wtaPath : wtpPath!).open();
-    var textures = ValueListNotifier<WtaTextureEntry>([]);
+    var textures = ValueListNotifier<WtaTextureEntry>([], fileId: file);
     try {
       for (int i = 0; i < wta.textureOffsets.length; i++) {
         messageLog.add("Extracting texture ${i + 1}/${wta.textureOffsets.length}");
@@ -191,13 +191,13 @@ class WtaWtpTextures with HasUuid, Undoable implements Disposable {
         BoolProp? isAlbedo;
         HexProp? flag;
         if (wta.textureFlags[i] == WtaFile.albedoFlag || wta.textureFlags[i] == WtaFile.noAlbedoFlag)
-          isAlbedo = BoolProp(wta.textureFlags[i] == WtaFile.albedoFlag);
+          isAlbedo = BoolProp(wta.textureFlags[i] == WtaFile.albedoFlag, fileId: file);
         else
-          flag = HexProp(wta.textureFlags[i]);
+          flag = HexProp(wta.textureFlags[i], fileId: file);
         textures.add(WtaTextureEntry(
           file,
-          HexProp(wta.textureIdx[i]),
-          StringProp(texturePath),
+          HexProp(wta.textureIdx[i], fileId: file),
+          StringProp(texturePath, fileId: file),
           isAlbedo: isAlbedo,
           flag: flag,
         ));

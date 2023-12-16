@@ -2,12 +2,11 @@
 
 import 'package:flutter/material.dart';
 
-import '../../../stateManagement/openFiles/types/xml/xmlProps/xmlActionProp.dart';
 import '../simpleProps/propEditorFactory.dart';
 import 'XmlActionEditor.dart';
 
 class DelayActionEditor extends XmlActionEditor {
-  DelayActionEditor({ super.key,  required XmlActionProp action, required super.showDetails}) : super(action: action);
+  DelayActionEditor({ super.key,  required super.action, required super.showDetails});
 
   @override
   XmlActionEditorState createState() => _DelayActionEditorState();

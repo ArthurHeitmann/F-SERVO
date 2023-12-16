@@ -9,6 +9,7 @@ import '../widgets/theme/nierTheme.dart';
 import 'Property.dart';
 import 'listNotifier.dart';
 import 'openFiles/openFileTypes.dart';
+import 'openFiles/openFilesManager.dart';
 import 'undoable.dart';
 
 enum ThemeType {
@@ -20,8 +21,8 @@ enum ThemeType {
 class SavableProp<T> extends ValueProp<T> {
   final String key;
 
-  SavableProp(this.key, SharedPreferences prefs, T fallback)
-    : super(fallback) {
+  SavableProp(this.key, SharedPreferences prefs, T fallback, OpenFileId fileId)
+    : super(fallback, fileId: fileId) {
     changesUndoable = false;
     value = _getValue(prefs) ?? fallback;
     addListener(saveChanges);
@@ -105,23 +106,23 @@ class PreferencesData extends OpenFileData {
 
     var paths = _prefs!.getStringList("indexingPaths") ?? [];
     if (indexingPaths == null) {
-      indexingPaths = IndexingPathsProp(_prefs!, paths);
+      indexingPaths = IndexingPathsProp(_prefs!, uuid, paths);
     }
     else {
       await indexingPaths!.clearPaths();
       await indexingPaths!.addPaths(paths);
     }
 
-    dataExportPath = SavableProp<String>("dataExportPath", _prefs!, "");
-    exportDats = SavableProp<bool>("exportDat", _prefs!, true);
-    exportPaks = SavableProp<bool>("exportPak", _prefs!, true);
-    convertXmls = SavableProp<bool>("convertXml", _prefs!, true);
-    preferVsCode = SavableProp<bool>("preferVsCode", _prefs!, false);
-    themeType = SavableProp<ThemeType>("themeType", _prefs!, ThemeType.dark);
-    waiExtractDir = SavableProp<String>("waiExtractDir", _prefs!, "");
-    wwiseCliPath = SavableProp<String>("wwiseCliPath", _prefs!, "");
-    lastCpkExtractDir = SavableProp<String>("lastCpkExtractDir", _prefs!, "");
-    lastSearchDir = SavableProp<String>("lastSearchDir", _prefs!, "");
+    dataExportPath = SavableProp<String>("dataExportPath", _prefs!, "", uuid);
+    exportDats = SavableProp<bool>("exportDat", _prefs!, true, uuid);
+    exportPaks = SavableProp<bool>("exportPak", _prefs!, true, uuid);
+    convertXmls = SavableProp<bool>("convertXml", _prefs!, true, uuid);
+    preferVsCode = SavableProp<bool>("preferVsCode", _prefs!, false, uuid);
+    themeType = SavableProp<ThemeType>("themeType", _prefs!, ThemeType.dark, uuid);
+    waiExtractDir = SavableProp<String>("waiExtractDir", _prefs!, "", uuid);
+    wwiseCliPath = SavableProp<String>("wwiseCliPath", _prefs!, "", uuid);
+    lastCpkExtractDir = SavableProp<String>("lastCpkExtractDir", _prefs!, "", uuid);
+    lastSearchDir = SavableProp<String>("lastSearchDir", _prefs!, "", uuid);
 
     await super.load();
     _loadingState = LoadingState.loaded;
@@ -157,19 +158,22 @@ class PreferencesData extends OpenFileData {
 class IndexingPathsProp extends ListNotifier<StringProp> {
   final SharedPreferences _prefs;
 
-  IndexingPathsProp(this._prefs, List<String> paths)
-    : super(paths.map((path) => StringProp(path)).toList());
+  IndexingPathsProp(this._prefs, OpenFileId fileId, List<String> paths)
+    : super(
+      paths.map((path) => StringProp(path, fileId: fileId)).toList(),
+      fileId: fileId
+    );
 
   List<String> _getPaths() => map((e) => e.value).toList();
 
   Future<void> addPath(String path) async {
-    add(StringProp(path));
+    add(StringProp(path, fileId: fileId));
     await _prefs.setStringList("indexingPaths", _getPaths());
     await idLookup.addIndexingPaths([path]);
   }
 
   Future<void> addPaths(List<String> paths) async {
-    addAll(paths.map((path) => StringProp(path)));
+    addAll(paths.map((path) => StringProp(path, fileId: fileId)));
     await _prefs.setStringList("indexingPaths", _getPaths());
     await idLookup.addIndexingPaths(paths);
   }
@@ -196,7 +200,7 @@ class IndexingPathsProp extends ListNotifier<StringProp> {
 
   @override
   Undoable takeSnapshot() {
-    var snapshot = IndexingPathsProp(_prefs, _getPaths());
+    var snapshot = IndexingPathsProp(_prefs, fileId!, _getPaths());
     snapshot.overrideUuid(uuid);
     return snapshot;
   }

@@ -121,14 +121,15 @@ class _AreaEditorState extends ChangeNotifierState<AreaEditor> {
     if (type == curType.value)
       return;
     
+    var fileId = prop.file;
     var parentTags = prop.nextParents();
     // add rotation, scale, height
     if (type == _typeBoxArea || type == _typeCylinderArea) {
       if (curType.value == _typeSphereArea) {
         var posI = prop.indexWhere((e) => e.tagName == "position");
-        prop.insert(posI + 1, XmlProp(file: prop.file, tagId: crc32("rotation"), tagName: "rotation", value: VectorProp([0, 0, 0]), parentTags: parentTags));
-        prop.insert(posI + 1, XmlProp(file: prop.file, tagId: crc32("scale"), tagName: "scale", value: VectorProp([1, 1, 1]), parentTags: parentTags));
-        prop.add(XmlProp(file: prop.file, tagId: crc32("height"), tagName: "height", value: NumberProp(1, false), parentTags: parentTags));
+        prop.insert(posI + 1, XmlProp(file: prop.file, tagId: crc32("rotation"), tagName: "rotation", value: VectorProp([0, 0, 0], fileId: fileId), parentTags: parentTags));
+        prop.insert(posI + 1, XmlProp(file: prop.file, tagId: crc32("scale"), tagName: "scale", value: VectorProp([1, 1, 1], fileId: fileId), parentTags: parentTags));
+        prop.add(XmlProp(file: prop.file, tagId: crc32("height"), tagName: "height", value: NumberProp(1, false, fileId: fileId), parentTags: parentTags));
       }
     }
     // remove rotation, scale, height
@@ -137,7 +138,7 @@ class _AreaEditorState extends ChangeNotifierState<AreaEditor> {
     }
     // add points
     if (type == _typeBoxArea) {
-      prop.insert(prop.length - 1, XmlProp(file: prop.file, tagId: crc32("points"), tagName: "points", value: VectorProp([-1, -1, 1, -1, 1, 1, -1, 1]), parentTags: parentTags));
+      prop.insert(prop.length - 1, XmlProp(file: prop.file, tagId: crc32("points"), tagName: "points", value: VectorProp([-1, -1, 1, -1, 1, 1, -1, 1], fileId: fileId), parentTags: parentTags));
     }
     // remove points
     else {
@@ -147,7 +148,7 @@ class _AreaEditorState extends ChangeNotifierState<AreaEditor> {
     if (type == _typeCylinderArea || type == _typeSphereArea) {
       if (curType.value == _typeBoxArea) {
         var insertI = getNextInsertIndexAfter(prop, ["scale", "rotation", "position"]);
-        prop.insert(insertI, XmlProp(file: prop.file, tagId: crc32("radius"), tagName: "radius", value: NumberProp(1, false), parentTags: parentTags));
+        prop.insert(insertI, XmlProp(file: prop.file, tagId: crc32("radius"), tagName: "radius", value: NumberProp(1, false, fileId: fileId), parentTags: parentTags));
       }
     }
     // remove radius

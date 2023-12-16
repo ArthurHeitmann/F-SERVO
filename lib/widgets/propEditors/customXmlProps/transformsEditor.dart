@@ -42,7 +42,7 @@ class _TransformsEditorState<T extends PropTextField> extends ChangeNotifierStat
     var newProp = XmlProp(
       file: widget.parent.file,
       tagId: tagId,
-      value: VectorProp(List.filled(3, initValue)),
+      value: VectorProp(List.filled(3, initValue), fileId: widget.parent.file),
       parentTags: parent.nextParents(),
     );
     parent.insert(getInsertPos(), newProp);

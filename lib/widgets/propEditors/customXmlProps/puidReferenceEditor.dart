@@ -37,7 +37,7 @@ class PuidReferenceEditor extends ChangeNotifierWidget {
 class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor> {
   late bool showLookup;
   Future<List<IndexedIdData>>? lookupFuture;
-  StringProp objIdProp = StringProp("");
+  StringProp objIdProp = StringProp("", fileId: null);
   bool isDragging = false;
 
   @override

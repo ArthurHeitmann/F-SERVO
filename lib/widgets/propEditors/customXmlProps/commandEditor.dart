@@ -41,7 +41,7 @@ class CommandEditorState extends ChangeNotifierState<CommandEditor> {
             file: parent.file,
             tagId: crc32("label"),
             tagName: "label",
-            value: StringProp("commandLabel"),
+            value: StringProp("commandLabel", fileId: parent.file),
             parentTags: [...parent.parentTags, tag, "command"],
           )
         ]
@@ -119,19 +119,20 @@ class CommandEditorState extends ChangeNotifierState<CommandEditor> {
         var value = command.get("value");
         var args = commParent.get("args");
         var argsParent = commParent.get("command") != null ? commParent : widget.prop;
+        var fileId= command.file;
         return NestedContextMenu(
           buttons: [
             optionalValPropButtonConfig(
               command, "label", () => 0,
-              () => StringProp("commandLabel")
+              () => StringProp("commandLabel", fileId: fileId)
             ),
             optionalValPropButtonConfig(
               command, "value", () => command.length,
-              () => NumberProp(1, true)
+              () => NumberProp(1, true, fileId: fileId)
             ),
             optionalValPropButtonConfig(
               argsParent, "args", () => argsParent.length,
-              () => StringProp("arg")
+              () => StringProp("arg", fileId: fileId)
             ),
           ],
           child: Column(

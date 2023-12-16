@@ -16,7 +16,7 @@ import '../HierarchyEntryTypes.dart';
 class XmlScriptHierarchyEntry extends FileHierarchyEntry {
   int groupId = -1;
   bool _hasReadMeta = false;
-  final StringProp hapName = StringProp("");
+  final StringProp hapName = StringProp("", fileId: null);
 
   XmlScriptHierarchyEntry(StringProp name, String path, { bool? preferVsCode })
       : super(name, path, false, true)

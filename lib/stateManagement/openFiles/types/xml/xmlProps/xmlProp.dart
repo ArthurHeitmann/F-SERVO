@@ -5,10 +5,10 @@ import '../../../../../fileTypeUtils/yax/hashToStringMap.dart';
 import '../../../../../fileTypeUtils/yax/japToEng.dart';
 import '../../../../../utils/utils.dart';
 import '../../../../Property.dart';
-import '../../../../charNamesXmlWrapper.dart';
 import '../../../../listNotifier.dart';
 import '../../../../undoable.dart';
 import '../../../openFilesManager.dart';
+import 'charNamesXmlWrapper.dart';
 import 'xmlActionProp.dart';
 
 class XmlProp extends ListNotifier<XmlProp> {
@@ -20,8 +20,8 @@ class XmlProp extends ListNotifier<XmlProp> {
 
   XmlProp({ required this.file, required this.tagId, String? tagName, Prop? value, String? strValue, List<XmlProp>? children, required this.parentTags }) :
     tagName = tagName ?? hashToStringMap[tagId] ?? "UNKNOWN",
-    value = value ?? Prop.fromString(strValue ?? "", tagName: tagName),
-    super(children ?? [])
+    value = value ?? Prop.fromString(strValue ?? "", tagName: tagName, fileId: file),
+    super(children ?? [], fileId: file)
   {
     this.value.addListener(_onValueChange);
   }
@@ -29,10 +29,13 @@ class XmlProp extends ListNotifier<XmlProp> {
   XmlProp._fromXml(XmlElement root, { required this.file, required this.parentTags }) :
     tagId = crc32(root.localName),
     tagName = root.localName,
-    value = Prop.fromString(root.childElements.isEmpty ? root.text : "", tagName: root.localName),
-    super(root.childElements
-      .map((XmlElement child) => XmlProp.fromXml(child, file: file, parentTags: [...parentTags, root.localName]))
-      .toList())
+    value = Prop.fromString(root.childElements.isEmpty ? root.text : "", tagName: root.localName, fileId: file),
+    super(
+      root.childElements
+        .map((XmlElement child) => XmlProp.fromXml(child, file: file, parentTags: [...parentTags, root.localName]))
+        .toList(),
+      fileId: file
+    )
   {
     value.addListener(_onValueChange);
   }
@@ -118,8 +121,8 @@ class XmlProp extends ListNotifier<XmlProp> {
       var file = areasManager.fromId(this.file);
       file?.setHasUnsavedChanges(true);
       file?.contentNotifier.notifyListeners();
+      file?.onUndoableEvent();
     }
-    undoHistoryManager.onUndoableEvent();
     notifyListeners();
   }
 

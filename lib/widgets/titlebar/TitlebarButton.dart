@@ -11,11 +11,11 @@ class TitleBarButton extends StatelessWidget {
   final Color? primaryColor;
 
   const TitleBarButton({
-    Key? key, 
+    super.key,
     required this.icon,
     required this.onPressed,
     this.primaryColor
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -129,7 +129,7 @@ class _TableEditorState extends ChangeNotifierState<TableEditor> {
   @override
   void initState() {
     columnSearch = List.generate(widget.config.columnNames.length, (index) {
-      var prop = StringProp("");
+      var prop = StringProp("", fileId: null);
       prop.addListener(() => setState(() {}));
       return prop;
     });

@@ -86,10 +86,10 @@ class SaveInventoryItem with HasUuid, Undoable {
 
   SaveInventoryItem(this.id, this.isActive, this.count);
 
-  SaveInventoryItem.read(ByteDataWrapper bytes) :
-        id = NumberProp(bytes.readInt32(), true),
-        isActive = BoolProp(bytes.readInt32() == 0x00070000),
-        count = NumberProp(bytes.readInt32(), true);
+  SaveInventoryItem.read(ByteDataWrapper bytes, OpenFileId file) :
+    id = NumberProp(bytes.readInt32(), true, fileId: file),
+    isActive = BoolProp(bytes.readInt32() == 0x00070000, fileId: file),
+    count = NumberProp(bytes.readInt32(), true, fileId: file);
 
   void write(ByteDataWrapper bytes) {
     bytes.writeInt32(id.value.toInt());
@@ -100,9 +100,9 @@ class SaveInventoryItem with HasUuid, Undoable {
   @override
   Undoable takeSnapshot() {
     return SaveInventoryItem(
-        id.takeSnapshot() as NumberProp,
-        isActive.takeSnapshot() as BoolProp,
-        count.takeSnapshot() as NumberProp
+      id.takeSnapshot() as NumberProp,
+      isActive.takeSnapshot() as BoolProp,
+      count.takeSnapshot() as NumberProp
     );
   }
 
@@ -125,12 +125,12 @@ class SaveWeapon with HasUuid, Undoable {
 
   SaveWeapon(this.index, this.id, this.level, this.isNew, this.hasNewStory, this.enemiesDefeated);
 
-  SaveWeapon.read(this.index, ByteDataWrapper bytes) :
-        id = NumberProp(bytes.readInt32(), true),
-        level = NumberProp(bytes.readInt32(), true),
-        isNew = BoolProp(bytes.readInt32() == 1),
-        hasNewStory = BoolProp(bytes.readInt32() == 1),
-        enemiesDefeated = NumberProp(bytes.readInt32(), true);
+  SaveWeapon.read(this.index, ByteDataWrapper bytes, OpenFileId file) :
+    id = NumberProp(bytes.readInt32(), true, fileId: file),
+    level = NumberProp(bytes.readInt32(), true, fileId: file),
+    isNew = BoolProp(bytes.readInt32() == 1, fileId: file),
+    hasNewStory = BoolProp(bytes.readInt32() == 1, fileId: file),
+    enemiesDefeated = NumberProp(bytes.readInt32(), true, fileId: file);
 
   void write(ByteDataWrapper bytes) {
     bytes.writeInt32(id.value.toInt());
@@ -143,12 +143,12 @@ class SaveWeapon with HasUuid, Undoable {
   @override
   Undoable takeSnapshot() {
     return SaveWeapon(
-        index,
-        id.takeSnapshot() as NumberProp,
-        level.takeSnapshot() as NumberProp,
-        isNew.takeSnapshot() as BoolProp,
-        hasNewStory.takeSnapshot() as BoolProp,
-        enemiesDefeated.takeSnapshot() as NumberProp
+      index,
+      id.takeSnapshot() as NumberProp,
+      level.takeSnapshot() as NumberProp,
+      isNew.takeSnapshot() as BoolProp,
+      hasNewStory.takeSnapshot() as BoolProp,
+      enemiesDefeated.takeSnapshot() as NumberProp
     );
   }
 
@@ -169,9 +169,9 @@ class SaveWeaponSet with HasUuid, Undoable {
 
   SaveWeaponSet(this.weaponIdLightAttack, this.weaponIdHeavyAttack);
 
-  SaveWeaponSet.read(ByteDataWrapper bytes) :
-        weaponIdLightAttack = NumberProp(bytes.readInt32(), true),
-        weaponIdHeavyAttack = NumberProp(bytes.readInt32(), true);
+  SaveWeaponSet.read(ByteDataWrapper bytes, OpenFileId file) :
+    weaponIdLightAttack = NumberProp(bytes.readInt32(), true, fileId: file),
+    weaponIdHeavyAttack = NumberProp(bytes.readInt32(), true, fileId: file);
 
   void write(ByteDataWrapper bytes) {
     bytes.writeInt32(weaponIdLightAttack.value.toInt());
@@ -181,8 +181,8 @@ class SaveWeaponSet with HasUuid, Undoable {
   @override
   Undoable takeSnapshot() {
     return SaveWeaponSet(
-        weaponIdLightAttack.takeSnapshot() as NumberProp,
-        weaponIdHeavyAttack.takeSnapshot() as NumberProp
+      weaponIdLightAttack.takeSnapshot() as NumberProp,
+      weaponIdHeavyAttack.takeSnapshot() as NumberProp
     );
   }
 
@@ -200,12 +200,12 @@ class SaveVector with HasUuid, Undoable {
 
   SaveVector(this.vec, this.w);
 
-  SaveVector.read(ByteDataWrapper bytes) {
+  SaveVector.read(ByteDataWrapper bytes, OpenFileId file) {
     vec = VectorProp([
       bytes.readFloat32(),
       bytes.readFloat32(),
       bytes.readFloat32(),
-    ]);
+    ], fileId: file);
     w = bytes.readFloat32();
   }
 
@@ -220,8 +220,8 @@ class SaveVector with HasUuid, Undoable {
   @override
   Undoable takeSnapshot() {
     return SaveVector(
-        vec.takeSnapshot() as VectorProp,
-        w
+      vec.takeSnapshot() as VectorProp,
+      w
     );
   }
 
@@ -236,7 +236,8 @@ class TreeEntry extends ListNotifier<TreeEntry> {
   final StringProp text;
   final OpenFileId file;
 
-  TreeEntry(this.text, super.children, this.file) {
+  TreeEntry(this.text, super.children, this.file)
+    :super(fileId: file) {
     text.addListener(() {
       areasManager.fromId(file)?.setHasUnsavedChanges(true);
     });
@@ -245,9 +246,9 @@ class TreeEntry extends ListNotifier<TreeEntry> {
   @override
   Undoable takeSnapshot() {
     return TreeEntry(
-        text.takeSnapshot() as StringProp,
-        map((e) => e.takeSnapshot() as TreeEntry).toList(),
-        file
+      text.takeSnapshot() as StringProp,
+      map((e) => e.takeSnapshot() as TreeEntry).toList(),
+      file
     );
   }
 
@@ -273,7 +274,7 @@ List<TreeEntry> _parseTree(String text, OpenFileId file) {
       indentationLevel++;
     line = line.substring(indentationLevel);
 
-    TreeEntry entry = TreeEntry(StringProp(line), [], file);
+    TreeEntry entry = TreeEntry(StringProp(line, fileId: file), [], file);
 
     if (indentationLevel == 0) {
       rootEntries.add(entry);
@@ -333,6 +334,7 @@ void _sortQuestEntries(TreeEntry questEntry) {
 }
 
 class SlotDataDat with HasUuid, Undoable implements Disposable {
+  final OpenFileId fileId;
   late final NumberProp steamId64;
   late final StringProp name;
   late final NumberProp money;
@@ -350,37 +352,37 @@ class SlotDataDat with HasUuid, Undoable implements Disposable {
   late final List<SaveWeaponSet> weaponSets;
   late final List<TreeEntry> tree;
 
-  SlotDataDat(this.steamId64, this.name, this.money, this.experience, this.phase, this.transporterFlag, this.position, this.rotation, this.corpseName, this.corpseOnlineName, this.corpsePosition, this.inventory, this.corpseInventory, this.weapons, this.weaponSets, this.tree);
+  SlotDataDat(this.fileId, this.steamId64, this.name, this.money, this.experience, this.phase, this.transporterFlag, this.position, this.rotation, this.corpseName, this.corpseOnlineName, this.corpsePosition, this.inventory, this.corpseInventory, this.weapons, this.weaponSets, this.tree);
 
-  SlotDataDat.read(ByteDataWrapper bytes, OpenFileId file) {
+  SlotDataDat.read(ByteDataWrapper bytes, this.fileId) {
     bytes.position = 4;
-    steamId64 = NumberProp(bytes.readInt64(), true);
+    steamId64 = NumberProp(bytes.readInt64(), true, fileId: fileId);
     bytes.position = 0x34;
-    name = StringProp(bytes.readString(35, encoding: StringEncoding.utf16).trimNull());
+    name = StringProp(bytes.readString(35, encoding: StringEncoding.utf16).trimNull(), fileId: fileId);
     bytes.position = 0x3056C;
-    money = NumberProp(bytes.readInt32(), true);
+    money = NumberProp(bytes.readInt32(), true, fileId: fileId);
     bytes.position = 0x3871C;
-    experience = NumberProp(bytes.readInt32(), true);
+    experience = NumberProp(bytes.readInt32(), true, fileId: fileId);
     bytes.position = 0x395F4;
-    phase = StringProp(bytes.readString(32).trimNull());
-    transporterFlag = StringProp(bytes.readString(32).trimNull());
+    phase = StringProp(bytes.readString(32).trimNull(), fileId: fileId);
+    transporterFlag = StringProp(bytes.readString(32).trimNull(), fileId: fileId);
     bytes.position = 0x3963C;
-    position = SaveVector.read(bytes);
-    rotation = SaveVector.read(bytes);
+    position = SaveVector.read(bytes, fileId);
+    rotation = SaveVector.read(bytes, fileId);
     bytes.position = 0x3884C;
-    corpseOnlineName = StringProp(bytes.readString(128).trimNull());
-    corpseName = StringProp(bytes.readString(22, encoding: StringEncoding.utf16).trimNull());
+    corpseOnlineName = StringProp(bytes.readString(128).trimNull(), fileId: fileId);
+    corpseName = StringProp(bytes.readString(22, encoding: StringEncoding.utf16).trimNull(), fileId: fileId);
     bytes.position = 0x388F8;
-    corpsePosition = SaveVector.read(bytes);
+    corpsePosition = SaveVector.read(bytes, fileId);
     bytes.position = 0x30570;
-    inventory = List.generate(256, (index) => SaveInventoryItem.read(bytes));
-    corpseInventory = List.generate(256, (index) => SaveInventoryItem.read(bytes));
-    weapons = List.generate(80, (index) => SaveWeapon.read(index, bytes));
+    inventory = List.generate(256, (index) => SaveInventoryItem.read(bytes, fileId));
+    corpseInventory = List.generate(256, (index) => SaveInventoryItem.read(bytes, fileId));
+    weapons = List.generate(80, (index) => SaveWeapon.read(index, bytes, fileId));
     bytes.position = 0x386F4;
-    weaponSets = List.generate(2, (index) => SaveWeaponSet.read(bytes));
+    weaponSets = List.generate(2, (index) => SaveWeaponSet.read(bytes, fileId));
     bytes.position = 0x7C;
     var treeText = bytes.readString(0x30000).trimNull();
-    tree = _parseTree(treeText, file);
+    tree = _parseTree(treeText, fileId);
   }
 
   void write(ByteDataWrapper bytes) {
@@ -440,6 +442,7 @@ class SlotDataDat with HasUuid, Undoable implements Disposable {
   @override
   Undoable takeSnapshot() {
     return SlotDataDat(
+      fileId,
       steamId64.takeSnapshot() as NumberProp,
       name.takeSnapshot() as StringProp,
       money.takeSnapshot() as NumberProp,

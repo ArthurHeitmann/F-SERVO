@@ -29,11 +29,11 @@ class _MinMaxPropEditorState<T extends PropTextField> extends ChangeNotifierStat
         buttons: [
           optionalValPropButtonConfig(
             widget.prop, "min", () => 0,
-            () => NumberProp(1, false)
+            () => NumberProp(1, false, fileId: widget.prop.file)
           ),
           optionalValPropButtonConfig(
             widget.prop, "max", () => widget.prop.length,
-            () => NumberProp(2, false)
+            () => NumberProp(2, false, fileId: widget.prop.file)
           ),
         ],
         child: Row(

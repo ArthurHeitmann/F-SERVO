@@ -21,7 +21,7 @@ typedef OpenFileId = String;
 
 
 class OpenFilesAreasManager with HasUuid, Undoable implements Disposable {
-  final ListNotifier<FilesAreaManager> _areas = ValueListNotifier([]);
+  final ListNotifier<FilesAreaManager> _areas = ValueListNotifier([], fileId: null);
   IterableNotifier<FilesAreaManager> get areas => _areas;
   final ValueNotifier<FilesAreaManager?> _activeArea = ValueNotifier(null);
   ValueListenable<FilesAreaManager?> get activeArea => _activeArea;
@@ -67,6 +67,18 @@ class OpenFilesAreasManager with HasUuid, Undoable implements Disposable {
     return _filesMap[id];
   }
 
+  void onFileUndoEvent(OpenFileData file) {
+    file.onUndoableEvent();
+  }
+
+  void onFileIdUndoEvent(OpenFileId id) {
+    var file = fromId(id);
+    if (file != null)
+      onFileUndoEvent(file);
+    else
+      print("WARNING: onFileIdUndoEvent: file not found: $id");
+  }
+
   FilesAreaManager? getAreaOfFileId(OpenFileId searchFile, [bool includeHidden = true]) {
     for (var area in areas) {
       for (var file in area.files) {
@@ -98,8 +110,6 @@ class OpenFilesAreasManager with HasUuid, Undoable implements Disposable {
     _activeArea.value = value;
 
     windowTitle.value = value?.currentFile.value?.displayName ?? "";
-    
-    undoHistoryManager.onUndoableEvent();
   }
 
   void ensureFileIsVisible(OpenFileData file) {
@@ -137,8 +147,6 @@ class OpenFilesAreasManager with HasUuid, Undoable implements Disposable {
     toArea.addFile(file);
     toArea.setCurrentFile(file);
     _filesMap[file.uuid] = file;
-
-    undoHistoryManager.onUndoableEvent();
 
     return file;
   }
@@ -251,7 +259,6 @@ class OpenFilesAreasManager with HasUuid, Undoable implements Disposable {
       rethrow;
     } finally {
       isLoadingStatus.popIsLoading();
-      undoHistoryManager.onUndoableEvent();
     }
   }
 

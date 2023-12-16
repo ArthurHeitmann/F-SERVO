@@ -24,11 +24,11 @@ class _FadeActionInnerEditorState extends XmlActionInnerEditorState<FadeActionIn
         optionalPropButtonConfig(widget.action, "param", () => 4, _makeParam),
         optionalValPropButtonConfig(
           widget.action, "time", () => getNextInsertIndexAfter(widget.action, ["param", "attribute"]),
-          () => NumberProp(2.0, false)
+          () => NumberProp(2.0, false, fileId: widget.action.file)
         ),
         optionalValPropButtonConfig(
           widget.action, "hack_whiteFade", () => getNextInsertIndexAfter(widget.action, ["type"]),
-          () => NumberProp(1, true)
+          () => NumberProp(1, true, fileId: widget.action.file)
         ),
       ],
       child: Column(

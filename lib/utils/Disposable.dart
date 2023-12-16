@@ -1,7 +1,7 @@
 
 import 'package:flutter/foundation.dart';
 
-abstract class Disposable {
+mixin Disposable {
   @mustCallSuper
   void dispose();
 }

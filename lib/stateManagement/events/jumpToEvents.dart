@@ -12,14 +12,14 @@ class JumpToEvent {
 class JumpToLineEvent extends JumpToEvent {
   final int line;
 
-  const JumpToLineEvent(OpenFileData file, this.line) : super(file);
+  const JumpToLineEvent(super.file, this.line);
 }
 
 class JumpToIdEvent extends JumpToEvent {
   final int id;
   final int? fallbackId;
 
-  const JumpToIdEvent(OpenFileData file, this.id, [this.fallbackId]) : super(file);
+  const JumpToIdEvent(super.file, this.id, [this.fallbackId]);
 }
 
 final jumpToStream = StreamController<JumpToEvent>.broadcast();

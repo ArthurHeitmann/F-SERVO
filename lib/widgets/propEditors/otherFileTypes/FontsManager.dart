@@ -224,7 +224,7 @@ class __McdFontsManagerState extends ChangeNotifierState<FontsManager> {
           ].map((e) => Padding(
             padding: const EdgeInsets.only(left: 20),
             child: e,
-          )).toList(),
+          )),
         ],
       ),
     );

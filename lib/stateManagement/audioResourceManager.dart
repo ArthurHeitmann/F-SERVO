@@ -24,6 +24,11 @@ class AudioResource {
   AudioResource(this.wavPath, this.wemPath, this.sampleRate, this.totalSamples, this.duration, this.previewSamples, this.previewSampleRate, this._deleteOnDispose);
 
   Future<void> dispose() => audioResourcesManager._disposeAudioResource(this);
+
+  AudioResource newRef() {
+    _refCount++;
+    return this;
+  }
 }
 
 /// Through this class, you can get a reference to an audio file and have to dispose it when you're done with it.

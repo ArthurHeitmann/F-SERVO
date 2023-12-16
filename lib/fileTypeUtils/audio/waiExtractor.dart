@@ -15,7 +15,7 @@ abstract class WaiChild {
 class WaiChildList extends WaiChild {
   final List<WaiChild> children;
 
-  const WaiChildList(String name, this.children) : super(name);
+  const WaiChildList(super.name, this.children);
 }
 class WaiChildDir extends WaiChildList {
   final String path;
@@ -31,7 +31,7 @@ class WaiChildWem extends WaiChild {
   final String path;
   final int wemId;
 
-  const WaiChildWem(String name, this.path, this.wemId) : super(name);
+  const WaiChildWem(super.name, this.path, this.wemId);
 }
 Future<List<WaiChild>> extractWaiWsps(WaiFile wai, String waiPath, String extractPath, [bool noExtract = false]) async {
   List<WaiChild> structure = [];

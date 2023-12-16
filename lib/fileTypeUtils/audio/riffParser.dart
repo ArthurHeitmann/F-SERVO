@@ -310,9 +310,9 @@ class CueChunk extends RiffChunk {
 }
 
 abstract class RiffListSubChunk extends RiffChunk {
-  RiffListSubChunk(String chunkId, int size) : super(chunkId, size);
+  RiffListSubChunk(super.chunkId, super.size);
 
-  RiffListSubChunk.read(ByteDataWrapper bytes) : super.read(bytes);
+  RiffListSubChunk.read(super.bytes) : super.read();
 }
 
 class RiffListGenericSubChunk extends RiffListSubChunk {

@@ -28,10 +28,10 @@ class WidgetSizeWrapper extends SingleChildRenderObjectWidget {
   final OnWidgetSizeChange onSizeChange;
 
   const WidgetSizeWrapper({
-    Key? key,
+    super.key,
     required this.onSizeChange,
-    required Widget child,
-  }) : super(key: key, child: child);
+    required Widget super.child,
+  });
 
   @override
   RenderObject createRenderObject(BuildContext context) {

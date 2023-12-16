@@ -45,7 +45,7 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> with Audi
   double? dragStartPos;
   Map<String, double>? initialXOff;
   @override
-  OpenFileId get fileId => widget.track.file;
+  OpenFileId get fileId => widget.track.fileId;
 
   @override
   void initState() {
@@ -81,7 +81,7 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> with Audi
       child: GestureDetector(
         onTap: () => setState(() {
           viewData.selectedClipUuids.clear();
-          selectable.deselectFile(widget.track.file);
+          selectable.deselectFile(widget.track.fileId);
         }),
         behavior: HitTestBehavior.translucent,
         child: LayoutBuilder(
@@ -428,12 +428,12 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> with Audi
         selectable.deselect(clip.uuid);
       } else {
         viewData.selectedClipUuids.add(clip.uuid);
-        selectable.select(clip.file, clip.combinedProps, (type) => onClipKeyEvent(type, clip));
+        selectable.select(clip.fileId, clip.combinedProps, (type) => onClipKeyEvent(type, clip));
       }
     } else {
       viewData.selectedClipUuids.clear();
       viewData.selectedClipUuids.add(clip.uuid);
-      selectable.select(clip.file, clip.combinedProps, (type) => onClipKeyEvent(type, clip));
+      selectable.select(clip.fileId, clip.combinedProps, (type) => onClipKeyEvent(type, clip));
     }
   }
 
@@ -498,7 +498,7 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> with Audi
     var viewData = AudioEditorData.of(context);
     viewData.selectedClipUuids.clear();
     viewData.selectedClipUuids.add(newClip.uuid);
-    selectable.select(newClip.file, newClip.combinedProps, (type) => onClipKeyEvent(type, clip));
+    selectable.select(newClip.fileId, newClip.combinedProps, (type) => onClipKeyEvent(type, clip));
     AudioPlaybackScope.of(context).cancelCurrentPlayback();
   }
 

@@ -3,13 +3,13 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:isolate';
 
+import 'package:flutter/cupertino.dart';
 import 'package:path/path.dart' as path;
 import 'package:xml/xml.dart';
 
 import '../fileTypeUtils/mcd/mcdIO.dart';
 import '../fileTypeUtils/tmd/tmdReader.dart';
 import '../fileTypeUtils/yax/hashToStringMap.dart';
-import '../stateManagement/Property.dart';
 import '../utils/utils.dart';
 import 'IdLookup.dart';
 import 'IdsIndexer.dart';
@@ -64,7 +64,7 @@ class SearchService {
   Isolate? _isolate;
   SendPort? _sendPort;
   final _isDoneCompleter = Completer<void>();
-  final BoolProp isSearching;
+  final ValueNotifier<bool> isSearching;
 
   SearchService({ required this.isSearching });
 

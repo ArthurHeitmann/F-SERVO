@@ -20,7 +20,6 @@ import 'package:path/path.dart';
 import '../../main.dart';
 import '../../stateManagement/events/jumpToEvents.dart';
 import '../../stateManagement/openFiles/types/TextFileData.dart';
-import '../../stateManagement/undoable.dart';
 import '../../utils/assetDirFinder.dart';
 import '../../utils/utils.dart';
 import '../misc/ChangeNotifierWidget.dart';
@@ -98,7 +97,7 @@ class _TextFileEditorState extends ChangeNotifierState<TextFileEditor> {
     widget.fileContent.text.value = text;
     widget.fileContent.setHasUnsavedChanges(true);
     widget.fileContent.cursorOffset = controller!.selection.baseOffset;
-    undoHistoryManager.onUndoableEvent();
+   widget.fileContent.onUndoableEvent();
     isOwnUpdate = false;
   }
 

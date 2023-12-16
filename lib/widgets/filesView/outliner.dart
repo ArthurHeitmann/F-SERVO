@@ -23,7 +23,7 @@ class Outliner extends ChangeNotifierWidget {
 }
 
 class _OutlinerState extends ChangeNotifierState<Outliner> {
-  final StringProp search = StringProp("");
+  final StringProp search = StringProp("", fileId: null);
   final scrollController = ScrollController();
 
   @override

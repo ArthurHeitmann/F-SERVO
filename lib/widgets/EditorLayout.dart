@@ -9,7 +9,7 @@ import 'filesView/searchPanel.dart';
 import 'filesView/sidebar.dart';
 
 class EditorLayout extends StatelessWidget {
-  const EditorLayout({Key? key}) : super(key: key);
+  const EditorLayout({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +24,7 @@ class EditorLayout extends StatelessWidget {
               icon: Icons.folder,
               child: ResizableWidget(
                 axis: Axis.vertical,
-                percentages: const [0.6, 0.4],
+                percentages: const [0.75, 0.25],
                 draggableThickness: 5,
                 children: [
                   FileExplorer(),

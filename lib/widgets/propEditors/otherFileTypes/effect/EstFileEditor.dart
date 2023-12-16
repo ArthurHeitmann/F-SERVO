@@ -7,6 +7,7 @@ import '../../../../fileTypeUtils/effects/estEntryTypes.dart';
 import '../../../../stateManagement/Property.dart';
 import '../../../../stateManagement/listNotifier.dart';
 import '../../../../stateManagement/openFiles/openFileTypes.dart';
+import '../../../../stateManagement/openFiles/openFilesManager.dart';
 import '../../../../stateManagement/openFiles/types/EstFileData.dart';
 import '../../../../utils/utils.dart';
 import '../../../misc/ChangeNotifierWidget.dart';
@@ -57,9 +58,9 @@ class _EstFileEditorState extends ChangeNotifierState<EstFileEditor> {
       showToast("Invalid json");
       return;
     }
-    var entries = json.map((e) => EstEntryWrapper.fromJson(e));
+    var entries = json.map((e) => EstEntryWrapper.fromJson(e, widget.file.uuid));
     widget.file.records.add(EstRecordWrapper(
-      ValueListNotifier(entries.toList()),
+      ValueListNotifier(entries.toList(), fileId: widget.file.uuid),
       widget.file.uuid,
     ));
   }
@@ -98,6 +99,7 @@ class _EstFileEditorState extends ChangeNotifierState<EstFileEditor> {
                   selectedEntry: widget.file.selectedEntry,
                   // initiallyCollapsed: widget.file.records.length > 3,
                   initiallyCollapsed: false,
+                  fileId: widget.file.uuid,
                 ),
                 const Divider(height: 1, thickness: 1,),
               ],
@@ -125,6 +127,7 @@ class _EstRecordEditor extends ChangeNotifierWidget {
   final VoidCallback onRemove;
   final ValueNotifier<SelectedEffectItem?> selectedEntry;
   final bool initiallyCollapsed;
+  final OpenFileId fileId;
 
   _EstRecordEditor({
     required this.index,
@@ -133,6 +136,7 @@ class _EstRecordEditor extends ChangeNotifierWidget {
     required this.onRemove,
     required this.selectedEntry,
     required this.initiallyCollapsed,
+    required this.fileId,
   }) : super(notifiers: [record.entries, selectedEntry], key: Key(record.uuid));
 
   @override
@@ -168,7 +172,7 @@ class _EstRecordEditorState extends ChangeNotifierState<_EstRecordEditor> {
         showToast("Invalid json");
       return;
     }
-    var entry = EstEntryWrapper.fromJson(json);
+    var entry = EstEntryWrapper.fromJson(json, widget.fileId);
     if (widget.record.entries.any((e) => e.entry.header.id == entry.entry.header.id)) {
       showToast("Entry of this type already exists");
       return;

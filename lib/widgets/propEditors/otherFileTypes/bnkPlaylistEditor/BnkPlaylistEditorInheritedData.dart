@@ -17,12 +17,12 @@ class AudioEditorData extends InheritedWidget {
 
   const AudioEditorData({
     super.key,
-    required Widget child,
+    required super.child,
     required this.msPerPix,
     required this.xOff,
     required this.selectedClipUuids,
     required this.getClipByUuid,
-  }) : super(child: child);
+  });
 
   @override
   bool updateShouldNotify(AudioEditorData oldWidget) {
@@ -50,10 +50,10 @@ class SnapPointsData extends InheritedWidget {
 
   const SnapPointsData({
     super.key,
-    required Widget child,
+    required super.child,
     required this.staticSnapPoints,
     required this.dynamicSnapPoints,
-  }) : super(child: child);
+  });
 
   @override
   bool updateShouldNotify(SnapPointsData oldWidget) {
@@ -115,12 +115,11 @@ class AudioPlaybackScope extends InheritedWidget {
 
   const AudioPlaybackScope({
     super.key, 
-    required Widget child,
+    required super.child,
     required this.currentPlaybackItem,
     required this.setCurrentPlaybackItem,
     required this.playbackMarker,
-  }) :
-    super(child: child);
+  });
 
   void cancelCurrentPlayback() {
     currentPlaybackItem?.onCancel();

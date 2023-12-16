@@ -11,7 +11,7 @@ import 'TitlebarButton.dart';
 
 
 class TitleBar extends ChangeNotifierWidget {
-  TitleBar({Key? key}) : super(key: key, notifiers: [windowTitle, undoHistoryManager]);
+  TitleBar({super.key}) : super(notifiers: [windowTitle]);
 
   @override
   TitleBarState createState() => TitleBarState();
@@ -69,91 +69,110 @@ class TitleBarState extends ChangeNotifierState<TitleBar> with WindowListener {
           minHeight: titleBarHeight,
           maxHeight: titleBarHeight,
         ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            IconButton(
-              padding: EdgeInsets.zero,
-              splashRadius: 14,
-              icon: const Icon(Icons.undo, size: 17),
-              onPressed: undoHistoryManager.canUndo ? undoHistoryManager.undo : null,
-            ),
-            IconButton(
-              padding: EdgeInsets.zero,
-              splashRadius: 14,
-              icon: const Icon(Icons.redo, size: 17),
-              onPressed: undoHistoryManager.canRedo ? undoHistoryManager.redo : null,
-            ),
-            Tooltip(
-              message: "Save all changed files",
-              waitDuration: const Duration(milliseconds: 500),
-              child: IconButton(
-                padding: EdgeInsets.zero,
-                splashRadius: 14,
-                icon: const Icon(Icons.save, size: 15),
-                onPressed: () => areasManager.saveAll(),
-              ),
-            ),
-            Tooltip(
-              message: "Settings",
-              waitDuration: const Duration(milliseconds: 500),
-              child: IconButton(
-                padding: EdgeInsets.zero,
-                splashRadius: 14,
-                icon: const Icon(Icons.settings, size: 15),
-                onPressed: () => areasManager.openPreferences(),
-              ),
-            ),
-            Tooltip(
-              message: "Auto translate Jap to Eng",
-              waitDuration: const Duration(milliseconds: 500),
-              child: ChangeNotifierBuilder(
-                notifier: shouldAutoTranslate,
-                builder: (context) => Opacity(
-                  opacity: shouldAutoTranslate.value ? 1.0 : 0.25,
+        child: activeFileBuilder(
+          builder: (context, file) {
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                IconButton(
+                  padding: EdgeInsets.zero,
+                  splashRadius: 14,
+                  icon: const Icon(Icons.undo, size: 17),
+                  onPressed: file?.canUndo ?? false ? file!.undo : null,
+                ),
+                IconButton(
+                  padding: EdgeInsets.zero,
+                  splashRadius: 14,
+                  icon: const Icon(Icons.redo, size: 17),
+                  onPressed: file?.canRedo ?? false ? file!.redo : null,
+                ),
+                Tooltip(
+                  message: "Save all changed files",
+                  waitDuration: const Duration(milliseconds: 500),
                   child: IconButton(
-                    padding: const EdgeInsets.all(5),
-                    constraints: const BoxConstraints(),
-                    iconSize: 20,
-                    splashRadius: 20,
-                    icon: const Icon(Icons.translate, size: 15,),
-                    isSelected: shouldAutoTranslate.value,
-                    onPressed: () => shouldAutoTranslate.value ^= true,
+                    padding: EdgeInsets.zero,
+                    splashRadius: 14,
+                    icon: const Icon(Icons.save, size: 15),
+                    onPressed: () => areasManager.saveAll(),
                   ),
                 ),
-              ),
-            ),
-            Expanded(
-              child: GestureDetector(
-                onPanUpdate: isDesktop ? (details) => windowManager.startDragging() : null,
-                onDoubleTap: isDesktop ? toggleMaximize : null,
-                behavior: HitTestBehavior.translucent,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                  alignment: Alignment.center,
-                  child: Text(windowTitle.value, style: TextStyle(color: getTheme(context).titleBarTextColor), overflow: TextOverflow.ellipsis),
-                )
-              ),
-            ),
-            if (isDesktop) ...[
-              TitleBarButton(
-                icon: Icons.minimize_rounded,
-                onPressed: windowManager.minimize,
-                primaryColor: getTheme(context).titleBarButtonPrimaryColor!,
-              ),
-              TitleBarButton(
-                icon: isExpanded ? Icons.expand_more_rounded : Icons.expand_less_rounded,
-                onPressed: toggleMaximize,
-                primaryColor: getTheme(context).titleBarButtonPrimaryColor!,
-              ),
-              TitleBarButton(
-                icon: Icons.close_rounded,
-                onPressed: windowManager.close,
-                primaryColor: getTheme(context).titleBarButtonCloseColor!,
-              ),
-            ]
-          ],
+                Tooltip(
+                  message: "Settings",
+                  waitDuration: const Duration(milliseconds: 500),
+                  child: IconButton(
+                    padding: EdgeInsets.zero,
+                    splashRadius: 14,
+                    icon: const Icon(Icons.settings, size: 15),
+                    onPressed: () => areasManager.openPreferences(),
+                  ),
+                ),
+                Tooltip(
+                  message: "Auto translate Jap to Eng",
+                  waitDuration: const Duration(milliseconds: 500),
+                  child: ChangeNotifierBuilder(
+                    notifier: shouldAutoTranslate,
+                    builder: (context) => Opacity(
+                      opacity: shouldAutoTranslate.value ? 1.0 : 0.25,
+                      child: IconButton(
+                        padding: const EdgeInsets.all(5),
+                        constraints: const BoxConstraints(),
+                        iconSize: 20,
+                        splashRadius: 20,
+                        icon: const Icon(Icons.translate, size: 15,),
+                        isSelected: shouldAutoTranslate.value,
+                        onPressed: () => shouldAutoTranslate.value ^= true,
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: GestureDetector(
+                    onPanUpdate: isDesktop ? (details) => windowManager.startDragging() : null,
+                    onDoubleTap: isDesktop ? toggleMaximize : null,
+                    behavior: HitTestBehavior.translucent,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                      alignment: Alignment.center,
+                      child: Text(windowTitle.value, style: TextStyle(color: getTheme(context).titleBarTextColor), overflow: TextOverflow.ellipsis),
+                    )
+                  ),
+                ),
+                if (isDesktop) ...[
+                  TitleBarButton(
+                    icon: Icons.minimize_rounded,
+                    onPressed: windowManager.minimize,
+                    primaryColor: getTheme(context).titleBarButtonPrimaryColor!,
+                  ),
+                  TitleBarButton(
+                    icon: isExpanded ? Icons.expand_more_rounded : Icons.expand_less_rounded,
+                    onPressed: toggleMaximize,
+                    primaryColor: getTheme(context).titleBarButtonPrimaryColor!,
+                  ),
+                  TitleBarButton(
+                    icon: Icons.close_rounded,
+                    onPressed: windowManager.close,
+                    primaryColor: getTheme(context).titleBarButtonCloseColor!,
+                  ),
+                ]
+              ],
+            );
+          }
         ),
+      ),
+    );
+  }
+
+  Widget activeFileBuilder({required Widget Function(BuildContext, HasUndoHistory?) builder}) {
+    return ChangeNotifierBuilder(
+      notifier: areasManager.activeArea,
+      builder: (context) => ChangeNotifierBuilder(
+        key: Key(areasManager.activeArea.value?.uuid ?? ""),
+        notifier: areasManager.activeArea.value?.currentFile,
+        builder: (context) => ChangeNotifierBuilder(
+          key: Key(areasManager.activeArea.value?.currentFile.value?.uuid ?? ""),
+          notifier: areasManager.activeArea.value?.currentFile.value?.historyNotifier,
+          builder: (context) => builder(context, areasManager.activeArea.value?.currentFile.value),
+        )
       ),
     );
   }

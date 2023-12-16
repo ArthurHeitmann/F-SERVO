@@ -145,8 +145,8 @@ typedef _EventWithIndex = Tuple2<int, McdEvent>;
 class _McdEditorBodyState extends ChangeNotifierState<_McdEditorBody> {
   final scrollController = ScrollController();
   List<List<_EventWithIndex>> eventPages = [];
-  StringProp search = StringProp("");
-  BoolProp isRegex = BoolProp(false);
+  StringProp search = StringProp("", fileId: null);
+  BoolProp isRegex = BoolProp(false, fileId: null);
   int currentPage = 0;
 
   @override
@@ -314,7 +314,7 @@ class _McdEditorBodyState extends ChangeNotifierState<_McdEditorBody> {
             ].map((w) => ConstrainedBox(
               constraints: BoxConstraints.tight(const Size(30, 40)),
               child: w,
-            )).toList(),
+            )),
           ],
         ),
       ),

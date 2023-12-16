@@ -20,16 +20,16 @@ import '../openFileTypes.dart';
 import '../openFilesManager.dart';
 
 class EstFileData extends OpenFileData {
-  final ValueListNotifier<EstRecordWrapper> records;
+  late final ValueListNotifier<EstRecordWrapper> records;
   List<String> typeNames;
   final ValueNotifier<SelectedEffectItem?> selectedEntry = ValueNotifier(null);
   final onAnyChange = ChangeNotifier();
 
   EstFileData(super.name, super.path, { super.secondaryName, ValueListNotifier<EstRecordWrapper>? records, List<String>? typeNames }) :
-    records = records ?? ValueListNotifier([]),
     typeNames = List.unmodifiable(typeNames ?? []),
     super(type: FileType.est, icon: Icons.subtitles)
   {
+    this.records = records ?? ValueListNotifier([], fileId: uuid);
     this.records.addListener(_onListChange);
     onAnyChange.addListener(_onAnyChange);
   }
@@ -47,7 +47,8 @@ class EstFileData extends OpenFileData {
     records.addAll(est.records
       .map((type) => EstRecordWrapper(
         ValueListNotifier(
-            type.map((record) => EstEntryWrapper.fromEntry(record)).toList()
+          type.map((record) => EstEntryWrapper.fromEntry(record, uuid)).toList(),
+          fileId: uuid
         ),
         uuid,
       ))
@@ -83,7 +84,7 @@ class EstFileData extends OpenFileData {
 
   void _onAnyChange() {
     setHasUnsavedChanges(true);
-    undoHistoryManager.onUndoableEvent();
+    onUndoableEvent();
   }
 
   void removeRecord(EstRecordWrapper record) {
@@ -145,7 +146,7 @@ class EstRecordWrapper with HasUuid, Undoable implements Disposable {
   final OpenFileId fileId;
 
   EstRecordWrapper(this.entries, this.fileId, [bool isEnabledB = true])
-      : isEnabled = BoolProp(isEnabledB) {
+      : isEnabled = BoolProp(isEnabledB, fileId: fileId) {
     entries.addListener(_onListChange);
     isEnabled.addListener(onAnyChange.notifyListeners);
     _onListChange();
@@ -186,31 +187,32 @@ class EstRecordWrapper with HasUuid, Undoable implements Disposable {
 }
 
 class EstEntryWrapper<T extends EstTypeEntry> with HasUuid, Undoable implements Disposable {
+  final OpenFileId fileId;
   final T entry;
   final BoolProp isEnabled;
   final onAnyChange = ChangeNotifier();
 
-  EstEntryWrapper.unknown(this.entry, [bool isEnabledB = true])
-      : isEnabled = BoolProp(isEnabledB) {
+  EstEntryWrapper.unknown(this.entry, this.fileId, [bool isEnabledB = true])
+      : isEnabled = BoolProp(isEnabledB, fileId: fileId) {
     isEnabled.addListener(onAnyChange.notifyListeners);
   }
 
-  static EstEntryWrapper<T> fromEntry<T extends EstTypeEntry>(T entry, [bool isEnabledB = true]) {
+  static EstEntryWrapper<T> fromEntry<T extends EstTypeEntry>(T entry, OpenFileId fileId, [bool isEnabledB = true]) {
     if (entry is EstTypePartEntry)
-      return EstPartEntryWrapper(entry, isEnabledB) as EstEntryWrapper<T>;
+      return EstPartEntryWrapper(entry, fileId, isEnabledB) as EstEntryWrapper<T>;
     else if (entry is EstTypeMoveEntry)
-      return EstMoveEntryWrapper(entry, isEnabledB) as EstEntryWrapper<T>;
+      return EstMoveEntryWrapper(entry, fileId, isEnabledB) as EstEntryWrapper<T>;
     else if (entry is EstTypeEmifEntry)
-      return EstEmifEntryWrapper(entry, isEnabledB) as EstEntryWrapper<T>;
+      return EstEmifEntryWrapper(entry, fileId, isEnabledB) as EstEntryWrapper<T>;
     else if (entry is EstTypeTexEntry)
-      return EstTexEntryWrapper(entry, isEnabledB) as EstEntryWrapper<T>;
+      return EstTexEntryWrapper(entry, fileId, isEnabledB) as EstEntryWrapper<T>;
     else if (entry is EstTypeFwkEntry)
-      return EstFwkEntryWrapper(entry, isEnabledB) as EstEntryWrapper<T>;
+      return EstFwkEntryWrapper(entry, fileId, isEnabledB) as EstEntryWrapper<T>;
     else
-      return EstEntryWrapper.unknown(entry, isEnabledB);
+      return EstEntryWrapper.unknown(entry, fileId, isEnabledB);
   }
 
-  static EstEntryWrapper fromJson(Map data) {
+  static EstEntryWrapper fromJson(Map data, OpenFileId fileId) {
     var header = EstTypeHeader(
       data["u_a"],
       data["id"],
@@ -224,7 +226,7 @@ class EstEntryWrapper<T extends EstTypeEntry> with HasUuid, Undoable implements 
         .toList();
     var byteBuffer = Uint8List.fromList(bytes).buffer;
     var entry = EstTypeEntry.read(ByteDataWrapper(byteBuffer), header);
-    return EstEntryWrapper.fromEntry(entry);
+    return EstEntryWrapper.fromEntry(entry, fileId);
   }
 
   Map<String, dynamic> toJson() {
@@ -250,8 +252,10 @@ class EstEntryWrapper<T extends EstTypeEntry> with HasUuid, Undoable implements 
 
   @override
   Undoable takeSnapshot() {
-    var snapshot = EstEntryWrapper.fromEntry(entry, isEnabled.value);
+    // var snapshot = EstEntryWrapper.fromEntry(entry, fileId, isEnabled.value);
+    var snapshot = EstEntryWrapper.fromJson(toJson(), fileId);
     snapshot.overrideUuid(uuid);
+    snapshot.isEnabled.value = isEnabled.value;
     return snapshot;
   }
 
@@ -269,7 +273,7 @@ class EstEntryWrapper<T extends EstTypeEntry> with HasUuid, Undoable implements 
 class SpecificEstEntryWrapper<T extends EstTypeEntry> extends EstEntryWrapper<T> {
   late final List<Prop> allProps;
 
-  SpecificEstEntryWrapper(super.entry, [super.isEnabledB])
+  SpecificEstEntryWrapper(super.entry, super.fileId, [super.isEnabledB])
       : super.unknown();
 
   @override
@@ -282,11 +286,13 @@ class SpecificEstEntryWrapper<T extends EstTypeEntry> extends EstEntryWrapper<T>
 }
 
 class EstPartEntryWrapper extends SpecificEstEntryWrapper<EstTypePartEntry> {
-  final unknown = NumberProp(0, true);
-  final anchorBone = NumberProp(0, true);
+  final NumberProp unknown;
+  final NumberProp anchorBone;
 
-  EstPartEntryWrapper(EstTypePartEntry entry, [bool isEnabledB = true])
-      : super(entry, isEnabledB) {
+  EstPartEntryWrapper(super.entry, super.fileId, [super.isEnabledB = true]) :
+    unknown = NumberProp(0, true, fileId: fileId),
+    anchorBone = NumberProp(0, true, fileId: fileId)
+  {
     _readFromEntry(entry);
     allProps = [
       unknown,
@@ -311,25 +317,41 @@ class EstPartEntryWrapper extends SpecificEstEntryWrapper<EstTypePartEntry> {
 }
 
 class EstMoveEntryWrapper extends SpecificEstEntryWrapper<EstTypeMoveEntry> {
-  final offset = VectorProp([0, 0, 0]);
-  final spawnBoxSize = VectorProp([0, 0, 0]);
-  final moveSpeed = VectorProp([0, 0, 0]);
-  final moveSmallSpeed = VectorProp([0, 0, 0]);
-  final angle = FloatProp(0);
-  final scaleX = FloatProp(0);
-  final scaleY = FloatProp(0);
-  final scaleZ = FloatProp(0);
-  final rgb = VectorProp([0, 0, 0]);
-  final alpha = FloatProp(0);
-  final fadeInSpeed = FloatProp(0);
-  final fadeOutSpeed = FloatProp(0);
-  final effectSizeLimit1 = FloatProp(0);
-  final effectSizeLimit2 = FloatProp(0);
-  final effectSizeLimit3 = FloatProp(0);
-  final effectSizeLimit4 = FloatProp(0);
+  final VectorProp offset ;
+  final VectorProp spawnBoxSize ;
+  final VectorProp moveSpeed ;
+  final VectorProp moveSmallSpeed ;
+  final FloatProp angle ;
+  final FloatProp scaleX ;
+  final FloatProp scaleY ;
+  final FloatProp scaleZ ;
+  final VectorProp rgb ;
+  final FloatProp alpha ;
+  final FloatProp fadeInSpeed ;
+  final FloatProp fadeOutSpeed ;
+  final FloatProp effectSizeLimit1 ;
+  final FloatProp effectSizeLimit2 ;
+  final FloatProp effectSizeLimit3 ;
+  final FloatProp effectSizeLimit4 ;
 
-  EstMoveEntryWrapper(EstTypeMoveEntry entry, [bool isEnabledB = true])
-      : super(entry, isEnabledB) {
+  EstMoveEntryWrapper(super.entry, super.fileId, [super.isEnabledB = true]) :
+    offset = VectorProp([0, 0, 0], fileId: fileId),
+    spawnBoxSize = VectorProp([0, 0, 0], fileId: fileId),
+    moveSpeed = VectorProp([0, 0, 0], fileId: fileId),
+    moveSmallSpeed = VectorProp([0, 0, 0], fileId: fileId),
+    angle = FloatProp(0, fileId: fileId),
+    scaleX = FloatProp(0, fileId: fileId),
+    scaleY = FloatProp(0, fileId: fileId),
+    scaleZ = FloatProp(0, fileId: fileId),
+    rgb = VectorProp([0, 0, 0], fileId: fileId),
+    alpha = FloatProp(0, fileId: fileId),
+    fadeInSpeed = FloatProp(0, fileId: fileId),
+    fadeOutSpeed = FloatProp(0, fileId: fileId),
+    effectSizeLimit1 = FloatProp(0, fileId: fileId),
+    effectSizeLimit2 = FloatProp(0, fileId: fileId),
+    effectSizeLimit3 = FloatProp(0, fileId: fileId),
+    effectSizeLimit4 = FloatProp(0, fileId: fileId)
+  {
     _readFromEntry(entry);
     allProps = [
       offset,
@@ -416,13 +438,17 @@ class EstMoveEntryWrapper extends SpecificEstEntryWrapper<EstTypeMoveEntry> {
 }
 
 class EstEmifEntryWrapper extends SpecificEstEntryWrapper<EstTypeEmifEntry> {
-  final count = NumberProp(0, true);
-  final playDelay = NumberProp(0, true);
-  final showAtOnce = NumberProp(0, true);
-  final size = NumberProp(0, true);
+  final NumberProp count;
+  final NumberProp playDelay;
+  final NumberProp showAtOnce;
+  final NumberProp size;
 
-  EstEmifEntryWrapper(EstTypeEmifEntry entry, [bool isEnabledB = true])
-      : super(entry, isEnabledB) {
+  EstEmifEntryWrapper(super.entry, super.fileId, [super.isEnabledB = true]) :
+    count = NumberProp(0, true, fileId: fileId),
+    playDelay = NumberProp(0, true, fileId: fileId),
+    showAtOnce = NumberProp(0, true, fileId: fileId),
+    size = NumberProp(0, true, fileId: fileId)
+  {
     _readFromEntry(entry);
     allProps = [
       count,
@@ -453,17 +479,25 @@ class EstEmifEntryWrapper extends SpecificEstEntryWrapper<EstTypeEmifEntry> {
 }
 
 class EstTexEntryWrapper extends SpecificEstEntryWrapper<EstTypeTexEntry> {
-  final speed = FloatProp(0);
-  final textureFileId = NumberProp(0, true);
-  final size = FloatProp(0);
-  final textureFileIndex = NumberProp(0, true);
-  final textureFileTextureIndex = NumberProp(0, true);
-  final meshId = NumberProp(0, true);
-  final videoFps = NumberProp(0, true);
-  final isSingleFrame = NumberProp(0, true);
+  final FloatProp speed;
+  final NumberProp textureFileId;
+  final FloatProp size;
+  final NumberProp textureFileIndex;
+  final NumberProp textureFileTextureIndex;
+  final NumberProp meshId;
+  final NumberProp videoFps;
+  final NumberProp isSingleFrame;
 
-  EstTexEntryWrapper(EstTypeTexEntry entry, [bool isEnabledB = true])
-      : super(entry, isEnabledB) {
+  EstTexEntryWrapper(super.entry, super.fileId, [super.isEnabledB = true]) :
+    speed = FloatProp(0, fileId: fileId),
+    textureFileId = NumberProp(0, true, fileId: fileId),
+    size = FloatProp(0, fileId: fileId),
+    textureFileIndex = NumberProp(0, true, fileId: fileId),
+    textureFileTextureIndex = NumberProp(0, true, fileId: fileId),
+    meshId = NumberProp(0, true, fileId: fileId),
+    videoFps = NumberProp(0, true, fileId: fileId),
+    isSingleFrame = NumberProp(0, true, fileId: fileId)
+  {
     _readFromEntry(entry);
     allProps = [
       speed,
@@ -504,10 +538,11 @@ class EstTexEntryWrapper extends SpecificEstEntryWrapper<EstTypeTexEntry> {
 }
 
 class EstFwkEntryWrapper extends SpecificEstEntryWrapper<EstTypeFwkEntry> {
-  final importedEffectId = NumberProp(0, true);
+  final NumberProp importedEffectId;
 
-  EstFwkEntryWrapper(EstTypeFwkEntry entry, [bool isEnabledB = true])
-      : super(entry, isEnabledB) {
+  EstFwkEntryWrapper(super.entry, super.fileId, [super.isEnabledB = true]) :
+    importedEffectId = NumberProp(0, true, fileId: fileId)
+  {
     _readFromEntry(entry);
     allProps = [
       importedEffectId,

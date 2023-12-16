@@ -101,59 +101,59 @@ class _EntityEditorState extends ChangeNotifierState<EntityEditor> {
         if (widget.showDetails && isLayoutEntity) ...[
           optionalValPropButtonConfig(
             widget.prop, "flags", () => 1,
-            () => HexProp(0),
+            () => HexProp(0, fileId: widget.prop.file),
           ),
           optionalValPropButtonConfig(
             widget.prop, "setFlag", () => widget.prop.indexOf(widget.prop.get("objId")!) + 1,
-            () => HexProp(0),
+            () => HexProp(0, fileId: widget.prop.file),
           ),
           optionalValPropButtonConfig(
             widget.prop, "setType", () => getNextInsertIndexAfter(widget.prop, ["setFlag", "objId"]),
-            () => NumberProp(0, true)
+            () => NumberProp(0, true, fileId: widget.prop.file),
           ),
           optionalValPropButtonConfig(
             widget.prop, "setRtn", () => getNextInsertIndexAfter(widget.prop, ["setType", "setFlag", "objId"]),
-            () => NumberProp(0, true)
+            () => NumberProp(0, true, fileId: widget.prop.file),
           ),
           optionalValPropButtonConfig(
             widget.prop, "alias", () => getNextInsertIndexAfter(widget.prop, ["setRtn", "setType", "setFlag", "objId"]),
-            () => StringProp("aliasName")
+            () => StringProp("aliasName", fileId: widget.prop.file),
           ),
           optionalValPropButtonConfig(
             widget.prop, "delay", () => widget.prop.length,
-            () => NumberProp(0.0, false),
+            () => NumberProp(0.0, false, fileId: widget.prop.file),
           ),
         ],
         if (widget.showDetails && !isLayoutEntity) ...[
           optionalPropButtonConfig(
             widget.prop, "levelRange", () => 2,
             () => [
-              XmlProp(file: widget.prop.file, tagId: crc32("min"), tagName: "min", value: NumberProp(1, true), parentTags: widget.prop.nextParents("levelRange")),
-              XmlProp(file: widget.prop.file, tagId: crc32("max"), tagName: "max", value: NumberProp(1, true), parentTags: widget.prop.nextParents("levelRange")),
+              XmlProp(file: widget.prop.file, tagId: crc32("min"), tagName: "min", value: NumberProp(1, true, fileId: widget.prop.file), parentTags: widget.prop.nextParents("levelRange")),
+              XmlProp(file: widget.prop.file, tagId: crc32("max"), tagName: "max", value: NumberProp(1, true, fileId: widget.prop.file), parentTags: widget.prop.nextParents("levelRange")),
             ],
           ),
           optionalValPropButtonConfig(
             widget.prop, "setType", () => getNextInsertIndexAfter(widget.prop, ["levelRange", "rate"]),
-            () => NumberProp(0, true)
+            () => NumberProp(0, true, fileId: widget.prop.file),
           ),
           optionalValPropButtonConfig(
             widget.prop, "setRtn", () => getNextInsertIndexAfter(widget.prop, ["setType", "levelRange", "rate"]),
-            () => NumberProp(0, true)
+            () => NumberProp(0, true, fileId: widget.prop.file),
           ),
           optionalValPropButtonConfig(
             widget.prop, "setFlag", () => getNextInsertIndexAfter(widget.prop, ["setRtn", "setType", "levelRange", "rate"]),
-            () => HexProp(0)
+            () => HexProp(0, fileId: widget.prop.file),
           ),
           optionalValPropButtonConfig(
             widget.prop, "type2type", () => getNextInsertIndexAfter(widget.prop, ["setFlag", "setRtn", "setType", "levelRange", "rate"]),
-            () => NumberProp(1, true)
+            () => NumberProp(1, true, fileId: widget.prop.file),
           ),
           optionalPropButtonConfig(
             widget.prop, "type2", () => getNextInsertIndexAfter(widget.prop, ["type2type", "setFlag", "setRtn", "setType", "levelRange", "rate"]),
             () => [
-              XmlProp(file: widget.prop.file, tagId: crc32("setRtn"), tagName: "setRtn", value: NumberProp(25, true), parentTags: widget.prop.nextParents(("type2"))),
-              XmlProp(file: widget.prop.file, tagId: crc32("setType"), tagName: "setType", value: NumberProp(2, true), parentTags: widget.prop.nextParents(("type2"))),
-              XmlProp(file: widget.prop.file, tagId: crc32("setFlag"), tagName: "setFlag", value: HexProp(0x10000000), parentTags: widget.prop.nextParents(("type2"))),
+              XmlProp(file: widget.prop.file, tagId: crc32("setRtn"), tagName: "setRtn", value: NumberProp(25, true, fileId: widget.prop.file), parentTags: widget.prop.nextParents(("type2"))),
+              XmlProp(file: widget.prop.file, tagId: crc32("setType"), tagName: "setType", value: NumberProp(2, true, fileId: widget.prop.file), parentTags: widget.prop.nextParents(("type2"))),
+              XmlProp(file: widget.prop.file, tagId: crc32("setFlag"), tagName: "setFlag", value: HexProp(0x10000000, fileId: widget.prop.file), parentTags: widget.prop.nextParents(("type2"))),
             ],
           ),
         ],

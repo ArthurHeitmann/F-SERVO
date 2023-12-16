@@ -52,16 +52,16 @@ enum RtpcPointInterpolationType {
 class BnkClipRtpcPoint with HasUuid, Undoable implements Disposable {
   final OpenFileId file;
   final BnkRtpcGraphPoint srcAutomation;
-  final NumberProp x;
-  final NumberProp y;
+  late final NumberProp x;
+  late final NumberProp y;
   final int interpolationType;
   BnkClipRtpcPoint(this.file, this.srcAutomation, this.x, this.y, this.interpolationType) {
     _setupListeners();
   }
   BnkClipRtpcPoint.fromAutomation(this.file, this.srcAutomation) :
-        x = NumberProp(srcAutomation.to * 1000, false),
-        y = NumberProp(srcAutomation.from, false),
-        interpolationType = srcAutomation.interpolation {
+    x = NumberProp(srcAutomation.to * 1000, false, fileId: file),
+    y = NumberProp(srcAutomation.from, false, fileId: file),
+    interpolationType = srcAutomation.interpolation {
     _setupListeners();
   }
 
@@ -114,7 +114,7 @@ class BnkClipRtpcPoint with HasUuid, Undoable implements Disposable {
   }
 }
 class BnkTrackClip with HasUuid, Undoable implements Disposable {
-  final OpenFileId file;
+  final OpenFileId fileId;
   final BnkPlaylist srcPlaylist;
   final int sourceId;
   final NumberProp xOff;
@@ -124,23 +124,23 @@ class BnkTrackClip with HasUuid, Undoable implements Disposable {
   late final XmlProp combinedProps;
   final Map<int, List<BnkClipRtpcPoint>> rtpcPoints;
   AudioResource? resource;
-  BnkTrackClip(this.file, this.srcPlaylist, this.sourceId, this.xOff, this.beginTrim, this.endTrim, this.srcDuration, this.rtpcPoints) {
+  BnkTrackClip(this.fileId, this.srcPlaylist, this.sourceId, this.xOff, this.beginTrim, this.endTrim, this.srcDuration, this.rtpcPoints) {
     _initCombinedProps();
     _setupListeners();
   }
-  BnkTrackClip.fromPlaylist(this.file, this.srcPlaylist, List<BnkClipAutomation> automations) :
+  BnkTrackClip.fromPlaylist(this.fileId, this.srcPlaylist, List<BnkClipAutomation> automations) :
         sourceId = srcPlaylist.sourceID,
-        xOff = NumberProp(srcPlaylist.fPlayAt, false),
-        beginTrim = NumberProp(srcPlaylist.fBeginTrimOffset, false),
-        endTrim = NumberProp(srcPlaylist.fEndTrimOffset, false),
-        srcDuration = NumberProp(srcPlaylist.fSrcDuration, false),
+        xOff = NumberProp(srcPlaylist.fPlayAt, false, fileId: fileId),
+        beginTrim = NumberProp(srcPlaylist.fBeginTrimOffset, false, fileId: fileId),
+        endTrim = NumberProp(srcPlaylist.fEndTrimOffset, false, fileId: fileId),
+        srcDuration = NumberProp(srcPlaylist.fSrcDuration, false, fileId: fileId),
         rtpcPoints = {} {
     for (var automation in automations) {
       var type = automation.eAutoType;
       if (!rtpcPoints.containsKey(type))
         rtpcPoints[type] = [];
       for (var point in automation.rtpcGraphPoint) {
-        rtpcPoints[type]!.add(BnkClipRtpcPoint.fromAutomation(file, point));
+        rtpcPoints[type]!.add(BnkClipRtpcPoint.fromAutomation(fileId, point));
       }
     }
     _initCombinedProps();
@@ -176,7 +176,7 @@ class BnkTrackClip with HasUuid, Undoable implements Disposable {
     srcDuration.addListener(_onPropChanged);
   }
   void _onPropChanged() {
-    areasManager.fromId(file)!.setHasUnsavedChanges(true);
+    areasManager.fromId(fileId)!.setHasUnsavedChanges(true);
   }
 
   @override
@@ -215,7 +215,7 @@ class BnkTrackClip with HasUuid, Undoable implements Disposable {
 
   BnkTrackClip duplicate() {
     return BnkTrackClip(
-        file,
+        fileId,
         makeNewSrcPl(),
         sourceId,
         xOff.takeSnapshot() as NumberProp,
@@ -238,13 +238,13 @@ class BnkTrackClip with HasUuid, Undoable implements Disposable {
   void clearRtpcPoints() {
     rtpcPoints.clear();
     _onPropChanged();
-    undoHistoryManager.onUndoableEvent();
+    areasManager.onFileIdUndoEvent(fileId);
   }
 
   Future<void> loadResource() async {
     var wemPath = wemFilesLookup.lookup[sourceId];
     if (wemPath == null) {
-      var fileData = areasManager.fromId(file);
+      var fileData = areasManager.fromId(fileId);
       if (fileData == null || fileData is! BnkFilePlaylistData)
         return;
       var bnkPath = fileData.path;
@@ -253,13 +253,13 @@ class BnkTrackClip with HasUuid, Undoable implements Disposable {
         return;
     }
     resource = await audioResourcesManager.getAudioResource(wemPath);
-    undoHistoryManager.onUndoableEvent();
+    areasManager.onFileIdUndoEvent(fileId);
   }
 
   @override
   Undoable takeSnapshot() {
     var snapshot = BnkTrackClip(
-        file,
+        fileId,
         srcPlaylist,
         sourceId,
         xOff.takeSnapshot() as NumberProp,
@@ -268,7 +268,7 @@ class BnkTrackClip with HasUuid, Undoable implements Disposable {
         srcDuration.takeSnapshot() as NumberProp,
         rtpcPoints.map((key, value) => MapEntry(key, value.map((e) => e.takeSnapshot() as BnkClipRtpcPoint).toList()))
     );
-    snapshot.resource = resource;
+    snapshot.resource = resource?.newRef();
     snapshot.overrideUuid(uuid);
     return snapshot;
   }
@@ -294,21 +294,22 @@ class BnkTrackClip with HasUuid, Undoable implements Disposable {
   }
 }
 class BnkTrackData with HasUuid, Undoable implements Disposable {
-  final OpenFileId file;
+  final OpenFileId fileId;
   final BnkMusicTrack srcTrack;
   final ValueListNotifier<BnkTrackClip> clips;
   final ValueNotifier<bool> hasSourceChanged = ValueNotifier(false);
-  BnkTrackData(this.file, this.srcTrack, this.clips) {
+  BnkTrackData(this.fileId, this.srcTrack, this.clips) {
     _setupListeners();
   }
-  BnkTrackData.fromTrack(this.file, this.srcTrack) :
-        clips = ValueListNotifier(
-            List.generate(srcTrack.playlists.length, (i) => BnkTrackClip.fromPlaylist(
-                file,
-                srcTrack.playlists[i],
-                srcTrack.clipAutomations.where((ca) => ca.uClipIndex == i).toList()
-            ))
-        ) {
+  BnkTrackData.fromTrack(this.fileId, this.srcTrack) :
+    clips = ValueListNotifier(
+      List.generate(srcTrack.playlists.length, (i) => BnkTrackClip.fromPlaylist(
+        fileId,
+        srcTrack.playlists[i],
+        srcTrack.clipAutomations.where((ca) => ca.uClipIndex == i).toList()
+      )),
+      fileId: fileId
+    ) {
     _setupListeners();
   }
 
@@ -316,14 +317,13 @@ class BnkTrackData with HasUuid, Undoable implements Disposable {
     clips.addListener(_onPropChanged);
   }
   void _onPropChanged() {
-    areasManager.fromId(file)!.setHasUnsavedChanges(true);
-    undoHistoryManager.onUndoableEvent();
+    var file = areasManager.fromId(fileId);
+    file!.setHasUnsavedChanges(true);
+    file.onUndoableEvent();
   }
 
   @override
   void dispose() {
-    for (var clip in clips)
-      clip.dispose();
     clips.dispose();
     hasSourceChanged.dispose();
   }
@@ -376,7 +376,7 @@ class BnkTrackData with HasUuid, Undoable implements Disposable {
   @override
   Undoable takeSnapshot() {
     var snapshot = BnkTrackData(
-      file,
+      fileId,
       srcTrack,
       clips.takeSnapshot() as ValueListNotifier<BnkTrackClip>,
     );
@@ -438,12 +438,12 @@ class BnkSegmentMarker with HasUuid, Undoable implements Disposable {
     _setupListeners();
   }
   BnkSegmentMarker.fromMarker(this.file, this.srcMarker, List<BnkMusicMarker> markers) :
-        pos = NumberProp(srcMarker.fPosition, false),
-        role = markers.first == srcMarker
-            ? BnkMarkerRole.entryCue
-            : markers.last == srcMarker
-            ? BnkMarkerRole.exitCue
-            : BnkMarkerRole.custom {
+    pos = NumberProp(srcMarker.fPosition, false, fileId: file),
+    role = markers.first == srcMarker
+        ? BnkMarkerRole.entryCue
+        : markers.last == srcMarker
+        ? BnkMarkerRole.exitCue
+        : BnkMarkerRole.custom {
     _setupListeners();
   }
 
@@ -485,7 +485,7 @@ class BnkSegmentData with HasUuid, Undoable implements Disposable {
     _setupListeners();
   }
   BnkSegmentData.fromSegment(this.file, this.srcSegment, Map<int, BnkHircChunkBase> hircMap) :
-        duration = NumberProp(srcSegment.fDuration, false),
+        duration = NumberProp(srcSegment.fDuration, false, fileId: file),
         tracks = srcSegment.musicParams.childrenList.ulChildIDs.map((id) =>
             BnkTrackData.fromTrack(file, hircMap[id] as BnkMusicTrack)).toList(),
         markers = srcSegment.wwiseMarkers.map((m) => BnkSegmentMarker.fromMarker(file, m, srcSegment.wwiseMarkers)).toList() {
@@ -669,9 +669,9 @@ class BnkFilePlaylistData extends OpenFileData {
   BnkMusicPlaylist? srcPlaylist;
   BnkPlaylistChild? rootChild;
 
-  BnkFilePlaylistData(String name, String path, { super.secondaryName }) :
+  BnkFilePlaylistData(super.name, super.path, { super.secondaryName }) :
         playlistId = int.parse(RegExp(r"\.bnk#p=(\d+)$").firstMatch(name)!.group(1)!),
-        super(type: FileType.bnkPlaylist, name, path, icon: Icons.queue_music) {
+        super(type: FileType.bnkPlaylist, icon: Icons.queue_music) {
     canBeReloaded = false;
   }
 

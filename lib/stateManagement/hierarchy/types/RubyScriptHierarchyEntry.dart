@@ -15,7 +15,7 @@ import 'DatHierarchyEntry.dart';
 
 class RubyScriptGroupHierarchyEntry extends HierarchyEntry {
   RubyScriptGroupHierarchyEntry()
-      : super(StringProp("Ruby Scripts"), false, true, false);
+    : super(StringProp("Ruby Scripts", fileId: null), false, true, false);
 
   @override
   Undoable takeSnapshot() {
@@ -76,7 +76,7 @@ Fiber.new() { proxy.update() }
     await rubyFileToBin(newScriptPath);
     await File(datInfoPath).writeAsString(const JsonEncoder.withIndent("\t").convert(datInfo));
 
-    var newScriptEntry = RubyScriptHierarchyEntry(StringProp(newScriptRb), newScriptPath);
+    var newScriptEntry = RubyScriptHierarchyEntry(StringProp(newScriptRb, fileId: null), newScriptPath);
     add(newScriptEntry);
     newScriptEntry.onOpen();
   }

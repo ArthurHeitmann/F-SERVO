@@ -48,22 +48,22 @@ class _SearchPanelState extends State<SearchPanel> {
   SearchService? searchService;
   Stream<SearchResult>? searchStream;
   StreamSubscription<String>? onSearchPathChangeSubscription;
-  final ValueListNotifier<SearchResult> searchResults = ValueListNotifier([]);
-  final BoolProp isSearching = BoolProp(false);
+  final ValueListNotifier<SearchResult> searchResults = ValueListNotifier([], fileId: null);
+  final isSearching = ValueNotifier(false);
   final Mutex cancelMutex = Mutex();
   final scrollController = ScrollController();
   late final void Function() updateSearchStream;
   Set<String> prevOpenFileUuids = {};
   // common options
-  final StringProp extensions = StringProp("");
-  final StringProp path = StringProp("");
+  final StringProp extensions = StringProp("", fileId: null);
+  final StringProp path = StringProp("", fileId: null);
   // text search options
-  final StringProp query = StringProp("");
-  final BoolProp isRegex = BoolProp(false);
-  final BoolProp isCaseSensitive = BoolProp(false);
+  final StringProp query = StringProp("", fileId: null);
+  final BoolProp isRegex = BoolProp(false, fileId: null);
+  final BoolProp isCaseSensitive = BoolProp(false, fileId: null);
   // id search options
-  final HexProp id = HexProp(0);
-  final BoolProp useIndexedData = BoolProp(true);
+  final HexProp id = HexProp(0, fileId: null);
+  final BoolProp useIndexedData = BoolProp(true, fileId: null);
   
 
   @override
