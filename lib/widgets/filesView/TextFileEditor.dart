@@ -30,7 +30,7 @@ import '../misc/onHoverBuilder.dart';
 class TextFileEditor extends ChangeNotifierWidget {
   late final TextFileData fileContent;
 
-  TextFileEditor({Key? key, required this.fileContent}) : super(key: key, notifier: fileContent.text);
+  TextFileEditor({super.key, required this.fileContent}) : super(notifier: fileContent.text);
 
   @override
   ChangeNotifierState<TextFileEditor> createState() => _TextFileEditorState();
@@ -118,11 +118,9 @@ class _TextFileEditorState extends ChangeNotifierState<TextFileEditor> {
         usesTabs = RegExp("^\t+", multiLine: true).hasMatch(widget.fileContent.text.value);
         widget.fileContent.text.addListener(onFileContentChange);
         controller = CodeController(
-          theme: _customTheme,
           language: _highlightLanguages[extension(widget.fileContent.path)],
           params: const EditorParams(tabSpaces: 4),
           text: tabsToSpaces(widget.fileContent.text.value),
-          onChange: onControllerTextChanged,
         );
         setState(() { });
       });
@@ -196,14 +194,18 @@ class _TextFileEditorState extends ChangeNotifierState<TextFileEditor> {
                 child: SmoothSingleChildScrollView(
                   controller: scrollController,
                   child: supressUndoRedo(
-                    child: CodeField(
-                      controller: controller!,
-                      focusNode: focus,
-                      lineNumberBuilder: (line, style) => TextSpan(
-                        text: line.toString(),
-                        style: style?.copyWith(
-                          fontSize: 12,
-                          overflow: TextOverflow.clip,
+                    child: CodeTheme(
+                      data: CodeThemeData(styles: _customTheme),
+                      child: CodeField(
+                        controller: controller!,
+                        focusNode: focus,
+                        onChanged: onControllerTextChanged,
+                        lineNumberBuilder: (line, style) => TextSpan(
+                          text: line.toString(),
+                          style: style?.copyWith(
+                            fontSize: 12,
+                            overflow: TextOverflow.clip,
+                          ),
                         ),
                       ),
                     ),
