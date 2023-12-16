@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 
 import '../../main.dart';
+import '../../utils/Disposable.dart';
 import '../../utils/assetDirFinder.dart';
 import '../../utils/utils.dart';
 import '../../widgets/misc/confirmCancelDialog.dart';
@@ -24,7 +25,7 @@ class HierarchyEntryAction {
   const HierarchyEntryAction({ required this.name, this.icon, this.iconScale = 1.0, required this.action });
 }
 
-mixin HierarchyEntryBase {
+mixin HierarchyEntryBase implements Disposable {
   final ListNotifier<HierarchyEntry> _children = ValueListNotifier([]);
   IterableNotifier<HierarchyEntry> get children => _children;
 
@@ -43,8 +44,10 @@ mixin HierarchyEntryBase {
     openHierarchyManager.treeViewIsDirty.value = true;
   }
 
-  void remove(HierarchyEntry child) {
+  void remove(HierarchyEntry child, { bool dispose = false }) {
     _children.remove(child);
+    if (dispose)
+      child.dispose();
     openHierarchyManager.treeViewIsDirty.value = true;
   }
 
@@ -61,7 +64,10 @@ mixin HierarchyEntryBase {
     _children.updateOrReplaceWith(newChildren, copy);
   }
 
+  @override
   void dispose() {
+    for (var child in children)
+      child.dispose();
     _children.dispose();
   }
 }
@@ -77,6 +83,7 @@ abstract class HierarchyEntry with HasUuid, Undoable, HierarchyEntryBase {
   final ValueNotifier<bool> isVisibleWithSearch = ValueNotifier(true);
 
   HierarchyEntry(this.name, this.isSelectable, this.isCollapsible, this.isOpenable) {
+    children.addListener(onTreeViewChanged);
     isCollapsed.addListener(onTreeViewChanged);
     isVisibleWithSearch.addListener(onTreeViewChanged);
   }
@@ -91,8 +98,6 @@ abstract class HierarchyEntry with HasUuid, Undoable, HierarchyEntryBase {
   }
 
   void onTreeViewChanged() {
-    if (undoHistoryManager.isPushing)
-      return;
     openHierarchyManager.treeViewIsDirty.value = true;
   }
 

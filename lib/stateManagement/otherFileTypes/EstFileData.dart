@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import '../../fileTypeUtils/effects/estEntryTypes.dart';
 import '../../fileTypeUtils/effects/estIO.dart';
 import '../../fileTypeUtils/utils/ByteDataWrapper.dart';
+import '../../utils/Disposable.dart';
 import '../../utils/utils.dart';
 import '../Property.dart';
 import '../hasUuid.dart';
@@ -13,7 +14,7 @@ import '../listNotifier.dart';
 import '../openFiles/openFilesManager.dart';
 import '../undoable.dart';
 
-class EstData with HasUuid, Undoable {
+class EstData with HasUuid, Undoable implements Disposable {
   final ValueListNotifier<EstRecordWrapper> records;
   List<String> typeNames = [];
   final ValueNotifier<SelectedEffectItem?> selectedEntry = ValueNotifier(null);
@@ -74,6 +75,7 @@ class EstData with HasUuid, Undoable {
     onAnyChange.notifyListeners();
   }
 
+  @override
   void dispose() {
     records.dispose();
     onAnyChange.dispose();
@@ -94,7 +96,7 @@ class EstData with HasUuid, Undoable {
   }
 }
 
-class EstRecordWrapper with HasUuid, Undoable {
+class EstRecordWrapper with HasUuid, Undoable implements Disposable {
   final ValueListNotifier<EstEntryWrapper> entries;
   final BoolProp isEnabled;
   final onAnyChange = ChangeNotifier();
@@ -119,6 +121,7 @@ class EstRecordWrapper with HasUuid, Undoable {
     onAnyChange.notifyListeners();
   }
 
+  @override
   void dispose() {
     entries.dispose();
     isEnabled.dispose();
@@ -140,7 +143,7 @@ class EstRecordWrapper with HasUuid, Undoable {
   }
 }
 
-class EstEntryWrapper<T extends EstTypeEntry> with HasUuid, Undoable {
+class EstEntryWrapper<T extends EstTypeEntry> with HasUuid, Undoable implements Disposable {
   final T entry;
   final BoolProp isEnabled;
   final onAnyChange = ChangeNotifier();
@@ -197,6 +200,7 @@ class EstEntryWrapper<T extends EstTypeEntry> with HasUuid, Undoable {
     return json;
   }
 
+  @override
   void dispose() {
     isEnabled.dispose();
     onAnyChange.dispose();

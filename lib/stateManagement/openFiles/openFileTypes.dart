@@ -22,6 +22,7 @@ import '../../fileTypeUtils/smd/smdWriter.dart';
 import '../../fileTypeUtils/tmd/tmdReader.dart';
 import '../../fileTypeUtils/tmd/tmdWriter.dart';
 import '../../fileTypeUtils/utils/ByteDataWrapper.dart';
+import '../../utils/Disposable.dart';
 import '../../utils/utils.dart';
 import '../../widgets/filesView/FileType.dart';
 import '../Property.dart';
@@ -55,7 +56,7 @@ abstract class OptionalFileInfo {
   const OptionalFileInfo();
 }
 
-abstract class OpenFileData with HasUuid, Undoable {
+abstract class OpenFileData with HasUuid, Undoable implements Disposable {
   OptionalFileInfo? optionalInfo;
   final IconData? icon;
   final Color? iconColor;
@@ -160,7 +161,8 @@ abstract class OpenFileData with HasUuid, Undoable {
   Future<void> save() async {
     setHasUnsavedChanges(false);
   }
-  
+
+  @override
   void dispose() {
     name.dispose();
     secondaryName.dispose();
@@ -553,13 +555,14 @@ class FtbFileData extends OpenFileData {
   }
 }
 
-mixin AudioFileData on HasUuid {
+mixin AudioFileData on HasUuid implements Disposable {
   AudioResource? resource;
   bool cuePointsStartAt1 = false;
   abstract final ValueNotifier<String> name;
 
   Future<void> load();
 
+  @override
   void dispose();
 }
 class WavFileData with HasUuid, AudioFileData {
@@ -927,7 +930,7 @@ enum RtpcPointInterpolationType {
   final String name;
   const RtpcPointInterpolationType(this.value, this.name);
 }
-class BnkClipRtpcPoint with HasUuid, Undoable {
+class BnkClipRtpcPoint with HasUuid, Undoable implements Disposable {
   final OpenFileId file;
   final BnkRtpcGraphPoint srcAutomation;
   final NumberProp x;
@@ -951,6 +954,7 @@ class BnkClipRtpcPoint with HasUuid, Undoable {
     areasManager.fromId(file)!.setHasUnsavedChanges(true);
   }
   
+  @override
   void dispose() {
     x.dispose();
     y.dispose();
@@ -990,7 +994,7 @@ class BnkClipRtpcPoint with HasUuid, Undoable {
     y.value = content.y.value;
   }
 }
-class BnkTrackClip with HasUuid, Undoable {
+class BnkTrackClip with HasUuid, Undoable implements Disposable {
   final OpenFileId file;
   final BnkPlaylist srcPlaylist;
   final int sourceId;
@@ -1056,6 +1060,7 @@ class BnkTrackClip with HasUuid, Undoable {
     areasManager.fromId(file)!.setHasUnsavedChanges(true);
   }
   
+  @override
   void dispose() {
     // xOff.dispose();
     // beginTrim.dispose();
@@ -1169,7 +1174,7 @@ class BnkTrackClip with HasUuid, Undoable {
     }
   }
 }
-class BnkTrackData with HasUuid, Undoable {
+class BnkTrackData with HasUuid, Undoable implements Disposable {
   final OpenFileId file;
   final BnkMusicTrack srcTrack;
   final ValueListNotifier<BnkTrackClip> clips;
@@ -1196,6 +1201,7 @@ class BnkTrackData with HasUuid, Undoable {
     undoHistoryManager.onUndoableEvent();
   }
   
+  @override
   void dispose() {
     for (var clip in clips)
       clip.dispose();
@@ -1303,7 +1309,7 @@ class BnkTrackData with HasUuid, Undoable {
 enum BnkMarkerRole {
   entryCue, exitCue, custom
 }
-class BnkSegmentMarker with HasUuid, Undoable {
+class BnkSegmentMarker with HasUuid, Undoable implements Disposable {
   final OpenFileId file;
   final BnkMusicMarker srcMarker;
   final NumberProp pos;
@@ -1329,6 +1335,7 @@ class BnkSegmentMarker with HasUuid, Undoable {
     areasManager.fromId(file)!.setHasUnsavedChanges(true);
   }
   
+  @override
   void dispose() {
     pos.dispose();
   }
@@ -1349,7 +1356,7 @@ class BnkSegmentMarker with HasUuid, Undoable {
     pos.restoreWith(content.pos);
   }
 }
-class BnkSegmentData with HasUuid, Undoable {
+class BnkSegmentData with HasUuid, Undoable implements Disposable {
   final OpenFileId file;
   final BnkMusicSegment srcSegment;
   final NumberProp duration;
@@ -1373,6 +1380,7 @@ class BnkSegmentData with HasUuid, Undoable {
     areasManager.fromId(file)!.setHasUnsavedChanges(true);
   }
   
+  @override
   void dispose() {
     duration.dispose();
     for (var t in tracks)
@@ -1443,7 +1451,7 @@ enum BnkPlaylistChildResetType {
     return none;
   }
 }
-class BnkPlaylistChild with HasUuid, Undoable {
+class BnkPlaylistChild with HasUuid, Undoable implements Disposable {
   final OpenFileId file;
   final BnkPlaylistItem srcItem;
   final int index;
@@ -1484,6 +1492,7 @@ class BnkPlaylistChild with HasUuid, Undoable {
     return root;
   }
 
+  @override
   void dispose() {
     segment?.dispose();
     for (var c in children)

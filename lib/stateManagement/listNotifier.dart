@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 
+import '../utils/Disposable.dart';
 import '../utils/utils.dart';
 import 'hasUuid.dart';
 import 'undoable.dart';
@@ -84,6 +85,8 @@ abstract class IterableNotifier<T> extends ChangeNotifier with IterableMixin<T>,
     }());
     for (var child in _children) {
       if (child is ChangeNotifier)
+        child.dispose();
+      else if (child is Disposable)
         child.dispose();
     }
     super.dispose();

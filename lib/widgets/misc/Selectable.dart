@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../keyboardEvents/intents.dart';
 import '../../stateManagement/openFiles/openFilesManager.dart';
 import '../../stateManagement/xmlProps/xmlProp.dart';
+import '../../utils/Disposable.dart';
 import '../../utils/utils.dart';
 import '../../widgets/theme/customTheme.dart';
 import 'ChangeNotifierWidget.dart';
@@ -14,7 +15,7 @@ Per file[uuid] one or zero selected (has uuid + XmlProp)
 
 typedef ChildKeyboardActionCallback = void Function(ChildKeyboardActionType actionType);
 
-class _SelectedData {
+class _SelectedData implements Disposable {
   final String uuid;
   final XmlProp prop;
   final void Function() onDispose;
@@ -24,6 +25,7 @@ class _SelectedData {
     prop.onDisposed.addListener(onDispose);
   }
 
+  @override
   void dispose() {
     prop.onDisposed.removeListener(onDispose);
   }

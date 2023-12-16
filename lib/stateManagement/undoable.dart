@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../utils/Disposable.dart';
 import '../utils/utils.dart';
 import 'hasUuid.dart';
 import 'hierarchy/FileHierarchy.dart';
@@ -12,7 +13,7 @@ mixin Undoable on HasUuid {
   void restoreWith(Undoable snapshot);
 }
 
-class _UndoSnapshot {
+class _UndoSnapshot implements Disposable {
   late final Undoable fileAreasSnapshot;
   late final Undoable openHierarchySnapshot;
 
@@ -28,6 +29,7 @@ class _UndoSnapshot {
     openHierarchyManager.restoreWith(openHierarchySnapshot);
   }
 
+  @override
   void dispose() {
     (fileAreasSnapshot as OpenFilesAreasManager).dispose();
     (openHierarchySnapshot as OpenHierarchyManager).dispose();

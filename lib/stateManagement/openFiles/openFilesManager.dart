@@ -5,6 +5,7 @@ import 'dart:collection';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as path;
 
+import '../../utils/Disposable.dart';
 import '../../utils/utils.dart';
 import '../changesExporter.dart';
 import '../events/statusInfo.dart';
@@ -19,7 +20,7 @@ import 'openFileTypes.dart';
 typedef OpenFileId = String;
 
 
-class OpenFilesAreasManager with HasUuid, Undoable {
+class OpenFilesAreasManager with HasUuid, Undoable implements Disposable {
   final ListNotifier<FilesAreaManager> _areas = ValueListNotifier([]);
   IterableNotifier<FilesAreaManager> get areas => _areas;
   final ValueNotifier<FilesAreaManager?> _activeArea = ValueNotifier(null);
@@ -281,6 +282,7 @@ class OpenFilesAreasManager with HasUuid, Undoable {
     }
   }
 
+  @override
   void dispose() {
     areas.dispose();
     _activeArea.dispose();

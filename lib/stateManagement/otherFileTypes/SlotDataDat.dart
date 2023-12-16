@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 
 import '../../fileTypeUtils/utils/ByteDataWrapper.dart';
+import '../../utils/Disposable.dart';
 import '../../utils/utils.dart';
 import '../Property.dart';
 import '../hasUuid.dart';
@@ -262,7 +263,7 @@ void _sortQuestEntries(TreeEntry questEntry) {
   });
 }
 
-class SlotDataDat with HasUuid, Undoable {
+class SlotDataDat with HasUuid, Undoable implements Disposable {
   late final NumberProp steamId64;
   late final StringProp name;
   late final NumberProp money;
@@ -361,6 +362,7 @@ class SlotDataDat with HasUuid, Undoable {
     ];
   }
 
+  @override
   void dispose() {
     for (var prop in allProps())
       prop.dispose();

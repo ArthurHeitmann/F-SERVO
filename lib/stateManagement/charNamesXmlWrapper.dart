@@ -5,6 +5,7 @@ import 'package:convert/convert.dart';
 import 'package:flutter/material.dart';
 
 import '../fileTypeUtils/utils/ByteDataWrapper.dart';
+import '../utils/Disposable.dart';
 import '../utils/utils.dart';
 import '../widgets/propEditors/otherFileTypes/genericTable/tableEditor.dart';
 import 'Property.dart';
@@ -29,7 +30,7 @@ class KeyValProp extends ChangeNotifier {
   }
 }
 
-class CharNameTranslations with HasUuid {
+class CharNameTranslations with HasUuid implements Disposable {
   final ChangeNotifier anyChangeNotifier;
   StringProp key;
   List<KeyValProp> translations;
@@ -43,6 +44,7 @@ class CharNameTranslations with HasUuid {
     }
   }
 
+  @override
   void dispose() {
     key.dispose();
     for (var element in translations)

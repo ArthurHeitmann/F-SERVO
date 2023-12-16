@@ -15,6 +15,7 @@ import '../../fileTypeUtils/mcd/defaultFontKerningMap.dart';
 import '../../fileTypeUtils/mcd/fontAtlasGeneratorTypes.dart';
 import '../../fileTypeUtils/mcd/mcdIO.dart';
 import '../../fileTypeUtils/wta/wtaReader.dart';
+import '../../utils/Disposable.dart';
 import '../../utils/assetDirFinder.dart';
 import '../../utils/utils.dart';
 import '../Property.dart';
@@ -25,7 +26,7 @@ import '../openFiles/openFilesManager.dart';
 import '../preferencesData.dart';
 import '../undoable.dart';
 
-abstract class _McdFilePart with HasUuid, Undoable {
+abstract class _McdFilePart with HasUuid, Undoable implements Disposable {
   OpenFileId? file;
 
   _McdFilePart(this.file);
@@ -36,6 +37,7 @@ abstract class _McdFilePart with HasUuid, Undoable {
     file?.setHasUnsavedChanges(true);
   }
 
+  @override
   void dispose() {
   }
 }
@@ -146,7 +148,7 @@ class McdLocalFont extends McdFont {
   McdLocalFont.zero() : super(0, 0, 4, -6, {});
 }
 
-class McdFontOverride with HasUuid {
+class McdFontOverride with HasUuid implements Disposable {
   final ValueListNotifier<int> fontIds;
   final NumberProp heightScale;
   final StringProp fontPath;
@@ -168,6 +170,7 @@ class McdFontOverride with HasUuid {
     yOffset = NumberProp(0.0, false),
     isFallbackOnly = BoolProp(false);
 
+  @override
   void dispose() {
     fontIds.dispose();
     scale.dispose();

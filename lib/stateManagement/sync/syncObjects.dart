@@ -8,6 +8,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:xml/xml.dart';
 
+import '../../utils/Disposable.dart';
 import '../../utils/utils.dart';
 import '../Property.dart';
 import '../events/statusInfo.dart';
@@ -119,7 +120,7 @@ void _handleSyncMessage(SyncMessage message) {
   }
 }
 
-abstract class SyncedObject with HasUuid {
+abstract class SyncedObject with HasUuid implements Disposable {
   final SyncedObjectsType type;
   final String parentUuid;
   String? nameHint;
@@ -157,6 +158,7 @@ abstract class SyncedObject with HasUuid {
 
   void updateInternal(SyncMessage message);
 
+  @override
   void dispose() {}
 
   void update(SyncMessage message) async {

@@ -21,6 +21,7 @@ import '../../fileTypeUtils/utils/ByteDataWrapper.dart';
 import '../../fileTypeUtils/yax/xmlToYax.dart';
 import '../../fileTypeUtils/yax/yaxToXml.dart';
 import '../../main.dart';
+import '../../utils/Disposable.dart';
 import '../../utils/utils.dart';
 import '../../widgets/misc/confirmCancelDialog.dart';
 import '../../widgets/misc/confirmDialog.dart';
@@ -52,12 +53,14 @@ import 'types/WtbHierarchyEntry.dart';
 import 'types/XmlScriptHierarchyEntry.dart';
 
 
-class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase {
+class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements Disposable {
   final ValueNotifier<HierarchyEntry?> _selectedEntry = ValueNotifier(null);
   ValueListenable<HierarchyEntry?> get selectedEntry => _selectedEntry;
   ValueNotifier<bool> treeViewIsDirty = ValueNotifier(false);
 
-  OpenHierarchyManager();
+  OpenHierarchyManager() {
+    children.addListener(() => treeViewIsDirty.value = true);
+  }
 
   HierarchyEntryBase parentOf(HierarchyEntryBase entry) {
     return (children.findRecWhere((e) => e.children.contains(entry)) ?? this) as HierarchyEntryBase;
@@ -836,24 +839,26 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase {
   }
 
   @override
-  void remove(HierarchyEntry child) {
+  void remove(HierarchyEntry child, { bool dispose = false }) {
     _removeRec(child);
-    super.remove(child);
+    super.remove(child, dispose: dispose);
   }
 
   @override
   void clear() {
     if (children.isEmpty)
       return;
-    for (var child in children)
+    for (var child in children) {
       _removeRec(child);
+      child.dispose();
+    }
     super.clear();
     treeViewIsDirty.value = true;
   }
 
   void removeAny(HierarchyEntry child) {
     _removeRec(child);
-    parentOf(child).remove(child);
+    parentOf(child).remove(child, dispose: true);
   }
 
   void _removeRec(HierarchyEntry entry) {
@@ -996,6 +1001,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase {
 
   @override
   void dispose() {
+    super.dispose();
     _selectedEntry.dispose();
     treeViewIsDirty.dispose();
   }

@@ -3,13 +3,13 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:audioplayers/audioplayers.dart';
-import 'package:flutter/foundation.dart';
 
 import '../../../../stateManagement/Property.dart';
 import '../../../../stateManagement/openFiles/openFileTypes.dart';
+import '../../../../utils/Disposable.dart';
 import '../../../../utils/utils.dart';
 
-abstract class PlaybackController {
+abstract class PlaybackController implements Disposable {
   final StreamController<double> _positionStream = StreamController<double>.broadcast();
   final StreamController<bool> _isPlayingStream = StreamController<bool>.broadcast();
   Stream<double> get positionStream => _positionStream.stream;
@@ -27,7 +27,7 @@ abstract class PlaybackController {
   Future<double> get position;
   double get duration => _duration;
 
-  @mustCallSuper
+  @override
   void dispose() {
     _positionStream.close();
     _isPlayingStream.close();

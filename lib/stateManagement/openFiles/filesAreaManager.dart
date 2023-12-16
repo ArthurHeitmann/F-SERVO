@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../../main.dart';
+import '../../utils/Disposable.dart';
 import '../../utils/utils.dart';
 import '../../widgets/misc/confirmCancelDialog.dart';
 import '../hasUuid.dart';
@@ -10,7 +11,7 @@ import '../undoable.dart';
 import 'openFileTypes.dart';
 import 'openFilesManager.dart';
 
-class FilesAreaManager with HasUuid, Undoable {
+class FilesAreaManager with HasUuid, Undoable implements Disposable {
   final ListNotifier<OpenFileData> _files = ValueListNotifier([]);
   IterableNotifier<OpenFileData> get files => _files;
   final ValueNotifier<OpenFileData?> _currentFile = ValueNotifier(null);
@@ -198,6 +199,7 @@ class FilesAreaManager with HasUuid, Undoable {
       child.dispose();
   }
 
+  @override
   void dispose() {
     for (var file in files.toList())
       removeFile(file);

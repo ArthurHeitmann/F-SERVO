@@ -4,6 +4,7 @@ import 'dart:collection';
 import 'package:flutter/foundation.dart';
 
 import '../fileTypeUtils/yax/hashToStringMap.dart';
+import '../utils/Disposable.dart';
 import '../utils/utils.dart';
 import 'hasUuid.dart';
 import 'miscValues.dart';
@@ -13,7 +14,7 @@ enum PropType {
   number, hexInt, vector, string, bool, float
 }
 
-mixin Prop<T> implements Listenable, Undoable {
+mixin Prop<T> implements Listenable, Undoable, Disposable {
   abstract final PropType type;
 
   void updateWith(String str);
@@ -31,6 +32,7 @@ mixin Prop<T> implements Listenable, Undoable {
       return StringProp(str, true);
   }
 
+  @override
   void dispose();
 }
 

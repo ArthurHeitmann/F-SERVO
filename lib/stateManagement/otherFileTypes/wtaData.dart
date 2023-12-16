@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:path/path.dart';
 
 import '../../fileTypeUtils/wta/wtaReader.dart';
+import '../../utils/Disposable.dart';
 import '../../utils/utils.dart';
 import '../Property.dart';
 import '../events/statusInfo.dart';
@@ -13,7 +14,7 @@ import '../openFiles/openFileTypes.dart';
 import '../openFiles/openFilesManager.dart';
 import '../undoable.dart';
 
-class WtaTextureEntry with HasUuid, Undoable {
+class WtaTextureEntry with HasUuid, Undoable implements Disposable {
   final OpenFileId file;
   final HexProp id;
   final StringProp path;
@@ -31,6 +32,7 @@ class WtaTextureEntry with HasUuid, Undoable {
     (areasManager.fromId(file) as WtaWtpData).onPropChanged();
   }
 
+  @override
   void dispose() {
     id.dispose();
     path.dispose();
@@ -65,7 +67,7 @@ class WtaTextureEntry with HasUuid, Undoable {
   }
 }
 
-class WtaWtpTextures with HasUuid, Undoable {
+class WtaWtpTextures with HasUuid, Undoable implements Disposable {
   final OpenFileId file;
   final String wtaPath;
   final String? wtpPath;
@@ -173,6 +175,7 @@ class WtaWtpTextures with HasUuid, Undoable {
     (areasManager.fromId(file) as WtaWtpData).onPropChanged();
   }
 
+  @override
   void dispose() {
     textures.dispose();
   }
