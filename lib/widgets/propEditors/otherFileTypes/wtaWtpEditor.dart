@@ -7,7 +7,7 @@ import 'package:path/path.dart';
 
 import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/listNotifier.dart';
-import '../../../stateManagement/openFiles/openFileTypes.dart';
+import '../../../stateManagement/openFiles/types/WtaWtpData.dart';
 import '../../../stateManagement/otherFileTypes/wtaData.dart';
 import '../../../stateManagement/undoable.dart';
 import '../../../utils/utils.dart';

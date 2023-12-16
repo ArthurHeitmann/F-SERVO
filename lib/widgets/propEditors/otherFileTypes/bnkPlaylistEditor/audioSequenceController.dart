@@ -5,7 +5,7 @@ import 'dart:math';
 import 'package:audioplayers/audioplayers.dart';
 
 import '../../../../stateManagement/Property.dart';
-import '../../../../stateManagement/openFiles/openFileTypes.dart';
+import '../../../../stateManagement/openFiles/types/BnkFilePlaylistData.dart';
 import '../../../../utils/Disposable.dart';
 import '../../../../utils/utils.dart';
 

@@ -1,6 +1,18 @@
 import 'package:flutter/material.dart';
 
 import '../../stateManagement/openFiles/openFileTypes.dart';
+import '../../stateManagement/openFiles/types/BnkFilePlaylistData.dart';
+import '../../stateManagement/openFiles/types/EstFileData.dart';
+import '../../stateManagement/openFiles/types/FtbFileData.dart';
+import '../../stateManagement/openFiles/types/McdFileData.dart';
+import '../../stateManagement/openFiles/types/SaveSlotData.dart';
+import '../../stateManagement/openFiles/types/SmdFileData.dart';
+import '../../stateManagement/openFiles/types/TextFileData.dart';
+import '../../stateManagement/openFiles/types/TmdFileData.dart';
+import '../../stateManagement/openFiles/types/WemFileData.dart';
+import '../../stateManagement/openFiles/types/WspFileData.dart';
+import '../../stateManagement/openFiles/types/WtaWtpData.dart';
+import '../../stateManagement/openFiles/types/XmlFileData.dart';
 import '../../stateManagement/preferencesData.dart';
 import '../misc/preferencesEditor.dart';
 import '../propEditors/otherFileTypes/SaveSlotDataEditor.dart';
@@ -29,6 +41,7 @@ enum FileType {
   saveSlotData,
   wta,
   est,
+  none,
 }
 
 Widget makeFileEditor(OpenFileData content) {

@@ -6,8 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 
 import '../../../fileTypeUtils/audio/wemToWavConverter.dart';
-import '../../../stateManagement/openFiles/openFileTypes.dart';
 import '../../../stateManagement/openFiles/openFilesManager.dart';
+import '../../../stateManagement/openFiles/types/WemFileData.dart';
 import '../../../utils/utils.dart';
 import '../../misc/ChangeNotifierWidget.dart';
 import '../../misc/ColumnSeparated.dart';

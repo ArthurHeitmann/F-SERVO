@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 
 import '../../stateManagement/charNamesXmlWrapper.dart';
-import '../../stateManagement/openFiles/openFileTypes.dart';
+import '../../stateManagement/openFiles/types/XmlFileData.dart';
 import '../../stateManagement/xmlProps/xmlProp.dart';
 import '../../utils/assetDirFinder.dart';
 import '../../utils/utils.dart';

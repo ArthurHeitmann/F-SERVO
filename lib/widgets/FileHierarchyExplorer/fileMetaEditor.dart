@@ -8,6 +8,7 @@ import '../../stateManagement/hierarchy/types/PakHierarchyEntry.dart';
 import '../../stateManagement/hierarchy/types/XmlScriptHierarchyEntry.dart';
 import '../../stateManagement/openFiles/openFileTypes.dart';
 import '../../stateManagement/openFiles/openFilesManager.dart';
+import '../../stateManagement/openFiles/types/XmlFileData.dart';
 import '../../stateManagement/xmlProps/xmlProp.dart';
 import '../../utils/utils.dart';
 import '../../widgets/theme/customTheme.dart';

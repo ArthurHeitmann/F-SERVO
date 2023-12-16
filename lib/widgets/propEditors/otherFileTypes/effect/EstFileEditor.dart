@@ -7,6 +7,7 @@ import '../../../../fileTypeUtils/effects/estEntryTypes.dart';
 import '../../../../stateManagement/Property.dart';
 import '../../../../stateManagement/listNotifier.dart';
 import '../../../../stateManagement/openFiles/openFileTypes.dart';
+import '../../../../stateManagement/openFiles/types/EstFileData.dart';
 import '../../../../stateManagement/otherFileTypes/EstFileData.dart';
 import '../../../../utils/utils.dart';
 import '../../../misc/ChangeNotifierWidget.dart';

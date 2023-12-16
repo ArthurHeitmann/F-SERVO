@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../background/IdLookup.dart';
+import '../widgets/filesView/FileType.dart';
 import '../widgets/theme/darkTheme.dart';
 import '../widgets/theme/nierTheme.dart';
 import 'Property.dart';
@@ -81,7 +82,7 @@ class PreferencesData extends OpenFileData {
 
   PreferencesData._() 
     : prefsFuture = SharedPreferences.getInstance(),
-    super("Preferences", "preferences", icon: Icons.settings)
+    super(type: FileType.preferences, "Preferences", "preferences", icon: Icons.settings)
   {
     prefsFuture.then((prefs) {
       _prefs = prefs;

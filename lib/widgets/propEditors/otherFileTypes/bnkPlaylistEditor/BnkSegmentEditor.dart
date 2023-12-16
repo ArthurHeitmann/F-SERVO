@@ -3,7 +3,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
-import '../../../../stateManagement/openFiles/openFileTypes.dart';
+import '../../../../stateManagement/openFiles/types/BnkFilePlaylistData.dart';
 import '../../../../utils/utils.dart';
 import '../../../misc/ChangeNotifierWidget.dart';
 import '../../../misc/CustomIcons.dart';

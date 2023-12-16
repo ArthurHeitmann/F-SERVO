@@ -60,23 +60,28 @@ class UndoHistoryManager with ChangeNotifier {
   void _pushSnapshot() {
     if (_isRestoring) return;
     _isPushing = true;
-    if (_undoStack.length - 1 > _undoIndex) {
-      for (int i = _undoStack.length - 1; i > _undoIndex; i--) {
-        _undoStack.removeAt(i)
-          .dispose();
+    try {
+      if (_undoStack.length - 1 > _undoIndex) {
+        for (int i = _undoStack.length - 1; i > _undoIndex; i--) {
+          _undoStack.removeAt(i)
+              .dispose();
+        }
       }
+      int t1 = DateTime
+          .now()
+          .millisecondsSinceEpoch;
+      _undoStack.add(_UndoSnapshot.take());
+      _undoIndex = clamp(_undoIndex + 1, 0, _undoStack.length - 1);
+
+      int tD = DateTime
+          .now()
+          .millisecondsSinceEpoch - t1;
+      if (tD > 8)
+        print("WARNING: Pushing history snapshot took ${tD}ms");
+    } finally {
+      _isPushing = false;
+      notifyListeners();
     }
-    int t1 = DateTime.now().millisecondsSinceEpoch;
-    _undoStack.add(_UndoSnapshot.take());
-    _undoIndex = clamp(_undoIndex + 1, 0, _undoStack.length - 1);
-    
-    int tD = DateTime.now().millisecondsSinceEpoch - t1;
-    if (tD > 8)
-      print("WARNING: Pushing history snapshot took ${tD}ms");
-    
-    _isPushing = false;
-    
-    notifyListeners();
   }
 
   void undo() {
@@ -88,8 +93,8 @@ class UndoHistoryManager with ChangeNotifier {
       _undoStack[_undoIndex].restore();
     } finally {
       _isRestoring = false;
+      notifyListeners();
     }
-    notifyListeners();
   }
 
   void redo() {
@@ -101,8 +106,8 @@ class UndoHistoryManager with ChangeNotifier {
       _undoStack[_undoIndex].restore();
     } finally {
       _isRestoring = false;
+      notifyListeners();
     }
-    notifyListeners();
   }
 
   bool get canUndo {

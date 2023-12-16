@@ -7,6 +7,7 @@ import 'package:tuple/tuple.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/listNotifier.dart';
 import '../../../stateManagement/openFiles/openFileTypes.dart';
+import '../../../stateManagement/openFiles/types/McdFileData.dart';
 import '../../../stateManagement/otherFileTypes/McdData.dart';
 import '../../../utils/utils.dart';
 import '../../misc/ChangeNotifierWidget.dart';

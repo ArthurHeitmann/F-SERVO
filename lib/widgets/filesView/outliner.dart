@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 
 import '../../stateManagement/Property.dart';
 import '../../stateManagement/events/jumpToEvents.dart';
-import '../../stateManagement/openFiles/openFileTypes.dart';
 import '../../stateManagement/openFiles/openFilesManager.dart';
+import '../../stateManagement/openFiles/types/XmlFileData.dart';
 import '../../stateManagement/xmlProps/xmlActionProp.dart';
 import '../../stateManagement/xmlProps/xmlProp.dart';
 import '../../widgets/theme/customTheme.dart';

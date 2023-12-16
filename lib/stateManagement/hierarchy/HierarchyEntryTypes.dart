@@ -31,29 +31,24 @@ mixin HierarchyEntryBase implements Disposable {
 
   void add(HierarchyEntry child) {
     _children.add(child);
-    openHierarchyManager.treeViewIsDirty.value = true;
   }
 
   void addAll(Iterable<HierarchyEntry> children) {
     _children.addAll(children);
-    openHierarchyManager.treeViewIsDirty.value = true;
   }
 
   void insert(int index, HierarchyEntry child) {
     _children.insert(index, child);
-    openHierarchyManager.treeViewIsDirty.value = true;
   }
 
   void remove(HierarchyEntry child, { bool dispose = false }) {
     _children.remove(child);
     if (dispose)
       child.dispose();
-    openHierarchyManager.treeViewIsDirty.value = true;
   }
 
   void clear() {
     _children.clear();
-    openHierarchyManager.treeViewIsDirty.value = true;
   }
 
   void replaceWith(List<HierarchyEntry> newChildren) {
@@ -66,8 +61,6 @@ mixin HierarchyEntryBase implements Disposable {
 
   @override
   void dispose() {
-    for (var child in children)
-      child.dispose();
     _children.dispose();
   }
 }

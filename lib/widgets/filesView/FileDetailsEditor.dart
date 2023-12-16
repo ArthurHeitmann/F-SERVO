@@ -2,8 +2,8 @@
 
 import 'package:flutter/material.dart';
 
-import '../../stateManagement/openFiles/openFileTypes.dart';
 import '../../stateManagement/openFiles/openFilesManager.dart';
+import '../../stateManagement/openFiles/types/EstFileData.dart';
 import '../../stateManagement/xmlProps/xmlProp.dart';
 import '../misc/ChangeNotifierWidget.dart';
 import '../misc/Selectable.dart';

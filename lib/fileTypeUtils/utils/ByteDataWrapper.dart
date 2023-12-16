@@ -5,7 +5,7 @@ import 'dart:typed_data';
 
 import 'package:euc/jis.dart';
 
-import '../../stateManagement/events/statusInfo.dart';
+// import '../../stateManagement/events/statusInfo.dart';
 
 enum StringEncoding {
   utf8,
@@ -48,7 +48,7 @@ class ByteDataWrapper {
       return ByteDataWrapper(buffer.buffer);
     } else {
       print("File is over 2GB, loading in chunks");
-      messageLog.add("Loading large file into memory...");
+      // messageLog.add("Loading large file into memory...");
       var buffer = Uint8List(fileSize).buffer;
       var file = File(path).openRead();
       int position = 0;
@@ -61,7 +61,7 @@ class ByteDataWrapper {
         i++;
       }
       print("Read $position bytes");
-      messageLog.add("Loaded file into memory");
+      // messageLog.add("Loaded file into memory");
       return ByteDataWrapper(buffer);
     }
   }

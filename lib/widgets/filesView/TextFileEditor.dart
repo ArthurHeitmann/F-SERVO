@@ -19,7 +19,7 @@ import 'package:path/path.dart';
 
 import '../../main.dart';
 import '../../stateManagement/events/jumpToEvents.dart';
-import '../../stateManagement/openFiles/openFileTypes.dart';
+import '../../stateManagement/openFiles/types/TextFileData.dart';
 import '../../stateManagement/undoable.dart';
 import '../../utils/assetDirFinder.dart';
 import '../../utils/utils.dart';

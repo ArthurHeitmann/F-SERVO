@@ -12,8 +12,8 @@ import '../../../fileTypeUtils/audio/waiExtractor.dart';
 import '../../../fileTypeUtils/audio/wemToWavConverter.dart';
 import '../../../utils/utils.dart';
 import '../../Property.dart';
-import '../../openFiles/openFileTypes.dart';
 import '../../openFiles/openFilesManager.dart';
+import '../../openFiles/types/WemFileData.dart';
 import '../../undoable.dart';
 import '../HierarchyEntryTypes.dart';
 
