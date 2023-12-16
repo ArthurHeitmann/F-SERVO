@@ -64,7 +64,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
   }
 
   HierarchyEntryBase parentOf(HierarchyEntryBase entry) {
-    return (children.findRecWhere((e) => e.children.contains(entry)) ?? this) as HierarchyEntryBase;
+    return (findRecWhere((e) => e.children.contains(entry)) ?? this) as HierarchyEntryBase;
   }
 
   Future<HierarchyEntry?> openFile(String filePath, { HierarchyEntry? parent }) async {
@@ -176,7 +176,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
   }
 
   Future<HierarchyEntry> openDat(String datPath, { HierarchyEntry? parent }) async {
-    var existing = children.findRecWhere((entry) => entry is DatHierarchyEntry && entry.path == datPath);
+    var existing = findRecWhere((entry) => entry is DatHierarchyEntry && entry.path == datPath);
     if (existing != null)
       return existing;
 
@@ -204,7 +204,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
     else
       add(datEntry);
 
-    var existingEntries = children.findAllRecWhere((entry) =>
+    var existingEntries = findAllRecWhere((entry) =>
       entry is FileHierarchyEntry && entry.path.startsWith(datExtractDir));
     for (var entry in existingEntries)
       parentOf(entry).remove(entry);
@@ -255,12 +255,12 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
     if (match == null)
       return null;
     var groupId = int.parse(match.group(1)!, radix: 16);
-    var parentGroup = children.findRecWhere((entry) => entry is HapGroupHierarchyEntry && entry.id == groupId) as HapGroupHierarchyEntry?;
+    var parentGroup = findRecWhere((entry) => entry is HapGroupHierarchyEntry && entry.id == groupId) as HapGroupHierarchyEntry?;
     return parentGroup;
   }
 
   Future<HierarchyEntry> openPak(String pakPath, { HierarchyEntry? parent }) async {
-    var existing = children.findRecWhere((entry) => entry is PakHierarchyEntry && entry.path == pakPath);
+    var existing = findRecWhere((entry) => entry is PakHierarchyEntry && entry.path == pakPath);
     if (existing != null)
       return existing;
 
@@ -277,7 +277,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
       add(pakEntry);
     await pakEntry.readGroups(join(pakExtractDir, "0.xml"), parent);
 
-    var existingEntries = children.findAllRecWhere((entry) =>
+    var existingEntries = findAllRecWhere((entry) =>
       entry is XmlScriptHierarchyEntry && entry.path.startsWith(pakExtractDir));
     for (var childXml in existingEntries)
       parentOf(childXml).remove(childXml);
@@ -325,7 +325,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
   }
 
   HierarchyEntry openGenericFile<T extends FileHierarchyEntry>(String filePath, HierarchyEntry? parent, T Function(StringProp n, String p) make) {
-    var existing = children.findRecWhere((entry) => entry is T && entry.path == filePath);
+    var existing = findRecWhere((entry) => entry is T && entry.path == filePath);
     if (existing != null)
       return existing;
     var entry = make(StringProp(basename(filePath)), filePath);
@@ -340,7 +340,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
   Future<HierarchyEntry> openBinMrbScript(String binFilePath, { HierarchyEntry? parent }) async {
     var rbPath = "$binFilePath.rb";
 
-    var existing = children.findRecWhere((entry) => entry is RubyScriptHierarchyEntry && entry.path == rbPath);
+    var existing = findRecWhere((entry) => entry is RubyScriptHierarchyEntry && entry.path == rbPath);
     if (existing != null)
       return existing;
 
@@ -352,7 +352,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
   }
 
   Future<HierarchyEntry> openWaiFile(String waiPath) async {
-    var existing = children.findRecWhere((entry) => entry is WaiHierarchyEntry && entry.path == waiPath);
+    var existing = findRecWhere((entry) => entry is WaiHierarchyEntry && entry.path == waiPath);
     if (existing != null)
       return existing;
     
@@ -409,7 +409,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
   }
 
   Future<HierarchyEntry> openBnkFile(String bnkPath, { HierarchyEntry? parent }) async {
-    var existing = children.findRecWhere((entry) => entry is BnkHierarchyEntry && entry.path == bnkPath);
+    var existing = findRecWhere((entry) => entry is BnkHierarchyEntry && entry.path == bnkPath);
     if (existing != null)
       return existing;
     
@@ -773,7 +773,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
   }
 
   Future<HierarchyEntry> openBxmFile(String bxmPath, { HierarchyEntry? parent }) async {
-    var existing = children.findRecWhere((entry) => entry is BxmHierarchyEntry && entry.path == bxmPath);
+    var existing = findRecWhere((entry) => entry is BxmHierarchyEntry && entry.path == bxmPath);
     if (existing != null)
       return existing;
     
@@ -790,7 +790,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
   }
 
   Future<HierarchyEntry> openWtaFile(String wtaPath, { HierarchyEntry? parent }) async {
-    var existing = children.findRecWhere((entry) => entry is WtaHierarchyEntry && entry.path == wtaPath);
+    var existing = findRecWhere((entry) => entry is WtaHierarchyEntry && entry.path == wtaPath);
     if (existing != null)
       return existing;
     
@@ -819,7 +819,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
   }
 
   Future<HierarchyEntry> openWtbFile(String wtaPath, { HierarchyEntry? parent }) async {
-    var existing = children.findRecWhere((entry) => entry is WtaHierarchyEntry && entry.path == wtaPath);
+    var existing = findRecWhere((entry) => entry is WtaHierarchyEntry && entry.path == wtaPath);
     if (existing != null)
       return existing;
 
@@ -995,7 +995,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
     var entry = snapshot as OpenHierarchyManager;
     updateOrReplaceWith(entry.children.toList(), (obj) => obj.takeSnapshot() as HierarchyEntry);
     if (entry.selectedEntry.value != null)
-      setSelectedEntry(children.findRecWhere((e) => entry.selectedEntry.value!.uuid == e.uuid));
+      setSelectedEntry(findRecWhere((e) => entry.selectedEntry.value!.uuid == e.uuid));
     else
       setSelectedEntry(null);
   }

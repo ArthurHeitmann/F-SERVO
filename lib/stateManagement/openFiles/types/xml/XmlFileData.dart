@@ -29,7 +29,6 @@ class XmlFileData extends OpenFileData {
     secondaryName.value = xmlName;
 
     var hierarchyEntry = openHierarchyManager
-        .children
         .findRecWhere((entry) => entry is XmlScriptHierarchyEntry && entry.path == path) as XmlScriptHierarchyEntry?;
     if (hierarchyEntry != null)
       hierarchyEntry.hapName.value = xmlName;

@@ -64,7 +64,7 @@ class PakHierarchyEntry extends ExtractableHierarchyEntry {
     if (parent is! DatHierarchyEntry)
       return;
 
-    var childPak = parent.children.findRecWhere((entry) {
+    var childPak = parent.findRecWhere((entry) {
       if (entry is! PakHierarchyEntry)
         return false;
       var pakGroupId = pakGroupIdMatcher.firstMatch(entry.name.value);

@@ -20,7 +20,7 @@ class WspFileData extends OpenFileData {
       return;
     loadingState.value = LoadingState.loading;
 
-    var wspHierarchyEntry = openHierarchyManager.children.findRecWhere((e) => e is WspHierarchyEntry && e.path == path);
+    var wspHierarchyEntry = openHierarchyManager.findRecWhere((e) => e is WspHierarchyEntry && e.path == path);
     if (wspHierarchyEntry == null) {
       showToast("WSP hierarchy entry not found");
       throw Exception("WSP hierarchy entry not found for $path");

@@ -59,6 +59,30 @@ mixin HierarchyEntryBase implements Disposable {
     _children.updateOrReplaceWith(newChildren, copy);
   }
 
+  HierarchyEntry? findRecWhere(bool Function(HierarchyEntry) test, { Iterable<HierarchyEntry>? children }) {
+    children ??= this.children;
+    for (var child in children) {
+      if (test(child))
+        return child;
+      var result = findRecWhere(test, children: child.children);
+      if (result != null) {
+        return result;
+      }
+    }
+    return null;
+  }
+
+  List<HierarchyEntry> findAllRecWhere(bool Function(HierarchyEntry) test, { Iterable<HierarchyEntry>? children }) {
+    children ??= this.children;
+    List<HierarchyEntry> result = [];
+    for (var child in children) {
+      if (test(child))
+        result.add(child);
+      result.addAll(findAllRecWhere(test, children: child.children));
+    }
+    return result;
+  }
+
   @override
   void dispose() {
     _children.dispose();
