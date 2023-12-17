@@ -7,30 +7,38 @@ import '../../main.dart';
 import '../../stateManagement/events/statusInfo.dart';
 import '../../stateManagement/preferencesData.dart';
 import '../../widgets/misc/fileSelectionDialog.dart';
-import '../utils/ByteDataWrapper.dart';
+import '../utils/ByteDataWrapperRA.dart';
 import 'cpk.dart';
 
 Future<List<String>> extractCpk(String cpkPath, String extractDir) async {
-  var cpk = Cpk.read(await ByteDataWrapper.fromFile(cpkPath));
-  bool logProgress = cpk.files.length > 250;
-  int tenPercentIncrement = (cpk.files.length / 10).round();
-  for (int i = 0; i < cpk.files.length; i++) {
-    var file = cpk.files[i];
-    print("Extracting ${file.name}");
-    var folder = join(extractDir, file.path);
-    var filePath = join(folder, file.name);
-    await Directory(folder).create(recursive: true);
-    await File(filePath).writeAsBytes(file.getData());
-    if (logProgress && i % tenPercentIncrement == 0) {
-      var percentProgress = ((i + 1) / cpk.files.length * 100).toStringAsFixed(1);
-      messageLog.add("Extracted $percentProgress% of files (${(i+1)}/${cpk.files.length})");
+  var bytes = await ByteDataWrapperRA.fromFile(cpkPath);
+  try {
+    var cpk = await Cpk.read(bytes);
+    bool logProgress = cpk.files.length > 250;
+    int tenPercentIncrement = (cpk.files.length / 10).round();
+    for (int i = 0; i < cpk.files.length; i++) {
+      var file = cpk.files[i];
+      print("Extracting ${file.name}");
+      var folder = join(extractDir, file.path);
+      var filePath = join(folder, file.name);
+      await Directory(folder).create(recursive: true);
+      await File(filePath).writeAsBytes(await file.readData(bytes));
+      if (logProgress && i % tenPercentIncrement == 0) {
+        var percentProgress = ((i) / cpk.files.length * 100)
+            .toStringAsFixed(1);
+        messageLog.add(
+            "Extracted $percentProgress% of files (${(i + 1)}/${cpk.files
+                .length})");
+      }
     }
+    if (logProgress)
+      messageLog.add("Extracted 100% of files (${cpk.files.length}/${cpk.files.length})");
+    return cpk.files
+      .map((file) => join(extractDir, file.path, file.name))
+      .toList();
+  } finally {
+    await bytes.close();
   }
-  if (logProgress)
-    messageLog.add("Extracted 100% of files (${cpk.files.length}/${cpk.files.length})");
-  return cpk.files
-    .map((file) => join(extractDir, file.path, file.name))
-    .toList();
 }
 
 Future<String?> extractCpkWithPrompt(String cpkPath) async {

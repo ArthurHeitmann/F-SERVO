@@ -4,7 +4,7 @@
 import 'dart:math';
 import 'dart:typed_data';
 
-import '../utils/ByteDataWrapper.dart';
+import '../utils/ByteDataWrapperRA.dart';
 
 class CpkSection {
   late String id;
@@ -15,68 +15,72 @@ class CpkSection {
 
   CpkSection(this.id, this.flags, this.tableLength, this.unknown, this.table);
 
-  CpkSection.read(ByteDataWrapper bytes) {
+  static Future<CpkSection> read(ByteDataWrapperRA bytes) async {
     bytes.endian = Endian.little;
-    id = bytes.readString(4);
-    flags = bytes.readUint32();
-    tableLength = bytes.readUint32();
-    unknown = bytes.readUint32();
-    table = CpkTable.read(bytes, tableLength);
+    var id = await bytes.readString(4);
+    var flags = await bytes.readUint32();
+    var tableLength = await bytes.readUint32();
+    var unknown = await bytes.readUint32();
+    var table = await CpkTable.read(bytes, tableLength);
+    return CpkSection(id, flags, tableLength, unknown, table);
   }
 }
 
 class CpkTableHeader {
-  late String id;
-  late int length;
-  late int unknown;
-  late int encodingType;
-  late int rowsPosition;
-  late int stringPoolPosition;
-  late int dataPoolPosition;
-  late int tableNamePosition;
-  late int fieldCount;
-  late int rowLength;
-  late int rowCount;
-  late String tableName;
-  late CpkTableDataPool dataPool;
+  final String id;
+  final int length;
+  final int unknown;
+  final int encodingType;
+  final int rowsPosition;
+  final int stringPoolPosition;
+  final int dataPoolPosition;
+  final int tableNamePosition;
+  final int fieldCount;
+  final int rowLength;
+  final int rowCount;
+  final String tableName;
+  final CpkTableDataPool dataPool;
 
-  CpkTableHeader.read(ByteDataWrapper bytes) {
+  CpkTableHeader(this.id, this.length, this.unknown, this.encodingType, this.rowsPosition, this.stringPoolPosition, this.dataPoolPosition, this.tableNamePosition, this.fieldCount, this.rowLength, this.rowCount, this.tableName, this.dataPool);
+
+  static Future<CpkTableHeader> read(ByteDataWrapperRA bytes) async {
     int startPos = bytes.position;
-    id = bytes.readString(4);
-    length = bytes.readUint32();
-    unknown = bytes.readUint8();
-    encodingType = bytes.readUint8();
-    rowsPosition = bytes.readUint16();
-    stringPoolPosition = bytes.readUint32();
-    dataPoolPosition = bytes.readUint32();
-    tableNamePosition = bytes.readUint32();
-    fieldCount = bytes.readUint16();
-    rowLength = bytes.readUint16();
-    rowCount = bytes.readUint32();
-    dataPool = CpkTableDataPool(bytes, startPos, this);
-    tableName = dataPool.readString(tableNamePosition);
+    var id = await bytes.readString(4);
+    var length = await bytes.readUint32();
+    var unknown = await bytes.readUint8();
+    var encodingType = await bytes.readUint8();
+    var rowsPosition = await bytes.readUint16();
+    var stringPoolPosition = await bytes.readUint32();
+    var dataPoolPosition = await bytes.readUint32();
+    var tableNamePosition = await bytes.readUint32();
+    var fieldCount = await bytes.readUint16();
+    var rowLength = await bytes.readUint16();
+    var rowCount = await bytes.readUint32();
+    var dataPool = CpkTableDataPool(bytes, startPos, stringPoolPosition, dataPoolPosition, rowsPosition, rowLength);
+    var tableName = await dataPool.readString(tableNamePosition);
+    return CpkTableHeader(id, length, unknown, encodingType, rowsPosition, stringPoolPosition, dataPoolPosition, tableNamePosition, fieldCount, rowLength, rowCount, tableName, dataPool);
   }
 }
 class CpkTable {
-  late CpkTableHeader header;
-  late List<List<CpkField>> rows;
+  final CpkTableHeader header;
+  final List<List<CpkField>> rows;
+  
+  CpkTable(this.header, this.rows);
 
-  CpkTable.read(ByteDataWrapper bytes, int tableLength) {
+  static Future<CpkTable> read(ByteDataWrapperRA bytes, int tableLength) async {
     bytes.endian = Endian.big;
-    header = CpkTableHeader.read(bytes);
+    var header = await CpkTableHeader.read(bytes);
     int rowsStart = bytes.position;
-    rows = List.generate(
-      header.rowCount,
-      (index) {
-        bytes.position = rowsStart;
-        var row = List.generate(
-          header.fieldCount,
-          (index2) => CpkField.read(bytes, header),
-        );
-        header.dataPool.nextRow();
-        return row;
-      },
-    );
+    List<List<CpkField>> rows = [];
+    for (var i = 0; i < header.rowCount; i++) {
+      await bytes.setPosition(rowsStart);
+      List<CpkField> row = [];
+      for (var j = 0; j < header.fieldCount; j++)
+        row.add(await CpkField.read(bytes, header));
+      header.dataPool.nextRow();
+      rows.add(row);
+    }
+    return CpkTable(header, rows);
   }
 
   CpkField? getField(int row, String name) {
@@ -89,7 +93,7 @@ class CpkTable {
   }
 }
 class CpkTableDataPool {
-  final ByteDataWrapper bytes;
+  final ByteDataWrapperRA bytes;
   final int tableStartOffset;
   final int stringPoolPosition;
   final int dataPoolPosition;
@@ -98,37 +102,37 @@ class CpkTableDataPool {
   int row = 0;
   int offset = 0;
 
-  CpkTableDataPool(this.bytes, this.tableStartOffset, CpkTableHeader header) :
-    stringPoolPosition = tableStartOffset + 8 + header.stringPoolPosition,
-    dataPoolPosition = tableStartOffset + 8 + header.dataPoolPosition,
-    rowsStoreOffset = header.rowsPosition,
-    rowsStoreRowLength = header.rowLength;
+  CpkTableDataPool(this.bytes, this.tableStartOffset, int stringPoolPosition, int dataPoolPosition, int rowsPosition, rowLength) :
+    stringPoolPosition = tableStartOffset + 8 + stringPoolPosition,
+    dataPoolPosition = tableStartOffset + 8 + dataPoolPosition,
+    rowsStoreOffset = rowsPosition,
+    rowsStoreRowLength = rowLength;
   
-  String readString(int offset) {
+  Future<String> readString(int offset) async {
     int pos = bytes.position;
-    bytes.position = stringPoolPosition + offset;
-    String str = bytes.readStringZeroTerminated();
-    bytes.position = pos;
+    await bytes.setPosition(stringPoolPosition + offset);
+    String str = await bytes.readStringZeroTerminated();
+    await bytes.setPosition(pos);
     return str;
   }
 
-  List<int> readData(int offset, int length) {
+  Future<List<int>> readData(int offset, int length) async {
     int pos = bytes.position;
-    bytes.position = dataPoolPosition + offset;
+    await bytes.setPosition(dataPoolPosition + offset);
     List<int> data;
     if (offset > 0 && length == 0) {
       print("WARNING: Untested code (:");
       int subLength = 0;
-      if (bytes.readString(4) == "@UTF") {
-        subLength = bytes.readUint32();
-        bytes.position -= 4;
+      if (await bytes.readString(4) == "@UTF") {
+        subLength = await bytes.readUint32();
+        await bytes.setPosition(bytes.position - 4);
       }
-      bytes.position -= 4;
-      data = bytes.asUint8List(subLength);
+      await bytes.setPosition(bytes.position - 4);
+      data = await bytes.readUint8List(subLength);
     } else {
-      data = bytes.asUint8List(length);
+      data = await bytes.readUint8List(length);
     }
-    bytes.position = pos;
+    await bytes.setPosition(pos);
     return data;
   }
 
@@ -157,90 +161,97 @@ class CpkField {
   int? dataPosition;
   int? dataLength;
   List<int>? data;
-
-  CpkField.read(ByteDataWrapper bytes, CpkTableHeader header) {
-    flags = bytes.readUint8();
+  
+  static Future<CpkField> read(ByteDataWrapperRA bytes, CpkTableHeader header) async {
+    var field = CpkField();
+    field.flags = await bytes.readUint8();
     var dataPool = header.dataPool;
 
-    if (flags & CpkFieldFlag.Name.value != 0) {
-      namePosition = bytes.readUint32();
-      name = dataPool.readString(namePosition!);
+    if (field.flags & CpkFieldFlag.Name.value != 0) {
+      field.namePosition = await bytes.readUint32();
+      field.name = await dataPool.readString(field.namePosition!);
     }
 
-    bool isDefaultValue = flags & CpkFieldFlag.DefaultValue.value != 0;
-    bool isRowStorage = flags & CpkFieldFlag.RowStorage.value != 0;
+    bool isDefaultValue = field.flags & CpkFieldFlag.DefaultValue.value != 0;
+    bool isRowStorage = field.flags & CpkFieldFlag.RowStorage.value != 0;
     if (isDefaultValue && isRowStorage)
       throw Exception("Field cannot have both DefaultValue and RowStorage flags");
-    
+
+    Object? value;
     if (isDefaultValue) {
-      _readValue(bytes, dataPool, false);
+      value = await _readValue(field, bytes, dataPool, false);
     } else if (isRowStorage) {
       int pos = bytes.position;
-      bytes.position = dataPool.currentRowStorePos;
-      _readValue(bytes, dataPool, true);
-      bytes.position = pos;
+      await bytes.setPosition(dataPool.currentRowStorePos);
+      value = await _readValue(field, bytes, dataPool, true);
+      await bytes.setPosition(pos);
     }
+    field.value = value;
+    
+    return field;
   }
 
-  void _readValue(ByteDataWrapper bytes, CpkTableDataPool dataPool, bool isRowStore) {
-    var typeFlag = flags & CpkFieldFlag.TypeMask.value;
+  static Future<Object?> _readValue(CpkField field, ByteDataWrapperRA bytes, CpkTableDataPool dataPool, bool isRowStore) async {
+    var typeFlag = field.flags & CpkFieldFlag.TypeMask.value;
+    Object? value;
     switch (CpkFieldType.values[typeFlag]) {
       case CpkFieldType.UInt8:
-        value = bytes.readUint8();
+        value = await bytes.readUint8();
         if (isRowStore) dataPool.incrementOffset(1);
         break;
       case CpkFieldType.Int8:
-        value = bytes.readInt8();
+        value = await bytes.readInt8();
         if (isRowStore) dataPool.incrementOffset(1);
         break;
       case CpkFieldType.UInt16:
-        value = bytes.readUint16();
+        value = await bytes.readUint16();
         if (isRowStore) dataPool.incrementOffset(2);
         break;
       case CpkFieldType.Int16:
-        value = bytes.readInt16();
+        value = await bytes.readInt16();
         if (isRowStore) dataPool.incrementOffset(2);
         break;
       case CpkFieldType.UInt32:
-        value = bytes.readUint32();
+        value = await bytes.readUint32();
         if (isRowStore) dataPool.incrementOffset(4);
         break;
       case CpkFieldType.Int32:
-        value = bytes.readInt32();
+        value = await bytes.readInt32();
         if (isRowStore) dataPool.incrementOffset(4);
         break;
       case CpkFieldType.UInt64:
-        value = bytes.readUint64();
+        value = await bytes.readUint64();
         if (isRowStore) dataPool.incrementOffset(8);
         break;
       case CpkFieldType.Int64:
-        value = bytes.readInt64();
+        value = await bytes.readInt64();
         if (isRowStore) dataPool.incrementOffset(8);
         break;
       case CpkFieldType.Float:
-        value = bytes.readFloat32();
+        value = await bytes.readFloat32();
         if (isRowStore) dataPool.incrementOffset(4);
         break;
       case CpkFieldType.Double:
-        value = bytes.readFloat64();
+        value = await bytes.readFloat64();
         if (isRowStore) dataPool.incrementOffset(8);
         break;
       case CpkFieldType.String:
-        stringPosition = bytes.readUint32();
-        value = dataPool.readString(stringPosition!);
+        field.stringPosition = await bytes.readUint32();
+        value = dataPool.readString(field.stringPosition!);
         if (isRowStore) dataPool.incrementOffset(4);
         break;
       case CpkFieldType.Data:
-        dataPosition = bytes.readUint32();
-        dataLength = bytes.readUint32();
-        data = dataPool.readData(dataPosition!, dataLength!);
+        field.dataPosition = await bytes.readUint32();
+        field.dataLength = await bytes.readUint32();
+        field.data = await dataPool.readData(field.dataPosition!, field.dataLength!);
         if (isRowStore) dataPool.incrementOffset(8);
         break;
       case CpkFieldType.Guid:
-        value = bytes.asUint8List(16);
+        value = await bytes.readUint8List(16);
         if (isRowStore) dataPool.incrementOffset(16);
         break;
     }
+    return value;
   }
 }
 
@@ -270,19 +281,25 @@ enum CpkFieldFlag {
   const CpkFieldFlag(this.value);
 }
 
-class CpkFile {
+abstract class CpkFile {
   final String path;
   final String name;
-  late Uint8List _data;
 
   CpkFile(this.path, this.name);
 
-  CpkFile.read(this.path, this.name, ByteDataWrapper bytes, int size) {
-    _data = bytes.asUint8List(size);
-  }
+  Future<Uint8List> readData(ByteDataWrapperRA bytes);
+}
 
-  Uint8List getData() {
-    return _data;
+class CpkFileUncompressed extends CpkFile {
+  final int dataOffset;
+  final int dataSize;
+
+  CpkFileUncompressed(super.path, super.name, this.dataOffset, this.dataSize);
+
+  @override
+  Future<Uint8List> readData(ByteDataWrapperRA bytes) async {
+    await bytes.setPosition(dataOffset);
+    return await bytes.readUint8List(dataSize);
   }
 }
 
@@ -295,27 +312,31 @@ class CriLaylaBitInfo {
 }
 
 class CpkFileCompressed extends CpkFile {
-  late final String id;
-  late final int uncompressedSize;
-  late final int compressedSize;
-  late final Uint8List compressedData;
-  late final Uint8List uncompressedHeader;
+  final String id;
+  final int uncompressedSize;
+  final int compressedSize;
+  final int compressedDataOffset;
 
-  CpkFileCompressed.read(super.path, super.name, ByteDataWrapper bytes) {
+  CpkFileCompressed(super.path, super.name, this.id, this.uncompressedSize, this.compressedSize, this.compressedDataOffset);
+
+  static Future<CpkFileCompressed> read(String path, String name, ByteDataWrapperRA bytes, int compressedDataOffset) async {
     bytes.endian = Endian.little;
-    id = bytes.readString(8);
-    uncompressedSize = bytes.readUint32();
-    compressedSize = bytes.readUint32();
-    compressedData = bytes.asUint8List(compressedSize);
-    uncompressedHeader = bytes.asUint8List(0x100);
+    await bytes.setPosition(compressedDataOffset);
+    var id = await bytes.readString(8);
+    var uncompressedSize = await bytes.readUint32();
+    var compressedSize = await bytes.readUint32();
+    return CpkFileCompressed(path, name, id, uncompressedSize, compressedSize, bytes.position);
   }
 
   @override
-  Uint8List getData() {
-    return decompress();
+  Future<Uint8List> readData(ByteDataWrapperRA bytes) async {
+    await bytes.setPosition(compressedDataOffset);
+    var compressedData = await bytes.readUint8List(compressedSize);
+    var uncompressedHeader = await bytes.readUint8List(0x100);
+    return decompress(compressedData, uncompressedHeader);
   }
 
-  Uint8List decompress() {
+  Uint8List decompress(Uint8List compressedData, Uint8List uncompressedHeader) {
     print("Decompressing $name...");
     var result = Uint8List(uncompressedSize + 0x100);
 
@@ -401,11 +422,13 @@ class CpkFileCompressed extends CpkFile {
 
 class Cpk {
   CpkSection header;
-  CpkSection? toc;
-  List<CpkFile> files = [];
+  CpkSection toc;
+  List<CpkFile> files;
 
-  Cpk.read(ByteDataWrapper bytes)
-    : header = CpkSection.read(bytes) {
+  Cpk(this.header, this.toc, this.files);
+
+  static Future<Cpk> read(ByteDataWrapperRA bytes) async {
+    var header = await CpkSection.read(bytes);
     var contentOffsetField = header.table.getField(0, "ContentOffset");
     if (contentOffsetField == null)
       throw Exception("ContentOffset field not found in header table");
@@ -415,28 +438,30 @@ class Cpk {
       throw Exception("TocOffset field not found in header table");
     int tocOffset = tocOffsetField.value! as int;
 
-    bytes.position = tocOffset;
-    toc = CpkSection.read(bytes);
+    await bytes.setPosition(tocOffset);
+    var toc = await CpkSection.read(bytes);
 
     int contentDelta = min(tocOffset, contentOffset);
-    print("Reading ${toc!.table.header.rowCount} files...");
-    for (var i = 0; i < toc!.table.header.rowCount; i++) {
-      var fileOffset = toc!.table.getField(i, "FileOffset")!.value! as int;
-      var fileSize = toc!.table.getField(i, "FileSize")!.value! as int;
-      var extractedSize = toc!.table.getField(i, "ExtractSize")!.value! as int;
-      var dirName = toc!.table.getField(i, "DirName")!.value! as String;
-      var fileName = toc!.table.getField(i, "FileName")!.value! as String;
+    print("Reading ${toc.table.header.rowCount} files...");
+    List<CpkFile> files = [];
+    for (var i = 0; i < toc.table.header.rowCount; i++) {
+      var fileOffset = toc.table.getField(i, "FileOffset")!.value! as int;
+      var fileSize = toc.table.getField(i, "FileSize")!.value! as int;
+      var extractedSize = toc.table.getField(i, "ExtractSize")!.value! as int;
+      var dirName = toc.table.getField(i, "DirName")!.value! as String;
+      var fileName = toc.table.getField(i, "FileName")!.value! as String;
       var isCompressed = fileSize != extractedSize;
-      bytes.position = fileOffset + contentDelta;
+      var dataOffset = fileOffset + contentDelta;
       try {
         if (isCompressed)
-          files.add(CpkFileCompressed.read(dirName, fileName, bytes));
+          files.add(await CpkFileCompressed.read(dirName, fileName, bytes, dataOffset));
         else
-          files.add(CpkFile.read(dirName, fileName, bytes, extractedSize));
+          files.add(CpkFileUncompressed(dirName, fileName, dataOffset, extractedSize));
       } catch (e) {
         print("Failed to read file $dirName/$fileName");
         rethrow;
       }
     }
+    return Cpk(header, toc, files);
   }
 }

@@ -32,6 +32,8 @@ linter:
     avoid_print: false
     avoid_unused_constructor_parameters: false
     prefer_single_quotes: false
+    await_only_futures: true
+    unawaited_futures: true
 
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options
