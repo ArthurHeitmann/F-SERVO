@@ -8,9 +8,9 @@ import '../../stateManagement/openFiles/types/xml/xmlProps/xmlProp.dart';
 import '../misc/ChangeNotifierWidget.dart';
 import '../misc/Selectable.dart';
 import '../misc/SmoothScrollBuilder.dart';
-import '../propEditors/otherFileTypes/effect/EstEntryDetailsEditor.dart';
-import '../propEditors/otherFileTypes/effect/EstRecordDetailsEditor.dart';
-import '../propEditors/xmlActions/XmlPropDetails.dart';
+import 'types/effect/EstEntryDetailsEditor.dart';
+import 'types/effect/EstRecordDetailsEditor.dart';
+import 'types/xml/xmlActions/XmlPropDetails.dart';
 
 class FileDetailsEditor extends ChangeNotifierWidget {
   FileDetailsEditor({super.key})

@@ -6,7 +6,7 @@ import 'package:path/path.dart';
 import '../../../fileTypeUtils/tmd/tmdReader.dart';
 import '../../../fileTypeUtils/tmd/tmdWriter.dart';
 import '../../../widgets/filesView/FileType.dart';
-import '../../../widgets/propEditors/otherFileTypes/genericTable/tableEditor.dart';
+import '../../../widgets/filesView/types/genericTable/tableEditor.dart';
 import '../../Property.dart';
 import '../../changesExporter.dart';
 import '../../hasUuid.dart';

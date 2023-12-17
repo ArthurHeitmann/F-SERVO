@@ -8,9 +8,9 @@ import '../../stateManagement/hierarchy/FileHierarchy.dart';
 import '../../utils/utils.dart';
 import '../../widgets/theme/customTheme.dart';
 import '../misc/ChangeNotifierWidget.dart';
-import '../propEditors/simpleProps/UnderlinePropTextField.dart';
-import '../propEditors/simpleProps/propEditorFactory.dart';
-import '../propEditors/simpleProps/propTextField.dart';
+import '../propEditors/UnderlinePropTextField.dart';
+import '../propEditors/propEditorFactory.dart';
+import '../propEditors/propTextField.dart';
 import 'HierarchyFlatList.dart';
 
 class FileExplorer extends ChangeNotifierWidget {

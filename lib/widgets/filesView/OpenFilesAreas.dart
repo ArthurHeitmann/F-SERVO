@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../stateManagement/openFiles/filesAreaManager.dart';
 import '../../stateManagement/openFiles/openFilesManager.dart';
-import '../../widgets/ResizableWidget.dart';
 import '../../widgets/theme/customTheme.dart';
 import '../misc/ChangeNotifierWidget.dart';
+import '../misc/ResizableWidget.dart';
 import 'fileTabView.dart';
 
 

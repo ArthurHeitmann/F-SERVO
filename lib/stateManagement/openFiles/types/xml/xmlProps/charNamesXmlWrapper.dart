@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import '../../../../../fileTypeUtils/utils/ByteDataWrapper.dart';
 import '../../../../../utils/Disposable.dart';
 import '../../../../../utils/utils.dart';
-import '../../../../../widgets/propEditors/otherFileTypes/genericTable/tableEditor.dart';
+import '../../../../../widgets/filesView/types/genericTable/tableEditor.dart';
 import '../../../../Property.dart';
 import '../../../../hasUuid.dart';
 import '../../../../undoable.dart';

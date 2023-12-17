@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 
 import 'FileHierarchyExplorer/FileExplorer.dart';
 import 'FileHierarchyExplorer/fileMetaEditor.dart';
-import 'ResizableWidget.dart';
 import 'filesView/OpenFilesAreas.dart';
-import 'filesView/rightSidebar.dart';
-import 'filesView/searchPanel.dart';
-import 'filesView/sidebar.dart';
+import 'layout/rightSidebar.dart';
+import 'layout/searchPanel.dart';
+import 'layout/sidebar.dart';
+import 'misc/ResizableWidget.dart';
 
 class EditorLayout extends StatelessWidget {
   const EditorLayout({super.key});

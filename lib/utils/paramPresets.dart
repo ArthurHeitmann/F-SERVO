@@ -2,7 +2,7 @@
 import 'dart:async';
 
 import '../background/IdLookup.dart';
-import '../widgets/propEditors/simpleProps/textFieldAutocomplete.dart';
+import '../widgets/propEditors/textFieldAutocomplete.dart';
 
 class ParamPreset {
   final String name;

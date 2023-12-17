@@ -12,14 +12,14 @@ import '../../stateManagement/openFiles/types/xml/XmlFileData.dart';
 import '../../stateManagement/openFiles/types/xml/xmlProps/xmlProp.dart';
 import '../../utils/utils.dart';
 import '../../widgets/theme/customTheme.dart';
+import '../filesView/types/xml/XmlPropEditorFactory.dart';
+import '../filesView/types/xml/customXmlProps/optionalPropEditor.dart';
+import '../filesView/types/xml/xmlActions/xmlArrayEditor.dart';
 import '../misc/ChangeNotifierWidget.dart';
 import '../misc/SmoothScrollBuilder.dart';
 import '../misc/onHoverBuilder.dart';
 import '../misc/smallButton.dart';
-import '../propEditors/simpleProps/XmlPropEditorFactory.dart';
-import '../propEditors/simpleProps/optionalPropEditor.dart';
-import '../propEditors/simpleProps/propEditorFactory.dart';
-import '../propEditors/xmlActions/xmlArrayEditor.dart';
+import '../propEditors/propEditorFactory.dart';
 
 enum _EditorType {
   none,

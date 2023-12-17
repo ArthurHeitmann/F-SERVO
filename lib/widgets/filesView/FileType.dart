@@ -15,17 +15,17 @@ import '../../stateManagement/openFiles/types/WtaWtpData.dart';
 import '../../stateManagement/openFiles/types/xml/XmlFileData.dart';
 import '../../stateManagement/preferencesData.dart';
 import '../misc/preferencesEditor.dart';
-import '../propEditors/otherFileTypes/SaveSlotDataEditor.dart';
-import '../propEditors/otherFileTypes/bnkPlaylistEditor/BnkPlaylistEditor.dart';
-import '../propEditors/otherFileTypes/effect/EstFileEditor.dart';
-import '../propEditors/otherFileTypes/ftbEditor.dart';
-import '../propEditors/otherFileTypes/genericTable/TableFileEditor.dart';
-import '../propEditors/otherFileTypes/mcdEditor.dart';
-import '../propEditors/otherFileTypes/wemFileEditor.dart';
-import '../propEditors/otherFileTypes/wspFileEditor.dart';
-import '../propEditors/otherFileTypes/wtaWtpEditor.dart';
-import 'TextFileEditor.dart';
-import 'XmlFileEditor.dart';
+import 'types/SaveSlotDataEditor.dart';
+import 'types/TextFileEditor.dart';
+import 'types/bnkPlaylistEditor/BnkPlaylistEditor.dart';
+import 'types/effect/EstFileEditor.dart';
+import 'types/fonts/ftbEditor.dart';
+import 'types/fonts/mcdEditor.dart';
+import 'types/genericTable/TableFileEditor.dart';
+import 'types/wem/wemFileEditor.dart';
+import 'types/wem/wspFileEditor.dart';
+import 'types/wtaWtpEditor.dart';
+import 'types/xml/XmlFileEditor.dart';
 
 enum FileType {
   text,
