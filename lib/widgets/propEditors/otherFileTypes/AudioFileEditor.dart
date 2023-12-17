@@ -6,18 +6,21 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
+import '../../../stateManagement/openFiles/openFilesManager.dart';
 import '../../../stateManagement/openFiles/types/WemFileData.dart';
+import '../../../stateManagement/preferencesData.dart';
 import '../../../utils/utils.dart';
 import '../../misc/mousePosition.dart';
 import '../../theme/customTheme.dart';
 
 class AudioFileEditor extends StatefulWidget {
   final AudioFileData file;
+  final OpenFileId fileId;
   final bool lockControls;
   final Widget? additionalControls;
   final Widget? rightSide;
 
-  const AudioFileEditor({ super.key, required this.file, this.lockControls = false, this.additionalControls, this.rightSide });
+  const AudioFileEditor({ super.key, required this.file, required this.fileId, this.lockControls = false, this.additionalControls, this.rightSide });
 
   @override
   State<AudioFileEditor> createState() => _AudioFileEditorState();
@@ -27,6 +30,8 @@ class _AudioFileEditorState extends State<AudioFileEditor> {
   late final AudioPlayer? _player;
   final ValueNotifier<int> _viewStart = ValueNotifier(0);
   final ValueNotifier<int> _viewEnd = ValueNotifier(1000);
+  final List<Listenable> _prevCurrentFileListeners = [];
+  late final PreferencesData prefs;
 
   @override
   void initState() {
@@ -39,6 +44,9 @@ class _AudioFileEditorState extends State<AudioFileEditor> {
       _viewEnd.value = widget.file.resource!.totalSamples;
       setState(() {});
     });
+    prefs = PreferencesData();
+    areasManager.areas.addListener(_onAreasChange);
+    _onAreasChange();
   }
 
   @override
@@ -46,6 +54,9 @@ class _AudioFileEditorState extends State<AudioFileEditor> {
     _player?.dispose();
     _viewStart.dispose();
     _viewEnd.dispose();
+    areasManager.areas.removeListener(_onAreasChange);
+    for (var prevListener in _prevCurrentFileListeners)
+      prevListener.removeListener(_onCurrentFileChange);
     super.dispose();
   }
 
@@ -148,6 +159,28 @@ class _AudioFileEditorState extends State<AudioFileEditor> {
         ],
       ),
     );
+  }
+
+  void _onAreasChange() {
+    for (var prevListener in _prevCurrentFileListeners)
+      prevListener.removeListener(_onCurrentFileChange);
+    _prevCurrentFileListeners.clear();
+    for (var area in areasManager.areas) {
+      area.currentFile.addListener(_onCurrentFileChange);
+      _prevCurrentFileListeners.add(area.currentFile);
+    }
+  }
+
+  void _onCurrentFileChange() {
+    if (_player == null)
+      return;
+    if (_player!.state != PlayerState.playing)
+      return;
+    if (prefs.pauseAudioOnFileChange?.value != true)
+      return;
+    if (areasManager.areas.any((area) => area.currentFile.value?.uuid == widget.fileId))
+      return;
+    _player!.pause();
   }
 }
 

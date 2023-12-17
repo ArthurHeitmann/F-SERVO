@@ -68,7 +68,9 @@ class ClipPlaybackController extends PlaybackController {
     // print("${DateTime.now()} clip play");
     _player.resume();
     var pos = await _player.getCurrentPosition();
-    var endIn = duration - pos!.inMicroseconds / 1000 + clip.beginTrim.value;
+    if (pos == null)
+      print("Warning: clip ${clip.sourceId} has null position");
+    var endIn = duration - (pos?.inMicroseconds ?? 0) / 1000 + clip.beginTrim.value;
     _endTimer?.cancel();
     _endTimer = Timer(Duration(microseconds: (endIn * 1000).toInt()), _onEndTimer);
   }
@@ -494,7 +496,7 @@ class MultiSegmentPlaybackController extends PlaybackController {
 
   MultiSegmentPlaybackController(BnkPlaylistChild plChild) {
     for (var child in plChild.children) {
-      var controller = BnkSegmentPlaybackController(child, child.segment!, onExitCue: _onSegmentEnd);
+      var controller = BnkSegmentPlaybackController(child, child.segment!, onExitCue: _onExitCue, onEnd: _onSegmentEnd);
       controller.positionStream.listen((_) async {
         if (controller != _segments[_currentSegment])
           return;
@@ -505,7 +507,7 @@ class MultiSegmentPlaybackController extends PlaybackController {
     _currentSegmentStream.add(_segments[_currentSegment].uuid);
   }
 
-  void _onSegmentEnd() {
+  void _onExitCue() {
     if (_currentSegment + 1 < _segments.length) {
       _currentSegment++;
       _currentSegmentStream.add(_segments[_currentSegment].uuid);
@@ -513,6 +515,18 @@ class MultiSegmentPlaybackController extends PlaybackController {
       _segments[_currentSegment].play();
     } else {
       _onEnd?.call();
+    }
+  }
+
+  void _onSegmentEnd() {
+    if (_currentSegment + 1 < _segments.length && isPlaying) {
+      _currentSegment++;
+      _currentSegmentStream.add(_segments[_currentSegment].uuid);
+      _positionStream.add(0);
+      _segments[_currentSegment].play();
+    } else {
+      _onEnd?.call();
+      _isPlayingStream.add(false);
     }
   }
   

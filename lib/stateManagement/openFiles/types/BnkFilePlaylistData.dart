@@ -399,14 +399,13 @@ class BnkTrackData with HasUuid, Undoable implements Disposable {
     if (wemPath == null)
       return;
     var wemBytes = await ByteDataWrapper.fromFile(wemPath);
-    var wemRiff = RiffFile.onlyFormat(wemBytes);
+    var wemRiff = RiffFile.fromBytes(wemBytes);
     var riffFormat = wemRiff.format;
     double duration;
     if (riffFormat is WemFormatChunk) {
       duration = riffFormat.numSamples / riffFormat.samplesPerSec;
     } else {
-      print("Unsupported format chunk in $wemPath");
-      return;
+      duration = wemRiff.data.size / riffFormat.avgBytesPerSec;
     }
     for (var clip in clips) {
       var newDuration = duration * 1000;

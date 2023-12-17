@@ -6,6 +6,7 @@ import '../../../../stateManagement/Property.dart';
 import '../../../../stateManagement/listNotifier.dart';
 import '../../../../stateManagement/openFiles/openFilesManager.dart';
 import '../../../../stateManagement/openFiles/types/BnkFilePlaylistData.dart';
+import '../../../../stateManagement/preferencesData.dart';
 import '../../../misc/mousePosition.dart';
 import 'audioSequenceController.dart';
 
@@ -139,6 +140,47 @@ class AudioPlaybackScope extends InheritedWidget {
 
 mixin AudioPlayingWidget<T extends StatefulWidget> on State<T> {
   CurrentPlaybackItem? currentPlaybackItem;
+  final List<Listenable> _prevCurrentFileListeners = [];
+  late final PreferencesData prefs;
+
+  @override
+  void initState() {
+    super.initState();
+    prefs = PreferencesData();
+    areasManager.areas.addListener(_onAreasChange);
+    _onAreasChange();
+  }
+
+  void onDispose() {
+    areasManager.areas.removeListener(_onAreasChange);
+    for (var prevListener in _prevCurrentFileListeners)
+      prevListener.removeListener(_onCurrentFileChange);
+    if (currentPlaybackItem == null)
+      return;
+    onCancel(true);
+  }
+
+  void _onAreasChange() {
+    for (var prevListener in _prevCurrentFileListeners)
+      prevListener.removeListener(_onCurrentFileChange);
+    _prevCurrentFileListeners.clear();
+    for (var area in areasManager.areas) {
+      area.currentFile.addListener(_onCurrentFileChange);
+      _prevCurrentFileListeners.add(area.currentFile);
+    }
+  }
+
+  void _onCurrentFileChange() {
+    if (currentPlaybackItem == null)
+      return;
+    if (!currentPlaybackItem!.playbackController.isPlaying)
+      return;
+    if (prefs.pauseAudioOnFileChange?.value != true)
+      return;
+    if (areasManager.areas.any((area) => area.currentFile.value?.uuid == fileId))
+      return;
+    currentPlaybackItem?.playbackController.pause();
+  }
 
   void onCancel([bool isDisposed = false]) {
     if (currentPlaybackItem == null)
@@ -167,12 +209,6 @@ mixin AudioPlayingWidget<T extends StatefulWidget> on State<T> {
       currentPlaybackItem!.playbackController.pause();
     else
       currentPlaybackItem!.playbackController.play();
-  }
-
-  void onDispose() {
-    if (currentPlaybackItem == null)
-      return;
-    onCancel(true);
   }
 
   void onSegmentChange(String segmentUuid) {

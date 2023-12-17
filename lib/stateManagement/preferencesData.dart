@@ -75,6 +75,7 @@ class PreferencesData extends OpenFileData {
   SavableProp<bool>? exportPaks;
   SavableProp<bool>? convertXmls;
   SavableProp<bool>? preferVsCode;
+  SavableProp<bool>? pauseAudioOnFileChange;
   SavableProp<ThemeType>? themeType;
   SavableProp<String>? waiExtractDir;
   SavableProp<String>? wwiseCliPath;
@@ -118,6 +119,7 @@ class PreferencesData extends OpenFileData {
     exportPaks = SavableProp<bool>("exportPak", _prefs!, true, uuid);
     convertXmls = SavableProp<bool>("convertXml", _prefs!, true, uuid);
     preferVsCode = SavableProp<bool>("preferVsCode", _prefs!, false, uuid);
+    pauseAudioOnFileChange = SavableProp<bool>("pauseAudioOnFileChange", _prefs!, false, uuid);
     themeType = SavableProp<ThemeType>("themeType", _prefs!, ThemeType.dark, uuid);
     waiExtractDir = SavableProp<String>("waiExtractDir", _prefs!, "", uuid);
     wwiseCliPath = SavableProp<String>("wwiseCliPath", _prefs!, "", uuid);

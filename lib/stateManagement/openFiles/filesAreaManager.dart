@@ -26,11 +26,13 @@ class FilesAreaManager with HasUuid, Undoable implements Disposable {
 
     if (this == areasManager.activeArea.value)
       windowTitle.value = currentFile.value?.displayName ?? "";
+    else
+      windowTitle.value = "";
   }
 
   void switchToClosestFile() {
     if (files.length <= 1) {
-      _currentFile.value = null;
+      setCurrentFile(null);
       return;
     }
 
@@ -39,7 +41,7 @@ class FilesAreaManager with HasUuid, Undoable implements Disposable {
       index--;
     else
       index++;
-    _currentFile.value = files[index];
+    setCurrentFile(files[index]);
   }
 
   Future<void> closeFile(OpenFileData file, { bool releaseHidden = false }) async {
@@ -122,7 +124,7 @@ class FilesAreaManager with HasUuid, Undoable implements Disposable {
     }
     rightArea._files.add(file);
     removeFile(file);
-    rightArea._currentFile.value = file;
+    rightArea.setCurrentFile(file);
 
     if (files.isEmpty) {
       areasManager.removeArea(this);
@@ -145,7 +147,7 @@ class FilesAreaManager with HasUuid, Undoable implements Disposable {
     }
     leftArea._files.add(file);
     removeFile(file);
-    leftArea._currentFile.value = file;
+    leftArea.setCurrentFile(file);
 
     if (files.isEmpty) {
       areasManager.removeArea(this);
@@ -155,7 +157,7 @@ class FilesAreaManager with HasUuid, Undoable implements Disposable {
   void switchToNextFile() {
     if (files.length <= 1) return;
     int nextIndex = (files.indexOf(currentFile.value!) + 1) % files.length;
-    _currentFile.value = files[nextIndex];
+    setCurrentFile(files[nextIndex]);
   }
 
   void switchToPreviousFile() {
@@ -163,7 +165,7 @@ class FilesAreaManager with HasUuid, Undoable implements Disposable {
     int nextIndex = (files.indexOf(currentFile.value!) - 1) % files.length;
     if (nextIndex < 0)
       nextIndex += files.length;
-    _currentFile.value = files[nextIndex];
+    setCurrentFile(files[nextIndex]);
   }
 
   Future<void> saveAll() async {
@@ -204,7 +206,7 @@ class FilesAreaManager with HasUuid, Undoable implements Disposable {
     var snapshot = FilesAreaManager();
     snapshot.overrideUuid(uuid);
     snapshot._files.replaceWith(files.map((entry) => entry.takeSnapshot() as OpenFileData).toList());
-    snapshot._currentFile.value = _currentFile.value != null ? snapshot.files[files.indexOf(_currentFile.value!)] : null;
+    snapshot.setCurrentFile(_currentFile.value != null ? snapshot.files[files.indexOf(_currentFile.value!)] : null);
     return snapshot;
   }
 
@@ -213,8 +215,8 @@ class FilesAreaManager with HasUuid, Undoable implements Disposable {
     var entry = snapshot as FilesAreaManager;
     _files.updateOrReplaceWith(entry.files.toList(), (obj) => obj.takeSnapshot() as OpenFileData);
     if (entry._currentFile.value != null)
-      _currentFile.value = files.where((file) => file.uuid == entry._currentFile.value!.uuid).first;
+      setCurrentFile(files.where((file) => file.uuid == entry._currentFile.value!.uuid).first);
     else
-      _currentFile.value = null;
+      setCurrentFile(null);
   }
 }

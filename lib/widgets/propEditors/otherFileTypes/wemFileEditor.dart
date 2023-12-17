@@ -85,6 +85,7 @@ class _WemFileEditorState extends ChangeNotifierState<WemFileEditor> {
         AudioFileEditor(
           key: refreshKey,
           file: widget.wem,
+          fileId: widget.wem.uuid,
           lockControls: widget.lockControls,
           additionalControls: Wrap(
             children: [
@@ -160,6 +161,7 @@ class _WemFileEditorState extends ChangeNotifierState<WemFileEditor> {
           AudioFileEditor(
             key: Key(widget.wem.overrideData.value!.uuid),
             file: widget.wem.overrideData.value!,
+            fileId: widget.wem.uuid,
             lockControls: widget.lockControls,
             additionalControls: Row(
               mainAxisSize: MainAxisSize.min,

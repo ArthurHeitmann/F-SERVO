@@ -245,6 +245,7 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
 
   List<Widget> makeMusicEditor() {
     return [
+      const SizedBox(height: 40,),
       const Text("Music preferences:", style: sectionHeaderStyle,),
       const SizedBox(height: 10,),
       RowSeparated(
@@ -291,6 +292,12 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
               }
             },
           ),
+        ],
+      ),
+      Row(
+        children: [
+          const Text("Pause audio playback when switching files:", overflow: TextOverflow.ellipsis,),
+          BoolPropSwitch(prop: widget.prefs.pauseAudioOnFileChange!),
         ],
       ),
     ];
