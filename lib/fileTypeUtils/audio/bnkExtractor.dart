@@ -43,3 +43,10 @@ Future<List<Tuple2<int, String>>> extractBnkWems(BnkFile bnk, String extractPath
 
   return wems;
 }
+
+Future<List<String>> extractBnkWemsFromPath(String bnkPath) async {
+  var bnk = BnkFile.read(await ByteDataWrapper.fromFile(bnkPath));
+  var extractPath = join(dirname(bnkPath), "${basename(bnkPath)}_extracted");
+  var wems = await extractBnkWems(bnk, extractPath);
+  return wems.map((e) => e.item2).toList();
+}

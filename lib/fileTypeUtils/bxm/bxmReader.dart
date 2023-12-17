@@ -7,6 +7,8 @@ import 'package:xml/xml.dart';
 import '../utils/ByteDataWrapper.dart';
 import 'bxmIO.dart';
 
+const _errorString = "ERROR";
+
 XmlElement parseBxm(ByteDataWrapper bytes) {
   bytes.endian = Endian.big;
 
@@ -35,12 +37,12 @@ XmlElement parseBxm(ByteDataWrapper bytes) {
     var nodeNameOffset = dataOffsets[nodeInfo.dataIndex].nameOffset;
     if (nodeNameOffset != 0xFFFF) {
       bytes.position = stringsOffsets + nodeNameOffset;
-      node.name = bytes.readStringZeroTerminated(encoding: bxmEncoding);
+      node.name = bytes.readStringZeroTerminated(encoding: bxmEncoding, errorFallback: _errorString);
     }
     var nodeValueOffset = dataOffsets[nodeInfo.dataIndex].valueOffset;
     if (nodeValueOffset != 0xFFFF) {
       bytes.position = stringsOffsets + nodeValueOffset;
-      node.value = bytes.readStringZeroTerminated(encoding: bxmEncoding);
+      node.value = bytes.readStringZeroTerminated(encoding: bxmEncoding, errorFallback: _errorString);
     }
 
     node.attributes = {};
@@ -50,12 +52,12 @@ XmlElement parseBxm(ByteDataWrapper bytes) {
       var attributeNameOffset = dataOffsets[nodeInfo.dataIndex + 1 + i].nameOffset;
       if (attributeNameOffset != 0xFFFF) {
         bytes.position = stringsOffsets + attributeNameOffset;
-        attributeName = bytes.readStringZeroTerminated(encoding: bxmEncoding);
+        attributeName = bytes.readStringZeroTerminated(encoding: bxmEncoding, errorFallback: _errorString);
       }
       var attributeValueOffset = dataOffsets[nodeInfo.dataIndex + 1 + i].valueOffset;
       if (attributeValueOffset != 0xFFFF) {
         bytes.position = stringsOffsets + attributeValueOffset;
-        attributeValue = bytes.readStringZeroTerminated(encoding: bxmEncoding);
+        attributeValue = bytes.readStringZeroTerminated(encoding: bxmEncoding, errorFallback: _errorString);
       }
       node.attributes[attributeName] = attributeValue;
     }

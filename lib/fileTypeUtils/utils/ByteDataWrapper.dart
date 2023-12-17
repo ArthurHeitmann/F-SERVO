@@ -245,7 +245,7 @@ class ByteDataWrapper {
     return decodeString(bytes, StringEncoding.utf16);
   }
 
-  String readStringZeroTerminated({StringEncoding encoding = StringEncoding.utf8}) {
+  String readStringZeroTerminated({StringEncoding encoding = StringEncoding.utf8, String? errorFallback }) {
     if (encoding == StringEncoding.utf16)
       return _readStringZeroTerminatedUtf16();
     var bytes = <int>[];
@@ -255,7 +255,13 @@ class ByteDataWrapper {
       if (byte == 0) break;
       bytes.add(byte);
     }
-    return decodeString(bytes, encoding);
+    try {
+      return decodeString(bytes, encoding);
+    } catch (e) {
+      if (errorFallback != null)
+        return errorFallback;
+      rethrow;
+    }
   }
 
   ByteDataWrapper makeSubView(int length) {

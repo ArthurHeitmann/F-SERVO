@@ -59,9 +59,11 @@ Future<List<String>> extractDatFiles(String datPath, { bool shouldExtractPakFile
   var datDir = path.dirname(datPath);
   var extractDir = path.join(datDir, "nier2blender_extracted", path.basename(datPath));
   await Directory(extractDir).create(recursive: true);
+  List<String> filePaths = [];
   for (int i = 0; i < header.fileNumber; i++) {
     bytes.position = fileOffsets[i];
     var extractedFile = File(path.join(extractDir, fileNames[i]));
+    filePaths.add(extractedFile.path);
     await extractedFile.writeAsBytes(bytes.readUint8List(fileSizes[i]));
   }
 
@@ -92,7 +94,7 @@ Future<List<String>> extractDatFiles(String datPath, { bool shouldExtractPakFile
 
   messageLog.add("Extracting ${path.basename(datPath)} done");
 
-  return fileNames;
+  return filePaths;
 }
 
 class ExtractedInnerFile {

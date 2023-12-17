@@ -7,6 +7,7 @@ import 'layout/rightSidebar.dart';
 import 'layout/searchPanel.dart';
 import 'layout/sidebar.dart';
 import 'misc/ResizableWidget.dart';
+import 'tools/toolsOverview.dart';
 
 class EditorLayout extends StatelessWidget {
   const EditorLayout({super.key});
@@ -36,7 +37,12 @@ class EditorLayout extends StatelessWidget {
               name: "Search",
               icon: Icons.search,
               child: const SearchPanel(),
-            )
+            ),
+            SidebarEntryConfig(
+              name: "Tools",
+              icon: Icons.build,
+              child: const ToolsOverview(),
+            ),
           ],
         ),
         Expanded(child: OpenFilesAreas()),
