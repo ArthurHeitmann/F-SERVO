@@ -15,6 +15,7 @@ Supported file types:
 - FTB (fonts)
 - CPK extract
 - Save files (SlotData_X.dat)
+- EST (effects)
 
 ## Installation
 
@@ -46,9 +47,9 @@ MCD editing
       ```bat
       git submodule update --init
       ```
-   2. Download additional assets from [here](https://github.com/ArthurHeitmann/NierScriptsEditor/releases/tag/assetsV0.5.0) and extract the folders inside into the `assets` folder. (This is so that the raw git repo isn't 100+ MB large)
+   2. Download additional assets from [here](https://github.com/ArthurHeitmann/F-SERVO/releases/tag/assetsV0.6.0) and extract the folders inside into the `assets` folder. (This is so that the raw git repo isn't 100+ MB large)
 
-3. Update dependencies with
+4. Update dependencies with
    ```bat
    flutter pub get
    ```
