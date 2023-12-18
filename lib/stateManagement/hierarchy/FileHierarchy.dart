@@ -188,9 +188,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
     else {
       datFilePaths = await getDatFileList(datExtractDir);
       //check if extracted folder actually contains all dat files
-      if (await Future.any(
-        datFilePaths.map((name) async 
-          => !await File(name).exists()))) {
+      if (await Future.any(datFilePaths.map((name) async => !await File(name).exists()))) {
         await extractDatFiles(datPath, shouldExtractPakFiles: true);
       }
     }
@@ -201,42 +199,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
     else
       add(datEntry);
 
-    var existingEntries = findAllRecWhere((entry) =>
-      entry is FileHierarchyEntry && entry.path.startsWith(datExtractDir));
-    for (var entry in existingEntries)
-      parentOf(entry).remove(entry);
-
-    // process DAT files
-    List<Future<void>> futures = [];
-    datFilePaths ??= await getDatFileList(datExtractDir);
-    RubyScriptGroupHierarchyEntry? rubyScriptGroup;
-    const supportedFileEndings = { ".pak", "_scp.bin", ".tmd", ".smd", ".mcd", ".ftb", ".bnk", ".bxm", ".wta", ".wtb", ".est", ".sst" };
-    for (var file in datFilePaths) {
-      if (supportedFileEndings.every((ending) => !file.endsWith(ending)))
-        continue;
-      int existingEntryI = existingEntries.indexWhere((entry) => (entry as FileHierarchyEntry).path == file);
-      if (existingEntryI != -1) {
-        datEntry.add(existingEntries[existingEntryI]);
-        continue;
-      }
-      if (file.endsWith("_scp.bin")) {
-        if (rubyScriptGroup == null) {
-          rubyScriptGroup = RubyScriptGroupHierarchyEntry();
-          datEntry.add(rubyScriptGroup);
-        }
-        futures.add(openBinMrbScript(file, parent: rubyScriptGroup));
-      }
-      else
-        futures.add(openFile(file, parent: datEntry));
-    }
-
-    await Future.wait(futures);
-
-    if (rubyScriptGroup != null) {
-      rubyScriptGroup.name.value += " (${rubyScriptGroup.children.length})";
-      if (rubyScriptGroup.children.length > 8)
-        rubyScriptGroup.isCollapsed.value = true;
-    }
+    await datEntry.loadChildren(datFilePaths);
 
     return datEntry;
   }
@@ -836,7 +799,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
 
   @override
   void remove(HierarchyEntry child, { bool dispose = false }) {
-    _removeRec(child);
+    _removeRec(child, freeFiles: dispose);
     super.remove(child, dispose: dispose);
   }
 
@@ -845,7 +808,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
     if (children.isEmpty)
       return;
     for (var child in children) {
-      _removeRec(child);
+      _removeRec(child, freeFiles: true);
       child.dispose();
     }
     super.clear();
@@ -853,18 +816,18 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
   }
 
   void removeAny(HierarchyEntry child) {
-    _removeRec(child);
+    _removeRec(child, freeFiles: true);
     parentOf(child).remove(child, dispose: true);
   }
 
-  void _removeRec(HierarchyEntry entry) {
-    if (entry is FileHierarchyEntry)
+  void _removeRec(HierarchyEntry entry, { bool freeFiles = false }) {
+    if (freeFiles && entry is FileHierarchyEntry)
       areasManager.releaseFile(entry.path);
     if (entry == _selectedEntry.value)
       setSelectedEntry(null);
       
     for (var child in entry.children) {
-      _removeRec(child);
+      _removeRec(child, freeFiles: freeFiles);
     }
   }
 

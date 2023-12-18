@@ -5,12 +5,16 @@ import 'package:path/path.dart';
 import '../../../fileTypeUtils/dat/datRepacker.dart';
 import '../../../main.dart';
 import '../../../utils/utils.dart';
+import '../../../widgets/FileHierarchyExplorer/datFilesSelector.dart';
 import '../../../widgets/misc/confirmDialog.dart';
 import '../../Property.dart';
 import '../../preferencesData.dart';
 import '../../undoable.dart';
+import '../FileHierarchy.dart';
 import '../HierarchyEntryTypes.dart';
+import 'PakHierarchyEntry.dart';
 import 'RubyScriptHierarchyEntry.dart';
+import 'XmlScriptHierarchyEntry.dart';
 
 class DatHierarchyEntry extends ExtractableHierarchyEntry {
   DatHierarchyEntry(StringProp name, String path, String extractedPath)
@@ -35,6 +39,58 @@ class DatHierarchyEntry extends ExtractableHierarchyEntry {
     updateOrReplaceWith(entry.children.toList(), (entry) => entry.takeSnapshot() as HierarchyEntry);
   }
 
+  Future<void> loadChildren(List<String>? datFilePaths) async {
+    var existingChildren = openHierarchyManager
+      .findAllRecWhere((entry) => entry is FileHierarchyEntry && dirname(entry.path) == extractedPath);
+    for (var child in existingChildren)
+      openHierarchyManager.parentOf(child).remove(child);
+
+    List<Future<void>> futures = [];
+    datFilePaths ??= await getDatFileList(extractedPath);
+    RubyScriptGroupHierarchyEntry? rubyScriptGroup;
+    const supportedFileEndings = { ".pak", "_scp.bin", ".tmd", ".smd", ".mcd", ".ftb", ".bnk", ".bxm", ".wta", ".wtb", ".est", ".sst" };
+    for (var file in datFilePaths) {
+      if (supportedFileEndings.every((ending) => !file.endsWith(ending)))
+        continue;
+      int existingChildI = existingChildren.indexWhere((entry) => (entry as FileHierarchyEntry).path == file);
+      if (existingChildI != -1) {
+        var existingChild = existingChildren.removeAt(existingChildI);
+        add(existingChild);
+        continue;
+      }
+      if (file.endsWith("_scp.bin")) {
+        if (rubyScriptGroup == null) {
+          rubyScriptGroup = RubyScriptGroupHierarchyEntry();
+          add(rubyScriptGroup);
+        }
+        futures.add(openHierarchyManager.openBinMrbScript(file, parent: rubyScriptGroup));
+      }
+      else
+        futures.add(openHierarchyManager.openFile(file, parent: this));
+    }
+
+    await Future.wait(futures);
+
+    // leftover existing children are no longer in the DAT
+    for (var child in existingChildren)
+      child.dispose();
+
+    if (rubyScriptGroup != null) {
+      rubyScriptGroup.name.value += " (${rubyScriptGroup.children.length})";
+      if (rubyScriptGroup.children.length > 8)
+        rubyScriptGroup.isCollapsed.value = true;
+    }
+
+    sortChildren((a, b) {
+      if (a is! FileHierarchyEntry || b is! FileHierarchyEntry)
+        return a.name.value.toLowerCase().compareTo(b.name.value.toLowerCase());
+      var extCmp = extension(a.path).compareTo(extension(b.path));
+      if (extCmp != 0)
+        return extCmp;
+      return a.name.value.toLowerCase().compareTo(b.name.value.toLowerCase());
+    });
+  }
+
   Future<void> addNewRubyScript() async {
     if (await confirmDialog(getGlobalContext(), title: "Add new Ruby Script?") != true)
       return;
@@ -51,7 +107,7 @@ class DatHierarchyEntry extends ExtractableHierarchyEntry {
   Future<void> repackDatAction() async {
     var prefs = PreferencesData();
     if (prefs.dataExportPath?.value == null) {
-      showToast("No export path set; go to Settings to set an export path");
+      showToast("No export path set. Go to Settings to set an export path");
       return;
     }
     var datBaseName = basename(extractedPath);
@@ -61,6 +117,7 @@ class DatHierarchyEntry extends ExtractableHierarchyEntry {
 
   @override
   List<HierarchyEntryAction> getActions() {
+    var scriptRelatedClasses = [RubyScriptGroupHierarchyEntry, RubyScriptHierarchyEntry, XmlScriptHierarchyEntry, PakHierarchyEntry];
     return [
       HierarchyEntryAction(
         name: "Repack DAT",
@@ -68,10 +125,16 @@ class DatHierarchyEntry extends ExtractableHierarchyEntry {
         action: repackDatAction,
       ),
       HierarchyEntryAction(
-        name: "Add new Ruby script",
-        icon: Icons.code,
-        action: () => addNewRubyScript(),
+        name: "Change packed files",
+        icon: Icons.folder_open,
+        action: () => showDatSelectorPopup(this),
       ),
+      if (children.where((child) => scriptRelatedClasses.any((type) => child.runtimeType == type)).isNotEmpty)
+        HierarchyEntryAction(
+          name: "Add new Ruby script",
+          icon: Icons.code,
+          action: () => addNewRubyScript(),
+        ),
       ...super.getActions(),
     ];
   }

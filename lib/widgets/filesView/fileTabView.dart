@@ -67,7 +67,7 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
     if (files.isEmpty)
       return;
     OpenFileData? firstFile;
-    const fileExplorerExtensions = { ".pak", ".dat", ".yax", ".bin", ".wai", ".wsp", ...bxmExtensions, ".bnk", ".cpk" };
+    const fileExplorerExtensions = { ".pak", ...datExtensions, ".yax", ".bin", ".wai", ".wsp", ...bxmExtensions, ".bnk", ".cpk" };
     for (var file in files) {
       bool isSaveSlotData = file.name.startsWith("SlotData_") && file.name.endsWith(".dat");
       if (fileExplorerExtensions.contains(path.extension(file.name)) && !isSaveSlotData || await Directory(file.path).exists()) {

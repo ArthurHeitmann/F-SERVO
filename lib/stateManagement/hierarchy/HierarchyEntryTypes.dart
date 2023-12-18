@@ -15,6 +15,7 @@ import '../openFiles/openFilesManager.dart';
 import '../preferencesData.dart';
 import '../undoable.dart';
 import 'FileHierarchy.dart';
+import 'types/PakHierarchyEntry.dart';
 
 class HierarchyEntryAction {
   final String name;
@@ -57,6 +58,10 @@ mixin HierarchyEntryBase implements Disposable {
 
   void updateOrReplaceWith(List<HierarchyEntry> newChildren, HierarchyEntry Function(Undoable) copy) {
     _children.updateOrReplaceWith(newChildren, copy);
+  }
+
+  void sortChildren([int Function(HierarchyEntry, HierarchyEntry)? compare]) {
+    _children.sort(compare ?? (a, b) => a.name.toString().compareTo(b.name.toString()));
   }
 
   HierarchyEntry? findRecWhere(bool Function(HierarchyEntry) test, { Iterable<HierarchyEntry>? children }) {
@@ -108,7 +113,13 @@ abstract class HierarchyEntry with HasUuid, Undoable, HierarchyEntryBase {
   @override
   void dispose() {
     super.dispose();
-    name.dispose();
+    try {
+      name.dispose();
+    } catch (e) {
+      // fix for HapGroupHierarchyEntry, where the name is owned and disposed by an open file
+      if (this is! HapGroupHierarchyEntry)
+        rethrow;
+    }
     isSelected.dispose();
     isCollapsed.dispose();
     isVisibleWithSearch.dispose();
