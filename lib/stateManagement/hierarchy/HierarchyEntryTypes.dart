@@ -147,7 +147,7 @@ abstract class HierarchyEntry with HasUuid, Undoable, HierarchyEntryBase {
           name: "Close",
           icon: Icons.close,
           iconScale: 0.85,
-          action: () => openHierarchyManager.remove(this),
+          action: () => openHierarchyManager.remove(this, dispose: true),
         ),
         HierarchyEntryAction(
           name: "Close All",

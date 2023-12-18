@@ -37,6 +37,7 @@ class _SidebarState extends State<Sidebar> {
   bool _isExpanded = true;
   OverlayEntry? _draggableOverlayEntry;
   final _layerLink = LayerLink();
+  static const switcherWidth = 22.0;
 
   @override
   void initState() {
@@ -79,15 +80,17 @@ class _SidebarState extends State<Sidebar> {
       child: ConstrainedBox(
         constraints: _isExpanded
           ? BoxConstraints(maxWidth: max(_width, 150))
-          : const BoxConstraints(),
+          : const BoxConstraints(maxWidth: switcherWidth + 1),
         child: Row(
           children: [
             if (widget.switcherPosition == SidebarSwitcherPosition.left) ...[
               _buildSwitcher(),
               const VerticalDivider(width: 1,),
             ],
-            if (_isExpanded)
-              Expanded(
+            Expanded(
+              child: Visibility (
+                visible: _isExpanded,
+                maintainState: true,
                 child: CompositedTransformTarget(
                   link: _layerLink,
                   child: IndexedStack(
@@ -96,6 +99,7 @@ class _SidebarState extends State<Sidebar> {
                   ),
                 ),
               ),
+            ),
             if (widget.switcherPosition == SidebarSwitcherPosition.right) ...[
               const VerticalDivider(width: 1,),
               _buildSwitcher(),
@@ -108,7 +112,7 @@ class _SidebarState extends State<Sidebar> {
 
   Widget _buildSwitcher() {
     return SizedBox(
-      width: 22,
+      width: switcherWidth,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

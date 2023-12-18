@@ -242,9 +242,11 @@ class _ExtractFilesToolState extends State<ExtractFilesTool> {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                GestureDetector(
-                  onTap: () => setState(() => recursive.value = !recursive.value),
-                  child: const Text("Recursive search")
+                Flexible(
+                  child: GestureDetector(
+                    onTap: () => setState(() => recursive.value = !recursive.value),
+                    child: const Text("Search all subfolders", overflow: TextOverflow.ellipsis),
+                  ),
                 ),
                 const SizedBox(width: 10),
                 BoolPropCheckbox(prop: recursive),
@@ -313,7 +315,7 @@ class _ExtractFilesToolState extends State<ExtractFilesTool> {
                 : TextButton(
                   onPressed: isStopped ? null : stopExtractingFiles,
                   child: const Text(
-                    "Stop",
+                    "Cancel",
                     textAlign: TextAlign.center,
                     textScaler: TextScaler.linear(1.2),
                   ),
@@ -330,7 +332,7 @@ class _ExtractFilesToolState extends State<ExtractFilesTool> {
                       child: ChangeNotifierBuilder(
                         notifiers: [service!.processedFiles, service!.remainingFiles],
                         builder: (context) => Text(
-                          "Processed: ${service!.processedFiles.value}    Remaining: ${service!.remainingFiles.value}",
+                          "Processed: ${service!.processedFiles.value}    Pending: ${service!.remainingFiles.value}",
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),

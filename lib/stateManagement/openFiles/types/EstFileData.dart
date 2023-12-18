@@ -8,8 +8,8 @@ import 'package:path/path.dart';
 import '../../../fileTypeUtils/effects/estEntryTypes.dart';
 import '../../../fileTypeUtils/effects/estIO.dart';
 import '../../../fileTypeUtils/utils/ByteDataWrapper.dart';
-import '../../../randomScripts/bnkWemAdder.dart';
 import '../../../utils/Disposable.dart';
+import '../../../utils/utils.dart';
 import '../../../widgets/filesView/FileType.dart';
 import '../../Property.dart';
 import '../../changesExporter.dart';
@@ -483,7 +483,6 @@ class EstTexEntryWrapper extends SpecificEstEntryWrapper<EstTypeTexEntry> {
   final NumberProp textureFileId;
   final FloatProp size;
   final NumberProp textureFileIndex;
-  final NumberProp textureFileTextureIndex;
   final NumberProp meshId;
   final NumberProp videoFps;
   final NumberProp isSingleFrame;
@@ -493,7 +492,6 @@ class EstTexEntryWrapper extends SpecificEstEntryWrapper<EstTypeTexEntry> {
     textureFileId = NumberProp(0, true, fileId: fileId),
     size = FloatProp(0, fileId: fileId),
     textureFileIndex = NumberProp(0, true, fileId: fileId),
-    textureFileTextureIndex = NumberProp(0, true, fileId: fileId),
     meshId = NumberProp(0, true, fileId: fileId),
     videoFps = NumberProp(0, true, fileId: fileId),
     isSingleFrame = NumberProp(0, true, fileId: fileId)
@@ -504,7 +502,6 @@ class EstTexEntryWrapper extends SpecificEstEntryWrapper<EstTypeTexEntry> {
       textureFileId,
       size,
       textureFileIndex,
-      textureFileTextureIndex,
       meshId,
       videoFps,
       isSingleFrame,

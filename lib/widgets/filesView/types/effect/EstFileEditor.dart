@@ -289,7 +289,7 @@ class _EstEntryWidgetState extends ChangeNotifierState<_EstEntryWidget> {
                   if (widget.entry is EstTexEntryWrapper) ...[
                     EstTexturePreview(
                       textureFileId: (widget.entry as EstTexEntryWrapper).textureFileId,
-                      textureFileTextureIndex: (widget.entry as EstTexEntryWrapper).textureFileTextureIndex,
+                      textureFileTextureIndex: (widget.entry as EstTexEntryWrapper).textureFileIndex,
                     ),
                     const SizedBox(width: 10),
                     EstModelPreview(

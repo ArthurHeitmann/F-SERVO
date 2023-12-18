@@ -7,8 +7,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:path/path.dart' as path;
 import 'package:xml/xml.dart';
 
+import '../fileTypeUtils/effects/estEntryTypes.dart';
+import '../fileTypeUtils/effects/estIO.dart';
 import '../fileTypeUtils/mcd/mcdIO.dart';
 import '../fileTypeUtils/tmd/tmdReader.dart';
+import '../fileTypeUtils/utils/ByteDataWrapper.dart';
 import '../fileTypeUtils/yax/hashToStringMap.dart';
 import '../utils/utils.dart';
 import 'IdLookup.dart';
@@ -31,6 +34,12 @@ class SearchResultId extends SearchResult {
   final IndexedIdData idData;
 
   SearchResultId(super.filePath, this.idData);
+}
+
+class SearchResultEst extends SearchResult {
+  final List<int> records;
+
+  SearchResultEst(super.filePath, this.records);
 }
 
 class SearchOptions {
@@ -59,6 +68,15 @@ class SearchOptionsId extends SearchOptions {
     : idHex = id.toRadixString(16);
 }
 
+class SearchOptionsEst extends SearchOptions {
+  final int? textureFileId;
+  final int? textureIndex;
+  final int? meshId;
+  final int? importedEstId;
+
+  SearchOptionsEst(super.searchPath, super.fileExtensions, this.textureFileId, this.textureIndex, this.meshId, this.importedEstId);
+}
+
 class SearchService {
   final StreamController<SearchResult> controller = StreamController<SearchResult>();
   Isolate? _isolate;
@@ -77,7 +95,7 @@ class SearchService {
       ReceivePort receivePort = ReceivePort();
       receivePort.listen(onMessage);
       options.sendPort = receivePort.sendPort;
-      Isolate.spawn(_SearchServiceWorker().search, options)
+      Isolate.spawn(_SearchServiceWorker.search, options)
         .then((isolate) {
           _isolate = isolate;
           isolate.addOnExitListener(receivePort.sendPort, response: "done");
@@ -124,12 +142,26 @@ class SearchService {
 }
 
 /// In new isolate search recursively for files with given extensions in given path
-class _SearchServiceWorker {
+abstract class _SearchServiceWorker<T extends SearchOptions> {
+  final T options;
   bool _isCanceled = false;
   int _resultsCount = 0;
   static const int _maxResults = 1000;
 
-  void search(SearchOptions options) async {
+  _SearchServiceWorker(this.options);
+
+  static void search(SearchOptions options) {
+    if (options is SearchOptionsText)
+      _SearchTextServiceWorker(options)._startSearch();
+    else if (options is SearchOptionsId)
+      _SearchIdServiceWorker(options)._startSearch();
+    else if (options is SearchOptionsEst)
+      _SearchEstServiceWorker(options)._startSearch();
+    else
+      throw Exception("Unknown search options type");
+  }
+
+  void _startSearch() async {
     var receivePort = ReceivePort();
     receivePort.listen(_onMessage);
     options.sendPort!.send(receivePort.sendPort);
@@ -138,10 +170,7 @@ class _SearchServiceWorker {
     try {
       if (!await Directory(options.searchPath).exists() && !await File(options.searchPath).exists())
         return;
-      if (options is SearchOptionsText)
-        await _searchTextRec(options.searchPath, options);
-      else if (options is SearchOptionsId)
-        await _searchIdRec(options.searchPath, options);
+      await _search(options.searchPath);
     }
     finally {
       options.sendPort!.send("done");
@@ -150,6 +179,8 @@ class _SearchServiceWorker {
     }
   }
 
+  Future<void> _search(String searchPath);
+
   void _onMessage(dynamic message) {
     if (message is String && message == "cancel") {
       _isCanceled = true;
@@ -157,14 +188,19 @@ class _SearchServiceWorker {
       print("Unhandled message: $message");
   }
 
-  void _sendResult(SearchResult result, SendPort sendPort) {
-    sendPort.send(result);
+  void _sendResult(SearchResult result) {
+    options.sendPort!.send(result);
     _resultsCount++;
     if (_resultsCount >= _maxResults)
       _isCanceled = true;
   }
+}
 
-  Future<void> _searchTextRec(String filePath, SearchOptionsText options, [bool Function(String)? test]) async {
+class _SearchTextServiceWorker extends _SearchServiceWorker<SearchOptionsText> {
+  _SearchTextServiceWorker(super.options);
+
+  @override
+  Future<void> _search(String filePath, [bool Function(String)? test]) async {
     if (_isCanceled)
       return;
     test ??= _initTestFuncStr(options);
@@ -179,7 +215,7 @@ class _SearchServiceWorker {
           var line = lines[i];
           if (!test(line))
             continue;
-          _sendResult(SearchResultText(filePath, line, i + 1), options.sendPort!);
+          _sendResult(SearchResultText(filePath, line, i + 1));
         }
       }
       else {
@@ -219,7 +255,7 @@ class _SearchServiceWorker {
             lineEnd = lineStart + line.length;
             matchStr += "\n$line";
           }
-          _sendResult(SearchResultText(filePath, matchStr, lineNum), options.sendPort!);
+          _sendResult(SearchResultText(filePath, matchStr, lineNum));
         }
       }
     }
@@ -232,7 +268,7 @@ class _SearchServiceWorker {
       }
       List<Future> futures = [];
       for (var dir in dirList) {
-        futures.add(_searchTextRec(dir.path, options, test));
+        futures.add(_search(dir.path, test));
       }
       await Future.wait(futures);
     }
@@ -251,7 +287,7 @@ class _SearchServiceWorker {
       return (line) => line.toLowerCase().contains(query);
     }
   }
-  
+
   Future<String> _getFileContent(File file, SearchOptionsText options) async {
     if (file.path.endsWith(".tmd")) {
       var entries = await readTmdFile(file.path);
@@ -302,8 +338,13 @@ class _SearchServiceWorker {
       return [];
     }
   }
+}
 
-  Future<void> _searchIdRec(String filePath, SearchOptionsId options) async {
+class _SearchIdServiceWorker extends _SearchServiceWorker<SearchOptionsId> {
+  _SearchIdServiceWorker(super.options);
+
+  @override
+  Future<void> _search(String filePath) async {
     if (_isCanceled)
       return;
     var file = File(filePath);
@@ -322,7 +363,7 @@ class _SearchServiceWorker {
         return;
       var xmlDoc = XmlDocument.parse(xmlText);
       var xmlRoot = xmlDoc.rootElement;
-      _searchIdInXml(filePath, xmlRoot, options);
+      _searchIdInXml(filePath, xmlRoot);
     }
     else {
       var dirList = await Directory(filePath).list().toList();
@@ -333,26 +374,26 @@ class _SearchServiceWorker {
       }
       List<Future> futures = [];
       for (var dir in dirList) {
-        futures.add(_searchIdRec(dir.path, options));
+        futures.add(_search(dir.path));
       }
       await Future.wait(futures);
     }
   }
 
-  void _optionallySendIdData(IndexedIdData idData, SearchOptionsId options) {
+  void _optionallySendIdData(IndexedIdData idData) {
     if (idData.id != options.id)
       return;
-    _sendResult(SearchResultId(idData.xmlPath, idData), options.sendPort!);
+    _sendResult(SearchResultId(idData.xmlPath, idData));
   }
 
-  void _searchIdInXml(String filePath, XmlElement root, SearchOptionsId options) {
+  void _searchIdInXml(String filePath, XmlElement root) {
     var fileId = root.getElement("id")?.text;
     if (fileId != null) {
       var id = int.parse(fileId);
       _optionallySendIdData(IndexedIdData(
         id, "HAP",
         "", "", filePath,
-      ), options);
+      ));
     }
 
     for (var action in root.findElements("action")) {
@@ -365,7 +406,7 @@ class _SearchServiceWorker {
         "", "", filePath,
         hashToStringMap[actionCode] ?? actionCode.toString(),
         actionName
-      ), options);
+      ));
 
       for (var normal in action.findAllElements("normal")) {  // entities
         var normalLayouts = normal.findElements("layouts").first;
@@ -394,9 +435,63 @@ class _SearchServiceWorker {
             "", "", filePath,
             objId, actionId,
             name, level
-          ), options);
+          ));
         }
       }
     }
+  }
+}
+class _SearchEstServiceWorker extends _SearchServiceWorker<SearchOptionsEst> {
+  final bool _searchForTexEntries;
+  final bool _searchForFwkEntries;
+
+  _SearchEstServiceWorker(super.options) :
+    _searchForTexEntries = options.textureFileId != null || options.textureIndex != null || options.meshId != null,
+    _searchForFwkEntries = options.importedEstId != null;
+
+  @override
+  Future<void> _search(String searchPath) async {
+    if (_isCanceled)
+      return;
+    await for (var file in Directory(searchPath).list(recursive: true)) {
+      if (_isCanceled)
+        return;
+      if (file is! File)
+        continue;
+      if (!options.fileExtensions.any((ext) => file.path.endsWith(ext)))
+        continue;
+      var est = EstFile.read(await ByteDataWrapper.fromFile(file.path));
+      List<int> matchingRecords = [];
+      for (int i = 0; i < est.records.length; i++) {
+        var record = est.records[i];
+        if (!_matchesRecord(record))
+          continue;
+        matchingRecords.add(i);
+      }
+      if (matchingRecords.isNotEmpty)
+        _sendResult(SearchResultEst(file.path, matchingRecords));
+    }
+  }
+
+  bool _matchesRecord(List<EstTypeEntry> record) {
+    if (_searchForTexEntries) {
+      var entry = record.whereType<EstTypeTexEntry>().firstOrNull;
+      if (entry == null)
+        return false;
+      if (options.textureFileId != null && entry.texture_file_id != options.textureFileId)
+        return false;
+      if (options.textureIndex != null && entry.texture_file_texture_index != options.textureIndex)
+        return false;
+      if (options.meshId != null && entry.mesh_id != options.meshId)
+        return false;
+    }
+    if (_searchForFwkEntries) {
+      var entry = record.whereType<EstTypeFwkEntry>().firstOrNull;
+      if (entry == null)
+        return false;
+      if (options.importedEstId != null && entry.imported_effect_id != options.importedEstId)
+        return false;
+    }
+    return true;
   }
 }

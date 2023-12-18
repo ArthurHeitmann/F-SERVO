@@ -22,12 +22,13 @@ import '../misc/ChangeNotifierWidget.dart';
 import '../misc/RowSeparated.dart';
 import '../misc/SmoothScrollBuilder.dart';
 import '../misc/nestedContextMenu.dart';
+import '../propEditors/boolPropCheckbox.dart';
 import '../propEditors/boolPropIcon.dart';
 import '../propEditors/propEditorFactory.dart';
 import '../propEditors/propTextField.dart';
 import '../theme/customTheme.dart';
 
-enum _SearchType { text, id }
+enum _SearchType { text, id, est }
 
 class _SearchResultsFileGroup {
   final String filePath;
@@ -64,7 +65,19 @@ class _SearchPanelState extends State<SearchPanel> {
   // id search options
   final HexProp id = HexProp(0, fileId: null);
   final BoolProp useIndexedData = BoolProp(true, fileId: null);
-  
+  // est search options
+  final textureFileId = (BoolProp(false, fileId: null), NumberProp(0, true, fileId: null));
+  final textureIndex = (BoolProp(false, fileId: null), NumberProp(0, true, fileId: null));
+  final meshId = (BoolProp(false, fileId: null), HexProp(0, fileId: null));
+  final importedEstId = (BoolProp(false, fileId: null), NumberProp(0, true, fileId: null));
+  List<(BoolProp, Prop)> get estOptions => [textureFileId, textureIndex, meshId, importedEstId];
+  List<(String, BoolProp, Prop)> get estOptionsNamed => [
+    ("Texture file ID", textureFileId.$1, textureFileId.$2),
+    ("Texture index", textureIndex.$1, textureIndex.$2),
+    ("Mesh ID", meshId.$1, meshId.$2),
+    ("Imported EST ID", importedEstId.$1, importedEstId.$2),
+  ];
+
 
   @override
   void initState() {
@@ -80,16 +93,13 @@ class _SearchPanelState extends State<SearchPanel> {
     isCaseSensitive.addListener(updateSearchStream);
     id.addListener(updateSearchStream);
     useIndexedData.addListener(updateSearchStream);
+    for (var (boolProp, numberProp) in estOptions) {
+      boolProp.addListener(updateSearchStream);
+      numberProp.addListener(updateSearchStream);
+    }
     var prefs = PreferencesData();
-    extensions.changesUndoable = false;
     if (prefs.lastSearchDir != null)
       path.value = prefs.lastSearchDir!.value;
-    path.changesUndoable = false;
-    query.changesUndoable = false;
-    isRegex.changesUndoable = false;
-    isCaseSensitive.changesUndoable = false;
-    id.changesUndoable = false;
-    useIndexedData.changesUndoable = false;
     super.initState();
   }
 
@@ -104,6 +114,10 @@ class _SearchPanelState extends State<SearchPanel> {
     isCaseSensitive.dispose();
     id.dispose();
     useIndexedData.dispose();
+    for (var (boolProp, numberProp) in estOptions) {
+      boolProp.dispose();
+      numberProp.dispose();
+    }
     super.dispose();
   }
 
@@ -120,6 +134,8 @@ class _SearchPanelState extends State<SearchPanel> {
             _makeTextSearchOptions(),
           if (searchType == _SearchType.id)
             _makeIdSearchOptions(),
+          if (searchType == _SearchType.est)
+            _makeEstSearchOptions(),
           _makeSearchResults(),
         ],
       ),
@@ -143,6 +159,11 @@ class _SearchPanelState extends State<SearchPanel> {
     if (searchType == _SearchType.id &&
       (id.value == 0 || path.value.isEmpty && !useIndexedData.value)
     ) {
+      return false;
+    }
+    if (searchType == _SearchType.est && (
+        path.value.isEmpty || estOptions.every((opt) => !opt.$1.value)
+    )) {
       return false;
     }
     return true;
@@ -172,6 +193,8 @@ class _SearchPanelState extends State<SearchPanel> {
     List<String> fileExtensions;
     if (searchType == _SearchType.id)
       fileExtensions = [".xml"];
+    if (searchType == _SearchType.est)
+      fileExtensions = [".est", ".sst"];
     else if (extensions.value.isNotEmpty)
       fileExtensions = extensions.value.split(",")
         .map((e) => e.trim())
@@ -193,6 +216,15 @@ class _SearchPanelState extends State<SearchPanel> {
         fileExtensions,
         id.value,
         useIndexedData.value,
+      );
+    } else if (searchType == _SearchType.est) {
+      options = SearchOptionsEst(
+        path.value,
+        fileExtensions,
+        textureFileId.$1.value ? textureFileId.$2.value.toInt() : null,
+        textureIndex.$1.value ? textureIndex.$2.value.toInt() : null,
+        meshId.$1.value ? meshId.$2.value.toInt() : null,
+        importedEstId.$1.value ? importedEstId.$2.value.toInt() : null,
       );
     } else {
       throw "Unknown search type";
@@ -228,6 +260,7 @@ class _SearchPanelState extends State<SearchPanel> {
         children: [
           _makeSearchTypeButton(context, _SearchType.text, "Text Search"),
           _makeSearchTypeButton(context, _SearchType.id, "ID Lookup"),
+          _makeSearchTypeButton(context, _SearchType.est, "EST Search"),
         ],
       ),
     );
@@ -252,7 +285,9 @@ class _SearchPanelState extends State<SearchPanel> {
         ),
         child: Text(
           text,
-          textScaleFactor: 1.25,
+          textScaleFactor: 1.125,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
       ),
     );
@@ -320,6 +355,47 @@ class _SearchPanelState extends State<SearchPanel> {
           )).toList(),
         );
       }
+    );
+  }
+
+  Widget _makeEstSearchOptions() {
+    return Column(
+      children: [
+        makePropEditor(path, const PropTFOptions(hintText: "Path", useIntrinsicWidth: false)),
+        ...estOptionsNamed.map((opt) => RowSeparated(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          separatorWidth: 5,
+          children: [
+            Expanded(child: Text(opt.$1)),
+            BoolPropCheckbox(
+              prop: opt.$2,
+            ),
+            Flexible(
+              child: ChangeNotifierBuilder(
+                notifier: opt.$2,
+                builder: (context) {
+                  return AnimatedOpacity(
+                    opacity: opt.$2.value ? 1 : 0.33,
+                    duration: const Duration(milliseconds: 100),
+                    child: makePropEditor(
+                      opt.$3,
+                      PropTFOptions(
+                        hintText: opt.$1,
+                        useIntrinsicWidth: false,
+                        constraints: const BoxConstraints(maxWidth: 80)
+                      )
+                    ),
+                  );
+                }
+              )
+            ),
+            const SizedBox()
+          ],
+        )),
+      ].map((e) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
+        child: e,
+      )).toList(),
     );
   }
 
@@ -507,6 +583,8 @@ class _SearchGroupResultState extends State<_SearchGroupResult> {
       resultWidget = _makeSearchResultText(context, result);
     else if (result is SearchResultId)
       resultWidget = _makeSearchResultId(context, result);
+    else if (result is SearchResultEst)
+      resultWidget = _makeSearchResultEst(context, result);
     else
       throw "Unknown search result type";
     return ConstrainedBox(
@@ -624,6 +702,16 @@ class _SearchGroupResultState extends State<_SearchGroupResult> {
 
     return Text(
       title,
+      style: const TextStyle(
+        fontSize: 14,
+      ),
+      maxLines: 1,
+    );
+  }
+
+  Widget _makeSearchResultEst(BuildContext context, SearchResultEst result) {
+    return Text(
+      "In ${pluralStr(result.records.length, "record")}: ${result.records.join(", ")}",
       style: const TextStyle(
         fontSize: 14,
       ),

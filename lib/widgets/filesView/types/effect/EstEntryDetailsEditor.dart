@@ -90,13 +90,13 @@ class _EstEntryDetailsEditorState extends State<EstEntryDetailsEditor> {
             child: Column(
               children: [
                 _EntryPropEditor(label: "Texture file ID", prop: entry.textureFileId),
-                _EntryPropEditor(label: "Texture index", prop: entry.textureFileTextureIndex),
+                _EntryPropEditor(label: "Texture index", prop: entry.textureFileIndex),
               ],
             ),
           ),
           EstTexturePreview(
             textureFileId: (widget.entry as EstTexEntryWrapper).textureFileId,
-            textureFileTextureIndex: (widget.entry as EstTexEntryWrapper).textureFileTextureIndex,
+            textureFileTextureIndex: (widget.entry as EstTexEntryWrapper).textureFileIndex,
             size: 50,
           ),
         ],
