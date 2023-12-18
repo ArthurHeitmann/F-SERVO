@@ -36,34 +36,44 @@ class HashInfo {
     if (preHashShift == 0)
       print("Hash shift is 0; does directory have more than 1 << 31 files?");
 
-    List<List<dynamic>> namesIndicesHashes = [];
+    List<(String, int, int)> namesIndicesHashes = [];
     for (int i = 0; i < filenames.length; i++)
-      namesIndicesHashes.add([
-        filenames[i],
-        i,
-        (crc32(filenames[i].toLowerCase()) & 0x7fffffff)
-      ]);
+      namesIndicesHashes.add((
+      filenames[i],
+      i,
+      (crc32(filenames[i].toLowerCase()) & ~0x80000000)
+    ));
 
-    namesIndicesHashes.sort((a, b) {
-      int kA = a[2] >> preHashShift;
-      int kB = b[2] >> preHashShift;
-      return kA.compareTo(kB);
+    var namesIndicesHashesI = namesIndicesHashes.indexed.toList();
+    namesIndicesHashesI.sort((a, b) {
+      int kA = a.$2.$3 >> preHashShift;
+      int kB = b.$2.$3 >> preHashShift;
+      var comp = kA.compareTo(kB);
+      if (comp == 0)
+        return a.$1.compareTo(b.$1);
+      return comp;
     });
+    namesIndicesHashes = namesIndicesHashesI.map((e) => e.$2).toList();
 
     hashes = namesIndicesHashes
-      .map((e) => e[2] as int)
+      .map((e) => e.$3)
       .toList();
 
-    hashes.sort((a, b) {
-      int kA = a >> preHashShift;
-      int kB = b >> preHashShift;
-      return kA.compareTo(kB);
+    var hashesI = hashes.indexed.toList();
+    hashesI.sort((a, b) {
+      int kA = a.$2 >> preHashShift;
+      int kB = b.$2 >> preHashShift;
+      var comp = kA.compareTo(kB);
+      if (comp == 0)
+        return a.$1.compareTo(b.$1);
+      return comp;
     });
+    hashes = hashesI.map((e) => e.$2).toList();
 
     for (int i = 0; i < namesIndicesHashes.length; i++) {
-      if (bucketOffsets[namesIndicesHashes[i][2] >> preHashShift] == -1)
-        bucketOffsets[namesIndicesHashes[i][2] >> preHashShift] = i;
-      indices.add(namesIndicesHashes[i][1]);
+      if (bucketOffsets[namesIndicesHashes[i].$3 >> preHashShift] == -1)
+        bucketOffsets[namesIndicesHashes[i].$3 >> preHashShift] = i;
+      indices.add(namesIndicesHashes[i].$2);
     }
   }
 
