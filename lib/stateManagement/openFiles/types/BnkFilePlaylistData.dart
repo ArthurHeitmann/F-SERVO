@@ -6,6 +6,7 @@ import 'package:path/path.dart';
 import 'package:tuple/tuple.dart';
 
 import '../../../background/wemFilesIndexer.dart';
+import '../../../fileTypeUtils/audio/audioModsMetadata.dart';
 import '../../../fileTypeUtils/audio/bnkIO.dart';
 import '../../../fileTypeUtils/audio/riffParser.dart';
 import '../../../fileTypeUtils/utils/ByteDataWrapper.dart';
@@ -328,8 +329,9 @@ class BnkTrackData with HasUuid, Undoable implements Disposable {
     hasSourceChanged.dispose();
   }
 
-  void applyTo(BnkMusicTrack newTrack) {
-    // metadata.moddedBnkChunks[newTrack.uid] = AudioModChunkInfo(newTrack.uid);
+  void applyTo(BnkMusicTrack newTrack, AudioModsMetadata? metadata) {
+    if (metadata != null)
+      metadata.moddedBnkChunks[newTrack.uid] = AudioModChunkInfo(newTrack.uid);
     int minLen = min(clips.length, newTrack.playlists.length);
     // common
     for (var i = 0; i < minLen; i++)
@@ -507,12 +509,13 @@ class BnkSegmentData with HasUuid, Undoable implements Disposable {
       m.dispose();
   }
 
-  void applyTo(BnkMusicSegment newSegment, Map<int, BnkHircChunkBase> hircMap) {
+  void applyTo(BnkMusicSegment newSegment, Map<int, BnkHircChunkBase> hircMap, AudioModsMetadata? metadata) {
     if (markers.length != srcSegment.wwiseMarkers.length)
       throw Exception("Cannot apply segment with different number of markers");
     if (tracks.length != srcSegment.musicParams.childrenList.ulChildIDs.length)
       throw Exception("Cannot apply segment with different number of tracks");
-    // metadata.moddedBnkChunks[newSegment.uid] = AudioModChunkInfo(newSegment.uid);
+    if (metadata != null)
+      metadata.moddedBnkChunks[newSegment.uid] = AudioModChunkInfo(newSegment.uid);
     if (markers.length >= 2) {
       // var minMarkerPos = markers.map((m) => m.pos.value).reduce(min);
       // var maxMarkerPos = markers.map((m) => m.pos.value).reduce(max);
@@ -527,7 +530,7 @@ class BnkSegmentData with HasUuid, Undoable implements Disposable {
     }
     for (var i = 0; i < tracks.length; i++) {
       var newTrack = hircMap[srcSegment.musicParams.childrenList.ulChildIDs[i]] as BnkMusicTrack;
-      tracks[i].applyTo(newTrack);
+      tracks[i].applyTo(newTrack, metadata);
     }
   }
 
@@ -617,7 +620,7 @@ class BnkPlaylistChild with HasUuid, Undoable implements Disposable {
       c.dispose();
   }
 
-  void applyTo(List<BnkPlaylistItem> newItems, Map<int, BnkHircChunkBase> hircMap) {
+  void applyTo(List<BnkPlaylistItem> newItems, Map<int, BnkHircChunkBase> hircMap, AudioModsMetadata? metadata) {
     var newItem = newItems[index];
     if (srcItem.playlistItemId != newItem.playlistItemId)
       throw Exception("Playlist item ID mismatch");
@@ -627,10 +630,10 @@ class BnkPlaylistChild with HasUuid, Undoable implements Disposable {
       throw Exception("Segment mismatch");
     if (segment != null) {
       var newSegment = hircMap[newItem.segmentId] as BnkMusicSegment;
-      segment!.applyTo(newSegment, hircMap);
+      segment!.applyTo(newSegment, hircMap, metadata);
     }
     for (var i = 0; i < children.length; i++) {
-      children[i].applyTo(newItems, hircMap);
+      children[i].applyTo(newItems, hircMap, metadata);
     }
   }
 
@@ -667,6 +670,7 @@ class BnkFilePlaylistData extends OpenFileData {
   final int playlistId;
   BnkMusicPlaylist? srcPlaylist;
   BnkPlaylistChild? rootChild;
+  int? _bnkVersion;
 
   BnkFilePlaylistData(super.name, super.path, { super.secondaryName }) :
         playlistId = int.parse(RegExp(r"\.bnk#p=(\d+)$").firstMatch(name)!.group(1)!),
@@ -682,6 +686,7 @@ class BnkFilePlaylistData extends OpenFileData {
 
     var bytes = await ByteDataWrapper.fromFile(path.split("#").first);
     var bnk = BnkFile.read(bytes);
+    _bnkVersion = bnk.chunks.whereType<BnkHeader>().firstOrNull?.version;
     var hircChunk = bnk.chunks.whereType<BnkHircChunk>().first;
     Map<int, BnkHircChunkBase> hircMap = {
       for (var hirc in hircChunk.chunks.whereType<BnkHircChunkBase>())
@@ -702,10 +707,12 @@ class BnkFilePlaylistData extends OpenFileData {
       return;
 
     var bnkPath = path.split("#").first;
-    // var metaDataPath = join(dirname(dirname(bnkPath)), audioModsMetadataFileName);
-    // await AudioModsMetadata.lock();
+    var useMetadata = basename(bnkPath) == "BGM.bnk" && _bnkVersion == 113;
+    var metaDataPath = join(dirname(dirname(bnkPath)), audioModsMetadataFileName);
+    if (useMetadata)
+      await AudioModsMetadata.lock();
     try {
-      // var modsMetaData = await AudioModsMetadata.fromFile(metaDataPath);
+      var modsMetaData = useMetadata ? await AudioModsMetadata.fromFile(metaDataPath) : null;
       var bytes = await ByteDataWrapper.fromFile(bnkPath);
       var bnk = BnkFile.read(bytes);
       var hircChunk = bnk.chunks.whereType<BnkHircChunk>().first;
@@ -714,15 +721,16 @@ class BnkFilePlaylistData extends OpenFileData {
           hirc.uid: hirc
       };
       var newPlaylist = hircMap[playlistId] as BnkMusicPlaylist;
-      rootChild!.applyTo(newPlaylist.playlistItems, hircMap);
+      rootChild!.applyTo(newPlaylist.playlistItems, hircMap, modsMetaData);
       hircChunk.chunkSize = hircChunk.calculateSize() - 8;
       bytes = ByteDataWrapper.allocate(bnk.calculateSize());
       bnk.write(bytes);
       await backupFile(bnkPath);
       await bytes.save(bnkPath);
-      // await modsMetaData.toFile(metaDataPath);
+      await modsMetaData?.toFile(metaDataPath);
     } finally {
-      // AudioModsMetadata.unlock();
+      if (useMetadata)
+        AudioModsMetadata.unlock();
     }
 
     await super.save();
