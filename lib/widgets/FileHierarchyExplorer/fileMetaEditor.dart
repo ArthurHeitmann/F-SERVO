@@ -236,7 +236,6 @@ class _FileMetaEditorState extends ChangeNotifierState<FileMetaEditor> {
         var xml = fileData.root;
         var id = xml?.get("id");
         var name = xml?.get("name");
-        var pakType = fileData.pakType;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -246,16 +245,6 @@ class _FileMetaEditorState extends ChangeNotifierState<FileMetaEditor> {
               makeXmlPropEditor(name, true),
             if (id != null)
               makeXmlPropEditor(id, true),
-            if (pakType != null)
-              Row(
-                children: [
-                  Text("pak file type", style: getTheme(context).propInputTextStyle,),
-                  const SizedBox(width: 10),
-                  Flexible(
-                    child: makePropEditor(pakType),
-                  ),
-                ],
-              )
           ],
         );
       },

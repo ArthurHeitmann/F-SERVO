@@ -9,11 +9,12 @@ import 'package:path/path.dart' as path;
 import '../../stateManagement/events/statusInfo.dart';
 import '../../utils/utils.dart';
 import '../utils/ByteDataWrapper.dart';
+import '../yax/yaxToXml.dart';
 
 const ZLibEncoder _zLibEncoder = ZLibEncoder();
 
 class _FileEntry {
-  int type;
+  late int type;
   int uncompressedSize;
   int offset;
 
@@ -22,9 +23,9 @@ class _FileEntry {
   List<int> compressedData;
   int compressedSize;
 
-  _FileEntry(this.offset, this.type) : uncompressedSize = 0, pakSize = 0, data = [], compressedData = [], compressedSize = -1;
+  _FileEntry(this.offset) : uncompressedSize = 0, pakSize = 0, data = [], compressedData = [], compressedSize = -1;
 
-  Future<void> init(File file) async {
+  Future<void> init(File file, int index) async {
     uncompressedSize = await file.length();
     data = await file.readAsBytes();
     var paddingEndLength = (4 - (uncompressedSize % 4)) % 4;
@@ -35,10 +36,20 @@ class _FileEntry {
       paddingEndLength = (4 - (compressedData.length % 4)) % 4;
       compressedSize = compressedData.length;
       pakSize = 4 + compressedSize + paddingEndLength;
+      type = 4;
     }
     else {
       compressedData = Uint8List(0);
       compressedSize = -1;
+      type = 1;
+    }
+    if (index > 0) {
+      var xml = yaxToXml(ByteDataWrapper(Uint8List.fromList(data).buffer));
+      const specialTagNames = ["node", "text"];
+      if (xml.childElements.any((e) => specialTagNames.contains(e.name.local)))
+        type += 1;
+      else
+        type += 2;
     }
   }
 
@@ -83,10 +94,11 @@ Future<void> repackPak(String pakDir) async {
   var filesOffset = (pakInfo["files"] as List).length * 12 + 0x4;
   var lastFileOffset = filesOffset;
   var fileEntries = <_FileEntry>[];
-  for (var yaxFile in pakInfo["files"]) {
+  for (var i = 0; i < pakInfo["files"].length; i++) {
+    var yaxFile = pakInfo["files"][i];
     var yaxF = File(path.join(pakDir, yaxFile["name"]));
-    var fileEntry = _FileEntry(lastFileOffset, yaxFile["type"]);
-    await fileEntry.init(yaxF);
+    var fileEntry = _FileEntry(lastFileOffset);
+    await fileEntry.init(yaxF, i);
     fileEntries.add(fileEntry);
 
     lastFileOffset += fileEntry.pakSize;

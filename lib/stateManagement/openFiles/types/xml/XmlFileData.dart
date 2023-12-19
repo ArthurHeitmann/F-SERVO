@@ -2,12 +2,9 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:path/path.dart';
 import 'package:xml/xml.dart';
 
-import '../../../../utils/utils.dart';
 import '../../../../widgets/filesView/FileType.dart';
-import '../../../Property.dart';
 import '../../../changesExporter.dart';
 import '../../../hierarchy/FileHierarchy.dart';
 import '../../../hierarchy/types/XmlScriptHierarchyEntry.dart';
@@ -18,7 +15,6 @@ import 'xmlProps/xmlProp.dart';
 class XmlFileData extends OpenFileData {
   XmlProp? _root;
   XmlProp? get root => _root;
-  NumberProp? pakType;
 
   XmlFileData(super.name, super.path, { super.secondaryName })
       : super(type: FileType.xml, icon: Icons.description);
@@ -49,23 +45,7 @@ class XmlFileData extends OpenFileData {
       secondaryName.value = nameProp.value.toString();
     }
 
-    var pakInfoFileData = await getPakInfoFileData(path);
-    pakType = null;
-    if (pakInfoFileData != null) {
-      pakType?.dispose();
-      pakType = NumberProp(pakInfoFileData["type"], true, fileId: uuid);
-      pakType!.addListener(updatePakType);
-    }
-
     await super.load();
-  }
-
-  Future<void> updatePakType() async {
-    await updatePakInfoFileData(path, (fileData) => fileData["type"] = pakType!.value.toInt());
-
-    var pakDir = dirname(path);
-    changedPakFiles.add(pakDir);
-    await processChangedFiles();
   }
 
   @override
@@ -87,8 +67,6 @@ class XmlFileData extends OpenFileData {
   void dispose() {
     _root?.dispose();
     _root?.get("name")?.value.removeListener(_onNameChange);
-    pakType?.removeListener(updatePakType);
-    pakType?.dispose();
     super.dispose();
   }
 
