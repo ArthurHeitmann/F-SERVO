@@ -7,7 +7,7 @@ import '../../../misc/expandOnHover.dart';
 import '../../../theme/customTheme.dart';
 
 class EstModelPreview extends ChangeNotifierWidget {
-  final NumberProp modelId;
+  final HexProp modelId;
   final double size;
 
   EstModelPreview({
@@ -26,7 +26,7 @@ class EstModelPreview extends ChangeNotifierWidget {
 class _EstModelPreviewState extends ChangeNotifierState<EstModelPreview> {
   @override
   Widget build(BuildContext context) {
-    var modelId = widget.modelId.value.toInt();
+    var modelId = widget.modelId.value;
     if (modelId == 0)
       return SizedBox(width: widget.size, height: widget.size);
     var imgName = "${modelId.toRadixString(16).padLeft(4, "0")}.png";
