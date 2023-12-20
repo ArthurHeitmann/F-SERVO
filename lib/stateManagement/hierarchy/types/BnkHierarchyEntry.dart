@@ -40,7 +40,7 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
       if (hirc is BnkMusicPlaylist)
         entryPath = "$path#p=${hirc.uid}";
       else
-        entryPath = "$path#id=${hirc.uid}";
+        entryPath = path;
       List<int> parentId = [];
       List<int> childIds = [];
       List<(bool, List<String>)> props = [];
@@ -319,11 +319,12 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
     if (directChildren > 50)
       objectHierarchyParentEntry.isCollapsed.value = true;
 
+    bool useUniqueActionChildren = hircEntries.length * actionEntries.length < 4*1000*1000;
     for (var actionEntry in actionEntries.values) {
       var action = actionEntry.hirc as BnkAction;
       var actionChild = hircEntries[action.initialParams.idExt];
       if (actionChild != null) {
-        actionEntry.add(actionChild);
+        actionEntry.add(actionChild, uniqueChildren: useUniqueActionChildren);
       }
       else {
         var actionChildName = wemIdsToNames[action.initialParams.idExt] ?? "Target ${action.initialParams.idExt.toString()}";
@@ -396,6 +397,7 @@ class BnkHircHierarchyEntry extends GenericFileHierarchyEntry {
   List<int> childIds;
   List<(bool, List<String>)>? properties;
   int usages = 0;
+  bool _isDisposed = false;
 
   BnkHircHierarchyEntry(String name, String path, this.type, {required this.id, String? entryName, this.parentIds = const [], this.childIds = const [], this.properties, this.hirc}) :
     entryName = entryName ?? wemIdsToNames[id],
@@ -434,6 +436,14 @@ class BnkHircHierarchyEntry extends GenericFileHierarchyEntry {
       ),
       ...super.getContextMenuActions(),
     ];
+  }
+
+  @override
+  void dispose() {
+    if (_isDisposed)
+      return;
+    super.dispose();
+    _isDisposed = true;
   }
 
   static List<(bool, List<String>)> makePropsFromParams(BnkPropValue propValues, [BnkPropRangedValue? rangedPropValues]) {

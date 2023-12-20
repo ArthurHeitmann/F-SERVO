@@ -121,9 +121,9 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
                 icon,
               const SizedBox(width: 5),
               Expanded(
-                child: ValueListenableBuilder(
-                  valueListenable: widget.entry.name,
-                  builder: (context, name, child) =>  Text(
+                child: ChangeNotifierBuilder(
+                  notifier: widget.entry.name,
+                  builder: (context) =>  Text(
                     widget.entry.name.toString(),
                     overflow: TextOverflow.ellipsis,
                     textScaleFactor: 0.85,
