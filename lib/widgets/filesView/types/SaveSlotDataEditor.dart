@@ -191,8 +191,7 @@ class _InventoryTableConfig with CustomTableConfig {
     this.name = name;
     columnNames = ["i", "ID", "Count", "Is Active?"];
     columnFlex = [1, 2, 2, 1];
-    rowCount = NumberProp(items.length, true, fileId: fileId)
-      ..changesUndoable = false;
+    rowCount = NumberProp(items.length, true, fileId: null);
     allowRowAddRemove = false;
   }
 
@@ -271,8 +270,7 @@ class _WeaponTableConfig with CustomTableConfig {
     name = "Weapons";
     columnNames = ["Index", "ID", "Level", "Is New?", "Has New Story?", "Kills" ];
     columnFlex = [4, 3, 3, 2, 2, 2];
-    rowCount = NumberProp(weapons.length, true, fileId: fileId)
-      ..changesUndoable = false;
+    rowCount = NumberProp(weapons.length, true, fileId: null);
     allowRowAddRemove = false;
   }
 

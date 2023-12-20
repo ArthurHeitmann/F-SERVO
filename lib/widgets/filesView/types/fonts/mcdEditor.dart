@@ -151,8 +151,6 @@ class _McdEditorBodyState extends ChangeNotifierState<_McdEditorBody> {
 
   @override
   void initState() {
-    search.changesUndoable = false;
-    isRegex.changesUndoable = false;
     search.addListener(() {
       setState(() {});
       currentPage = 0;

@@ -25,12 +25,6 @@ class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
   bool isDroppingFile = false;
   bool expandSearch = false;
 
-  @override
-  void initState() {
-    openHierarchySearch.changesUndoable = false;
-    super.initState();
-  }
-
   void openFile(DropDoneDetails details) async {
     List<Future> futures = [];
 

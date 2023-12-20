@@ -41,7 +41,6 @@ mixin Prop<T> implements Listenable, Undoable, Disposable {
 abstract class ValueProp<T> extends ValueNotifier<T> with Prop<T>, HasUuid {
   @override
   final OpenFileId? fileId;
-  bool changesUndoable = true;
 
   ValueProp(super.value, { required this.fileId });
 
@@ -54,7 +53,7 @@ abstract class ValueProp<T> extends ValueNotifier<T> with Prop<T>, HasUuid {
   set value(T value) {
     if (value == this.value) return;
     super.value = value;
-    if (changesUndoable && fileId != null)
+    if (fileId != null)
       areasManager.onFileIdUndoEvent(fileId!);
   }
 

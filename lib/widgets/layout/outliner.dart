@@ -27,12 +27,6 @@ class _OutlinerState extends ChangeNotifierState<Outliner> {
   final scrollController = ScrollController();
 
   @override
-  void initState() {
-    super.initState();
-    search.changesUndoable = false;
-  }
-
-  @override
   void dispose() {
     search.dispose();
     super.dispose();

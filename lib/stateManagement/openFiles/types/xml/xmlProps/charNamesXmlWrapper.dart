@@ -88,9 +88,8 @@ class CharNamesXmlProp extends XmlProp with CustomTableConfig {
       1,
       ...List.filled(_nameKeys.length, 1)
     ];
-    rowCount = NumberProp(0, true, fileId: file);
-    rowCount.changesUndoable = false;
-    
+    rowCount = NumberProp(0, true, fileId: null);
+
     deserialize();
 
     anyChangeNotifier.addListener(() {

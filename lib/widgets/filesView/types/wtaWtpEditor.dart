@@ -43,8 +43,7 @@ class _TexturesTableConfig with CustomTableConfig {
       if (!texData.useFlagsSimpleMode)
         2,
     ];
-    rowCount = NumberProp(textures.length, true, fileId: file.uuid)
-      ..changesUndoable = false;
+    rowCount = NumberProp(textures.length, true, fileId: null);
     textures.addListener(() => rowCount.value = textures.length);
   }
 

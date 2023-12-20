@@ -21,9 +21,8 @@ enum ThemeType {
 class SavableProp<T> extends ValueProp<T> {
   final String key;
 
-  SavableProp(this.key, SharedPreferences prefs, T fallback, OpenFileId fileId)
-    : super(fallback, fileId: fileId) {
-    changesUndoable = false;
+  SavableProp(this.key, SharedPreferences prefs, T fallback)
+    : super(fallback, fileId: null) {
     value = _getValue(prefs) ?? fallback;
     addListener(saveChanges);
   }
@@ -114,17 +113,17 @@ class PreferencesData extends OpenFileData {
       await indexingPaths!.addPaths(paths);
     }
 
-    dataExportPath = SavableProp<String>("dataExportPath", _prefs!, "", uuid);
-    exportDats = SavableProp<bool>("exportDat", _prefs!, true, uuid);
-    exportPaks = SavableProp<bool>("exportPak", _prefs!, true, uuid);
-    convertXmls = SavableProp<bool>("convertXml", _prefs!, true, uuid);
-    preferVsCode = SavableProp<bool>("preferVsCode", _prefs!, false, uuid);
-    pauseAudioOnFileChange = SavableProp<bool>("pauseAudioOnFileChange", _prefs!, false, uuid);
-    themeType = SavableProp<ThemeType>("themeType", _prefs!, ThemeType.dark, uuid);
-    waiExtractDir = SavableProp<String>("waiExtractDir", _prefs!, "", uuid);
-    wwiseCliPath = SavableProp<String>("wwiseCliPath", _prefs!, "", uuid);
-    lastCpkExtractDir = SavableProp<String>("lastCpkExtractDir", _prefs!, "", uuid);
-    lastSearchDir = SavableProp<String>("lastSearchDir", _prefs!, "", uuid);
+    dataExportPath = SavableProp<String>("dataExportPath", _prefs!, "");
+    exportDats = SavableProp<bool>("exportDat", _prefs!, true);
+    exportPaks = SavableProp<bool>("exportPak", _prefs!, true);
+    convertXmls = SavableProp<bool>("convertXml", _prefs!, true);
+    preferVsCode = SavableProp<bool>("preferVsCode", _prefs!, false);
+    pauseAudioOnFileChange = SavableProp<bool>("pauseAudioOnFileChange", _prefs!, false);
+    themeType = SavableProp<ThemeType>("themeType", _prefs!, ThemeType.dark);
+    waiExtractDir = SavableProp<String>("waiExtractDir", _prefs!, "");
+    wwiseCliPath = SavableProp<String>("wwiseCliPath", _prefs!, "");
+    lastCpkExtractDir = SavableProp<String>("lastCpkExtractDir", _prefs!, "");
+    lastSearchDir = SavableProp<String>("lastSearchDir", _prefs!, "");
 
     await super.load();
     _loadingState = LoadingState.loaded;
