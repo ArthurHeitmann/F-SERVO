@@ -1,11 +1,10 @@
 
-import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 
-import '../../utils/utils.dart';
+import 'contextMenuBuilder.dart';
 
 class _NestedContextMenuIW extends InheritedWidget {
-  final List<ContextMenuButtonConfig?> contextChildren;
+  final List<ContextMenuConfig?> contextChildren;
   final BuildContext parentContext;
   final bool clearParent;
 
@@ -20,17 +19,17 @@ class _NestedContextMenuIW extends InheritedWidget {
     return true;
   }
 
-  List<ContextMenuButtonConfig?> getAllWidgets() {
+  List<ContextMenuConfig?> getAllConfigs() {
     return [
       ...contextChildren,
-      ...(!clearParent ? _NestedContextMenuIW.of(parentContext)?.getAllWidgets() ?? [] : [])
+      ...(!clearParent ? _NestedContextMenuIW.of(parentContext)?.getAllConfigs() ?? [] : [])
     ];
   }
 }
 
 class NestedContextMenu extends StatelessWidget {
   final Widget child;
-  final List<ContextMenuButtonConfig?> buttons;
+  final List<ContextMenuConfig?> buttons;
   final bool clearParent;
 
   const NestedContextMenu({super.key, required this.buttons, required this.child, this.clearParent = false});
@@ -44,24 +43,21 @@ class NestedContextMenu extends StatelessWidget {
       clearParent: clearParent,
       child: Builder(
         builder: (context) {
-          var buttons = _NestedContextMenuIW.of(context)!.getAllWidgets();
+          var config = _NestedContextMenuIW.of(context)!.getAllConfigs();
           // remove leading & trailing nulls
-          while (buttons.isNotEmpty && buttons.first == null)
-            buttons.removeAt(0);
-          while (buttons.isNotEmpty && buttons.last == null)
-            buttons.removeLast();
+          while (config.isNotEmpty && config.first == null)
+            config.removeAt(0);
+          while (config.isNotEmpty && config.last == null)
+            config.removeLast();
           // remove neighboring nulls
-          for (int i = 0; i < buttons.length - 1; i++) {
-            if (buttons[i] == null && buttons[i + 1] == null) {
-              buttons.removeAt(i);
+          for (int i = 0; i < config.length - 1; i++) {
+            if (config[i] == null && config[i + 1] == null) {
+              config.removeAt(i);
               i--;
             }
           }
-          return ContextMenuRegion(
-            enableLongPress: isMobile,
-            contextMenu: GenericContextMenu(
-              buttonConfigs: buttons,
-            ),
+          return ContextMenu(
+            config: config,
             child: child,
           );
         }

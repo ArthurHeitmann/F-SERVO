@@ -1,6 +1,5 @@
 
 
-import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../../background/IdLookup.dart';
@@ -12,6 +11,7 @@ import '../../../../../stateManagement/openFiles/types/xml/xmlProps/xmlProp.dart
 import '../../../../../utils/puidPresets.dart';
 import '../../../../../utils/utils.dart';
 import '../../../../misc/ChangeNotifierWidget.dart';
+import '../../../../misc/contextMenuBuilder.dart';
 import '../../../../misc/nestedContextMenu.dart';
 import '../../../../misc/puidDraggable.dart';
 import '../../../../propEditors/UnderlinePropTextField.dart';
@@ -125,10 +125,10 @@ class _PuidReferenceEditorState extends ChangeNotifierState<PuidReferenceEditor>
   Widget interactionsWrapper(BuildContext context, { required Widget child }) {
     return NestedContextMenu(
       buttons: [
-        ContextMenuButtonConfig("Copy PUID ref", icon: const Icon(Icons.content_copy, size: 14), onPressed: copyRef),
-        ContextMenuButtonConfig("Paste PUID ref", icon: const Icon(Icons.content_paste, size: 14), onPressed: pasteRef),
-        ContextMenuButtonConfig("Go to Reference", icon: const Icon(Icons.east, size: 14), shortcutLabel: "(ctrl + click)", onPressed: goToReference),
-        ContextMenuButtonConfig("Toggle Editing", icon: const Icon(Icons.edit, size: 14), shortcutLabel: "(double click)", onPressed: () => setState(() => showLookup = !showLookup)),
+        ContextMenuConfig(label: "Copy PUID ref", icon: const Icon(Icons.content_copy, size: 14), action: copyRef),
+        ContextMenuConfig(label: "Paste PUID ref", icon: const Icon(Icons.content_paste, size: 14), action: pasteRef),
+        ContextMenuConfig(label: "Go to Reference", icon: const Icon(Icons.east, size: 14), shortcutLabel: "(ctrl + click)", action: goToReference),
+        ContextMenuConfig(label: "Toggle Editing", icon: const Icon(Icons.edit, size: 14), shortcutLabel: "(double click)", action: () => setState(() => showLookup = !showLookup)),
         null,
       ],
       child: MouseRegion(

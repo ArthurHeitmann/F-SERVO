@@ -45,6 +45,12 @@ class FileMetaEditor extends ChangeNotifierWidget {
 class _FileMetaEditorState extends ChangeNotifierState<FileMetaEditor> {
   final scrollController = ScrollController();
 
+  @override
+  void dispose() {
+    scrollController.dispose();
+    super.dispose();
+  }
+
   _EditorType get editorType {
     var file = openHierarchyManager.selectedEntry.value;
     if (file == null)

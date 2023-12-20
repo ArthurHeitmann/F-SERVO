@@ -1,5 +1,4 @@
 
-import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 
 import '../../stateManagement/hierarchy/FileHierarchy.dart';
@@ -17,6 +16,7 @@ import '../../stateManagement/miscValues.dart';
 import '../../utils/utils.dart';
 import '../../widgets/theme/customTheme.dart';
 import '../misc/ChangeNotifierWidget.dart';
+import '../misc/contextMenuBuilder.dart';
 import 'wemPreviewButton.dart';
 
 class HierarchyEntryWidget extends ChangeNotifierWidget {
@@ -143,18 +143,15 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
   }
 
   Widget setupContextMenu({ required Widget child }) {
-    return ContextMenuRegion(
-      enableLongPress: isMobile,
-      contextMenu: GenericContextMenu(
-        buttonConfigs: widget.entry.getContextMenuActions()
-          .map((action) => ContextMenuButtonConfig(
-            action.name,
-            icon: Icon(action.icon, size: 15 * action.iconScale,),
-            onPressed: () => action.action(),
-          ))
-          .toList(),
-      ),
-      child: child,
+    return ContextMenu(
+        config: widget.entry.getContextMenuActions()
+            .map((action) => ContextMenuConfig(
+              label: action.name,
+              icon: Icon(action.icon, size: 15 * action.iconScale,),
+              action: () => action.action(),
+            ))
+            .toList(),
+        child: child,
     );
   }
 

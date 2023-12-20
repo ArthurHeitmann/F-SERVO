@@ -88,6 +88,13 @@ mixin HierarchyEntryBase implements Disposable {
     return result;
   }
 
+  int countAllRec() {
+    int count = children.length;
+    for (var child in children)
+      count += child.countAllRec();
+    return count;
+  }
+
   @override
   void dispose() {
     _children.dispose();

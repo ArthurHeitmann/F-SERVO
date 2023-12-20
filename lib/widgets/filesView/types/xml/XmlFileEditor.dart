@@ -15,7 +15,7 @@ import 'xmlActions/XmlActionsEditor.dart';
 class XmlFileEditor extends ChangeNotifierWidget {
   late final XmlFileData fileContent;
 
-  XmlFileEditor({super.key, required this.fileContent}) : super(notifier: fileContent.root);
+  XmlFileEditor({super.key, required this.fileContent}) : super(notifiers: [fileContent.loadingState, if(fileContent.root != null) fileContent.root!]);
 
   @override
   ChangeNotifierState<XmlFileEditor> createState() => _XmlEditorState();

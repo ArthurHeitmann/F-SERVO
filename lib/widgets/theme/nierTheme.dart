@@ -135,3 +135,44 @@ class NierNierThemeExtension extends NierThemeExtension {
     );
   } 
 }
+
+
+class NierOverlayPainter extends CustomPainter {
+  final bool vignette;
+
+  const NierOverlayPainter({this.vignette = true});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // grid
+    const gridSize = 10;
+    const gridColor = Color.fromARGB(10, 133, 125, 65);
+    const lineW = 3.0;
+
+    final paint = Paint()
+      ..color = gridColor;
+
+    for (double x = 0; x < size.width; x += gridSize)
+      canvas.drawRect(Rect.fromLTWH(x, 0, lineW, size.height), paint);
+    for (double y = 0; y < size.height; y += gridSize)
+      canvas.drawRect(Rect.fromLTWH(0, y, size.width, lineW), paint);
+
+    // vignette
+    if (vignette) {
+      final vignettePaint = Paint()
+        ..shader = RadialGradient(
+          colors: [
+            Colors.black.withOpacity(0.0),
+            Colors.black.withOpacity(0.2),
+          ],
+          stops: const [0.7, 5.0],
+          center: Alignment.center,
+          radius: 1.0,
+        ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+      canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), vignettePaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}

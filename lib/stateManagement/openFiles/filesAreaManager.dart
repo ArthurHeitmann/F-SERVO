@@ -80,6 +80,7 @@ class FilesAreaManager with HasUuid, Undoable implements Disposable {
 
     if (files.isEmpty && areasManager.areas.length > 1)
       areasManager.removeArea(this);
+    areasManager.onFileRemoved(file.uuid);
   }
 
   void closeAll() {
@@ -110,18 +111,19 @@ class FilesAreaManager with HasUuid, Undoable implements Disposable {
   }
 
   void moveToRightView(OpenFileData file) {
-    if (_currentFile.value == file)
-      switchToClosestFile();
-
     int areaIndex = areasManager.areas.indexOf(this);
     FilesAreaManager rightArea;
     if (areaIndex >= areasManager.areas.length - 1) {
+      if (files.length == 1)
+        return;
       rightArea = FilesAreaManager();
       areasManager.addArea(rightArea);
     }
     else {
       rightArea = areasManager.areas[areaIndex + 1];
     }
+    if (_currentFile.value == file)
+      switchToClosestFile();
     rightArea._files.add(file);
     removeFile(file);
     rightArea.setCurrentFile(file);
@@ -132,19 +134,20 @@ class FilesAreaManager with HasUuid, Undoable implements Disposable {
   }
 
   void moveToLeftView(OpenFileData file) {
-    if (currentFile.value == file)
-      switchToClosestFile();
-
     int areaIndex = areasManager.areas.indexOf(this);
     int leftAreaIndex = areaIndex - 1;
     FilesAreaManager leftArea;
     if (leftAreaIndex < 0 || leftAreaIndex >= areasManager.areas.length) {
+      if (files.length == 1)
+        return;
       leftArea = FilesAreaManager();
       areasManager.insertArea(clamp(leftAreaIndex, 0, areasManager.areas.length), leftArea);
     }
     else {
       leftArea = areasManager.areas[leftAreaIndex];
     }
+    if (currentFile.value == file)
+      switchToClosestFile();
     leftArea._files.add(file);
     removeFile(file);
     leftArea.setCurrentFile(file);

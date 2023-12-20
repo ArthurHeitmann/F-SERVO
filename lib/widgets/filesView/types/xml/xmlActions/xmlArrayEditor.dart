@@ -1,7 +1,6 @@
 
 import 'dart:math';
 
-import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 import 'package:xml/xml.dart';
 
@@ -12,6 +11,7 @@ import '../../../../../utils/utils.dart';
 import '../../../../misc/ChangeNotifierWidget.dart';
 import '../../../../misc/FlexReorderable.dart';
 import '../../../../misc/Selectable.dart';
+import '../../../../misc/contextMenuBuilder.dart';
 import '../../../../misc/nestedContextMenu.dart';
 import '../../../../misc/smallButton.dart';
 import '../../../../theme/customTheme.dart';
@@ -145,38 +145,38 @@ class XmlArrayEditorState<T extends XmlArrayEditor> extends ChangeNotifierState<
     }
   }
 
-  List<ContextMenuButtonConfig?> getContextMenuButtons(int index) {
+  List<ContextMenuConfig?> getContextMenuButtons(int index) {
     return [
       null,
-      ContextMenuButtonConfig(
-        "Duplicate ${widget.childrenPreset.name}",
+      ContextMenuConfig(
+        label: "Duplicate ${widget.childrenPreset.name}",
         shortcutLabel: "Ctrl+D",
-        icon: const Icon(Icons.copy_all, size: 14,),
-        onPressed: () => duplicateChild(index),
+        icon: const Icon(Icons.copy_all, size: 14),
+        action: () => duplicateChild(index),
       ),
-      ContextMenuButtonConfig(
-        "Copy ${widget.childrenPreset.name} XML",
+      ContextMenuConfig(
+        label: "Copy ${widget.childrenPreset.name} XML",
         shortcutLabel: "Ctrl+C",
-        icon: const Icon(Icons.copy, size: 14,),
-        onPressed: () => copyChild(index),
+        icon: const Icon(Icons.copy, size: 14),
+        action: () => copyChild(index),
       ),
-      ContextMenuButtonConfig(
-        "Cut ${widget.childrenPreset.name} XML",
+      ContextMenuConfig(
+        label: "Cut ${widget.childrenPreset.name} XML",
         shortcutLabel: "Ctrl+X",
-        icon: const Icon(Icons.cut, size: 14,),
-        onPressed: () => cutChild(index),
+        icon: const Icon(Icons.cut, size: 14),
+        action: () => cutChild(index),
       ),
-      ContextMenuButtonConfig(
-        "Paste ${widget.childrenPreset.name} XML here",
+      ContextMenuConfig(
+        label: "Paste ${widget.childrenPreset.name} XML here",
         shortcutLabel: "Ctrl+V",
-        icon: const Icon(Icons.paste, size: 14,),
-        onPressed: () => pasteChild(index),
+        icon: const Icon(Icons.paste, size: 14),
+        action: () => pasteChild(index),
       ),
-      ContextMenuButtonConfig(
-        "Delete ${widget.childrenPreset.name}",
+      ContextMenuConfig(
+        label: "Delete ${widget.childrenPreset.name}",
         shortcutLabel: "Del",
-        icon: const Icon(Icons.delete, size: 14,),
-        onPressed: () => deleteChild(index),
+        icon: const Icon(Icons.delete, size: 14),
+        action: () => deleteChild(index),
       ),
     ];
   }
@@ -256,10 +256,10 @@ class XmlArrayEditorState<T extends XmlArrayEditor> extends ChangeNotifierState<
     }
     return NestedContextMenu(
       buttons: [
-        ContextMenuButtonConfig(
-          "Paste ${widget.childrenPreset.name} XML here",
-          icon: const Icon(Icons.paste, size: 14,),
-          onPressed: () async {
+        ContextMenuConfig(
+          label: "Paste ${widget.childrenPreset.name} XML here",
+          icon: const Icon(Icons.paste, size: 14),
+          action: () async {
             var xmlStr = await getClipboardText();
             if (xmlStr == null) {
               showToast("Clipboard is empty");

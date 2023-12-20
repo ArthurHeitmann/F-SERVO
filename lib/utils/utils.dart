@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
-import 'package:context_menus/context_menus.dart';
 import 'package:crclib/catalog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -24,6 +23,7 @@ import '../stateManagement/Property.dart';
 import '../stateManagement/events/statusInfo.dart';
 import '../stateManagement/miscValues.dart';
 import '../stateManagement/openFiles/types/xml/xmlProps/xmlProp.dart';
+import '../widgets/misc/contextMenuBuilder.dart';
 import '../widgets/theme/customTheme.dart';
 
 const uuidGen = Uuid();
@@ -316,12 +316,12 @@ int randomId() {
   return _randomGen.nextInt(0xFFFFFFFF);
 }
 
-ContextMenuButtonConfig optionalValPropButtonConfig(XmlProp parent, String tagName, int Function() getInsertPos, FutureOr<Prop> Function() makePropVal) {
+ContextMenuConfig optionalValPropButtonConfig(XmlProp parent, String tagName, int Function() getInsertPos, FutureOr<Prop> Function() makePropVal) {
   if (parent.get(tagName) == null)
-    return ContextMenuButtonConfig(
-      "Add $tagName prop",
-      icon: const Icon(Icons.add, size: 14,),
-      onPressed: () async {
+    return ContextMenuConfig(
+      label: "Add $tagName prop",
+      icon: const Icon(Icons.add, size: 14),
+      action: () async {
         var prop = await makePropVal();
         parent.insert(
           getInsertPos(),
@@ -330,22 +330,22 @@ ContextMenuButtonConfig optionalValPropButtonConfig(XmlProp parent, String tagNa
       },
     );
   else
-    return ContextMenuButtonConfig(
-      "Remove $tagName prop",
-      icon: const Icon(Icons.remove, size: 14,),
-      onPressed: () => parent.remove(
+    return ContextMenuConfig(
+      label: "Remove $tagName prop",
+      icon: const Icon(Icons.remove, size: 14),
+      action: () => parent.remove(
         parent.get(tagName)!
           ..dispose()
       )
     );
 }
 
-ContextMenuButtonConfig optionalPropButtonConfig(XmlProp parent, String tagName, int Function() getInsertPos, FutureOr<List<XmlProp>> Function() makePropChildren) {
+ContextMenuConfig optionalPropButtonConfig(XmlProp parent, String tagName, int Function() getInsertPos, FutureOr<List<XmlProp>> Function() makePropChildren) {
   if (parent.get(tagName) == null)
-    return ContextMenuButtonConfig(
-      "Add $tagName prop",
-      icon: const Icon(Icons.add, size: 14,),
-      onPressed: () async {
+    return ContextMenuConfig(
+      label: "Add $tagName prop",
+      icon: const Icon(Icons.add, size: 14),
+      action: () async {
         var props = await makePropChildren();
         parent.insert(
           getInsertPos(),
@@ -354,10 +354,10 @@ ContextMenuButtonConfig optionalPropButtonConfig(XmlProp parent, String tagName,
       },
     );
   else
-    return ContextMenuButtonConfig(
-      "Remove $tagName prop",
-      icon: const Icon(Icons.remove, size: 14,),
-      onPressed: () => parent.remove(
+    return ContextMenuConfig(
+      label: "Remove $tagName prop",
+      icon: const Icon(Icons.remove, size: 14),
+      action: () => parent.remove(
         parent.get(tagName)!
           ..dispose()
       )
@@ -558,7 +558,7 @@ void revealFileInExplorer(String path) {
 }
 
 const datExtensions = { ".dat", ".dtt", ".evn", ".eff", ".eft" };
-const bxmExtensions = { ".bxm", ".gad", ".sar" };
+const bxmExtensions = { ".bxm", ".gad", ".sar", ".seq" };
 
 bool strEndsWithDat(String str) {
   for (var ext in datExtensions) {

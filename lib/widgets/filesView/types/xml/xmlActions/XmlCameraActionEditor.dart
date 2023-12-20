@@ -1,5 +1,4 @@
 
-import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../../stateManagement/Property.dart';
@@ -7,6 +6,7 @@ import '../../../../../stateManagement/openFiles/types/xml/sync/syncListImplemen
 import '../../../../../stateManagement/openFiles/types/xml/xmlProps/xmlProp.dart';
 import '../../../../../utils/utils.dart';
 import '../../../../misc/ChangeNotifierWidget.dart';
+import '../../../../misc/contextMenuBuilder.dart';
 import '../../../../misc/nestedContextMenu.dart';
 import '../../../../misc/syncButton.dart';
 import '../XmlPropEditorFactory.dart';
@@ -127,12 +127,12 @@ class _CameraActionInnerEditorState extends XmlActionInnerEditorState<CameraActi
       child: child
     );
   }
-  ContextMenuButtonConfig _makeButtonConfig(String label, String tagName, XmlProp parent, XmlProp usageProp) {
+  ContextMenuConfig _makeButtonConfig(String label, String tagName, XmlProp parent, XmlProp usageProp) {
     var hasProp = parent.isNotEmpty;
-    return ContextMenuButtonConfig(
-      "${hasProp ? "Disable" : "Enable"} $label",
-      icon: Icon(hasProp ? Icons.remove : Icons.add, size: 14,),
-      onPressed: () {
+    return ContextMenuConfig(
+      label: "${hasProp ? "Disable" : "Enable"} $label",
+      icon: Icon(hasProp ? Icons.remove : Icons.add, size: 14),
+      action: () {
         if (hasProp) {
           for (var prop in parent)
             prop.dispose();

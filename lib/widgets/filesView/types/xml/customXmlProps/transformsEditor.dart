@@ -2,7 +2,6 @@
 
 import 'dart:math';
 
-import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 import 'package:xml/xml.dart';
 
@@ -10,6 +9,7 @@ import '../../../../../stateManagement/Property.dart';
 import '../../../../../stateManagement/openFiles/types/xml/xmlProps/xmlProp.dart';
 import '../../../../../utils/utils.dart';
 import '../../../../misc/ChangeNotifierWidget.dart';
+import '../../../../misc/contextMenuBuilder.dart';
 import '../../../../misc/nestedContextMenu.dart';
 import '../../../../propEditors/propEditorFactory.dart';
 import '../../../../propEditors/propTextField.dart';
@@ -82,15 +82,15 @@ class _TransformsEditorState<T extends PropTextField> extends ChangeNotifierStat
     var scale = widget.parent.get("scale");
     return NestedContextMenu(
       buttons: [
-        ContextMenuButtonConfig(
-          "Copy Transforms",
+        ContextMenuConfig(
+          label: "Copy Transforms",
           icon: const Icon(Icons.copy, size: 14),
-          onPressed: () => onCopyTransforms(position, rotation, scale),
+          action: () => onCopyTransforms(position, rotation, scale),
         ),
-        ContextMenuButtonConfig(
-          "Paste Transforms",
+        ContextMenuConfig(
+          label: "Paste Transforms",
           icon: const Icon(Icons.paste, size: 14),
-          onPressed: () => onPasteTransforms(position, rotation, scale)
+          action: () => onPasteTransforms(position, rotation, scale)
         ),
       ],
       child: Column(

@@ -1,12 +1,12 @@
 
 import 'dart:async';
 
-import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../stateManagement/Property.dart';
 import '../../../misc/ChangeNotifierWidget.dart';
 import '../../../misc/SmoothScrollBuilder.dart';
+import '../../../misc/contextMenuBuilder.dart';
 import '../../../misc/nestedContextMenu.dart';
 import '../../../propEditors/UnderlinePropTextField.dart';
 import '../../../propEditors/propEditorFactory.dart';
@@ -447,10 +447,10 @@ class _TableRowState extends State<_TableRow> {
       clearParent: true,
       buttons: [
         if (widget.config.allowRowAddRemove)
-          ContextMenuButtonConfig(
-            "Remove Row",
-            icon: const Icon(Icons.remove, size: 15,),
-            onPressed: () => widget.config.onRowRemove(widget.index),
+          ContextMenuConfig(
+            label: "Remove Row",
+            icon: const Icon(Icons.remove, size: 15),
+            action: () => widget.config.onRowRemove(widget.index),
           ),
       ],
       child: MouseRegion(

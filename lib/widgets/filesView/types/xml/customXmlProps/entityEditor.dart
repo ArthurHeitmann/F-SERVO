@@ -1,11 +1,12 @@
 
-import 'package:context_menus/context_menus.dart';
+
 import 'package:flutter/material.dart';
 
 import '../../../../../stateManagement/Property.dart';
 import '../../../../../stateManagement/openFiles/types/xml/xmlProps/xmlProp.dart';
 import '../../../../../utils/utils.dart';
 import '../../../../misc/ChangeNotifierWidget.dart';
+import '../../../../misc/contextMenuBuilder.dart';
 import '../../../../misc/nestedContextMenu.dart';
 import '../../../../propEditors/UnderlinePropTextField.dart';
 import '../../../../theme/customTheme.dart';
@@ -78,10 +79,10 @@ class _EntityEditorState extends ChangeNotifierState<EntityEditor> {
     return NestedContextMenu(
       buttons: [
         if (isLayoutEntity) ...[
-          ContextMenuButtonConfig(
-            "Copy Entity PUID ref",
-            icon: const Icon(Icons.content_copy, size: 14,),
-            onPressed: () => copyPuidRef("app::EntityLayout", (widget.prop.get("id")!.value as HexProp).value)
+          ContextMenuConfig(
+            label: "Copy Entity PUID ref",
+            icon: const Icon(Icons.content_copy, size: 14),
+            action: () => copyPuidRef("app::EntityLayout", (widget.prop.get("id")!.value as HexProp).value)
           ),
           null,
         ],

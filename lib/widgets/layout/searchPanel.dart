@@ -2,7 +2,6 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 import 'package:mutex/mutex.dart';
 import 'package:path/path.dart';
@@ -21,6 +20,7 @@ import '../../utils/utils.dart';
 import '../misc/ChangeNotifierWidget.dart';
 import '../misc/RowSeparated.dart';
 import '../misc/SmoothScrollBuilder.dart';
+import '../misc/contextMenuBuilder.dart';
 import '../misc/nestedContextMenu.dart';
 import '../propEditors/boolPropCheckbox.dart';
 import '../propEditors/boolPropIcon.dart';
@@ -518,15 +518,15 @@ class _SearchGroupResultState extends State<_SearchGroupResult> {
   Widget build(BuildContext context) {
     return NestedContextMenu(
       buttons: [
-        ContextMenuButtonConfig(
-          "Open in File Explorer",
-          icon: const Icon(Icons.drive_file_move, size: 15,),
-          onPressed: () => openHierarchyManager.openFile(widget.group.filePath),
+        ContextMenuConfig(
+          label: "Open in File Explorer",
+          icon: const Icon(Icons.drive_file_move, size: 15),
+          action: () => openHierarchyManager.openFile(widget.group.filePath),
         ),
-        ContextMenuButtonConfig(
-          "Reveal in Windows Explorer",
-          icon: const Icon(Icons.folder_open, size: 15,),
-          onPressed: () => revealFileInExplorer(widget.group.filePath),
+        ContextMenuConfig(
+          label: "Reveal in Windows Explorer",
+          icon: const Icon(Icons.folder_open, size: 15),
+          action: () => revealFileInExplorer(widget.group.filePath),
         ),
       ],
       child: Column(

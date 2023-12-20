@@ -25,7 +25,6 @@ class _FileDetailsEditorState extends ChangeNotifierState<FileDetailsEditor> {
 
   @override
   Widget build(BuildContext context) {
-    XmlProp? prop = selectable.active.value?.prop;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -38,7 +37,7 @@ class _FileDetailsEditorState extends ChangeNotifierState<FileDetailsEditor> {
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: _notifierBuilders(
-                (context) => _getDetailsEditor(prop),
+                (context) => _getDetailsEditor(selectable.active.value?.prop),
               ),
             ),
           ),

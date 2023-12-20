@@ -2,7 +2,6 @@
 import 'dart:convert';
 import 'dart:math';
 
-import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:tuple/tuple.dart';
@@ -16,6 +15,7 @@ import '../../../../stateManagement/openFiles/types/BnkFilePlaylistData.dart';
 import '../../../../utils/utils.dart';
 import '../../../misc/ChangeNotifierWidget.dart';
 import '../../../misc/Selectable.dart';
+import '../../../misc/contextMenuBuilder.dart';
 import '../../../misc/mousePosition.dart';
 import '../../../misc/nestedContextMenu.dart';
 import '../../../misc/onHoverBuilder.dart';
@@ -289,53 +289,53 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> with Audi
     ];
   }
 
-  List<ContextMenuButtonConfig> _getClipContextMenuButtons(BnkTrackClip clip, AudioEditorData viewData) {
+  List<ContextMenuConfig> _getClipContextMenuButtons(BnkTrackClip clip, AudioEditorData viewData) {
     return [
-      ContextMenuButtonConfig(
-        "Duplicate",
-        icon: const Icon(Icons.copy_all, size: 16),
-        onPressed: () => _duplicateClip(clip),
+      ContextMenuConfig(
+        label: "Duplicate",
+        icon: const Icon(Icons.copy_all, size: 14),
+        action: () => _duplicateClip(clip),
         shortcutLabel: "Ctrl+D"
       ),
-      ContextMenuButtonConfig(
-        "Delete",
-        icon: const Icon(Icons.delete, size: 16),
-        onPressed: () => _deleteClip(clip),
+      ContextMenuConfig(
+        label: "Delete",
+        icon: const Icon(Icons.delete, size: 14),
+        action: () => _deleteClip(clip),
         shortcutLabel: "Del"
       ),
-      ContextMenuButtonConfig(
-        "Copy offsets",
+      ContextMenuConfig(
+        label: "Copy offsets",
         icon: const Icon(Icons.copy, size: 16),
-        onPressed: () => _copyOffsets(clip),
+        action: () => _copyOffsets(clip),
         shortcutLabel: "Ctrl+C"
       ),
-      ContextMenuButtonConfig(
-        "Paste offsets",
+      ContextMenuConfig(
+        label: "Paste offsets",
         icon: const Icon(Icons.paste, size: 16),
-        onPressed: () => _pasteOffsets(clip),
+        action: () => _pasteOffsets(clip),
         shortcutLabel: "Ctrl+V"
       ),
       if (viewData.selectedClipUuids.length >= 2)
-        ContextMenuButtonConfig(
-          "Trim start to other selection",
+        ContextMenuConfig(
+          label: "Trim start to other selection",
           icon: const Icon(Icons.cut, size: 16),
-          onPressed: () => _trimToOtherSelection(clip),
+          action: () => _trimToOtherSelection(clip),
         ),
       if (clip.rtpcPoints.isNotEmpty)
-        ContextMenuButtonConfig(
-          "Clear Graph Points",
+        ContextMenuConfig(
+          label: "Clear Graph Points",
           icon: const Icon(Icons.clear, size: 16),
-          onPressed: () => _clearRtpcPoints(clip),
+          action: () => _clearRtpcPoints(clip),
         ),
-      ContextMenuButtonConfig(
-        "Edit WEM",
+      ContextMenuConfig(
+        label: "Edit WEM",
         icon: const Icon(Icons.edit, size: 16),
-        onPressed: () => _replaceWem(clip),
+        action: () => _replaceWem(clip),
       ),
-      ContextMenuButtonConfig(
-        "Open WEM in explorer",
+      ContextMenuConfig(
+        label: "Open WEM in explorer",
         icon: const Icon(Icons.folder_open, size: 16),
-        onPressed: () => _openWemInExplorer(clip),
+        action: () => _openWemInExplorer(clip),
       ),
     ];
   }

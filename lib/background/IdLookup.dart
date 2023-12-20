@@ -168,8 +168,8 @@ class IdLookup with Initializable {
       var file = _openHierarchyFiles[i];
       if (file is ExtractableHierarchyEntry) {
         _openFilesWorker.removeIndexingPaths([file.extractedPath]);
-        _openHierarchyFiles.removeAt(i);
       }
+      _openHierarchyFiles.removeAt(i);
     }
   }
 

@@ -1,4 +1,3 @@
-import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 
 import '../../stateManagement/changesExporter.dart';
@@ -8,6 +7,7 @@ import '../../stateManagement/openFiles/openFilesManager.dart';
 import '../../utils/utils.dart';
 import '../../widgets/theme/customTheme.dart';
 import '../misc/ChangeNotifierWidget.dart';
+import '../misc/contextMenuBuilder.dart';
 import '../misc/onHoverBuilder.dart';
 
 
@@ -106,72 +106,69 @@ class _FileTabEntryState extends ChangeNotifierState<FileTabEntry> {
   }
 
   Widget logicWrapper(OpenFileData file, Widget child) {
-    return ContextMenuRegion(
-      enableLongPress: isMobile,
-      contextMenu: GenericContextMenu(
-        buttonConfigs: [
-          ContextMenuButtonConfig(
-            "Save",
-            icon: const Icon(Icons.save, size: 14),
-            onPressed: () async {
-              var file = areasManager.fromId(widget.file)!;
-              await file.save();
-              await processChangedFiles();
-            },
+    return ContextMenu(
+      config: [
+        ContextMenuConfig(
+          label: "Save",
+          icon: const Icon(Icons.save, size: 14),
+          action: () async {
+            var file = areasManager.fromId(widget.file)!;
+            await file.save();
+            await processChangedFiles();
+          },
+        ),
+        if (file.canBeReloaded)
+          ContextMenuConfig(
+            label: "Reload",
+            icon: const Icon(Icons.refresh, size: 15),
+            action: () => areasManager.fromId(widget.file)!.reload(),
           ),
-          if (file.canBeReloaded)
-            ContextMenuButtonConfig(
-              "Reload",
-              icon: const Icon(Icons.refresh, size: 15),
-              onPressed: () => areasManager.fromId(widget.file)!.reload(),
-            ),
-          ContextMenuButtonConfig(
-            "Copy path",
-            icon: const Icon(Icons.link, size: 15),
-            onPressed: () => copyToClipboard(areasManager.fromId(widget.file)!.path),
-          ),
-          ContextMenuButtonConfig(
-            "Show in Explorer",
-            icon: const Icon(Icons.folder_open, size: 14),
-            onPressed: () => revealFileInExplorer(areasManager.fromId(widget.file)!.path),
-          ),
-          ContextMenuButtonConfig(
-            "Close",
-            icon: const Icon(Icons.close, size: 11),
-            onPressed: () => widget.area.closeFile(areasManager.fromId(widget.file)!),
-          ),
-          ContextMenuButtonConfig(
-            "Close others",
-            icon: const Icon(Icons.close, size: 13),
-            onPressed: () => widget.area.closeOthers(areasManager.fromId(widget.file)!),
-          ),
-          ContextMenuButtonConfig(
-            "Close all",
-            icon: const Icon(Icons.close, size: 15),
-            onPressed: () => widget.area.closeAll(),
-          ),
-          ContextMenuButtonConfig(
-            "Close to the left",
-            icon: const Icon(Icons.chevron_left, size: 14),
-            onPressed: () => widget.area.closeToTheLeft(areasManager.fromId(widget.file)!),
-          ),
-          ContextMenuButtonConfig(
-            "Close to the right",
-            icon: const Icon(Icons.chevron_right, size: 14),
-            onPressed: () => widget.area.closeToTheRight(areasManager.fromId(widget.file)!),
-          ),
-          ContextMenuButtonConfig(
-            "Move to left view",
-            icon: const Icon(Icons.arrow_back, size: 14),
-            onPressed: () => widget.area.moveToLeftView(areasManager.fromId(widget.file)!),
-          ),
-          ContextMenuButtonConfig(
-            "Move to right view",
-            icon: const Icon(Icons.arrow_forward, size: 14),
-            onPressed: () => widget.area.moveToRightView(areasManager.fromId(widget.file)!),
-          ),
-        ],
-      ),
+        ContextMenuConfig(
+          label: "Copy path",
+          icon: const Icon(Icons.link, size: 15),
+          action: () => copyToClipboard(areasManager.fromId(widget.file)!.path),
+        ),
+        ContextMenuConfig(
+          label: "Show in Explorer",
+          icon: const Icon(Icons.folder_open, size: 14),
+          action: () => revealFileInExplorer(areasManager.fromId(widget.file)!.path),
+        ),
+        ContextMenuConfig(
+          label: "Close",
+          icon: const Icon(Icons.close, size: 11),
+          action: () => widget.area.closeFile(areasManager.fromId(widget.file)!),
+        ),
+        ContextMenuConfig(
+          label: "Close others",
+          icon: const Icon(Icons.close, size: 13),
+          action: () => widget.area.closeOthers(areasManager.fromId(widget.file)!),
+        ),
+        ContextMenuConfig(
+          label: "Close all",
+          icon: const Icon(Icons.close, size: 15),
+          action: () => widget.area.closeAll(),
+        ),
+        ContextMenuConfig(
+          label: "Close to the left",
+          icon: const Icon(Icons.chevron_left, size: 14),
+          action: () => widget.area.closeToTheLeft(areasManager.fromId(widget.file)!),
+        ),
+        ContextMenuConfig(
+          label: "Close to the right",
+          icon: const Icon(Icons.chevron_right, size: 14),
+          action: () => widget.area.closeToTheRight(areasManager.fromId(widget.file)!),
+        ),
+        ContextMenuConfig(
+          label: "Move to left view",
+          icon: const Icon(Icons.arrow_back, size: 14),
+          action: () => widget.area.moveToLeftView(areasManager.fromId(widget.file)!),
+        ),
+        ContextMenuConfig(
+          label: "Move to right view",
+          icon: const Icon(Icons.arrow_forward, size: 14),
+          action: () => widget.area.moveToRightView(areasManager.fromId(widget.file)!),
+        ),
+      ],
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
         child: GestureDetector(

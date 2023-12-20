@@ -1,12 +1,12 @@
 
 
-import 'package:context_menus/context_menus.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../../stateManagement/openFiles/types/xml/xmlProps/xmlActionProp.dart';
 import '../../../../../utils/utils.dart';
 import '../../../../misc/ChangeNotifierWidget.dart';
 import '../../../../misc/FlexReorderable.dart';
+import '../../../../misc/contextMenuBuilder.dart';
 import '../../../../misc/nestedContextMenu.dart';
 import '../../../../misc/puidDraggable.dart';
 import '../../../../propEditors/DoubleClickablePropTextField.dart';
@@ -51,10 +51,10 @@ class XmlActionEditorState<T extends XmlActionEditor> extends ChangeNotifierStat
       child: NestedContextMenu(
         buttons: [
           null,
-          ContextMenuButtonConfig(
-            "Copy Action PUID ref",
-            icon: const Icon(Icons.content_copy, size: 14,),
-            onPressed: () => copyPuidRef("hap::Action", widget.action.id.value)
+          ContextMenuConfig(
+            label: "Copy Action PUID ref",
+            icon: const Icon(Icons.content_copy, size: 14),
+            action: () => copyPuidRef("hap::Action", widget.action.id.value)
           ),
         ],
         child: SizedBox(

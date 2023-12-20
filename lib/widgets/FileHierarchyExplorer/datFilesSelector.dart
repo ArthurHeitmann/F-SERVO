@@ -1,6 +1,7 @@
 
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -72,7 +73,7 @@ class _DatSelectorWidgetState extends State<_DatSelectorWidget> {
         const Text("Select which files to include in the DAT file. This displays all files in the extracted folder."),
         const SizedBox(height: 16),
         ConstrainedBox(
-          constraints: BoxConstraints(maxHeight: clamp(windowHeight - 200, 500, windowHeight * 0.8)),
+          constraints: BoxConstraints(maxHeight: min(windowHeight - 300, windowHeight * 0.8)),
           child: SmoothSingleChildScrollView(
             controller: controller,
             child: Column(

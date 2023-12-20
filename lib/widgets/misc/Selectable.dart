@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 
 import '../../keyboardEvents/intents.dart';
+import '../../stateManagement/openFiles/filesAreaManager.dart';
 import '../../stateManagement/openFiles/openFilesManager.dart';
 import '../../stateManagement/openFiles/types/xml/xmlProps/xmlProp.dart';
 import '../../utils/Disposable.dart';
@@ -34,9 +35,10 @@ class _SelectedData implements Disposable {
 class _Selectable {
   final Map<OpenFileId, _SelectedData?> _selectedData = {};
   final active = ValueNotifier<_SelectedData?>(null);
+  FilesAreaManager? _listeningArea;
 
   _Selectable() {
-    areasManager.subEvents.addListener(_onAreaChanges);
+    areasManager.activeArea.addListener(_onAreaChanges);
   }
 
   void select(OpenFileId id, XmlProp prop, [ChildKeyboardActionCallback? onKeyboardAction]) {
@@ -77,6 +79,13 @@ class _Selectable {
   bool isSelected(String uuid) => _selectedData.values.any((e) => e?.uuid == uuid);
 
   void _onAreaChanges() {
+    _listeningArea?.currentFile.removeListener(_onCurrentFileChange);
+    _listeningArea = areasManager.activeArea.value;
+    _listeningArea?.currentFile.addListener(_onCurrentFileChange);
+    _onCurrentFileChange();
+  }
+
+  void _onCurrentFileChange() {
     var id = areasManager.activeArea.value?.currentFile.value?.uuid;
     if (id == null)
       active.value = null;
@@ -85,7 +94,7 @@ class _Selectable {
   }
 }
 
-final  selectable = _Selectable();
+final selectable = _Selectable();
 
 class SelectableWidget extends ChangeNotifierWidget {
   final Color? color;
