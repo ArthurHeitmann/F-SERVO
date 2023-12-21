@@ -129,8 +129,8 @@ class BnkTrackClip with HasUuid, Undoable implements Disposable {
     _initCombinedProps();
     _setupListeners();
   }
-  BnkTrackClip.fromPlaylist(this.fileId, this.srcPlaylist, List<BnkClipAutomation> automations) :
-        sourceId = srcPlaylist.sourceID,
+  BnkTrackClip.fromPlaylist(this.fileId, BnkMusicTrack srcTrack, this.srcPlaylist, List<BnkClipAutomation> automations) :
+        sourceId = srcTrack.sources.where((s) => s.sourceID == srcPlaylist.sourceID).firstOrNull?.fileID ?? srcPlaylist.sourceID,
         xOff = NumberProp(srcPlaylist.fPlayAt, false, fileId: fileId),
         beginTrim = NumberProp(srcPlaylist.fBeginTrimOffset, false, fileId: fileId),
         endTrim = NumberProp(srcPlaylist.fEndTrimOffset, false, fileId: fileId),
@@ -306,6 +306,7 @@ class BnkTrackData with HasUuid, Undoable implements Disposable {
     clips = ValueListNotifier(
       List.generate(srcTrack.playlists.length, (i) => BnkTrackClip.fromPlaylist(
         fileId,
+        srcTrack,
         srcTrack.playlists[i],
         srcTrack.clipAutomations.where((ca) => ca.uClipIndex == i).toList()
       )),
@@ -394,9 +395,9 @@ class BnkTrackData with HasUuid, Undoable implements Disposable {
   Future<void> updateDuration() async {
     if (srcTrack.sources.isEmpty)
       return;
-    if (!srcTrack.sources.every((s) => s.sourceID == srcTrack.sources.first.sourceID))
+    if (!srcTrack.sources.every((s) => s.fileID == srcTrack.sources.first.fileID))
       throw Exception("Can't update duration of a track with multiple sources");
-    var srcId = srcTrack.sources.first.sourceID;
+    var srcId = srcTrack.sources.first.fileID;
     var wemPath = wemFilesLookup.lookup[srcId];
     if (wemPath == null)
       return;
