@@ -26,6 +26,7 @@ class EstModelPreview extends ChangeNotifierWidget {
 class _EstModelPreviewState extends ChangeNotifierState<EstModelPreview> {
   @override
   Widget build(BuildContext context) {
+    return const SizedBox();
     var modelId = widget.modelId.value;
     if (modelId == 0)
       return SizedBox(width: widget.size, height: widget.size);
