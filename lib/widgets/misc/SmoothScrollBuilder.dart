@@ -81,8 +81,8 @@ class _SmoothScrollBuilderState extends State<SmoothScrollBuilder> {
   }
 }
 
-class SmoothSingleChildScrollView extends StatelessWidget {
-  final ScrollController controller;
+class SmoothSingleChildScrollView extends StatefulWidget {
+  final ScrollController? controller;
   final Duration duration;
   final double stepSize;
   final ScrollPhysics? physics;
@@ -91,7 +91,7 @@ class SmoothSingleChildScrollView extends StatelessWidget {
 
   const SmoothSingleChildScrollView({
     super.key,
-    required this.controller,
+    this.controller,
     this.duration = const Duration(milliseconds: 150),
     this.stepSize = 100,
     this.physics,
@@ -100,17 +100,37 @@ class SmoothSingleChildScrollView extends StatelessWidget {
   });
 
   @override
+  State<SmoothSingleChildScrollView> createState() => _SmoothSingleChildScrollViewState();
+}
+
+class _SmoothSingleChildScrollViewState extends State<SmoothSingleChildScrollView> {
+  late ScrollController controller;
+
+  @override
+  void initState() {
+    controller = widget.controller ?? ScrollController();
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    if (widget.controller == null)
+      controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return SmoothScrollBuilder(
       controller: controller,
-      duration: duration,
-      stepSize: stepSize,
-      physics: physics,
+      duration: widget.duration,
+      stepSize: widget.stepSize,
+      physics: widget.physics,
       builder: (context, controller, physics) => SingleChildScrollView(
         controller: controller,
         physics: physics,
-        scrollDirection: scrollDirection,
-        child: child,
+        scrollDirection: widget.scrollDirection,
+        child: widget.child,
       ),
     );
   }
