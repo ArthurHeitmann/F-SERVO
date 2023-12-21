@@ -44,6 +44,7 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
       List<int> parentId = [];
       List<int> childIds = [];
       List<(bool, List<String>)> props = [];
+      List<TransitionRule> transitionRules = [];
       if (hirc is BnkHircChunkWithBaseParamsGetter) {
         var hircChunk = hirc as BnkHircChunkWithBaseParamsGetter;
         var baseParams = hircChunk.getBaseParams();
@@ -181,6 +182,12 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
             }
           }
         }
+        if (hircChunk is BnkHircChunkWithTransNodeParams) {
+          var rules = (hircChunk as BnkHircChunkWithTransNodeParams).musicTransParams.rules;
+          for (var rule in rules) {
+            transitionRules.add(TransitionRule.make(rule, hircEntries));
+          }
+        }
         BnkAkMeterInfo? meterInfo;
         if (hircChunk is BnkMusicSegment)
           meterInfo = hircChunk.musicParams.meterInfo;
@@ -285,7 +292,15 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
         uidNameStr += " (${hirc.uid})";
       }
       var entryFullName = "$chunkType $uidNameStr";
-      var entry = BnkHircHierarchyEntry(entryFullName, entryPath, chunkType, id: hirc.uid, entryName: entryName, parentIds: parentId, childIds: childIds, properties: props, hirc: hirc);
+      var entry = BnkHircHierarchyEntry(entryFullName, entryPath, chunkType,
+        id: hirc.uid,
+        entryName: entryName,
+        parentIds: parentId,
+        childIds: childIds,
+        properties: props,
+        hirc: hirc,
+        transitionRules: transitionRules,
+      );
 
       if (hirc is BnkEvent) {
         List<BnkHircHierarchyEntry> childActions = [];
@@ -462,13 +477,14 @@ class BnkHircHierarchyEntry extends GenericFileHierarchyEntry {
   final int id;
   final String? entryName;
   final BnkHircChunkBase? hirc;
+  final List<TransitionRule> transitionRules;
   List<int> parentIds;
   List<int> childIds;
   List<(bool, List<String>)>? properties;
   int usages = 0;
   bool _isDisposed = false;
 
-  BnkHircHierarchyEntry(String name, String path, this.type, {required this.id, String? entryName, this.parentIds = const [], this.childIds = const [], this.properties, this.hirc}) :
+  BnkHircHierarchyEntry(String name, String path, this.type, {required this.id, String? entryName, this.parentIds = const [], this.childIds = const [], this.properties, this.hirc, this.transitionRules = const []}) :
     entryName = entryName ?? wemIdsToNames[id],
     super(StringProp(name, fileId: null), path, !nonCollapsibleTypes.contains(type), openableTypes.contains(type)) {
     isCollapsed.value = true;
@@ -546,4 +562,154 @@ class BnkHircHierarchyEntry extends GenericFileHierarchyEntry {
 
     return props;
   }
+}
+
+/*
+BnkMusicTransitionRule
+  int srcID;
+  int dstID;
+  BnkMusicTransSrcRule srcRule;
+  BnkMusicTransDstRule dstRule;
+  int bIsTransObjectEnabled;
+  BnkMusicTransitionObject musicTransition;
+
+BnkMusicTransSrcRule
+  BnkFadeParams fadeParam;
+  int eSyncType;
+  int uMarkerID;
+  int bPlayPostExit;
+
+class BnkMusicTransDstRule
+  BnkFadeParams fadeParam;
+  int uMarkerID;
+  int uJumpToID;
+  int eEntryType;
+  int bPlayPreEntry;
+  int bDestMatchSourceCueName;
+
+BnkMusicTransitionObject {
+  int segmentID;
+  BnkFadeParams fadeInParams;
+  BnkFadeParams fadeOutParams;
+  int playPreEntry;
+  int playPostExit;
+*/
+class TransitionSrc {
+  final String fallbackText;
+  final BnkHircHierarchyEntry? entry;
+
+  const TransitionSrc(this.fallbackText, this.entry);
+
+  static TransitionSrc fromId(int id, Map<int, BnkHircHierarchyEntry> hircEntries) {
+    if (id == -1)
+      return const TransitionSrc("Any", null);
+    if (id == 0)
+      return const TransitionSrc("None", null);
+    var entry = hircEntries[id];
+    if (entry != null)
+      return TransitionSrc("", entry);
+    return TransitionSrc(id.toString(), null);
+  }
+}
+
+class TransitionRule {
+  final TransitionSrc src;
+  final TransitionSrc dst;
+  final TransitionSrcRule srcRule;
+  final TransitionDstRule dstRule;
+  final bool isTransObjectEnabled;
+  final TransitionObject musicTransition;
+
+  const TransitionRule(this.src, this.dst, this.srcRule, this.dstRule, this.isTransObjectEnabled, this.musicTransition);
+
+  static TransitionRule make(BnkMusicTransitionRule transitionRule, Map<int, BnkHircHierarchyEntry> hircEntries) {
+    return TransitionRule(
+      TransitionSrc.fromId(transitionRule.srcID, hircEntries),
+      TransitionSrc.fromId(transitionRule.dstID, hircEntries),
+      TransitionSrcRule.make(transitionRule.srcRule),
+      TransitionDstRule.make(transitionRule.dstRule),
+      transitionRule.bIsTransObjectEnabled != 0,
+      TransitionObject.make(transitionRule.musicTransition, hircEntries)
+    );
+  }
+}
+
+class TransitionSrcRule {
+  final FadeParams fadeParam;
+  final String syncType;
+  final int markerId;
+  final int playPostExit;
+
+  const TransitionSrcRule(this.fadeParam, this.syncType, this.markerId, this.playPostExit);
+
+  static TransitionSrcRule make(BnkMusicTransSrcRule srcRule) {
+    return TransitionSrcRule(
+      FadeParams.make(srcRule.fadeParam),
+      syncTypes[srcRule.eSyncType] ?? srcRule.eSyncType.toString(),
+      srcRule.uMarkerID,
+      srcRule.bPlayPostExit
+    );
+  }
+}
+
+class TransitionDstRule {
+  final FadeParams fadeParam;
+  final int markerId;
+  final int jumpToId;
+  final String entryType;
+  final bool playPreEntry;
+  final bool matchSourceCueName;
+
+  const TransitionDstRule(this.fadeParam, this.markerId, this.jumpToId, this.entryType, this.playPreEntry, this.matchSourceCueName);
+
+  static TransitionDstRule make(BnkMusicTransDstRule dstRule) {
+    return TransitionDstRule(
+      FadeParams.make(dstRule.fadeParam),
+      dstRule.uMarkerID,
+      dstRule.uJumpToID,
+      entryTypes[dstRule.eEntryType] ?? dstRule.eEntryType.toString(),
+      dstRule.bPlayPreEntry != 0,
+      dstRule.bDestMatchSourceCueName != 0
+    );
+  }
+}
+
+class TransitionObject {
+  final TransitionSrc segment;
+  final FadeParams fadeInParams;
+  final FadeParams fadeOutParams;
+  final bool playPreEntry;
+  final bool playPostExit;
+
+  const TransitionObject(this.segment, this.fadeInParams, this.fadeOutParams, this.playPreEntry, this.playPostExit);
+
+  static TransitionObject make(BnkMusicTransitionObject transitionObject, Map<int, BnkHircHierarchyEntry> hircEntries) {
+    return TransitionObject(
+      TransitionSrc.fromId(transitionObject.segmentID, hircEntries),
+      FadeParams.make(transitionObject.fadeInParams),
+      FadeParams.make(transitionObject.fadeOutParams),
+      transitionObject.playPreEntry != 0,
+      transitionObject.playPostExit != 0
+    );
+  }
+
+  bool get isDefault => segment.fallbackText == "None" && fadeInParams.isDefault && fadeOutParams.isDefault && !playPreEntry && !playPostExit;
+}
+
+class FadeParams {
+  final String curve;
+  final int time;
+  final int offset;
+
+  const FadeParams(this.curve, this.time, this.offset);
+
+  static FadeParams make(BnkFadeParams fadeParams) {
+    return FadeParams(
+      curveInterpolations[fadeParams.eFadeCurve] ?? fadeParams.eFadeCurve.toString(),
+      fadeParams.transitionTime,
+      fadeParams.iFadeOffset
+    );
+  }
+
+  bool get isDefault => curve == "Linear" && time == 0 && offset == 0;
 }

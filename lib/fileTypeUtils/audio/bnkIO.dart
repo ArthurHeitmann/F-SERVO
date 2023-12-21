@@ -2,6 +2,7 @@
 // ignore_for_file: constant_identifier_names
 
 import 'dart:typed_data';
+
 import '../utils/ByteDataWrapper.dart';
 import 'wemIdsToNames.dart';
 
@@ -366,6 +367,10 @@ mixin BnkHircChunkWithBaseParams implements BnkHircChunkWithBaseParamsGetter {
   BnkNodeBaseParams getBaseParams() => baseParams;
 }
 
+mixin BnkHircChunkWithTransNodeParams {
+  abstract BnkMusicTransNodeParams musicTransParams;
+}
+
 class BnkMusicTrack extends BnkHircChunkBase with BnkHircChunkWithBaseParams {
   // late int uFlags;
   late int numSources;
@@ -582,7 +587,8 @@ class BnkMusicSegment extends BnkHircChunkBase with BnkHircChunkWithBaseParamsGe
   }
 }
 
-class BnkMusicSwitch extends BnkHircChunkBase with BnkHircChunkWithBaseParamsGetter {
+class BnkMusicSwitch extends BnkHircChunkBase with BnkHircChunkWithBaseParamsGetter, BnkHircChunkWithTransNodeParams {
+  @override
   late BnkMusicTransNodeParams musicTransParams;
   late int eGroupType;
   late int ulGroupID;
@@ -636,7 +642,8 @@ class BnkMusicSwitch extends BnkHircChunkBase with BnkHircChunkWithBaseParamsGet
 }
 
 
-class BnkMusicPlaylist extends BnkHircChunkBase with BnkHircChunkWithBaseParamsGetter {
+class BnkMusicPlaylist extends BnkHircChunkBase with BnkHircChunkWithBaseParamsGetter, BnkHircChunkWithTransNodeParams {
+  @override
   late BnkMusicTransNodeParams musicTransParams;
   late int numPlaylistItems;
   late List<BnkPlaylistItem> playlistItems;
@@ -789,13 +796,13 @@ class BnkMusicTransitionRule {
   late BnkMusicTransSrcRule srcRule;
   late BnkMusicTransDstRule dstRule;
   late int bIsTransObjectEnabled;
-  BnkMusicTransitionObject? musicTransition;
+  late BnkMusicTransitionObject musicTransition;
 
   BnkMusicTransitionRule(this.srcID, this.dstID, this.srcRule, this.dstRule, this.bIsTransObjectEnabled, this.musicTransition);
 
   BnkMusicTransitionRule.read(ByteDataWrapper bytes) {
-    srcID = bytes.readUint32();
-    dstID = bytes.readUint32();
+    srcID = bytes.readInt32();
+    dstID = bytes.readInt32();
     srcRule = BnkMusicTransSrcRule.read(bytes);
     dstRule = BnkMusicTransDstRule.read(bytes);
     bIsTransObjectEnabled = bytes.readUint8();
@@ -803,12 +810,12 @@ class BnkMusicTransitionRule {
   }
 
   void write(ByteDataWrapper bytes) {
-    bytes.writeUint32(srcID);
-    bytes.writeUint32(dstID);
+    bytes.writeInt32(srcID);
+    bytes.writeInt32(dstID);
     srcRule.write(bytes);
     dstRule.write(bytes);
     bytes.writeUint8(bIsTransObjectEnabled);
-    musicTransition!.write(bytes);
+    musicTransition.write(bytes);
   }
 
   int calcChunkSize() {
@@ -818,7 +825,7 @@ class BnkMusicTransitionRule {
       srcRule.calcChunkSize() + // srcRule
       dstRule.calcChunkSize() + // dstRule
       1 + // allocTransObjectFlag
-      musicTransition!.calcChunkSize() // musicTransition
+      musicTransition.calcChunkSize() // musicTransition
     );
   }
 }
@@ -2811,4 +2818,38 @@ const actionTypes = {
   0x3202: "ResetSetFX_M",
   0x3204: "ResetSetFX_ALL",
   0x4000: "NoOp",
+};
+
+const syncTypes = {
+  0x0: "Immediate",
+  0x1: "NextGrid",
+  0x2: "NextBar",
+  0x3: "NextBeat",
+  0x4: "NextMarker",
+  0x5: "NextUserMarker",
+  0x6: "EntryMarker",
+  0x7: "ExitMarker",
+  0x8: "ExitNever",
+  0x9: "LastExitPosition",
+};
+
+const curveInterpolations = {
+  0x0: "Log3",
+  0x1: "Sine",
+  0x2: "Log1",
+  0x3: "InvSCurve",
+  0x4: "Linear",
+  0x5: "SCurve",
+  0x6: "Exp1",
+  0x7: "SineRecip",
+  0x8: "Exp3",
+  0x9: "Constant",
+};
+
+const entryTypes = {
+  0x0: "EntryMarker",
+  0x1: "SameTime",
+  0x2: "RandomMarker",
+  0x3: "RandomUserMarker",
+  0x4: "LastExitTime",
 };

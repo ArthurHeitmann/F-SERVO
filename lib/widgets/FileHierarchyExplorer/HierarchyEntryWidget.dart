@@ -127,14 +127,14 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
                     textScaleFactor: 0.85,
                     overflow: TextOverflow.ellipsis,
                     text: TextSpan(
-                      style: Theme.of(context).textTheme.bodyMedium,
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: getTextColor(context)),
                       children: openHierarchyManager.search.value.isEmpty
                         ? [TextSpan(text: widget.entry.name.toString())]
                         : getHighlightedTextSpans(
-                          widget.entry.name.toString(),
-                          openHierarchyManager.search.value,
-                          Theme.of(context).textTheme.bodyMedium!,
-                        )
+                            widget.entry.name.toString(),
+                            openHierarchyManager.search.value,
+                            Theme.of(context).textTheme.bodyMedium!.copyWith(color: getTextColor(context)),
+                          )
                     ),
                   ),
                 )
