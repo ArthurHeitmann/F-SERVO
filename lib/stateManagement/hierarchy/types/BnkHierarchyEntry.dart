@@ -95,29 +95,91 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
           await addWemChild(srcId);
         }
         if (hircChunk is BnkMusicSwitch) {
+          if (wemIdsToNames.containsKey(hircChunk.ulGroupID))
+            uidNameStr = wemIdsToNames[hircChunk.ulGroupID].toString();
           var groupName = wemIdsToNames[hircChunk.ulGroupID] ?? hircChunk.ulGroupID.toString();
-            var defaultValue = wemIdsToNames[hircChunk.ulDefaultSwitch] ?? hircChunk.ulDefaultSwitch.toString();
-            addGroupUsage(usedSwitchGroups, groupName, defaultValue);
-            props.addAll([
-              (false, ["Switch Group", "Default Switch"]),
-              (true, [groupName, defaultValue]),
-            ]);
-            for (var switchAssoc in hircChunk.pAssocs) {
-              var switchAssocName = wemIdsToNames[switchAssoc.switchID] ?? switchAssoc.switchID.toString();
-              addGroupUsage(usedSwitchGroups, groupName, switchAssocName);
+          var defaultValue = wemIdsToNames[hircChunk.ulDefaultSwitch] ?? hircChunk.ulDefaultSwitch.toString();
+          addGroupUsage(usedSwitchGroups, groupName, defaultValue);
+          props.addAll([
+            (false, ["Switch Group", "Default Switch"]),
+            (true, [groupName, defaultValue]),
+          ]);
+          for (var switchAssoc in hircChunk.pAssocs) {
+            var switchAssocName = wemIdsToNames[switchAssoc.switchID] ?? switchAssoc.switchID.toString();
+            if (switchAssoc.switchID == hircChunk.ulDefaultSwitch)
+              switchAssocName += " (Default)";
+            addGroupUsage(usedSwitchGroups, groupName, switchAssocName);
+            var switchId = randomId();
+            var childNodeId = switchAssoc.nodeID;
+            var switchAssocEntry = BnkHircHierarchyEntry(switchAssocName, "", "SwitchAssoc", id: switchId, parentIds: [hirc.uid], childIds: [childNodeId], entryName: wemIdsToNames[switchAssoc.switchID]);
+            hircEntries[switchId] = switchAssocEntry;
+            var nodeChild = hircEntries[childNodeId];
+            if (nodeChild != null) {
+              nodeChild.parentIds.add(switchId);
+            }
+            else {
+              var nodeEntry = BnkHircHierarchyEntry("Node $switchAssocName", "", "Node", id: childNodeId, parentIds: [switchId], entryName: wemIdsToNames[switchAssoc.switchID]);
+              hircEntries[childNodeId] = nodeEntry;
+            }
+          }
+        }
+        if (hircChunk is BnkSoundSwitch) {
+          if (wemIdsToNames.containsKey(hircChunk.ulGroupID))
+            uidNameStr = wemIdsToNames[hircChunk.ulGroupID].toString();
+          var groupName = wemIdsToNames[hircChunk.ulGroupID] ?? hircChunk.ulGroupID.toString();
+          var defaultValue = wemIdsToNames[hircChunk.ulDefaultSwitch] ?? hircChunk.ulDefaultSwitch.toString();
+          addGroupUsage(usedSwitchGroups, groupName, defaultValue);
+          props.addAll([
+            (false, ["Switch Group", "Default Switch"]),
+            (true, [groupName, defaultValue]),
+          ]);
+          for (var switchAssoc in hircChunk.switches) {
+            var switchAssocName = wemIdsToNames[switchAssoc.ulSwitchID] ?? switchAssoc.ulSwitchID.toString();
+            if (switchAssoc.ulSwitchID == hircChunk.ulDefaultSwitch)
+              switchAssocName += " (Default)";
+            addGroupUsage(usedSwitchGroups, groupName, switchAssocName);
+            var childNodeIds = switchAssoc.nodeIDs;
+            for (var childNodeId in childNodeIds) {
               var switchId = randomId();
-              var childNodeId = switchAssoc.nodeID;
-              var switchAssocEntry = BnkHircHierarchyEntry(switchAssocName, "", "SwitchAssoc", id: switchId, parentIds: [hirc.uid], childIds: [childNodeId], entryName: wemIdsToNames[switchAssoc.switchID]);
+              List<(bool, List<String>)>? childProps;
+              var param = hircChunk.switchParams.where((p) => p.ulNodeID == childNodeId).firstOrNull;
+              if (param != null) {
+                childProps = [];
+                if (param.bIsFirstOnly != 0)
+                  childProps.add((true, ["Is First Only", "True"]));
+                if (param.bContinuePlayback != 0)
+                  childProps.add((true, ["Continue Playback", "True"]));
+                if (param.eOnSwitchMod != 1)
+                  childProps.add((true, ["On Switch Mod", "${param.eOnSwitchMod}"]));
+                if (param.fadeOutTime != 0)
+                  childProps.add((true, ["Fade Out Time", "${param.fadeOutTime}"]));
+                if (param.fadeInTime != 0)
+                  childProps.add((true, ["Fade In Time", "${param.fadeInTime}"]));
+                if (childProps.isNotEmpty)
+                  print("Child props: $childProps (${hircChunk.uid})");
+              }
+              var switchAssocEntry = BnkHircHierarchyEntry(
+                switchAssocName, "", "SwitchAssoc",
+                id: switchId,
+                parentIds: [hirc.uid],
+                childIds: [childNodeId],
+                entryName: wemIdsToNames[switchAssoc.ulSwitchID],
+                properties: childProps
+              );
               hircEntries[switchId] = switchAssocEntry;
               var nodeChild = hircEntries[childNodeId];
               if (nodeChild != null) {
                 nodeChild.parentIds.add(switchId);
-              }
-              else {
-                var nodeEntry = BnkHircHierarchyEntry("Node $switchAssocName", "", "Node", id: childNodeId, parentIds: [switchId], entryName: wemIdsToNames[switchAssoc.switchID]);
+              } else {
+                var nodeEntry = BnkHircHierarchyEntry(
+                    "Node $switchAssocName", "", "Node",
+                    id: childNodeId,
+                    parentIds: [switchId],
+                    entryName: wemIdsToNames[switchAssoc.ulSwitchID]);
                 hircEntries[childNodeId] = nodeEntry;
               }
             }
+          }
         }
         BnkAkMeterInfo? meterInfo;
         if (hircChunk is BnkMusicSegment)

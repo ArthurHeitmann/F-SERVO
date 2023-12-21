@@ -77,6 +77,7 @@ class PreferencesData extends OpenFileData {
   SavableProp<bool>? pauseAudioOnFileChange;
   SavableProp<ThemeType>? themeType;
   SavableProp<String>? waiExtractDir;
+  SavableProp<String>? wemExtractDir;
   SavableProp<String>? wwiseCliPath;
   SavableProp<String>? lastCpkExtractDir;
   SavableProp<String>? lastSearchDir;
@@ -121,6 +122,7 @@ class PreferencesData extends OpenFileData {
     pauseAudioOnFileChange = SavableProp<bool>("pauseAudioOnFileChange", _prefs!, false);
     themeType = SavableProp<ThemeType>("themeType", _prefs!, ThemeType.dark);
     waiExtractDir = SavableProp<String>("waiExtractDir", _prefs!, "");
+    wemExtractDir = SavableProp<String>("wemExtractDir", _prefs!, "");
     wwiseCliPath = SavableProp<String>("wwiseCliPath", _prefs!, "");
     lastCpkExtractDir = SavableProp<String>("lastCpkExtractDir", _prefs!, "");
     lastSearchDir = SavableProp<String>("lastSearchDir", _prefs!, "");
