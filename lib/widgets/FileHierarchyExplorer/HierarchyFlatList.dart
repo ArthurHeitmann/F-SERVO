@@ -10,7 +10,7 @@ import '../misc/onHoverBuilder.dart';
 import 'HierarchyEntryWidget.dart';
 
 class HierarchyFlatList extends ChangeNotifierWidget {
-  HierarchyFlatList({super.key}) : super(notifier: openHierarchyManager.treeViewIsDirty);
+  HierarchyFlatList({super.key}) : super(notifiers: [openHierarchyManager.filteredTreeIsDirty, openHierarchyManager.collapsedTreeIsDirty]);
 
   @override
   State<HierarchyFlatList> createState() => _HierarchyFlatListState();
@@ -18,19 +18,26 @@ class HierarchyFlatList extends ChangeNotifierWidget {
 
 class _HierarchyFlatListState extends ChangeNotifierState<HierarchyFlatList> {
   final scrollController = ScrollController();
-  List<IndentedHierarchyEntry> cachedFlatTree = [];
+  List<_IndentedHierarchyEntryResult> filteredResults = [];
+  List<_IndentedHierarchyEntry> flatTree = [];
   bool isCursorInside = false;
 
   @override
   void initState() {
     super.initState();
+    regenerateFilteredResults();
     regenerateFlatTree();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (openHierarchyManager.treeViewIsDirty.value)
+    if (openHierarchyManager.filteredTreeIsDirty.value) {
+      regenerateFilteredResults();
       regenerateFlatTree();
+    }
+    else if (openHierarchyManager.collapsedTreeIsDirty.value) {
+      regenerateFlatTree();
+    }
 
     return shortcutsWrapper(
       child: OnHoverBuilder(
@@ -42,10 +49,10 @@ class _HierarchyFlatListState extends ChangeNotifierState<HierarchyFlatList> {
               return ListView.builder(
                 controller: controller,
                 physics: physics,
-                itemCount: cachedFlatTree.length,
-                prototypeItem: cachedFlatTree.isNotEmpty ? HierarchyEntryWidget(entry: cachedFlatTree.first.entry) : null,
+                itemCount: flatTree.length,
+                prototypeItem: flatTree.isNotEmpty ? HierarchyEntryWidget(entry: flatTree.first.entry) : null,
                 itemBuilder: (context, index) {
-                  var entry = cachedFlatTree[index];
+                  var entry = flatTree[index];
                   return HierarchyEntryWidget(
                     key: Key(entry.uuidPath.join(", ")),
                     entry: entry.entry,
@@ -60,23 +67,42 @@ class _HierarchyFlatListState extends ChangeNotifierState<HierarchyFlatList> {
     );
   }
 
-  void regenerateFlatTree() {
-    cachedFlatTree = [];
-    for (var entry in openHierarchyManager.children) {
-      _regenerateFlatTree(entry, 0);
-    }
-    openHierarchyManager.treeViewIsDirty.value = false;
+  void regenerateFilteredResults() {
+    filteredResults = [];
+    for (var entry in openHierarchyManager.children)
+      filteredResults.add(getFilteredTree(entry, 0, [], openHierarchyManager.search.value.toLowerCase(), false));
+    openHierarchyManager.filteredTreeIsDirty.value = false;
   }
 
-  void _regenerateFlatTree(HierarchyEntry entry, int depth, [List<String> parentUuidPath = const []]) {
-    if (!entry.isVisibleWithSearch.value)
-      return;
+  void regenerateFlatTree() {
+    flatTree = [];
+    flatTree.addAll(filteredResults.expand((e) => getFlatTree(e)));
+    openHierarchyManager.collapsedTreeIsDirty.value = false;
+  }
+
+  _IndentedHierarchyEntryResult getFilteredTree(HierarchyEntry entry, int depth, Iterable<String> parentUuidPath, String query, bool parentMatchesSearch) {
     var uuidPath = [...parentUuidPath, entry.uuid];
-    cachedFlatTree.add(IndentedHierarchyEntry(entry, uuidPath, depth));
-    if (!entry.isCollapsed.value) {
-      for (var child in entry.children)
-        _regenerateFlatTree(child, depth + 1, uuidPath);
-    }
+    bool hasMatch = parentMatchesSearch || query.isEmpty || entry.name.toString().toLowerCase().contains(query);
+    var newEntry = _IndentedHierarchyEntry(entry, uuidPath, depth);
+    var childResults = List.generate(
+      entry.children.length,
+      (i) => getFilteredTree(entry.children[i], depth + 1, parentUuidPath, query, hasMatch)
+    );
+    return _IndentedHierarchyEntryResult(
+      newEntry,
+      childResults,
+      hasMatch || childResults.any((e) => e.matchesSearch)
+    );
+  }
+
+  Iterable<_IndentedHierarchyEntry> getFlatTree(_IndentedHierarchyEntryResult result) sync* {
+    if (!result.matchesSearch)
+      return;
+    yield result.entry;
+    if (result.entry.entry.isCollapsed.value)
+      return;
+    for (var child in result.children)
+      yield* getFlatTree(child);
   }
 
   Widget shortcutsWrapper({required Widget child}) {
@@ -104,18 +130,18 @@ class _HierarchyFlatListState extends ChangeNotifierState<HierarchyFlatList> {
     if (shouldIgnoreKeyboardEvents())
       return;
     if (openHierarchyManager.selectedEntry.value == null) {
-      if (cachedFlatTree.isNotEmpty)
-        openHierarchyManager.setSelectedEntry(cachedFlatTree.first.entry);
+      if (flatTree.isNotEmpty)
+        openHierarchyManager.setSelectedEntry(flatTree.first.entry);
       return;
     }
-    var currentIndex = cachedFlatTree.indexWhere((e) => e.entry == openHierarchyManager.selectedEntry.value);
+    var currentIndex = flatTree.indexWhere((e) => e.entry == openHierarchyManager.selectedEntry.value);
     if (currentIndex == -1)
       return;
     var newIndex = currentIndex + direction;
-    if (newIndex < 0 || newIndex >= cachedFlatTree.length)
+    if (newIndex < 0 || newIndex >= flatTree.length)
       return;
     unfocusCurrent();
-    openHierarchyManager.setSelectedEntry(cachedFlatTree[newIndex].entry);
+    openHierarchyManager.setSelectedEntry(flatTree[newIndex].entry);
     scrollToSelectedEntry();
   }
 
@@ -177,7 +203,7 @@ class _HierarchyFlatListState extends ChangeNotifierState<HierarchyFlatList> {
   void scrollToSelectedEntry() {
     if (openHierarchyManager.selectedEntry.value == null)
       return;
-    var currentIndex = cachedFlatTree.indexWhere((e) => e.entry == openHierarchyManager.selectedEntry.value);
+    var currentIndex = flatTree.indexWhere((e) => e.entry == openHierarchyManager.selectedEntry.value);
     if (currentIndex == -1)
       return;
     var currentEntryTop = currentIndex * HierarchyEntryWidget.height;
@@ -199,10 +225,18 @@ class _HierarchyFlatListState extends ChangeNotifierState<HierarchyFlatList> {
   }
 }
 
-class IndentedHierarchyEntry {
+class _IndentedHierarchyEntry {
   final HierarchyEntry entry;
   final List<String> uuidPath;
   final int depth;
 
-  const IndentedHierarchyEntry(this.entry, this.uuidPath, this.depth);
+  const _IndentedHierarchyEntry(this.entry, this.uuidPath, this.depth);
+}
+
+class _IndentedHierarchyEntryResult {
+  final _IndentedHierarchyEntry entry;
+  final List<_IndentedHierarchyEntryResult> children;
+  final bool matchesSearch;
+
+  const _IndentedHierarchyEntryResult(this.entry, this.children, this.matchesSearch);
 }

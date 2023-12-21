@@ -53,11 +53,22 @@ import 'types/XmlScriptHierarchyEntry.dart';
 
 class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements Disposable {
   final ValueNotifier<HierarchyEntry?> _selectedEntry = ValueNotifier(null);
+  final StringProp search = StringProp("", fileId: null);
   ValueListenable<HierarchyEntry?> get selectedEntry => _selectedEntry;
-  ValueNotifier<bool> treeViewIsDirty = ValueNotifier(false);
+  ValueNotifier<bool> filteredTreeIsDirty = ValueNotifier(false);
+  ValueNotifier<bool> collapsedTreeIsDirty = ValueNotifier(false);
+  late void Function() _onSearchChangedThrottled;
 
   OpenHierarchyManager() {
-    children.addListener(() => treeViewIsDirty.value = true);
+    children.addListener(() => filteredTreeIsDirty.value = true);
+    _onSearchChangedThrottled = debounce(() => filteredTreeIsDirty.value = true, 500);
+    search.addListener(() {
+      var (overThreshold, count) = hasOverXChildren(500*1000);
+      if (overThreshold)
+        _onSearchChangedThrottled();
+      else
+        filteredTreeIsDirty.value = true;
+    });
   }
 
   HierarchyEntryBase parentOf(HierarchyEntryBase entry) {
@@ -490,7 +501,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
       child.dispose();
     }
     super.clear();
-    treeViewIsDirty.value = true;
+    filteredTreeIsDirty.value = true;
   }
 
   void removeAny(HierarchyEntry child) {
@@ -640,17 +651,10 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
   void dispose() {
     super.dispose();
     _selectedEntry.dispose();
-    treeViewIsDirty.dispose();
+    search.dispose();
+    filteredTreeIsDirty.dispose();
+    collapsedTreeIsDirty.dispose();
   }
 }
 
 final openHierarchyManager = OpenHierarchyManager();
-final StringProp openHierarchySearch = StringProp("", fileId: null)
-  ..addListener(() {
-    for (var entry in openHierarchyManager.children) {
-      entry.setIsVisibleWithSearchRecursive(false);
-      entry.computeIsVisibleWithSearchFilter();
-      entry.propagateVisibility(openHierarchyManager.generateTmpParentMap());
-    }
-    openHierarchyManager.treeViewIsDirty.value = true;
-  });

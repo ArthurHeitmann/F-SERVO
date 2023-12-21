@@ -95,6 +95,20 @@ mixin HierarchyEntryBase implements Disposable {
     return count;
   }
 
+  (bool, int) hasOverXChildren(int threshold, [int count = 0]) {
+    // alternative to countAllRec, that stops counting when it reaches x
+    count += children.length;
+    if (count >= threshold)
+      return (true, count);
+    for (var child in children) {
+      var result = child.hasOverXChildren(threshold, count);
+      if (result.$1)
+        return result;
+      count = result.$2;
+    }
+    return (false, count);
+  }
+
   @override
   void dispose() {
     _children.dispose();
@@ -109,12 +123,10 @@ abstract class HierarchyEntry with HasUuid, Undoable, HierarchyEntryBase {
   final bool isCollapsible;
   final ValueNotifier<bool> isCollapsed = ValueNotifier(false);
   final bool isOpenable;
-  final ValueNotifier<bool> isVisibleWithSearch = ValueNotifier(true);
 
   HierarchyEntry(this.name, this.isSelectable, this.isCollapsible, this.isOpenable) {
-    children.addListener(onTreeViewChanged);
-    isCollapsed.addListener(onTreeViewChanged);
-    isVisibleWithSearch.addListener(onTreeViewChanged);
+    children.addListener(() => openHierarchyManager.filteredTreeIsDirty.value = true);
+    isCollapsed.addListener(() => openHierarchyManager.collapsedTreeIsDirty.value = true);
   }
 
   @override
@@ -129,11 +141,6 @@ abstract class HierarchyEntry with HasUuid, Undoable, HierarchyEntryBase {
     }
     isSelected.dispose();
     isCollapsed.dispose();
-    isVisibleWithSearch.dispose();
-  }
-
-  void onTreeViewChanged() {
-    openHierarchyManager.treeViewIsDirty.value = true;
   }
 
   void onOpen() {
@@ -185,44 +192,6 @@ abstract class HierarchyEntry with HasUuid, Undoable, HierarchyEntryBase {
     for (var child in children) {
       child.setCollapsedRecursive(value, true);
     }
-  }
-
-  // 3 methods for checking if is visible with search
-  // 3 steps:
-  //   1. set isVisibleWithSearch to false for all entries
-  //   2. for each entry, check and store if it is visible with search
-  //   3. propagate visibility to parents and children (if an entry is visible, all its parents and children are visible)
-  void setIsVisibleWithSearchRecursive(bool value) {
-    isVisibleWithSearch.value = value;
-    for (var child in children) {
-      child.setIsVisibleWithSearchRecursive(value);
-    }
-  }
-  void computeIsVisibleWithSearchFilter() {
-    var search = openHierarchySearch.value.toLowerCase();
-    if (search.isEmpty)
-      isVisibleWithSearch.value = true;
-    else if (name.toString().toLowerCase().contains(search))
-      isVisibleWithSearch.value = true;
-    else
-      isVisibleWithSearch.value = false;
-    for (var child in children) {
-      child.computeIsVisibleWithSearchFilter();
-    }
-  }
-  void propagateVisibility(Map<HierarchyEntry, HierarchyEntry?> parentMap) {
-    if (!isVisibleWithSearch.value) {
-      for (var child in children)
-        child.propagateVisibility(parentMap);
-      return;
-    }
-    
-    var parent = parentMap[this];
-    while (parent != null) {
-      parent.isVisibleWithSearch.value = true;
-      parent = parentMap[parent];
-    }
-    setIsVisibleWithSearchRecursive(true);
   }
 }
 

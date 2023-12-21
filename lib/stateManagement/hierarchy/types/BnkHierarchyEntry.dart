@@ -210,13 +210,15 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
         continue;
 
       var chunkType = hirc.runtimeType.toString().replaceFirst("Bnk", "");
-      // var entryName = "${hirc.uid}_$chunkType$uidNameStr";
-      if (uidNameStr.isEmpty)
+      String? entryName;
+      if (uidNameStr.isEmpty) {
         uidNameStr = "(${hirc.uid.toString()})";
-      else
+      } else {
+        entryName = uidNameStr;
         uidNameStr += " (${hirc.uid})";
-      var entryName = "$chunkType $uidNameStr";
-      var entry = BnkHircHierarchyEntry(entryName, entryPath, chunkType, id: hirc.uid, parentIds: parentId, childIds: childIds, properties: props, hirc: hirc);
+      }
+      var entryFullName = "$chunkType $uidNameStr";
+      var entry = BnkHircHierarchyEntry(entryFullName, entryPath, chunkType, id: hirc.uid, entryName: entryName, parentIds: parentId, childIds: childIds, properties: props, hirc: hirc);
 
       if (hirc is BnkEvent) {
         List<BnkHircHierarchyEntry> childActions = [];

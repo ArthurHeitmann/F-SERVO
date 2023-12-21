@@ -25,7 +25,7 @@ class HierarchyEntryWidget extends ChangeNotifierWidget {
   static const height = 25.0;
 
   HierarchyEntryWidget({ required this.entry, Key? key, this.depth = 0 })
-    : super(key: key ?? Key(entry.uuid), notifiers: [entry.isCollapsed, entry.isSelected, entry.name, openHierarchyManager.selectedEntry, shouldAutoTranslate, openHierarchySearch]);
+    : super(key: key ?? Key(entry.uuid), notifiers: [entry.isCollapsed, entry.isSelected, entry.name, openHierarchyManager.selectedEntry, shouldAutoTranslate, openHierarchyManager.search]);
 
   @override
   State<HierarchyEntryWidget> createState() => _HierarchyEntryState();
@@ -122,13 +122,19 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
               const SizedBox(width: 5),
               Expanded(
                 child: ChangeNotifierBuilder(
-                  notifier: widget.entry.name,
-                  builder: (context) =>  Text(
-                    widget.entry.name.toString(),
-                    overflow: TextOverflow.ellipsis,
+                  notifiers: [widget.entry.name, openHierarchyManager.search],
+                  builder: (context) => RichText(
                     textScaleFactor: 0.85,
-                    style: TextStyle(
-                      color: getTextColor(context)
+                    overflow: TextOverflow.ellipsis,
+                    text: TextSpan(
+                      style: Theme.of(context).textTheme.bodyMedium,
+                      children: openHierarchyManager.search.value.isEmpty
+                        ? [TextSpan(text: widget.entry.name.toString())]
+                        : getHighlightedTextSpans(
+                          widget.entry.name.toString(),
+                          openHierarchyManager.search.value,
+                          Theme.of(context).textTheme.bodyMedium!,
+                        )
                     ),
                   ),
                 )
@@ -200,5 +206,24 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
 
   void toggleCollapsed() {
     widget.entry.isCollapsed.value = !widget.entry.isCollapsed.value;
+  }
+
+  List<TextSpan> getHighlightedTextSpans(String text, String query, TextStyle style) {
+    var regex = RegExp(RegExp.escape(query), caseSensitive: false);
+    List<TextSpan> textSpans = text.split(regex)
+      .map((e) => TextSpan(text: e))
+      .toList();
+    List<String> fillStrings = regex.allMatches(text)
+      .map((e) => e.group(0)!)
+      .toList();
+    for (int i = 1; i < textSpans.length; i += 2) {
+      textSpans.insert(i, TextSpan(
+        text: fillStrings[(i - 1) ~/ 2],
+        style: style.copyWith(
+          backgroundColor: Theme.of(context).colorScheme.secondary.withOpacity(0.35),
+        ),
+      ));
+    }
+    return textSpans;
   }
 }

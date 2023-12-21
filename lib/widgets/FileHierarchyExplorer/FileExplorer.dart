@@ -14,7 +14,7 @@ import '../propEditors/propTextField.dart';
 import 'HierarchyFlatList.dart';
 
 class FileExplorer extends ChangeNotifierWidget {
-  FileExplorer({super.key}) : super(notifiers: [openHierarchyManager.children, openHierarchySearch]);
+  FileExplorer({super.key}) : super(notifiers: [openHierarchyManager.children, openHierarchyManager.search]);
 
   @override
   State<FileExplorer> createState() => _FileExplorerState();
@@ -102,7 +102,7 @@ class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
           const SizedBox(width: 8),
           Expanded(
             child: makePropEditor<UnderlinePropTextField>(
-              openHierarchySearch, const PropTFOptions(useIntrinsicWidth: false, hintText: "Search..."),
+              openHierarchyManager.search, const PropTFOptions(useIntrinsicWidth: false, hintText: "Search..."),
             )
           ),
           const SizedBox(width: 8),
@@ -116,7 +116,7 @@ class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
           onPressed: () => setState(() {
             expandSearch = !expandSearch;
             if (!expandSearch)
-              openHierarchySearch.value = "";
+              openHierarchyManager.search.value = "";
           }),
         ),
         Row(
