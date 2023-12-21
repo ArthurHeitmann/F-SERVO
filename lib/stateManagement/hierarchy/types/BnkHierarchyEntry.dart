@@ -53,7 +53,7 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
         for (var stateGroup in baseParams.states.stateGroup) {
           var stateGroupId = randomId();
           var groupName = wemIdsToNames[stateGroup.ulStateGroupID] ?? stateGroup.ulStateGroupID.toString();
-          var stateGroupEntry = BnkHircHierarchyEntry("StateGroup_$groupName", "", "StateGroup", id: stateGroupId, parentIds: [hirc.uid]);
+          var stateGroupEntry = BnkHircHierarchyEntry("StateGroup $groupName", "", "StateGroup", id: stateGroupId, parentIds: [hirc.uid], entryName: wemIdsToNames[stateGroup.ulStateGroupID]);
           hircEntries[stateGroupId] = stateGroupEntry;
           for (var state in stateGroup.state) {
             var stateName = wemIdsToNames[state.ulStateID] ?? state.ulStateID.toString();
@@ -66,7 +66,7 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
               childState.parentIds.add(stateGroupId);
             }
             else {
-              var stateEntry = BnkHircHierarchyEntry("State_$stateName", "", "State", id: stateId, parentIds: [stateGroupId], childIds: [childId]);
+              var stateEntry = BnkHircHierarchyEntry("State $stateName", "", "State", id: stateId, parentIds: [stateGroupId], childIds: [childId], entryName: wemIdsToNames[state.ulStateID]);
               hircEntries[stateId] = stateEntry;
             }
           }
@@ -95,24 +95,29 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
           await addWemChild(srcId);
         }
         if (hircChunk is BnkMusicSwitch) {
-          var groups = hircChunk.arguments
-              .map((a) => wemIdsToNames[a.ulGroup] ?? a.ulGroup.toString())
-              .toList();
-          void parseSwitchNode(int parentId, BnkTreeNode node, int depth) {
-            // if (node.key == 0 && node.audioNodeId == null) {
-            //   for (var child in node.children)
-            //     parseSwitchNode(parentId, child, depth + 1);
-            //   return;
-            // }
-            var nodeId = randomId();
-            var nodeName = "${groups[depth]}=${wemIdsToNames[node.key] ?? node.key.toString()}";
-            var nodeEntry = BnkHircHierarchyEntry(nodeName, "", "SwitchNode", id: nodeId, parentIds: [parentId], childIds: node.audioNodeId != null ? [node.audioNodeId!] : []);
-            hircEntries[nodeId] = nodeEntry;
-            for (var child in node.children)
-              parseSwitchNode(nodeId, child, depth + 1);
-          }
-          for (var node in hircChunk.decisionTree[0].children)
-            parseSwitchNode(hirc.uid, node, 0);
+          var groupName = wemIdsToNames[hircChunk.ulGroupID] ?? hircChunk.ulGroupID.toString();
+            var defaultValue = wemIdsToNames[hircChunk.ulDefaultSwitch] ?? hircChunk.ulDefaultSwitch.toString();
+            addGroupUsage(usedSwitchGroups, groupName, defaultValue);
+            props.addAll([
+              (false, ["Switch Group", "Default Switch"]),
+              (true, [groupName, defaultValue]),
+            ]);
+            for (var switchAssoc in hircChunk.pAssocs) {
+              var switchAssocName = wemIdsToNames[switchAssoc.switchID] ?? switchAssoc.switchID.toString();
+              addGroupUsage(usedSwitchGroups, groupName, switchAssocName);
+              var switchId = randomId();
+              var childNodeId = switchAssoc.nodeID;
+              var switchAssocEntry = BnkHircHierarchyEntry(switchAssocName, "", "SwitchAssoc", id: switchId, parentIds: [hirc.uid], childIds: [childNodeId], entryName: wemIdsToNames[switchAssoc.switchID]);
+              hircEntries[switchId] = switchAssocEntry;
+              var nodeChild = hircEntries[childNodeId];
+              if (nodeChild != null) {
+                nodeChild.parentIds.add(switchId);
+              }
+              else {
+                var nodeEntry = BnkHircHierarchyEntry("Node $switchAssocName", "", "Node", id: childNodeId, parentIds: [switchId], entryName: wemIdsToNames[switchAssoc.switchID]);
+                hircEntries[childNodeId] = nodeEntry;
+              }
+            }
         }
         BnkAkMeterInfo? meterInfo;
         if (hircChunk is BnkMusicSegment)
@@ -144,7 +149,7 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
       else if (hirc is BnkAction) {
         childIds = [hirc.initialParams.idExt];
         if (hirc.initialParams.idExt != 0 && !hircEntries.containsKey(hirc.initialParams.idExt)) {
-          var targetName = wemIdsToNames[hirc.initialParams.idExt] ?? "Target_${hirc.initialParams.idExt.toString()}";
+          var targetName = wemIdsToNames[hirc.initialParams.idExt] ?? "Target ${hirc.initialParams.idExt.toString()}";
           var targetId = randomId();
           var child = BnkHircHierarchyEntry(targetName, "", "ActionTarget", id: targetId, parentIds: [hirc.uid], entryName: wemIdsToNames[hirc.initialParams.idExt]);
           hircEntries[targetId] = child;
