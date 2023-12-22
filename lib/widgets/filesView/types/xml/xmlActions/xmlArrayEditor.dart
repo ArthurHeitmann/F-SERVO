@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:xml/xml.dart';
 
+import '../../../../../fileTypeUtils/xml/xmlExtension.dart';
 import '../../../../../keyboardEvents/intents.dart';
 import '../../../../../stateManagement/Property.dart';
 import '../../../../../stateManagement/openFiles/types/xml/xmlProps/xmlProp.dart';
@@ -111,14 +112,14 @@ class XmlArrayEditorState<T extends XmlArrayEditor> extends ChangeNotifierState<
     var ownIndex = offset + index;
     var prop = widget.parent[ownIndex];
     var xml = widget.childrenPreset.duplicateAsXml(prop);
-    copyToClipboard(xml.toXmlString(pretty: true, indent: "\t", level: prop.parentTags.length));
+    copyToClipboard(xml.toPrettyString(level: prop.parentTags.length));
   }
 
   void cutChild(int index) {
     var offset = firstChildOffset;
     var ownIndex = offset + index;
     var xml = widget.parent[ownIndex].toXml();
-    copyToClipboard(xml.toXmlString(pretty: true));
+    copyToClipboard(xml.toPrettyString());
     deleteChild(index);
   }
 

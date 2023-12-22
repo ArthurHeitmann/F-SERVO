@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:xml/xml.dart';
 
+import '../../../../../fileTypeUtils/xml/xmlExtension.dart';
 import '../../../../../stateManagement/Property.dart';
 import '../../../../../stateManagement/openFiles/types/xml/xmlProps/xmlProp.dart';
 import '../../../../../utils/utils.dart';
@@ -180,7 +181,7 @@ class _TransformsEditorState<T extends PropTextField> extends ChangeNotifierStat
     var xml = XmlDocument([
       XmlElement(XmlName("transforms"), [], xmlElements)
     ]);
-    copyToClipboard(xml.toXmlString(pretty: true, indent: "\t"));
+    copyToClipboard(xml.toPrettyString());
   }
 
   void onPasteTransforms(XmlProp? pos, XmlProp? rot, XmlProp? scale) async {

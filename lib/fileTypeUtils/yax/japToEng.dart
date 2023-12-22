@@ -6012,7 +6012,6 @@ final Map<String, String> japToEng = HashMap<String, String>.from({
 	"目的地表示(48)": "Destination display (48)",
 	"条件コマンド_PRESS": "Condition command _PRESS",
 	"qc12_自殺3": "qc12_ suicide 3",
-	"EVENT_AUTO_KILL　bool": "EVENT_AUTO_KILL　bool",
 	"条件ブロック_ザコレイアウト待ち": "Condition block_wait for layout",
 	"条件コマンド_ドア開かない会話": "Condition command_Conversation without opening the door",
 	"コマンド送信_右手OFF": "Send command_Right hand OFF",
