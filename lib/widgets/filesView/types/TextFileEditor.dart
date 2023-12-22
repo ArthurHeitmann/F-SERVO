@@ -129,6 +129,7 @@ class _TextFileEditorState extends ChangeNotifierState<TextFileEditor> {
   void dispose() {
     widget.fileContent.text.removeListener(onFileContentChange);
     goToLineSubscription?.cancel();
+    scrollController.dispose();
     super.dispose();
   }
 

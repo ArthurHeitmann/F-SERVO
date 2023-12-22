@@ -52,7 +52,6 @@ class _SearchPanelState extends State<SearchPanel> {
   final ValueListNotifier<SearchResult> searchResults = ValueListNotifier([], fileId: null);
   final isSearching = ValueNotifier(false);
   final Mutex cancelMutex = Mutex();
-  final scrollController = ScrollController();
   late final void Function() updateSearchStream;
   Set<String> prevOpenFileUuids = {};
   // common options
@@ -453,7 +452,6 @@ class _SearchPanelState extends State<SearchPanel> {
               if (errorText == null)
                 Expanded(
                   child: SmoothSingleChildScrollView(
-                    controller: scrollController,
                     duration: const Duration(milliseconds: 100),
                     stepSize: 40,
                     child: Column(

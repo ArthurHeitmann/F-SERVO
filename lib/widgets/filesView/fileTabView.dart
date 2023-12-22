@@ -45,6 +45,12 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
     super.onNotified();
   }
 
+  @override
+  void dispose() {
+    tabBarScrollController.dispose();
+    super.dispose();
+  }
+
   void scrollTabIntoView(String uuid) {
     const tabWidth = 200.0;
     var viewWidth = (context.findRenderObject() as RenderBox).size.width;

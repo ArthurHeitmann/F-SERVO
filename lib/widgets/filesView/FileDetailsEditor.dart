@@ -21,8 +21,6 @@ class FileDetailsEditor extends ChangeNotifierWidget {
 }
 
 class _FileDetailsEditorState extends ChangeNotifierState<FileDetailsEditor> {
-  final scrollController = ScrollController();
-
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -33,7 +31,6 @@ class _FileDetailsEditorState extends ChangeNotifierState<FileDetailsEditor> {
         Expanded(
           child: SmoothSingleChildScrollView(
             stepSize: 60,
-            controller: scrollController,
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: _notifierBuilders(

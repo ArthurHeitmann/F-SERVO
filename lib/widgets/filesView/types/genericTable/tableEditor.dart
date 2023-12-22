@@ -141,6 +141,7 @@ class _TableEditorState extends ChangeNotifierState<TableEditor> {
     for (var prop in columnSearch)
       prop.dispose();
     widget.config.disposeConfig();
+    scrollController.dispose();
     super.dispose();
   }
 

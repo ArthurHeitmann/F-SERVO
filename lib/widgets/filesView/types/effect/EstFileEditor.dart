@@ -31,8 +31,6 @@ class EstFileEditor extends ChangeNotifierWidget {
 }
 
 class _EstFileEditorState extends ChangeNotifierState<EstFileEditor> {
-  final scrollController = ScrollController();
-  
   @override
   void initState() {
     widget.file.load();
@@ -80,7 +78,6 @@ class _EstFileEditorState extends ChangeNotifierState<EstFileEditor> {
       );
     }
     return SmoothSingleChildScrollView(
-      controller: scrollController,
       child: ChangeNotifierBuilder(
         notifier: widget.file.records,
         builder: (context) {

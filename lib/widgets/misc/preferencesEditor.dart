@@ -28,12 +28,10 @@ class PreferencesEditor extends ChangeNotifierWidget {
 
 class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
   static const sectionHeaderStyle = TextStyle(fontWeight: FontWeight.w300, fontSize: 18);
-  final controller = ScrollController();
 
   @override
   Widget build(BuildContext context) {
     return SmoothSingleChildScrollView(
-      controller: controller,
       child: Padding(
         padding: const EdgeInsets.all(32),
         child: Column(

@@ -8,7 +8,7 @@ import '../../utils/utils.dart';
 
 
 class SmoothScrollBuilder extends StatefulWidget {
-  final ScrollController controller;
+  final ScrollController? controller;
   final Duration duration;
   final double stepSize;
   final ScrollPhysics? physics;
@@ -16,7 +16,7 @@ class SmoothScrollBuilder extends StatefulWidget {
 
   const SmoothScrollBuilder({
     super.key,
-    required this.controller,
+    this.controller,
     required this.builder,
     this.duration = const Duration(milliseconds: 150),
     this.stepSize = 100,
@@ -28,6 +28,7 @@ class SmoothScrollBuilder extends StatefulWidget {
 }
 
 class _SmoothScrollBuilderState extends State<SmoothScrollBuilder> {
+  late ScrollController controller;
   static const ScrollPhysics desktopPhysics = NeverScrollableScrollPhysics();
   static const ScrollPhysics? mobilePhysics = null;
   double targetOffset = 0;
@@ -37,16 +38,26 @@ class _SmoothScrollBuilderState extends State<SmoothScrollBuilder> {
 
   @override
   void initState() {
-    if (widget.controller.hasClients)
-      targetOffset = widget.controller.offset;
-    widget.controller.addListener(onScrollChange);
+    controller = widget.controller ?? ScrollController();
+    if (controller.hasClients)
+      targetOffset = controller.offset;
+    controller.addListener(onScrollChange);
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    controller.removeListener(onScrollChange);
+    isScrollingTimer?.cancel();
+    if (widget.controller == null)
+      controller.dispose();
+    super.dispose();
   }
 
   void onScrollChange() {
     if (isScrolling)
       return;
-    targetOffset = widget.controller.offset;
+    targetOffset = controller.offset;
   }
 
   void onScrollEnd() {
@@ -57,11 +68,11 @@ class _SmoothScrollBuilderState extends State<SmoothScrollBuilder> {
     if (physics != desktopPhysics)
       setState(() => physics = desktopPhysics);
     targetOffset += widget.stepSize * event.scrollDelta.dy.sign;
-    targetOffset = clamp(targetOffset, 0, widget.controller.position.maxScrollExtent);
-    if (targetOffset == widget.controller.offset)
+    targetOffset = clamp(targetOffset, 0, controller.position.maxScrollExtent);
+    if (targetOffset == controller.offset)
       return;
     isScrolling = true;
-    widget.controller.animateTo(targetOffset, duration: widget.duration, curve: Curves.linear);
+    controller.animateTo(targetOffset, duration: widget.duration, curve: Curves.linear);
     isScrollingTimer?.cancel();
     isScrollingTimer = Timer(widget.duration, onScrollEnd);
   }
@@ -76,13 +87,13 @@ class _SmoothScrollBuilderState extends State<SmoothScrollBuilder> {
     return Listener(
       onPointerSignal: (event) => event is PointerScrollEvent ? onWheelScroll(event) : null,
       onPointerDown: (_) => onContinuosScroll(),
-      child: widget.builder(context, widget.controller, physics),
+      child: widget.builder(context, controller, physics),
     );
   }
 }
 
 class SmoothSingleChildScrollView extends StatelessWidget {
-  final ScrollController controller;
+  final ScrollController? controller;
   final Duration duration;
   final double stepSize;
   final ScrollPhysics? physics;
@@ -91,7 +102,7 @@ class SmoothSingleChildScrollView extends StatelessWidget {
 
   const SmoothSingleChildScrollView({
     super.key,
-    required this.controller,
+    this.controller,
     this.duration = const Duration(milliseconds: 150),
     this.stepSize = 100,
     this.physics,

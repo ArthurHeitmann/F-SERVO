@@ -24,7 +24,6 @@ class Outliner extends ChangeNotifierWidget {
 
 class _OutlinerState extends ChangeNotifierState<Outliner> {
   final StringProp search = StringProp("", fileId: null);
-  final scrollController = ScrollController();
 
   @override
   void dispose() {
@@ -57,7 +56,6 @@ class _OutlinerState extends ChangeNotifierState<Outliner> {
                       : null;
                     return xmlProp != null ? SmoothSingleChildScrollView(
                       stepSize: 60,
-                      controller: scrollController,
                       child: makeOutliner(),
                     ) : Container();
                   }

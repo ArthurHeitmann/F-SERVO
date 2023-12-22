@@ -63,7 +63,6 @@ class _SelectionContextMenuState extends State<_SelectionContextMenu> with Arrow
   static const screenPadding = 10.0;
   final focusNode = TextFieldFocusNode();
 
-  final scrollController = ScrollController();
   String search = "";
   
   @override
@@ -86,12 +85,6 @@ class _SelectionContextMenuState extends State<_SelectionContextMenu> with Arrow
   }
 
   @override
-  void dispose() {
-    scrollController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     var searchedConfigs = widget.configs
       .where((config) => config.name.toLowerCase().contains(search.toLowerCase()))
@@ -101,7 +94,6 @@ class _SelectionContextMenuState extends State<_SelectionContextMenu> with Arrow
         child: ConstrainedBox(
           constraints: const BoxConstraints(minWidth: popupWidth, maxWidth: popupWidth, maxHeight: maxPopupHeight),
           child: SmoothSingleChildScrollView(
-            controller: scrollController,
             child: Column(
               children: [
                 makeSearchBar(),
