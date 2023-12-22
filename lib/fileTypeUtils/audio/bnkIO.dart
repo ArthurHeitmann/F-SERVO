@@ -238,8 +238,6 @@ class BnkHircChunk extends BnkChunkBase {
   BnkHircChunk.read(ByteDataWrapper bytes) : super.read(bytes) {
     int childrenCount = bytes.readUint32();
     chunks = List.generate(childrenCount, (index) {
-      if (index == 405)
-        print("here");
       return _makeNextHircChunk(bytes);
     });
   }
@@ -451,29 +449,29 @@ class BnkLayerContainer extends BnkHircChunkBase with BnkHircChunkWithBaseParams
   }
 
   BnkLayerContainer.read(ByteDataWrapper bytes) : super.read(bytes) {
+    baseParams = BnkNodeBaseParams.read(bytes);
     childrenList = BnkChildren.read(bytes);
     numLayers = bytes.readUint32();
     layers = List.generate(numLayers, (index) => BnkLayer.read(bytes));
-    baseParams = BnkNodeBaseParams.read(bytes);
   }
 
   @override
   void write(ByteDataWrapper bytes) {
     super.write(bytes);
+    baseParams.write(bytes);
     childrenList.write(bytes);
     bytes.writeUint32(numLayers);
     for (var i = 0; i < numLayers; i++)
       layers[i].write(bytes);
-    baseParams.write(bytes);
   }
 
   @override
   int calculateSize() {
     return (
+      baseParams.calcChunkSize() +  // baseParams
       childrenList.calcChunkSize() +  // childrenList
       4 + // numLayers
-      layers.fold<int>(0, (sum, l) => sum + l.calcChunkSize()) +  // layers
-      baseParams.calcChunkSize()  // baseParams
+      layers.fold<int>(0, (sum, l) => sum + l.calcChunkSize())  // layers
     );
   }
 }
@@ -2175,8 +2173,8 @@ class BnkSoundSwitch extends BnkHircChunkBase with BnkHircChunkWithBaseParams {
       baseParams.calcChunkSize() +
       4 + 4 + 4 + 1 +
       childList.calcChunkSize() +
-      4 + ulNumSwitchGroups * 4 +
-      4 + ulNumSwitchParams * 4
+      4 + switches.fold<int>(0, (prev, s) => prev + s.calcChunkSize()) +
+      4 + switchParams.fold<int>(0, (prev, s) => prev + s.calcChunkSize())
     );
   }
 }
@@ -2198,6 +2196,10 @@ class BnkSwitchPackage {
     bytes.writeUint32(ulNumItems);
     for (var i = 0; i < ulNumItems; i++)
       bytes.writeUint32(nodeIDs[i]);
+  }
+
+  int calcChunkSize() {
+    return 8 + ulNumItems * 4;
   }
 }
 class BnkSwitchNodeParam {
@@ -2226,6 +2228,10 @@ class BnkSwitchNodeParam {
     bytes.writeUint32(eOnSwitchMod);
     bytes.writeInt32(fadeOutTime);
     bytes.writeInt32(fadeInTime);
+  }
+
+  int calcChunkSize() {
+    return 4 + 1 + 1 + 4 + 4 + 4;
   }
 }
 
