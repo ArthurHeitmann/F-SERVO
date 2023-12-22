@@ -27,39 +27,51 @@ class _BnkTransitionVisualizationState extends State<BnkTransitionVisualization>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           makeRulesList(context),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const SizedBox(height: 8),
-                    makeSrcVis(context),
-                    const SizedBox(height: 12),
-                    makeDstVis(context),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Column(
+          LayoutBuilder(
+            builder: (context, constraints) {
+              var isWide = constraints.maxWidth > 550;
+              return Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 8),
-                  makeTransSegmentVis(context),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const SizedBox(height: 8),
+                        makeSrcVis(context),
+                        const SizedBox(height: 12),
+                        makeDstVis(context),
+                        if (!isWide) ...[
+                          const SizedBox(width: 8),
+                          const SizedBox(height: 8),
+                          makeTransSegmentVis(context)
+                        ],
+                      ],
+                    ),
+                  ),
+                  if (isWide) ...[
+                    const SizedBox(width: 8),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 8),
+                        makeTransSegmentVis(context),
+                      ],
+                    )
+                  ]
                 ],
-              )
-            ],
+              );
+            }
           )
         ],
       ),
     );
   }
 
-  Widget makeSrcObjVis(BuildContext context, TransitionSrc obj) {
+  Widget makeSrcObjVis(BuildContext context, TransitionSrc obj, [TextOverflow? overflow]) {
     if (obj.entry == null)
-      return Text(obj.fallbackText);
-    return Text(obj.entry!.name.value);
+      return Text(obj.fallbackText, overflow: overflow,);
+    return Text(obj.entry!.name.value, overflow: overflow,);
   }
 
   Widget makeRulesList(BuildContext context) {
@@ -116,10 +128,10 @@ class _BnkTransitionVisualizationState extends State<BnkTransitionVisualization>
                           child: Text((i + 1).toString())
                         ),
                         Expanded(
-                          child: makeSrcObjVis(context, widget.rules[i].src),
+                          child: makeSrcObjVis(context, widget.rules[i].src, TextOverflow.ellipsis),
                         ),
                         Expanded(
-                          child: makeSrcObjVis(context, widget.rules[i].dst),
+                          child: makeSrcObjVis(context, widget.rules[i].dst, TextOverflow.ellipsis),
                         ),
                       ],
                     ),
