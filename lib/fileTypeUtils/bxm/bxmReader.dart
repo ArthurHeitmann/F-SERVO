@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:xml/xml.dart';
 
 import '../utils/ByteDataWrapper.dart';
+import '../xml/xmlExtension.dart';
 import 'bxmIO.dart';
 
 const _errorString = "ERROR";
@@ -97,6 +98,6 @@ Future<void> convertBxmFileToXml(String bxmPath, String xmlPath) async {
   var doc = XmlDocument();
   doc.children.add(XmlDeclaration([XmlAttribute(XmlName("version"), "1.0"), XmlAttribute(XmlName("encoding"), "utf-8")]));
   doc.children.add(root);
-  var xmlStr = "${doc.toXmlString(pretty: true, indent: "\t")}\n";
+  var xmlStr = doc.toPrettyString();
   await File(xmlPath).writeAsString(xmlStr);
 }

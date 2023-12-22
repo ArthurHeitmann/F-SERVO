@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:xml/xml.dart';
 
+import '../../../../fileTypeUtils/xml/xmlExtension.dart';
 import '../../../../widgets/filesView/FileType.dart';
 import '../../../changesExporter.dart';
 import '../../../hierarchy/FileHierarchy.dart';
@@ -57,7 +58,7 @@ class XmlFileData extends OpenFileData {
     var doc = XmlDocument();
     doc.children.add(XmlDeclaration([XmlAttribute(XmlName("version"), "1.0"), XmlAttribute(XmlName("encoding"), "utf-8")]));
     doc.children.add(_root!.toXml());
-    var xmlStr = "${doc.toXmlString(pretty: true, indent: '\t')}\n";
+    var xmlStr = doc.toPrettyString();
     await File(path).writeAsString(xmlStr);
     await super.save();
     changedXmlFiles.add(this);

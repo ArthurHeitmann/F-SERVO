@@ -11,6 +11,7 @@ import '../../utils/assetDirFinder.dart';
 import '../../utils/utils.dart';
 import '../utils/ByteDataWrapper.dart';
 import 'riffParser.dart';
+import '../xml/xmlExtension.dart';
 
 const _defaultTemplateFile = "wavToWemTemplate_default.zip";
 const _bgmTemplateFile = "wavToWemTemplate_BGM.zip";
@@ -72,7 +73,7 @@ Future<void> wavToWem(String wavPath, String wemSavePath, bool isBgm, [bool enab
     String wavSrcDir = join(projectPath, "wavSrc");
     XmlDocument wSourcesXml = _getWwiseSourcesXml(wavPath, enableVolumeNormalization);
     String wSourcesXmlPath = join(wavSrcDir, "ExtSourceList.wsources");
-    var xmlStr = wSourcesXml.toXmlString(pretty: true, indent: "\t");
+    var xmlStr = wSourcesXml.toPrettyString();
     await File(wSourcesXmlPath).writeAsString(xmlStr);
 
     messageLog.add("Converting WAV to WEM");

@@ -15,6 +15,7 @@ import '../../fileTypeUtils/dat/datExtractor.dart';
 import '../../fileTypeUtils/pak/pakExtractor.dart';
 import '../../fileTypeUtils/ruby/pythonRuby.dart';
 import '../../fileTypeUtils/utils/ByteDataWrapper.dart';
+import '../../fileTypeUtils/xml/xmlExtension.dart';
 import '../../fileTypeUtils/yax/xmlToYax.dart';
 import '../../fileTypeUtils/yax/yaxToXml.dart';
 import '../../main.dart';
@@ -554,7 +555,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
     var doc = XmlDocument();
     doc.children.add(XmlDeclaration([XmlAttribute(XmlName("version"), "1.0"), XmlAttribute(XmlName("encoding"), "utf-8")]));
     doc.children.add(content.toXml());
-    var xmlStr = "${doc.toXmlString(pretty: true, indent: '\t')}\n";
+    var xmlStr = doc.toPrettyString();
     await file.writeAsString(xmlStr);
     xmlFileToYaxFile(filePath);
     
