@@ -61,6 +61,12 @@ class _BnkPlaylistEditorState extends State<BnkPlaylistEditor> {
   }
 
   @override
+  void dispose() {
+    scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     if (widget.playlist.loadingState.value != LoadingState.loaded) {
       return const Stack(

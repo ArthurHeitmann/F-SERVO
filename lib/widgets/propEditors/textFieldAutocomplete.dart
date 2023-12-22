@@ -175,6 +175,7 @@ class __AutocompleteOverlayState extends State<_AutocompleteOverlay> with ArrowN
   @override
   void dispose() {
     widget.textController.removeListener(_onTextChange);
+    scrollController.dispose();
     super.dispose();
   }
 

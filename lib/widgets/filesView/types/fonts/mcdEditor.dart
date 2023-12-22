@@ -162,6 +162,7 @@ class _McdEditorBodyState extends ChangeNotifierState<_McdEditorBody> {
   void dispose() {
     search.dispose();
     isRegex.dispose();
+    scrollController.dispose();
     super.dispose();
   }
 

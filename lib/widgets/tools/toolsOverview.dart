@@ -13,13 +13,11 @@ class ToolsOverview extends StatefulWidget {
 }
 
 class _ToolsOverviewState extends State<ToolsOverview> {
-  final scrollController = ScrollController();
   final extractToolKey = const PageStorageKey("extractTool");
 
   @override
   Widget build(BuildContext context) {
     return SmoothSingleChildScrollView(
-      controller: scrollController,
       child: Column(
         children: [
           ExpansionTile(
@@ -28,7 +26,7 @@ class _ToolsOverviewState extends State<ToolsOverview> {
             initiallyExpanded: true,
             textColor: getTheme(context).textColor,
             maintainState: true,
-            children: [
+            children: const [
               ExtractFilesTool()
             ],
           )

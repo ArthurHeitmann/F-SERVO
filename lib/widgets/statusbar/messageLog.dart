@@ -98,6 +98,12 @@ class _MessageLogDialogState extends ChangeNotifierState<_MessageLogDialog> {
     jumpToEnd();
   }
 
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+
   void jumpToEnd() async {
     await waitForNextFrame();
     controller.jumpTo(controller.position.maxScrollExtent);

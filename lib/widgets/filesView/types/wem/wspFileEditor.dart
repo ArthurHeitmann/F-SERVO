@@ -15,8 +15,6 @@ class WspFileEditor extends StatefulWidget {
 }
 
 class _WspFileEditorState extends State<WspFileEditor> {
-  final controller = ScrollController();
-
   @override
   void initState() {
     widget.wsp.load().then((_) => setState(() {}));
@@ -26,7 +24,6 @@ class _WspFileEditorState extends State<WspFileEditor> {
   @override
   Widget build(BuildContext context) {
     return SmoothScrollBuilder(
-      controller: controller,
       builder: (context, controller, physics) => ListView.builder(
         controller: controller,
         physics: physics,

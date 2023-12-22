@@ -47,7 +47,6 @@ abstract class OpenFileData with HasUuid, Undoable, Disposable, HasUndoHistory {
   final ValueNotifier<LoadingState> loadingState = ValueNotifier(LoadingState.notLoaded);
   bool keepOpenAsHidden = false;
   final ChangeNotifier contentNotifier = ChangeNotifier();
-  final ScrollController scrollController = ScrollController();
   bool canBeReloaded = true;
 
   OpenFileData(String name, this.path, { required this.type, String? secondaryName, this.icon, this.iconColor }) :
@@ -120,6 +119,5 @@ abstract class OpenFileData with HasUuid, Undoable, Disposable, HasUndoHistory {
     secondaryName.dispose();
     _hasUnsavedChanges.dispose();
     contentNotifier.dispose();
-    scrollController.dispose();
   }
 }

@@ -30,6 +30,12 @@ class _HierarchyFlatListState extends ChangeNotifierState<HierarchyFlatList> {
   }
 
   @override
+  void dispose() {
+    scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     if (openHierarchyManager.filteredTreeIsDirty.value) {
       regenerateFilteredResults();
@@ -44,7 +50,6 @@ class _HierarchyFlatListState extends ChangeNotifierState<HierarchyFlatList> {
         builder: (context, isHovering) {
           isCursorInside = isHovering;
           return SmoothScrollBuilder(
-            controller: scrollController,
             builder: (context, controller, physics) {
               return ListView.builder(
                 controller: controller,

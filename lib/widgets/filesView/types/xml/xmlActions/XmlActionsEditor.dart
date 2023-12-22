@@ -30,8 +30,6 @@ class XmlActionsEditor extends XmlArrayEditor {
 }
 
 class _XmlActionsEditorState extends XmlArrayEditorState<XmlActionsEditor> {
-  final scrollController = ScrollController();
-
   @override
   Widget build(BuildContext context) {
     var actions = getChildProps().toList();
@@ -39,7 +37,6 @@ class _XmlActionsEditorState extends XmlArrayEditorState<XmlActionsEditor> {
       fit: StackFit.expand,
       children: [
         SmoothSingleChildScrollView(
-          controller: scrollController,
           child: _backgroundDeselectArea(
             child: XmlJumpToLineEventWrapper(
               file: widget.root.file!,

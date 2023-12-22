@@ -21,7 +21,6 @@ class FileExplorer extends ChangeNotifierWidget {
 }
 
 class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
-  final scrollController = ScrollController();
   bool isDroppingFile = false;
   bool expandSearch = false;
 

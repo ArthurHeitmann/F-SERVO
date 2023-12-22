@@ -41,7 +41,6 @@ class _DatSelectorWidget extends StatefulWidget {
 }
 
 class _DatSelectorWidgetState extends State<_DatSelectorWidget> {
-  final controller = ScrollController();
   List<(String, BoolProp)>? files;
   bool? multiSelectToggleType;
 
@@ -75,7 +74,6 @@ class _DatSelectorWidgetState extends State<_DatSelectorWidget> {
         ConstrainedBox(
           constraints: BoxConstraints(maxHeight: min(windowHeight - 300, windowHeight * 0.8)),
           child: SmoothSingleChildScrollView(
-            controller: controller,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,

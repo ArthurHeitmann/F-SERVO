@@ -9,7 +9,6 @@ import 'SmoothScrollBuilder.dart';
 
 Future<bool?> confirmDialog(BuildContext context, { required String title, String? body }) {
   var result = Completer<bool?>();
-  final ScrollController scrollController = ScrollController();
   showDialog(
     context: context,
     builder: (context) => WillPopScope(
@@ -25,7 +24,6 @@ Future<bool?> confirmDialog(BuildContext context, { required String title, Strin
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 600, maxHeight: 450),
             child: SmoothSingleChildScrollView(
-              controller: scrollController,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,

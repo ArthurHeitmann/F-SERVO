@@ -28,8 +28,6 @@ class FontsManager extends ChangeNotifierWidget {
 }
 
 class __McdFontsManagerState extends ChangeNotifierState<FontsManager> {
-  final scrollController = ScrollController();
-
   @override
   Widget build(BuildContext context) {
     int iStart = 0;
@@ -56,7 +54,6 @@ class __McdFontsManagerState extends ChangeNotifierState<FontsManager> {
       ""
     ];
     return SmoothSingleChildScrollView(
-      controller: scrollController,
       child: ColumnSeparated(
         children: [
           Table(
@@ -241,8 +238,6 @@ class _FontOverrideIdsSelector extends StatefulWidget {
 }
 
 class _FontOverrideIdsSelectorState extends State<_FontOverrideIdsSelector> {
-  final scrollController = ScrollController();
-
   @override
   Widget build(BuildContext context) {
     var blockedFontIds = McdData.fontOverrides
@@ -263,7 +258,6 @@ class _FontOverrideIdsSelectorState extends State<_FontOverrideIdsSelector> {
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: SmoothSingleChildScrollView(
-                    controller: scrollController,
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
