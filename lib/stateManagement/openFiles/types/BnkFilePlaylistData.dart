@@ -117,7 +117,7 @@ class BnkClipRtpcPoint with HasUuid, Undoable implements Disposable {
 class BnkTrackClip with HasUuid, Undoable implements Disposable {
   final OpenFileId fileId;
   final BnkPlaylist srcPlaylist;
-  final int sourceId;
+  late final int sourceId;
   final NumberProp xOff;
   final NumberProp beginTrim;
   final NumberProp endTrim;
@@ -129,13 +129,19 @@ class BnkTrackClip with HasUuid, Undoable implements Disposable {
     _initCombinedProps();
     _setupListeners();
   }
-  BnkTrackClip.fromPlaylist(this.fileId, BnkMusicTrack srcTrack, this.srcPlaylist, List<BnkClipAutomation> automations) :
-        sourceId = srcTrack.sources.where((s) => s.sourceID == srcPlaylist.sourceID).firstOrNull?.fileID ?? srcPlaylist.sourceID,
-        xOff = NumberProp(srcPlaylist.fPlayAt, false, fileId: fileId),
-        beginTrim = NumberProp(srcPlaylist.fBeginTrimOffset, false, fileId: fileId),
-        endTrim = NumberProp(srcPlaylist.fEndTrimOffset, false, fileId: fileId),
-        srcDuration = NumberProp(srcPlaylist.fSrcDuration, false, fileId: fileId),
-        rtpcPoints = {} {
+  BnkTrackClip.fromPlaylist(this.fileId, BnkMusicTrack srcTrack, this.srcPlaylist, List<BnkClipAutomation> automations, int bnkId) :
+      xOff = NumberProp(srcPlaylist.fPlayAt, false, fileId: fileId),
+      beginTrim = NumberProp(srcPlaylist.fBeginTrimOffset, false, fileId: fileId),
+      endTrim = NumberProp(srcPlaylist.fEndTrimOffset, false, fileId: fileId),
+      srcDuration = NumberProp(srcPlaylist.fSrcDuration, false, fileId: fileId),
+      rtpcPoints = {} {
+    var src = srcTrack.sources.where((s) => s.sourceID == srcPlaylist.sourceID).firstOrNull;
+    if (src == null)
+      sourceId = srcPlaylist.sourceID;
+    else if (src.fileID == bnkId)
+      sourceId = src.sourceID;
+    else
+      sourceId = src.fileID;
     for (var automation in automations) {
       var type = automation.eAutoType;
       if (!rtpcPoints.containsKey(type))
@@ -302,13 +308,14 @@ class BnkTrackData with HasUuid, Undoable implements Disposable {
   BnkTrackData(this.fileId, this.srcTrack, this.clips) {
     _setupListeners();
   }
-  BnkTrackData.fromTrack(this.fileId, this.srcTrack) :
+  BnkTrackData.fromTrack(this.fileId, this.srcTrack, int bnkId) :
     clips = ValueListNotifier(
       List.generate(srcTrack.playlists.length, (i) => BnkTrackClip.fromPlaylist(
         fileId,
         srcTrack,
         srcTrack.playlists[i],
-        srcTrack.clipAutomations.where((ca) => ca.uClipIndex == i).toList()
+        srcTrack.clipAutomations.where((ca) => ca.uClipIndex == i).toList(),
+        bnkId
       )),
       fileId: fileId
     ) {
@@ -486,10 +493,10 @@ class BnkSegmentData with HasUuid, Undoable implements Disposable {
   BnkSegmentData(this.file, this.srcSegment, this.duration, this.tracks, this.markers) {
     _setupListeners();
   }
-  BnkSegmentData.fromSegment(this.file, this.srcSegment, Map<int, BnkHircChunkBase> hircMap) :
+  BnkSegmentData.fromSegment(this.file, this.srcSegment, Map<int, BnkHircChunkBase> hircMap, int bnkId) :
         duration = NumberProp(srcSegment.fDuration, false, fileId: file),
         tracks = srcSegment.musicParams.childrenList.ulChildIDs.map((id) =>
-            BnkTrackData.fromTrack(file, hircMap[id] as BnkMusicTrack)).toList(),
+            BnkTrackData.fromTrack(file, hircMap[id] as BnkMusicTrack, bnkId)).toList(),
         markers = srcSegment.wwiseMarkers.map((m) => BnkSegmentMarker.fromMarker(file, m, srcSegment.wwiseMarkers)).toList() {
     _setupListeners();
   }
@@ -584,21 +591,21 @@ class BnkPlaylistChild with HasUuid, Undoable implements Disposable {
   final List<int> appliesTo;  // playlist IDs
   BnkPlaylistChild(this.file, this.srcItem, this.index, this.children, this.segment, this.loops, this.resetType)
       : appliesTo = [];
-  BnkPlaylistChild.fromPlaylistItem(this.file, this.srcItem, this.index, Map<int, BnkHircChunkBase> hircMap) :
+  BnkPlaylistChild.fromPlaylistItem(this.file, this.srcItem, this.index, Map<int, BnkHircChunkBase> hircMap, int bnkId) :
         children = [],
-        segment = srcItem.segmentId != 0 ? BnkSegmentData.fromSegment(file, hircMap[srcItem.segmentId] as BnkMusicSegment, hircMap) : null,
+        segment = srcItem.segmentId != 0 ? BnkSegmentData.fromSegment(file, hircMap[srcItem.segmentId] as BnkMusicSegment, hircMap, bnkId) : null,
         loops = srcItem.loop == 0 ? "Infinite" : srcItem.loop.toString(),
         resetType = BnkPlaylistChildResetType.fromValue(srcItem.eRSType),
         appliesTo = [srcItem.playlistItemId];
 
-  List<BnkPlaylistItem> parseChildren(int curIndex, List<BnkPlaylistItem> remainingItems, Map<int, BnkHircChunkBase> hircMap, List<BnkPlaylistChild> parsedItems) {
+  List<BnkPlaylistItem> parseChildren(int curIndex, List<BnkPlaylistItem> remainingItems, Map<int, BnkHircChunkBase> hircMap, List<BnkPlaylistChild> parsedItems, int bnkId) {
     var remaining = remainingItems;
     remaining = remaining.sublist(1);
     curIndex++;
     for (int i = 0; i < srcItem.numChildren; i++) {
-      var child = BnkPlaylistChild.fromPlaylistItem(file, remaining.first, curIndex, hircMap);
+      var child = BnkPlaylistChild.fromPlaylistItem(file, remaining.first, curIndex, hircMap, bnkId);
       int prevLength = remaining.length;
-      remaining = child.parseChildren(curIndex, remaining, hircMap, parsedItems);
+      remaining = child.parseChildren(curIndex, remaining, hircMap, parsedItems, bnkId);
       curIndex += prevLength - remaining.length;
       children.add(child);
       parsedItems.add(child);
@@ -606,9 +613,9 @@ class BnkPlaylistChild with HasUuid, Undoable implements Disposable {
     return remaining;
   }
 
-  static BnkPlaylistChild parsePlaylist(OpenFileId file, BnkMusicPlaylist srcPlaylist, Map<int, BnkHircChunkBase> hircMap) {
-    var root = BnkPlaylistChild.fromPlaylistItem(file, srcPlaylist.playlistItems.first, 0, hircMap);
-    var remaining = root.parseChildren(0, srcPlaylist.playlistItems, hircMap, []);
+  static BnkPlaylistChild parsePlaylist(OpenFileId file, BnkMusicPlaylist srcPlaylist, Map<int, BnkHircChunkBase> hircMap, int bnkId) {
+    var root = BnkPlaylistChild.fromPlaylistItem(file, srcPlaylist.playlistItems.first, 0, hircMap, bnkId);
+    var remaining = root.parseChildren(0, srcPlaylist.playlistItems, hircMap, [], bnkId);
     if (remaining.isNotEmpty)
       throw Exception("Failed to parse playlist");
     return root;
@@ -687,7 +694,8 @@ class BnkFilePlaylistData extends OpenFileData {
 
     var bytes = await ByteDataWrapper.fromFile(path.split("#").first);
     var bnk = BnkFile.read(bytes);
-    _bnkVersion = bnk.chunks.whereType<BnkHeader>().firstOrNull?.version;
+    var bnkHeader = bnk.chunks.whereType<BnkHeader>().first;
+    _bnkVersion = bnkHeader.version;
     var hircChunk = bnk.chunks.whereType<BnkHircChunk>().first;
     Map<int, BnkHircChunkBase> hircMap = {
       for (var hirc in hircChunk.chunks.whereType<BnkHircChunkBase>())
@@ -696,7 +704,7 @@ class BnkFilePlaylistData extends OpenFileData {
     srcPlaylist = hircChunk.chunks
         .whereType<BnkMusicPlaylist>()
         .firstWhere((p) => p.uid == playlistId);
-    rootChild = BnkPlaylistChild.parsePlaylist(uuid, srcPlaylist!, hircMap);
+    rootChild = BnkPlaylistChild.parsePlaylist(uuid, srcPlaylist!, hircMap, bnkHeader.bnkId);
     await rootChild!.updateTrackDurations();
 
     await super.load();

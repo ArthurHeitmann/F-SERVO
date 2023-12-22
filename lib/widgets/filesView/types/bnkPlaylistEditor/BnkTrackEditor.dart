@@ -133,7 +133,9 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> with Audi
   }
 
   List<Widget> _makeClipWidgets(int i, BnkTrackClip clip, AudioEditorData viewData, double viewWidth) {
-    var srcId = widget.track.srcTrack.sources.first.fileID;
+    var srcId = widget.track.srcTrack.sources.first.sourceID;
+    if (!wemIdsToNames.containsKey(srcId))
+      srcId = widget.track.srcTrack.sources.first.fileID;
     return [
       // left trimmed off area
       if (widget.track.clips.isNotEmpty && clip == widget.track.clips.first)
@@ -399,7 +401,7 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> with Audi
   }
 
   void _replaceWem(BnkTrackClip clip) async {
-    var srcId = widget.track.srcTrack.sources.first.fileID;
+    var srcId = clip.sourceId;
     var wemPath = wemFilesLookup.lookup[srcId];
     wemPath ??= clip.resource?.wemPath;
     if (wemPath == null) {
@@ -410,7 +412,7 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> with Audi
   }
 
   void _openWemInExplorer(BnkTrackClip clip) {
-    var srcId = widget.track.srcTrack.sources.first.fileID;
+    var srcId = clip.sourceId;
     var wemPath = wemFilesLookup.lookup[srcId];
     wemPath ??= clip.resource?.wemPath;
     if (wemPath == null) {

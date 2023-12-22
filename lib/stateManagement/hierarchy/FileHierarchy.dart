@@ -406,10 +406,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
     if (wemFiles.length > 8)
       wemParentEntry.isCollapsed.value = true;
 
-    var hircChunk = bnk.chunks.whereType<BnkHircChunk>().firstOrNull;
-    if (hircChunk != null) {
-      await bnkEntry.generateHierarchy(hircChunk);
-    }
+    await bnkEntry.generateHierarchy(bnk);
 
     if (parent != null)
       parent.add(bnkEntry);

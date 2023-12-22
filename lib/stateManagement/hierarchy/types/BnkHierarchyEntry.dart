@@ -21,7 +21,11 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
     return BnkHierarchyEntry(name.takeSnapshot() as StringProp, path, extractedPath);
   }
 
-  Future<void> generateHierarchy(BnkHircChunk hircChunk) async {
+  Future<void> generateHierarchy(BnkFile bnk) async {
+    var bnkId = bnk.chunks.whereType<BnkHeader>().first.bnkId;
+    var hircChunk = bnk.chunks.whereType<BnkHircChunk>().firstOrNull;
+    if (hircChunk == null)
+      return;
     Map<int, BnkHircHierarchyEntry> hircEntries = {};
     Map<int, BnkHircHierarchyEntry> actionEntries = {};
     List<BnkHircHierarchyEntry> eventEntries = [];
@@ -93,6 +97,8 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
         }
         if (hircChunk is BnkSound) {
           var srcId = hircChunk.bankData.mediaInformation.uFileID;
+          if (srcId == bnkId)
+            srcId = hircChunk.bankData.mediaInformation.sourceID;
           await addWemChild(srcId);
         }
         if (hircChunk is BnkMusicSwitch) {
