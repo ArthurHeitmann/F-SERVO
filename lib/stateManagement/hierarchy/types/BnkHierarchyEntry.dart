@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../background/wemFilesIndexer.dart';
 import '../../../fileTypeUtils/audio/bnkIO.dart';
 import '../../../fileTypeUtils/audio/wemIdsToNames.dart';
+import '../../../fileTypeUtils/audio/wwiseObjectPath.dart';
 import '../../../utils/utils.dart';
 import '../../Property.dart';
 import '../../openFiles/types/WemFileData.dart';
@@ -21,21 +22,22 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
     return BnkHierarchyEntry(name.takeSnapshot() as StringProp, path, extractedPath);
   }
 
-  Future<void> generateHierarchy(BnkFile bnk) async {
-    var bnkId = bnk.chunks.whereType<BnkHeader>().first.bnkId;
+  Future<void> generateHierarchy(BnkFile bnk, String bnkName) async {
+    var bnkHeader = bnk.chunks.whereType<BnkHeader>().first;
+    var bnkId = bnkHeader.bnkId;
     var hircChunk = bnk.chunks.whereType<BnkHircChunk>().firstOrNull;
     if (hircChunk == null)
       return;
     Map<int, BnkHircHierarchyEntry> hircEntries = {};
     Map<int, BnkHircHierarchyEntry> actionEntries = {};
     List<BnkHircHierarchyEntry> eventEntries = [];
-    Map<String, Set<String>> usedSwitchGroups = {};
-    Map<String, Set<String>> usedStateGroups = {};
-    Map<String, Set<String>> usedGameParameters = {};
-    void addGroupUsage(Map<String, Set<String>> map, String groupName, String entryName) {
+    Map<int, Set<int>> usedSwitchGroups = {};
+    Map<int, Set<int>> usedStateGroups = {};
+    Map<int, Set<String>> usedGameParameters = {};
+    void addGroupUsage<S, T>(Map<S, Set<T>> map, S groupName, T id) {
       if (!map.containsKey(groupName))
         map[groupName] = {};
-      map[groupName]!.add(entryName);
+      map[groupName]!.add(id);
     }
     for (var hirc in hircChunk.chunks) {
       var uidNameLookup = wemIdsToNames[hirc.uid];
@@ -62,7 +64,7 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
           hircEntries[stateGroupId] = stateGroupEntry;
           for (var state in stateGroup.state) {
             var stateName = wemIdsToNames[state.ulStateID] ?? state.ulStateID.toString();
-            addGroupUsage(usedStateGroups, groupName, stateName);
+            addGroupUsage(usedStateGroups, stateGroup.ulStateGroupID, state.ulStateID);
             var stateId = randomId();
             var childId = state.ulStateInstanceID;
             if (hircEntries.containsKey(childId)) {
@@ -106,7 +108,7 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
             uidNameStr = wemIdsToNames[hircChunk.ulGroupID].toString();
           var groupName = wemIdsToNames[hircChunk.ulGroupID] ?? hircChunk.ulGroupID.toString();
           var defaultValue = wemIdsToNames[hircChunk.ulDefaultSwitch] ?? hircChunk.ulDefaultSwitch.toString();
-          addGroupUsage(usedSwitchGroups, groupName, defaultValue);
+          addGroupUsage(usedSwitchGroups, hircChunk.ulGroupID, hircChunk.ulDefaultSwitch);
           props.addAll([
             (false, ["Switch Group", "Default Switch"]),
             (true, [groupName, defaultValue]),
@@ -115,7 +117,7 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
             var switchAssocName = wemIdsToNames[switchAssoc.switchID] ?? switchAssoc.switchID.toString();
             if (switchAssoc.switchID == hircChunk.ulDefaultSwitch)
               switchAssocName += " (Default)";
-            addGroupUsage(usedSwitchGroups, groupName, switchAssocName);
+            addGroupUsage(usedSwitchGroups, hircChunk.ulGroupID, switchAssoc.switchID);
             var switchId = randomId();
             var childNodeId = switchAssoc.nodeID;
             var switchAssocEntry = BnkHircHierarchyEntry(switchAssocName, "", "SwitchAssoc", id: switchId, parentIds: [hirc.uid], childIds: [childNodeId], entryName: wemIdsToNames[switchAssoc.switchID]);
@@ -135,7 +137,7 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
             uidNameStr = wemIdsToNames[hircChunk.ulGroupID].toString();
           var groupName = wemIdsToNames[hircChunk.ulGroupID] ?? hircChunk.ulGroupID.toString();
           var defaultValue = wemIdsToNames[hircChunk.ulDefaultSwitch] ?? hircChunk.ulDefaultSwitch.toString();
-          addGroupUsage(usedSwitchGroups, groupName, defaultValue);
+          addGroupUsage(usedSwitchGroups, hircChunk.ulGroupID, hircChunk.ulDefaultSwitch);
           props.addAll([
             (false, ["Switch Group", "Default Switch"]),
             (true, [groupName, defaultValue]),
@@ -144,7 +146,7 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
             var switchAssocName = wemIdsToNames[switchAssoc.ulSwitchID] ?? switchAssoc.ulSwitchID.toString();
             if (switchAssoc.ulSwitchID == hircChunk.ulDefaultSwitch)
               switchAssocName += " (Default)";
-            addGroupUsage(usedSwitchGroups, groupName, switchAssocName);
+            addGroupUsage(usedSwitchGroups, hircChunk.ulGroupID, switchAssoc.ulSwitchID);
             var childNodeIds = switchAssoc.nodeIDs;
             for (var childNodeId in childNodeIds) {
               var switchId = randomId();
@@ -236,7 +238,7 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
         if (specificParams is BnkSwitchActionParams) {
           var groupName = wemIdsToNames[specificParams.ulSwitchGroupID] ?? specificParams.ulSwitchGroupID.toString();
           var switchValue = wemIdsToNames[specificParams.ulSwitchStateID] ?? specificParams.ulSwitchStateID.toString();
-          addGroupUsage(usedSwitchGroups, groupName, switchValue);
+          addGroupUsage(usedSwitchGroups, specificParams.ulSwitchGroupID, specificParams.ulSwitchStateID);
           props.addAll([
             (false, ["Switch Group", "Switch State"]),
             (true, [groupName, switchValue]),
@@ -245,7 +247,7 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
         if (specificParams is BnkStateActionParams) {
           var groupName = wemIdsToNames[specificParams.ulStateGroupID] ?? specificParams.ulStateGroupID.toString();
           var stateValue = wemIdsToNames[specificParams.ulTargetStateID] ?? specificParams.ulTargetStateID.toString();
-          addGroupUsage(usedStateGroups, groupName, stateValue);
+          addGroupUsage(usedStateGroups, specificParams.ulStateGroupID, specificParams.ulTargetStateID);
           props.addAll([
             (false, ["State Group", "Target State"]),
             (true, [groupName, stateValue]),
@@ -254,7 +256,7 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
         if (specificParams is BnkValueActionParams) {
           if (gameParamActionTypes.contains(hirc.ulActionType & 0xFF00)) {
             var gameParamName = wemIdsToNames[hirc.initialParams.idExt] ?? hirc.initialParams.idExt.toString();
-            addGroupUsage(usedGameParameters, gameParamName, "");
+            addGroupUsage(usedGameParameters, hirc.initialParams.idExt, "");
             props.addAll([
               (false, ["Game Parameter"]),
               (true, [gameParamName]),
@@ -347,6 +349,38 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
         }
       }
     }
+
+    // Add entries to hierarchy
+    Map<int, String> bnkPaths = wwiseBnkToIdObjectPath[bnkName] ?? wwiseBnkToIdObjectPath[wemIdsToNames[bnkId]] ?? wwiseIdToObjectPath;
+    void addToTopLevel(BnkHircHierarchyEntry entry, BnkSubCategoryParentHierarchyEntry topLevelEntry) {
+      var localBnkPaths = bnkPaths;
+      if (!localBnkPaths.containsKey(entry.hirc?.uid ?? entry.id)) {
+        localBnkPaths = wwiseBnkToIdObjectPath["Init"]!;
+        if (!localBnkPaths.containsKey(entry.hirc?.uid ?? entry.id)) {
+          topLevelEntry.add(entry);
+          return;
+        }
+      }
+      var path = localBnkPaths[entry.id]!.split("/").skip(1);
+      path = path.take(path.length - 1);
+      if (path.isEmpty) {
+        topLevelEntry.add(entry);
+        return;
+      }
+      HierarchyEntry resolvePath(Iterable<String> path, HierarchyEntry parent) {
+        var childName = path.firstOrNull;
+        if (childName == null)
+          return parent;
+        var child = parent.children.where((child) => child.name.value == childName).firstOrNull;
+        if (child == null) {
+          child = BnkSubCategoryParentHierarchyEntry(childName, isFolder: true);
+          parent.add(child);
+        }
+        return resolvePath(path.skip(1), child);
+      }
+      var parent = resolvePath(path, topLevelEntry);
+      parent.add(entry);
+    }
     var groupUsages = [
       ("Switch Groups", usedSwitchGroups),
       ("State Groups", usedStateGroups),
@@ -358,15 +392,17 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
         continue;
       var groupParentEntry = BnkSubCategoryParentHierarchyEntry(groupName, isCollapsed: true);
       add(groupParentEntry);
-      var groupEntries = groupMap.entries.toList();
-      groupEntries.sort((a, b) => a.key.toLowerCase().compareTo(b.key.toLowerCase()));
+      List<({int id, String name, List<int> values})> groupEntries = groupMap.entries
+        .map((e) => (id: e.key, name: wemIdsToNames[e.key] ?? e.key.toString(), values: e.value.toList()))
+        .toList();
+      groupEntries.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
       for (var group in groupEntries) {
-        var groupEntry = BnkHircHierarchyEntry(group.key, "", groupName, id: randomId());
-        groupParentEntry.add(groupEntry);
-        var groupValues = group.value.toList();
-        groupValues.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
-        for (var entryName in groupValues) {
-          var entry = BnkHircHierarchyEntry(entryName, "", "Group Entry", id: randomId());
+        var groupEntry = BnkHircHierarchyEntry(group.name, "", groupName, id: group.id);
+        addToTopLevel(groupEntry, groupParentEntry);
+        var groupValues = group.values.map((v) => (v, wemIdsToNames[v] ?? v.toString())).toList();
+        groupValues.sort((a, b) => a.$2.toLowerCase().compareTo(b.$2.toLowerCase()));
+        for (var (vId, vName) in groupValues) {
+          var entry = BnkHircHierarchyEntry(vName, "", "Group Entry", id: vId);
           groupEntry.add(entry);
         }
       }
@@ -374,11 +410,13 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
     if (usedGameParameters.isNotEmpty) {
       var gameParamParentEntry = BnkSubCategoryParentHierarchyEntry("Game Parameters", isCollapsed: true);
       add(gameParamParentEntry);
-      var gameParameters = usedGameParameters.keys.toList();
-      gameParameters.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
-      for (var gameParam in gameParameters) {
-        var gameParamEntry = BnkHircHierarchyEntry(gameParam, "", "Game Parameter", id: randomId());
-        gameParamParentEntry.add(gameParamEntry);
+      var gameParameters = usedGameParameters.keys
+        .map((id) => (id, wemIdsToNames[id] ?? id.toString()))
+        .toList();
+      gameParameters.sort((a, b) => a.$2.toLowerCase().compareTo(b.$2.toLowerCase()));
+      for (var (paramId, paramName) in gameParameters) {
+        var gameParamEntry = BnkHircHierarchyEntry(paramName, "", "Game Parameter", id: paramId);
+        addToTopLevel(gameParamEntry, gameParamParentEntry);
       }
     }
     var objectHierarchyParentEntry = BnkSubCategoryParentHierarchyEntry("Object Hierarchy");
@@ -402,7 +440,7 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
       }
       else {
         var child = entry.value;
-        objectHierarchyParentEntry.add(child);
+        addToTopLevel(child, objectHierarchyParentEntry);
         directChildren++;
       }
     }
@@ -433,7 +471,7 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
       return a.id.compareTo(b.id);
     });
     for (var entry in eventEntries)
-      eventHierarchyParentEntry.add(entry);
+      addToTopLevel(entry, eventHierarchyParentEntry);
     if (eventEntries.length > 50)
       eventHierarchyParentEntry.isCollapsed.value = true;
 
@@ -442,7 +480,9 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
 }
 
 class BnkSubCategoryParentHierarchyEntry extends HierarchyEntry {
-  BnkSubCategoryParentHierarchyEntry(String name, { bool isCollapsed = false })
+  final bool isFolder;
+
+  BnkSubCategoryParentHierarchyEntry(String name, { bool isCollapsed = false, this.isFolder = false })
       : super(StringProp(name, fileId: null), false, true, false) {
     this.isCollapsed.value = isCollapsed;
   }
@@ -570,36 +610,6 @@ class BnkHircHierarchyEntry extends GenericFileHierarchyEntry {
   }
 }
 
-/*
-BnkMusicTransitionRule
-  int srcID;
-  int dstID;
-  BnkMusicTransSrcRule srcRule;
-  BnkMusicTransDstRule dstRule;
-  int bIsTransObjectEnabled;
-  BnkMusicTransitionObject musicTransition;
-
-BnkMusicTransSrcRule
-  BnkFadeParams fadeParam;
-  int eSyncType;
-  int uMarkerID;
-  int bPlayPostExit;
-
-class BnkMusicTransDstRule
-  BnkFadeParams fadeParam;
-  int uMarkerID;
-  int uJumpToID;
-  int eEntryType;
-  int bPlayPreEntry;
-  int bDestMatchSourceCueName;
-
-BnkMusicTransitionObject {
-  int segmentID;
-  BnkFadeParams fadeInParams;
-  BnkFadeParams fadeOutParams;
-  int playPreEntry;
-  int playPostExit;
-*/
 class TransitionSrc {
   final String fallbackText;
   final BnkHircHierarchyEntry? entry;

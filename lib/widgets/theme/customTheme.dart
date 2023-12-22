@@ -274,6 +274,10 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
       else
         return Colors.white;
     }
+    if (entry is BnkSubCategoryParentHierarchyEntry) {
+      if (entry.isFolder)
+        return filetypeDatColor!;
+    }
 
     return Colors.white;
   }

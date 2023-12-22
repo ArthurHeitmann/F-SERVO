@@ -77,7 +77,13 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
       else
         return Icon(Icons.list, color: iconColor, size: 15);
     }
-    else
+    else if (widget.entry is BnkSubCategoryParentHierarchyEntry) {
+      var isFolder = (widget.entry as BnkSubCategoryParentHierarchyEntry).isFolder;
+      if (isFolder)
+        return Icon(Icons.folder, color: iconColor, size: 15);
+      else
+        return Icon(Icons.list, color: iconColor, size: 15);
+    } else
       return Icon(Icons.description, color: iconColor, size: 15);
   }
 
