@@ -89,6 +89,6 @@ Future<void> wavToWem(String wavPath, String wemSavePath, bool isBgm, bool enabl
     print("WAV to WEM conversion successful");
     messageLog.add("WAV to WEM conversion successful");
   } finally {
-  // await Directory(projectPath).delete(recursive: true);
+    await Directory(projectPath).delete(recursive: true);
   }
 }
