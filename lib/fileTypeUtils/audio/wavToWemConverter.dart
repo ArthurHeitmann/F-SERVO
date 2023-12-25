@@ -48,8 +48,8 @@ Future<void> wavToWem(String wavPath, String wemSavePath, bool isBgm, bool enabl
     showToast("Assets directory not found");
     throw Exception("Assets directory not found");
   }
-  if (prefs.wwiseCliPath!.value.isEmpty) {
-    showToast("Wwise CLI path not set");
+  if (prefs.wwise2012CliPath!.value.isEmpty) {
+    showToast("Please set Wwise CLI path in settings");
     throw Exception("Wwise CLI path not set");
   }
 
@@ -64,7 +64,7 @@ Future<void> wavToWem(String wavPath, String wemSavePath, bool isBgm, bool enabl
     await File(wSourcesXmlPath).writeAsString(xmlStr);
 
     messageLog.add("Converting WAV to WEM");
-    String wwiseCliPath = prefs.wwiseCliPath!.value;
+    String wwiseCliPath = prefs.wwise2012CliPath!.value;
     String wwiseProjectPath = join(projectPath, "wavToWemTemplate.wproj");
     List<String> args = [
       wwiseProjectPath,
@@ -74,6 +74,7 @@ Future<void> wavToWem(String wavPath, String wemSavePath, bool isBgm, bool enabl
       "-NoWwiseDat"
       "-Verbose",
     ];
+    print("$wwiseCliPath ${args.join(" ")}");
     var result = await Process.run(wwiseCliPath, args);
     print(result.stdout);
     print(result.stderr);
@@ -88,6 +89,6 @@ Future<void> wavToWem(String wavPath, String wemSavePath, bool isBgm, bool enabl
     print("WAV to WEM conversion successful");
     messageLog.add("WAV to WEM conversion successful");
   } finally {
-    await Directory(projectPath).delete(recursive: true);
+  // await Directory(projectPath).delete(recursive: true);
   }
 }

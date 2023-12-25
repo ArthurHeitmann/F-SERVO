@@ -33,6 +33,7 @@ dependencies:
   permission_handler: ^11.0.1
   shared_preferences: ^2.2.2
   tuple: ^2.0.0
+  url_launcher: ^6.2.2
   uuid: ^4.2.2
   window_manager: ^0.3.7
   xml: ^6.3.0

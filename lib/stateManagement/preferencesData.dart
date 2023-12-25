@@ -78,7 +78,8 @@ class PreferencesData extends OpenFileData {
   SavableProp<ThemeType>? themeType;
   SavableProp<String>? waiExtractDir;
   SavableProp<String>? wemExtractDir;
-  SavableProp<String>? wwiseCliPath;
+  // SavableProp<String>? wwiseCliPath;
+  SavableProp<String>? wwise2012CliPath;
   SavableProp<String>? lastCpkExtractDir;
   SavableProp<String>? lastSearchDir;
 
@@ -123,7 +124,8 @@ class PreferencesData extends OpenFileData {
     themeType = SavableProp<ThemeType>("themeType", _prefs!, ThemeType.dark);
     waiExtractDir = SavableProp<String>("waiExtractDir", _prefs!, "");
     wemExtractDir = SavableProp<String>("wemExtractDir", _prefs!, "");
-    wwiseCliPath = SavableProp<String>("wwiseCliPath", _prefs!, "");
+    // wwiseCliPath = SavableProp<String>("wwiseCliPath", _prefs!, "");
+    wwise2012CliPath = SavableProp<String>("wwise2012CliPath", _prefs!, "");
     lastCpkExtractDir = SavableProp<String>("lastCpkExtractDir", _prefs!, "");
     lastSearchDir = SavableProp<String>("lastSearchDir", _prefs!, "");
 
