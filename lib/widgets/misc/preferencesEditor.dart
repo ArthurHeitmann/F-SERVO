@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../stateManagement/preferencesData.dart';
 import '../../utils/assetDirFinder.dart';
@@ -246,25 +247,25 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
       const SizedBox(height: 40,),
       const Text("Music preferences:", style: sectionHeaderStyle,),
       const SizedBox(height: 10,),
-      RowSeparated(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          const Text("WAI Extract Directory:", overflow: TextOverflow.ellipsis,),
-          Expanded(
-            child: PrimaryPropTextField(
-              prop: widget.prefs.waiExtractDir!,
-              onValid: (value) => widget.prefs.waiExtractDir!.value = value,
-              validatorOnChange: (value) => value.isEmpty || Directory(value).existsSync() ? null : "Directory does not exist",
-              options: const PropTFOptions(constraints: BoxConstraints(minHeight: 30)),
-            ),
-          ),
-          makeFilePickerButton(
-            "Select WAI Extract Directory",
-            widget.prefs.waiExtractDir!.value.isNotEmpty ? widget.prefs.waiExtractDir!.value : null,
-            (dir) => widget.prefs.waiExtractDir!.value = dir,
-          ),
-        ],
-      ),
+      // RowSeparated(
+      //   crossAxisAlignment: CrossAxisAlignment.center,
+      //   children: [
+      //     const Text("WAI Extract Directory:", overflow: TextOverflow.ellipsis,),
+      //     Expanded(
+      //       child: PrimaryPropTextField(
+      //         prop: widget.prefs.waiExtractDir!,
+      //         onValid: (value) => widget.prefs.waiExtractDir!.value = value,
+      //         validatorOnChange: (value) => value.isEmpty || Directory(value).existsSync() ? null : "Directory does not exist",
+      //         options: const PropTFOptions(constraints: BoxConstraints(minHeight: 30)),
+      //       ),
+      //     ),
+      //     makeFilePickerButton(
+      //       "Select WAI Extract Directory",
+      //       widget.prefs.waiExtractDir!.value.isNotEmpty ? widget.prefs.waiExtractDir!.value : null,
+      //       (dir) => widget.prefs.waiExtractDir!.value = dir,
+      //     ),
+      //   ],
+      // ),
       RowSeparated(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -287,27 +288,37 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
       RowSeparated(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const Text("Wwise CLI Path (2014):", overflow: TextOverflow.ellipsis,),
+          const Text("Wwise CLI Path (2012):", overflow: TextOverflow.ellipsis,),
           Expanded(
             child: PrimaryPropTextField(
-              prop: widget.prefs.wwiseCliPath!,
-              onValid: (value) => widget.prefs.wwiseCliPath!.value = value.isNotEmpty ? findWwiseCliExe(value)! : "",
+              prop: widget.prefs.wwise2012CliPath!,
+              onValid: (value) => widget.prefs.wwise2012CliPath!.value = value.isNotEmpty ? findWwiseCliExe(value)! : "",
               validatorOnChange: (value) => value.isEmpty || findWwiseCliExe(value) != null ? null : "Directory does not exist",
               options: const PropTFOptions(constraints: BoxConstraints(minHeight: 30)),
             ),
           ),
           makeFilePickerButton(
-            "Select Wwise Path",
-            widget.prefs.wwiseCliPath!.value.isNotEmpty ? widget.prefs.wwiseCliPath!.value : null,
+            "Select Wwise install directory",
+            widget.prefs.wwise2012CliPath!.value.isNotEmpty ? widget.prefs.wwise2012CliPath!.value : null,
             (dir) {
               var cliExe = findWwiseCliExe(dir);
               if (cliExe != null)
-                widget.prefs.wwiseCliPath!.value = cliExe;
+                widget.prefs.wwise2012CliPath!.value = cliExe;
               else {
-                widget.prefs.wwiseCliPath!.value = "";
+                widget.prefs.wwise2012CliPath!.value = "";
                 showToast("Could not find Wwise CLI executable in directory");
               }
             },
+          ),
+        ],
+      ),
+      Row(
+        children: [
+          const SizedBox(width: 20,),
+          const Text("Download for example from "),
+          TextButton(
+            onPressed: () => launchUrl(Uri.parse("https://mega.nz/file/5SQ3SKCK#pDTdNl7rP2SrFe_6w2JY2E6JqfP_bPosGl4fYHE2R9U")),
+            child: Text("here", style: TextStyle(decoration: TextDecoration.underline),),
           ),
         ],
       ),
