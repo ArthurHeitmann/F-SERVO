@@ -1,5 +1,7 @@
 // ignore_for_file: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
 
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 
@@ -61,7 +63,7 @@ class OptionalWemData extends OptionalFileInfo {
 }
 
 class WemFileData extends OpenFileData with AudioFileData {
-  final ValueNotifier<WavFileData?> overrideData = ValueNotifier(null);
+  final ValueNotifier<AudioFileData?> overrideData = ValueNotifier(null);
   late final BoolProp usesLoudnessNormalization;
   bool usesSeekTable = false;
   final ChangeNotifier onOverrideApplied = ChangeNotifier();
@@ -148,8 +150,13 @@ class WemFileData extends OpenFileData with AudioFileData {
 
     try {
       await backupFile(path);
-      var wav = overrideData.value!;
-      await wavToWem(wav.path, path, usesSeekTable, enableVolumeNormalization);
+      var overrideFile = overrideData.value!;
+      if (overrideFile is WavFileData)
+        await wavToWem(overrideFile.path, path, usesSeekTable, enableVolumeNormalization);
+      else if (overrideFile is WemFileData)
+        await File(overrideFile.path).copy(path);
+      else
+        throw Exception("Invalid override file type");
       overrideData.value!.dispose();
       overrideData.value = null;
 

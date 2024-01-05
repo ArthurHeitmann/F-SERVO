@@ -48,18 +48,23 @@ class _WemFileEditorState extends ChangeNotifierState<WemFileEditor> {
   Future<void> _pickOverride() async {
     var files = await FilePicker.platform.pickFiles(
       allowMultiple: false,
-      allowedExtensions: ["wav"],
+      allowedExtensions: ["wav", "wem"],
       type: FileType.custom,
     );
     if (files == null)
       return;
     var file = files.files.first;
-    if (!file.path!.endsWith(".wav")) {
-      showToast("Please select a .wav file");
-      return;
+    AudioFileData overrideData;
+    if (file.path!.endsWith(".wav")) {
+      overrideData = WavFileData(file.path!);
     }
-    var wavFile = WavFileData(file.path!);
-    widget.wem.overrideData.value = wavFile;
+    else if (file.path!.endsWith(".wem")) {
+      overrideData = WemFileData("", file.path!);
+    }
+    else {
+      throw Exception("Invalid file extension");
+    }
+    widget.wem.overrideData.value = overrideData;
   }
 
   Future<void> _exportAsWav({ String? wavPath, bool displayToast = true }) async {
@@ -93,7 +98,7 @@ class _WemFileEditorState extends ChangeNotifierState<WemFileEditor> {
                 ElevatedButton(
                   onPressed: _pickOverride,
                   style: getTheme(context).dialogPrimaryButtonStyle,
-                  child: const Text("Select WAV"),
+                  child: const Text("Select WAV or WEM"),
                 ),
                 const SizedBox(width: 10),
                 if (widget.wem.overrideData.value != null)
@@ -171,9 +176,11 @@ class _WemFileEditorState extends ChangeNotifierState<WemFileEditor> {
                   style: getTheme(context).dialogPrimaryButtonStyle,
                   child: const Text("Replace WEM"),
                 ),
-                const SizedBox(width: 20),
-                BoolPropSwitch(prop: widget.wem.usesLoudnessNormalization),
-                const Text("Volume normalization"),
+                if (widget.wem.overrideData is WavFileData) ...[
+                  const SizedBox(width: 20),
+                  BoolPropSwitch(prop: widget.wem.usesLoudnessNormalization),
+                  const Text("Volume normalization"),
+                ],
               ],
             ),
           ),

@@ -28,7 +28,6 @@ class EstTexturePreview extends ChangeNotifierWidget {
 class _EstTexturePreviewState extends ChangeNotifierState<EstTexturePreview> {
   @override
   Widget build(BuildContext context) {
-    return const SizedBox();
     var texFileId = widget.textureFileId.value;
     var texFileIndex = widget.textureFileTextureIndex.value;
     // if (texFileId == 0 && texFileIndex == 0)
