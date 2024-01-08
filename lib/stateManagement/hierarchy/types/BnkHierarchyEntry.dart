@@ -1,8 +1,10 @@
 
 import 'package:flutter/material.dart';
+import 'package:path/path.dart';
 
 import '../../../background/wemFilesIndexer.dart';
 import '../../../fileTypeUtils/audio/bnkIO.dart';
+import '../../../fileTypeUtils/audio/removePrefetchWems.dart';
 import '../../../fileTypeUtils/audio/wemIdsToNames.dart';
 import '../../../fileTypeUtils/audio/wwiseObjectPath.dart';
 import '../../../utils/utils.dart';
@@ -10,6 +12,7 @@ import '../../Property.dart';
 import '../../openFiles/types/WemFileData.dart';
 import '../../undoable.dart';
 import '../HierarchyEntryTypes.dart';
+import 'WaiHierarchyEntries.dart';
 
 class BnkHierarchyEntry extends GenericFileHierarchyEntry {
   final String extractedPath;
@@ -476,6 +479,35 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
       eventHierarchyParentEntry.isCollapsed.value = true;
 
     print("Total tree size: ${countAllRec()}");
+  }
+
+  @override
+  List<HierarchyEntryAction> getContextMenuActions() {
+    return [
+      HierarchyEntryAction(
+        name: "Remove prefetch WEMs",
+        icon: Icons.playlist_remove,
+        action: _removePrefetchWems,
+      ),
+      ...super.getContextMenuActions()
+    ];
+  }
+
+  Future<void> _removePrefetchWems() async {
+    await backupFile(path);
+    var removedWemIds = await removePrefetchWems(path);
+    var wemsParent = children.where((child) => child.name.value == "WEM files").firstOrNull;
+    if (wemsParent != null) {
+      for (var child in wemsParent.children.whereType<WemHierarchyEntry>().toList()) {
+        if (removedWemIds.contains(child.wemId))
+          wemsParent.remove(child, dispose: true);
+      }
+    }
+
+    if (removedWemIds.isEmpty)
+     showToast("No prefetched WEMs found in ${basename(path)}");
+    else
+      showToast("Removed ${pluralStr(removedWemIds.length, "prefetched WEM")} from ${basename(path)}");
   }
 }
 
