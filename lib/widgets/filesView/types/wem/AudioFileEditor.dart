@@ -89,7 +89,7 @@ class _AudioFileEditorState extends State<AudioFileEditor> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Text(
-                        "  ${widget.file.name}",
+                        "  ${widget.file.name.value}",
                         style: const TextStyle(fontFamily: "FiraCode", fontSize: 16),
                         overflow: TextOverflow.ellipsis,
                       ),

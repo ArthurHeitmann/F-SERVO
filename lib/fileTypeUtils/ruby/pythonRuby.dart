@@ -42,7 +42,7 @@ Future<bool> binFileToRuby(String filePath, { bool isIsolate = false, String? cu
 
 Future<bool> rubyFileToBin(String filePath) async {
   messageLog.add("Compiling ${basename(filePath)}");
-  var result = await _processFile(filePath, null, false);
+  var result = await _processFile(filePath, assetsDir, false);
   if (!result)
     return false;
   // TODO is .bin and not .mrb
