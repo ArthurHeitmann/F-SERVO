@@ -11,7 +11,6 @@ import '../../../../stateManagement/openFiles/types/WemFileData.dart';
 import '../../../../utils/utils.dart';
 import '../../../misc/ChangeNotifierWidget.dart';
 import '../../../misc/ColumnSeparated.dart';
-import '../../../propEditors/boolPropSwitch.dart';
 import '../../../theme/customTheme.dart';
 import 'AudioFileEditor.dart';
 
@@ -176,11 +175,11 @@ class _WemFileEditorState extends ChangeNotifierState<WemFileEditor> {
                   style: getTheme(context).dialogPrimaryButtonStyle,
                   child: const Text("Replace WEM"),
                 ),
-                if (widget.wem.overrideData is WavFileData) ...[
-                  const SizedBox(width: 20),
-                  BoolPropSwitch(prop: widget.wem.usesLoudnessNormalization),
-                  const Text("Volume normalization"),
-                ],
+                // if (widget.wem.overrideData is WavFileData) ...[
+                //   const SizedBox(width: 20),
+                //   BoolPropSwitch(prop: widget.wem.usesLoudnessNormalization),
+                //   const Text("Volume normalization"),
+                // ],
               ],
             ),
           ),

@@ -9,6 +9,8 @@ import '../../stateManagement/events/statusInfo.dart';
 import '../../stateManagement/preferencesData.dart';
 import '../../utils/assetDirFinder.dart';
 import '../../utils/utils.dart';
+import '../utils/ByteDataWrapper.dart';
+import 'riffParser.dart';
 
 const _defaultTemplateFile = "wavToWemTemplate_default.zip";
 const _bgmTemplateFile = "wavToWemTemplate_BGM.zip";
@@ -20,7 +22,7 @@ Future<String> _makeWwiseProject(bool isBgm) async {
   var fs = InputFileStream(wwiseProjectTemplate);
   var archive = ZipDecoder().decodeBuffer(fs);
   extractArchiveToDisk(archive, tempProjectDir);
-  fs.close();
+  await fs.close();
 
   return tempProjectDir;
 }
@@ -42,7 +44,7 @@ XmlDocument _getWwiseSourcesXml(String wavPath, bool enableVolumeNormalization) 
   ]);
 }
 
-Future<void> wavToWem(String wavPath, String wemSavePath, bool isBgm, bool enableVolumeNormalization) async {
+Future<void> wavToWem(String wavPath, String wemSavePath, bool isBgm, [bool enableVolumeNormalization = false]) async {
   var prefs = PreferencesData();
   if (assetsDir == null) {
     showToast("Assets directory not found");
@@ -51,6 +53,16 @@ Future<void> wavToWem(String wavPath, String wemSavePath, bool isBgm, bool enabl
   if (prefs.wwise2012CliPath!.value.isEmpty) {
     showToast("Please set Wwise CLI path in settings");
     throw Exception("Wwise CLI path not set");
+  }
+  var riff = RiffFile.onlyFormat(await ByteDataWrapper.fromFile(wavPath));
+  var formatChunk = riff.chunks.whereType<FormatChunk>().firstOrNull;
+  if (formatChunk == null) {
+    showToast("WAV file has no format chunk");
+    throw Exception("WAV file has no format chunk");
+  }
+  if (![16, 24].contains(formatChunk.bitsPerSample)) {
+    showToast("WAV file must be 16 or 24 bits per sample (instead ${formatChunk.bitsPerSample})");
+    throw Exception("WAV file must be 16 or 24 bits per sample (instead ${formatChunk.bitsPerSample})");
   }
 
   messageLog.add("Preparing Wwise project");

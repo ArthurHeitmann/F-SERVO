@@ -152,7 +152,7 @@ class WemFileData extends OpenFileData with AudioFileData {
       await backupFile(path);
       var overrideFile = overrideData.value!;
       if (overrideFile is WavFileData)
-        await wavToWem(overrideFile.path, path, usesSeekTable, enableVolumeNormalization);
+        await wavToWem(overrideFile.path, path, usesSeekTable);
       else if (overrideFile is WemFileData)
         await File(overrideFile.path).copy(path);
       else
