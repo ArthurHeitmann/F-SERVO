@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../stateManagement/events/statusInfo.dart';
+import '../../utils/loggingWrapper.dart';
 import '../../utils/utils.dart';
 import '../misc/ChangeNotifierWidget.dart';
 import '../theme/customTheme.dart';
@@ -187,6 +188,16 @@ class _MessageLogDialogState extends ChangeNotifierState<_MessageLogDialog> {
                               splashRadius: 15,
                               onPressed: () => copyToClipboard(messageLog.join("\n"))
                                 .then((_) => showToast("Copied ${pluralStr(messageLog.length, "message")} to clipboard")),
+                            ),
+                          ),
+                          Tooltip(
+                            message: "Open logs file",
+                            waitDuration: const Duration(milliseconds: 500),
+                            child: IconButton(
+                              icon: const Icon(Icons.open_in_new, size: 18,),
+                              padding: EdgeInsets.zero,
+                              splashRadius: 15,
+                              onPressed: () => openInTextEditor(logFileName),
                             ),
                           ),
                         ],
