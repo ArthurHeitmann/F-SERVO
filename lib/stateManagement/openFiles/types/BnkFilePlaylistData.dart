@@ -427,12 +427,17 @@ class BnkTrackData with HasUuid, Undoable implements Disposable {
   }
 }
 enum BnkMarkerRole {
-  entryCue, exitCue, custom
+  entryCue("Entry"), exitCue("Exit"), custom("Custom");
+
+  final String name;
+
+  const BnkMarkerRole(this.name);
 }
 class BnkSegmentMarker with HasUuid, Undoable implements Disposable {
   final OpenFileId file;
   final BnkMusicMarker srcMarker;
   final NumberProp pos;
+  late final XmlProp posSelectable;
   final BnkMarkerRole role;
   String get name => srcMarker.pMarkerName ?? "";
   BnkSegmentMarker(this.file, this.srcMarker, this.pos, this.role) {
@@ -450,6 +455,9 @@ class BnkSegmentMarker with HasUuid, Undoable implements Disposable {
 
   void _setupListeners() {
     pos.addListener(_onPropChanged);
+    posSelectable = XmlProp(file: file, tagId: 0, tagName: "${role.name} cue marker", parentTags: [], children: [
+      XmlProp(file: file, tagId: 0, tagName: "time", value: pos, parentTags: [])
+    ]);
   }
   void _onPropChanged() {
     areasManager.fromId(file)!.setHasUnsavedChanges(true);
@@ -457,7 +465,7 @@ class BnkSegmentMarker with HasUuid, Undoable implements Disposable {
 
   @override
   void dispose() {
-    pos.dispose();
+    posSelectable.dispose();
   }
 
   void applyTo(BnkMusicMarker newMarker) {
