@@ -14,7 +14,7 @@ const _assetsDirSubDirs = { "fonts", "MrubyDecompiler" };
 Future<bool> findAssetsDir() async {
   if (assetsDir != null)
     return true;
-  var path = Directory.current.path;
+  var path = dirname(Platform.resolvedExecutable);
   // search cwd breadth first
   List<String> searchPathsQueue = [path];
   while (searchPathsQueue.isNotEmpty) {
