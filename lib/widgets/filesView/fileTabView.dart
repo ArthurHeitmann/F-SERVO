@@ -166,7 +166,7 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
   Widget makeTabBar() {
     return Positioned(
       left: 0,
-      top: 0,
+      top: -1,
       right: 0,
       child: SizedBox(
         height: 30,

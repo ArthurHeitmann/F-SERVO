@@ -37,6 +37,7 @@ class _XmlActionsEditorState extends XmlArrayEditorState<XmlActionsEditor> {
       fit: StackFit.expand,
       children: [
         SmoothSingleChildScrollView(
+          stepMultiplier: 1.5,
           child: _backgroundDeselectArea(
             child: XmlJumpToLineEventWrapper(
               file: widget.root.file!,

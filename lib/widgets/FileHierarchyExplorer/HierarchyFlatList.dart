@@ -50,6 +50,7 @@ class _HierarchyFlatListState extends ChangeNotifierState<HierarchyFlatList> {
         builder: (context, isHovering) {
           isCursorInside = isHovering;
           return SmoothScrollBuilder(
+            stepSize: 50,
             builder: (context, controller, physics) {
               return ListView.builder(
                 controller: controller,
