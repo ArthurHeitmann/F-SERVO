@@ -7,6 +7,7 @@ import '../../../../stateManagement/openFiles/types/BnkFilePlaylistData.dart';
 import '../../../../utils/utils.dart';
 import '../../../misc/ChangeNotifierWidget.dart';
 import '../../../misc/CustomIcons.dart';
+import '../../../misc/Selectable.dart';
 import '../../../theme/customTheme.dart';
 import 'BnkPlaylistEditorInheritedData.dart';
 import 'BnkTrackEditor.dart';
@@ -104,53 +105,64 @@ class _BnkSegmentEditorState extends ChangeNotifierState<BnkSegmentEditor> {
   }
 
   List<Widget> getMarkers(BuildContext context, AudioEditorData viewData) {
-    return [
-      for (var i = 0; i < widget.segment.markers.length; i++) ...[
-        Positioned(
-          left: widget.segment.markers[i].pos.value / viewData.msPerPix.value + viewData.xOff.value + getMarkerOffset(widget.segment.markers[i].role),
-          width: BnkSegmentEditor.markerSize,
-          // move down a bit, by how close this marker is to the previous one
-          top: i - 1 >= 0
-            ? clamp(10.0 - (widget.segment.markers[i].pos.value - widget.segment.markers[i - 1].pos.value).abs() / viewData.msPerPix.value, 0, 10)
-            : 0,
-          child: GestureDetector(
-            onHorizontalDragUpdate: (_) {
-              var pos = widget.segment.markers[i].pos;
-              var newPos = getMousePosOnTrack(viewData.xOff, viewData.msPerPix, context);
-              newPos = SnapPointsData.of(context).trySnapTo(newPos, [pos], viewData.msPerPix.value);
-              pos.value = newPos;
-              AudioPlaybackScope.of(context).cancelCurrentPlayback();
-            },
-            child: Icon(
-              getMarkerIcon(widget.segment.markers[i].role),
-              size: BnkSegmentEditor.markerSize,
-              color: getMarkerColor(context, widget.segment.markers[i].role)
-            ),
-          ),
+    List<Widget> widgets = [];
+    for (var (i, marker) in widget.segment.markers.indexed) {
+      widgets.add(
+        ChangeNotifierBuilder(
+          notifier: selectable.active,
+          builder: (_) {
+            var markerSize = BnkSegmentEditor.markerSize * (selectable.isSelected(marker.posSelectable.uuid) ? 1.25 : 1);
+            return Positioned(
+              left: marker.pos.value / viewData.msPerPix.value + viewData.xOff.value + getMarkerOffset(marker.role, markerSize),
+              width: markerSize,
+              // move down a bit, by how close this marker is to the previous one
+              top: i - 1 >= 0
+                ? clamp(10.0 - (marker.pos.value - widget.segment.markers[i - 1].pos.value).abs() / viewData.msPerPix.value, 0, 10)
+                : 0,
+              child: GestureDetector(
+                onHorizontalDragUpdate: (_) {
+                  var pos = marker.pos;
+                  var newPos = getMousePosOnTrack(viewData.xOff, viewData.msPerPix, context);
+                  newPos = SnapPointsData.of(context).trySnapTo(newPos, [pos], viewData.msPerPix.value);
+                  pos.value = newPos;
+                  AudioPlaybackScope.of(context).cancelCurrentPlayback();
+                },
+                onTap: () => selectable.select(widget.segment.file, marker.posSelectable),
+                child: Icon(
+                  getMarkerIcon(marker.role),
+                  size: markerSize,
+                  color: getMarkerColor(context, marker.role)
+                )
+              ),
+            );
+          }
         ),
+      );
+      widgets.add(
         Positioned(
-          left: widget.segment.markers[i].pos.value / viewData.msPerPix.value + viewData.xOff.value,
+          left: marker.pos.value / viewData.msPerPix.value + viewData.xOff.value,
           width: 2,
           top: BnkSegmentEditor.headerHeight / 2,
           bottom: 0,
           child: IgnorePointer(
             child: Container(
-              color: getMarkerColor(context, widget.segment.markers[i].role),
+              color: getMarkerColor(context, marker.role),
             ),
           ),
         ),
-      ]
-    ];
+      );
+    }
+    return widgets;
   }
 
-  double getMarkerOffset(BnkMarkerRole type) {
+  double getMarkerOffset(BnkMarkerRole type, double markerSize) {
     switch (type) {
       case BnkMarkerRole.entryCue:
         return -3;
       case BnkMarkerRole.exitCue:
-        return -BnkSegmentEditor.markerSize + 4;
+        return -markerSize + 4;
       default:
-        return -BnkSegmentEditor.markerSize / 2;
+        return -markerSize / 2;
     }
   }
 
