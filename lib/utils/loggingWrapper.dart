@@ -7,7 +7,7 @@ import 'package:path/path.dart';
 
 import 'utils.dart';
 
-final _logFileName = join(dirname(Platform.resolvedExecutable), "log.txt");
+final logFileName = join(dirname(Platform.resolvedExecutable), "log.txt");
 
 void loggingWrapper(void Function() run) {
   // log all output to file
@@ -57,7 +57,7 @@ void _logErrorToFile(FlutterErrorDetails err) {
 Future<void> _saveLogBuffer() async {
   var logBuffer = _logBuffer;
   _logBuffer = [];
-  var file = File(_logFileName);
+  var file = File(logFileName);
   var logFile = await file.open(mode: FileMode.append);
   await logFile.writeString("${logBuffer.join("\n")}\n");
   await logFile.close();

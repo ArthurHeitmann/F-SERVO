@@ -25,6 +25,7 @@ import '../stateManagement/miscValues.dart';
 import '../stateManagement/openFiles/types/xml/xmlProps/xmlProp.dart';
 import '../widgets/misc/contextMenuBuilder.dart';
 import '../widgets/theme/customTheme.dart';
+import 'assetDirFinder.dart';
 
 const uuidGen = Uuid();
 
@@ -654,6 +655,21 @@ void openInVsCode(String path) {
   } else if (Platform.isLinux) {
     Process.run("code", [path], runInShell: true);
   } else {
+    throw Exception("Unsupported platform");
+  }
+}
+
+void openInTextEditor(String path) async {
+  if (await hasVsCode())
+    openInVsCode(path);
+  else if (Platform.isWindows) {
+    await Process.run("notepad", [path], runInShell: true);
+  } else if (Platform.isMacOS) {
+    await Process.run("open", [path], runInShell: true);
+  } else if (Platform.isLinux) {
+    await Process.run("gedit", [path], runInShell: true);
+  } else {
+    showToast("Unsupported platform :(");
     throw Exception("Unsupported platform");
   }
 }
