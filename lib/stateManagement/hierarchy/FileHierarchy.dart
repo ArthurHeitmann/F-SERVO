@@ -394,7 +394,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
     var wemFiles = await extractBnkWems(bnk, bnkExtractDir, noExtract);
     await extractedFile.writeAsString("Delete this file to re-extract files");
 
-    var bnkEntry = BnkHierarchyEntry(StringProp(basename(bnkPath), fileId: null), bnkPath, bnkExtractDir);
+    var bnkEntry = BnkHierarchyEntry(StringProp(basename(bnkPath), fileId: null), bnkPath, bnkExtractDir, bnk);
 
     var wemParentEntry = BnkSubCategoryParentHierarchyEntry("WEM files");
     bnkEntry.add(wemParentEntry);
@@ -407,7 +407,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
     if (wemFiles.length > 8)
       wemParentEntry.isCollapsed.value = true;
 
-    await bnkEntry.generateHierarchy(bnk, basenameWithoutExtension(bnkPath));
+    await bnkEntry.generateHierarchy(basenameWithoutExtension(bnkPath));
 
     if (parent != null)
       parent.add(bnkEntry);

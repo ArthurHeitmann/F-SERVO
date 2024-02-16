@@ -1,4 +1,7 @@
 
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 
@@ -16,16 +19,17 @@ import 'WaiHierarchyEntries.dart';
 
 class BnkHierarchyEntry extends GenericFileHierarchyEntry {
   final String extractedPath;
+  final BnkFile bnk;
 
-  BnkHierarchyEntry(StringProp name, String path, this.extractedPath)
+  BnkHierarchyEntry(StringProp name, String path, this.extractedPath, this.bnk)
       : super(name, path, true, false);
 
   @override
   HierarchyEntry clone() {
-    return BnkHierarchyEntry(name.takeSnapshot() as StringProp, path, extractedPath);
+    return BnkHierarchyEntry(name.takeSnapshot() as StringProp, path, extractedPath, bnk);
   }
 
-  Future<void> generateHierarchy(BnkFile bnk, String bnkName) async {
+  Future<void> generateHierarchy(String bnkName) async {
     var bnkHeader = bnk.chunks.whereType<BnkHeader>().first;
     var bnkId = bnkHeader.bnkId;
     var hircChunk = bnk.chunks.whereType<BnkHircChunk>().firstOrNull;
@@ -489,6 +493,11 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
         icon: Icons.playlist_remove,
         action: _removePrefetchWems,
       ),
+      HierarchyEntryAction(
+        name: "Generate cues info file",
+        icon: Icons.playlist_add_check,
+        action: _generateCuesTxtFile,
+      ),
       ...super.getContextMenuActions()
     ];
   }
@@ -508,6 +517,62 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
      showToast("No prefetched WEMs found in ${basename(path)}");
     else
       showToast("Removed ${pluralStr(removedWemIds.length, "prefetched WEM")} from ${basename(path)}");
+  }
+
+  void _generateCuesTxtFile() async {
+    var txt = "";
+    var parent = children.where((e) => e.name.value == "Object Hierarchy").firstOrNull;
+    for (var child in parent?.children.whereType<BnkHircHierarchyEntry>() ?? const Iterable.empty()) {
+      txt += _generateCuesTxt(child, null, 0);
+    }
+    
+    var cuesTxtPath = await FilePicker.platform.saveFile(
+      dialogTitle: "Save cues info file",
+      fileName: "${basenameWithoutExtension(path)}_cues.txt",
+    );
+    if (cuesTxtPath == null)
+      return;
+
+    await File(cuesTxtPath).writeAsString(txt);
+    showToast("Saved cues info file");
+  }
+
+  String _generateCuesTxt(BnkHircHierarchyEntry entry, BnkHircHierarchyEntry? parent, int depth) {
+    var chunk = entry.hirc;
+    var parentChunk = parent?.hirc;
+    
+    if (chunk is BnkMusicSegment) {
+      var txt = "${"  " * depth}- ${entry.name} (duration ${(chunk.fDuration / 1000).toStringAsFixed(3)}s)";
+      if (parentChunk is BnkMusicPlaylist) {
+        var plItem = parentChunk.playlistItems.where((e) => e.segmentId == chunk.uid).firstOrNull;
+        if (plItem != null)
+         txt += " (loops ${plItem.loop == 0 ? "Infinite" : plItem.loop})";
+      }
+      txt += "\n";
+      for (var (i, marker) in chunk.wwiseMarkers.indexed) {
+        String name;
+        if (i == 0)
+          name = "Entry";
+        else if (i + 1 == chunk.wwiseMarkers.length)
+          name = "Exit ";
+        else
+          name = "Custom $i";
+        txt += "${"  " * (depth + 1)}- $name cue: ${(marker.fPosition / 1000).toStringAsFixed(3)}s\n";
+      }
+      return txt;
+    }
+    
+    var txt = "";
+    var children = entry.children.whereType<BnkHircHierarchyEntry>();
+    if (chunk is BnkMusicSwitch)
+      children = children.where((e) => e.type == "SwitchAssoc");
+    for (var child in children) {
+      txt += _generateCuesTxt(child, entry, depth + 1);
+    }
+    if (txt.isEmpty)
+      return txt;
+    txt = "${"  " * depth}- ${entry.name.toString()}\n$txt";
+    return txt;
   }
 }
 
@@ -570,7 +635,7 @@ class BnkHircHierarchyEntry extends GenericFileHierarchyEntry {
 
   @override
   HierarchyEntry clone() {
-    return BnkHircHierarchyEntry(name.value, path, type, id: id, parentIds: parentIds, childIds: childIds, properties: properties);
+    return BnkHircHierarchyEntry(name.value, path, type, id: id, entryName: entryName, parentIds: parentIds, childIds: childIds, properties: properties, hirc: hirc, transitionRules: transitionRules);
   }
 
   @override
