@@ -452,7 +452,7 @@ class _SearchPanelState extends State<SearchPanel> {
               if (errorText == null)
                 Expanded(
                   child: SmoothSingleChildScrollView(
-                    duration: const Duration(milliseconds: 100),
+                    animationDuration: const Duration(milliseconds: 100),
                     stepSize: 40,
                     child: Column(
                       children: fileGroups.map((fg) => 
