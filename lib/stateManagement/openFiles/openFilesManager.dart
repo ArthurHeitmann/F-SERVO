@@ -188,7 +188,8 @@ class OpenFilesAreasManager with HasUuid, Undoable implements Disposable {
   }
 
   void onFileRemoved(OpenFileId file) {
-    _filesMap.remove(file);
+    if (!hiddenArea.files.any((f) => f.uuid == file))
+      _filesMap.remove(file);
   }
 
   Future<void> openPreferences() async {

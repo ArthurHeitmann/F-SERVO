@@ -45,6 +45,10 @@ class XmlScriptHierarchyEntry extends FileHierarchyEntry {
     if (name.isNotEmpty)
       hapName.value = name.first.text;
 
+    var node = xmlRoot.findElements("node");
+    if (node.isNotEmpty)
+      supportsVsCodeEditing = true;
+
     _hasReadMeta = true;
   }
 

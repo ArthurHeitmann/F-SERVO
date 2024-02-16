@@ -103,7 +103,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
         Tuple2(
           [".xml"],
           () async => openGenericFile<XmlScriptHierarchyEntry>(filePath, parent, 
-            (n, p) => XmlScriptHierarchyEntry(n, p, preferVsCode: PreferencesData().preferVsCode?.value ?? false))
+            (n, p) => XmlScriptHierarchyEntry(n, p))
         ),
         Tuple2(
           [".yax"],
