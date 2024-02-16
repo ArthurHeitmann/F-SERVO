@@ -31,8 +31,7 @@ Future<bool?> confirmOrCancelDialog(BuildContext context, { required String titl
                 Text(body, style: Theme.of(context).textTheme.bodyText2),
               ],
               const SizedBox(height: 16),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 300),
+              IntrinsicWidth(
                 child: RowSeparated(
                   separatorWidth: 5,
                   mainAxisAlignment: MainAxisAlignment.end,

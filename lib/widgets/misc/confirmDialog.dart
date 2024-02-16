@@ -7,7 +7,7 @@ import '../../widgets/theme/customTheme.dart';
 import 'RowSeparated.dart';
 import 'SmoothScrollBuilder.dart';
 
-Future<bool?> confirmDialog(BuildContext context, { required String title, String? body }) {
+Future<bool?> confirmDialog(BuildContext context, { required String title, String? body, confirmText = "Confirm", cancelText = "Cancel" }) {
   var result = Completer<bool?>();
   showDialog(
     context: context,
@@ -49,7 +49,7 @@ Future<bool?> confirmDialog(BuildContext context, { required String title, Strin
                             Navigator.of(context).pop();
                           },
                           style: getTheme(context).dialogPrimaryButtonStyle,
-                          child: const Text("Confirm"),
+                          child: Text(confirmText),
                         ),
                         ElevatedButton(
                           onPressed: () {
@@ -57,7 +57,7 @@ Future<bool?> confirmDialog(BuildContext context, { required String title, Strin
                             Navigator.of(context).pop();
                           },
                           style: getTheme(context).dialogSecondaryButtonStyle,
-                          child: const Text("Cancel"),
+                          child: Text(cancelText),
                         ),
                       ],
                     ),

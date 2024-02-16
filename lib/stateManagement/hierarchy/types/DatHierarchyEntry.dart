@@ -2,13 +2,11 @@
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 
-import '../../../fileTypeUtils/dat/datRepacker.dart';
 import '../../../main.dart';
 import '../../../utils/utils.dart';
 import '../../../widgets/FileHierarchyExplorer/datFilesSelector.dart';
 import '../../../widgets/misc/confirmDialog.dart';
 import '../../Property.dart';
-import '../../preferencesData.dart';
 import '../../undoable.dart';
 import '../FileHierarchy.dart';
 import '../HierarchyEntryTypes.dart';
@@ -105,14 +103,7 @@ class DatHierarchyEntry extends ExtractableHierarchyEntry {
   }
 
   Future<void> repackDatAction() async {
-    var prefs = PreferencesData();
-    if (prefs.dataExportPath?.value == null) {
-      showToast("No export path set. Go to Settings to set an export path");
-      return;
-    }
-    var datBaseName = basename(extractedPath);
-    var exportPath = join(prefs.dataExportPath!.value, getDatFolder(datBaseName), datBaseName);
-    await repackDat(extractedPath, exportPath);
+    await exportDat(extractedPath, checkForNesting: true);
   }
 
   @override

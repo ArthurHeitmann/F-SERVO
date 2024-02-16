@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:path/path.dart';
 
-import '../fileTypeUtils/dat/datRepacker.dart';
 import '../fileTypeUtils/pak/pakRepacker.dart';
 import '../fileTypeUtils/ruby/pythonRuby.dart';
 import '../fileTypeUtils/yax/xmlToYax.dart';
@@ -83,12 +82,8 @@ Future<void> processChangedFiles() async {
   // }
 
   // repack DAT
-  if (prefs.exportDats?.value == true && prefs.dataExportPath?.value != "") {
-    await Future.wait(dats.map((datDir) {
-      var datBaseName = basename(datDir);
-      var exportPath = join(prefs.dataExportPath!.value, getDatFolder(datBaseName), datBaseName);
-      return repackDat(datDir, exportPath);
-    }));
+  if (prefs.exportDats?.value == true && (prefs.dataExportPath?.value ?? "") != "") {
+    await Future.wait(dats.map((dat) => exportDat(dat, checkForNesting: true)));
   }
 
   // save WAI

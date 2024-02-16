@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 import 'package:tuple/tuple.dart';
 
-import '../../../fileTypeUtils/dat/datRepacker.dart';
 import '../../../fileTypeUtils/ftb/ftbIO.dart';
 import '../../../fileTypeUtils/mcd/fontAtlasGeneratorTypes.dart';
 import '../../../fileTypeUtils/wta/wtaReader.dart';
@@ -16,7 +15,6 @@ import '../../../utils/assetDirFinder.dart';
 import '../../../utils/utils.dart';
 import '../../../widgets/filesView/FileType.dart';
 import '../../changesExporter.dart';
-import '../../preferencesData.dart';
 import '../../undoable.dart';
 import '../openFileTypes.dart';
 import 'McdFileData.dart';
@@ -295,14 +293,7 @@ class FtbData extends ChangeNotifier {
     await File(wtpPath).writeAsBytes(wtpBytes.buffer.asUint8List());
     // export dtt
     var dttPath = dirname(wtpPath);
-    var prefs = PreferencesData();
-    if (prefs.dataExportPath?.value == "") {
-      showToast("Couldn't export DTT file: no export path set");
-    } else {
-      var dttName = basename(dttPath);
-      var exportPath = join(prefs.dataExportPath!.value, getDatFolder(dttName), dttName);
-      await repackDat(dttPath, exportPath);
-    }
+    await exportDat(dttPath);
 
     // update texture sizes
     for (int i = 0; i < textureBatches.length; i++) {

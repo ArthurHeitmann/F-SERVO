@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:crclib/catalog.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
@@ -15,6 +16,7 @@ import 'package:uuid/uuid.dart';
 import 'package:xml/xml.dart';
 
 import '../fileTypeUtils/dat/datExtractor.dart';
+import '../fileTypeUtils/dat/datRepacker.dart';
 import '../fileTypeUtils/utils/ByteDataWrapper.dart';
 import '../fileTypeUtils/yax/hashToStringMap.dart';
 import '../fileTypeUtils/yax/japToEng.dart';
@@ -23,6 +25,8 @@ import '../stateManagement/Property.dart';
 import '../stateManagement/events/statusInfo.dart';
 import '../stateManagement/miscValues.dart';
 import '../stateManagement/openFiles/types/xml/xmlProps/xmlProp.dart';
+import '../stateManagement/preferencesData.dart';
+import '../widgets/misc/confirmCancelDialog.dart';
 import '../widgets/misc/contextMenuBuilder.dart';
 import '../widgets/theme/customTheme.dart';
 import 'assetDirFinder.dart';
@@ -468,7 +472,17 @@ const Map<String, String> _nameStartToFolder = {
   "subtitle": "subtitle",
   "txt": "txtmess",
 };
+const _topLevelFileNames = {
+  "autoshadereff.dat",
+  "autoshadereffInfo.bxm",
+  "shader.dat",
+  "shader2.dat",
+  "shadereff.dat",
+  "shadereffcs.dat",
+};
 String getDatFolder(String datName) {
+  if (_topLevelFileNames.contains(datName))
+    return "";
   if (datName.endsWith(".eff"))
     return "effect";
   var c2 = datName.substring(0, 2);
@@ -530,6 +544,65 @@ Future<List<String>> _getDatFileListFromMetadata(String metadataPath) async {
   files = files.map((file) => path.join(dir, file)).toList();
 
   return files;
+}
+
+Future<void> exportDat(String datFolder, { bool checkForNesting = false }) async {
+  var exportDir = PreferencesData().dataExportPath?.value ?? "";
+  if (exportDir.isNotEmpty && !await Directory(exportDir).exists()) {
+    messageLog.add("Export path does not exist: $exportDir");
+    exportDir = "";
+  }
+  var datName = basename(datFolder);
+  String datExportDir = "";
+  bool recursive = false;
+  // check if this DAT is inside another DAT
+  if (checkForNesting) {
+    var parentDirs = [dirname(datFolder), dirname(dirname(datFolder))];
+    for (var parentDir in parentDirs) {
+      if (!await Directory(parentDir).exists())
+        break;
+      var dirName = basename(parentDir);
+      if (!dirName.contains("."))
+        continue;
+      var ext = extension(dirName);
+      if (!datExtensions.contains(ext))
+        continue;
+      var exportToParent = await confirmOrCancelDialog(
+        getGlobalContext(),
+        title: "Export $datName to parent DAT folder?",
+        body: "Parent is ...\\$dirName\\",
+        yesText: "To $dirName",
+        noText: exportDir.isEmpty ? "Select export path" : "To export path",
+      );
+      if (exportToParent == null)
+        return;
+      if (!exportToParent)
+        break;
+      datExportDir = parentDir;
+      recursive = true;
+    }
+  }
+  if (datExportDir.isEmpty) {
+    // select export path
+    if (exportDir.isEmpty) {
+      var dir = await FilePicker.platform.getDirectoryPath(
+        dialogTitle: "Select DAT export folder",
+      );
+      if (dir == null)
+        return;
+      datExportDir = dir;
+    }
+    // export to export path from preferences
+    else {
+      var datSubDir = getDatFolder(datName);
+      datExportDir = join(exportDir, datSubDir);
+    }
+  }
+  var datExportPath = join(datExportDir, datName);
+  await repackDat(datFolder, datExportPath);
+
+  if (recursive)
+    await exportDat(datExportDir, checkForNesting: true);
 }
 
 String pluralStr(int number, String label, [String numberSuffix = ""]) {
