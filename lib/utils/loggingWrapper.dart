@@ -7,7 +7,7 @@ import 'package:path/path.dart';
 
 import 'utils.dart';
 
-final _logFileName = join(Directory.current.path, "log.txt");
+final _logFileName = join(dirname(Platform.resolvedExecutable), "log.txt");
 
 void loggingWrapper(void Function() run) {
   // log all output to file
@@ -38,7 +38,7 @@ List<String> _logBuffer = [];
 
 void _logToFile(String line) {
   var now = DateTime.now();
-  var time = "${now.hour}:${now.minute}:${now.second}.${now.millisecond}";
+  var time = "${now.hour.toString().padLeft(2, "0")}:${now.minute.toString().padLeft(2, "0")}:${now.second.toString().padLeft(2, "0")}.${now.millisecond}";
   var logLine = "$time: $line";
   _logBuffer.add(logLine);
   _saveLogBufferThrottled();
@@ -46,7 +46,7 @@ void _logToFile(String line) {
 
 void _logErrorToFile(FlutterErrorDetails err) {
   var now = DateTime.now();
-  var time = "${now.hour}:${now.minute}:${now.second}.${now.millisecond}";
+  var time = "${now.hour.toString().padLeft(2, "0")}:${now.minute.toString().padLeft(2, "0")}:${now.second.toString().padLeft(2, "0")}.${now.millisecond}";
   var logLine = "$time: ERROR: ${err.exceptionAsString()}"
       "\n"
       "${err.stack.toString()}";

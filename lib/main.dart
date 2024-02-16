@@ -11,6 +11,7 @@ import 'background/IdLookup.dart';
 import 'background/wemFilesIndexer.dart';
 import 'keyboardEvents/globalShortcutsWrapper.dart';
 import 'stateManagement/beforeExitCleanup.dart';
+import 'stateManagement/openFiles/openFilesManager.dart';
 import 'stateManagement/openFiles/types/xml/sync/syncServer.dart';
 import 'stateManagement/preferencesData.dart';
 import 'utils/assetDirFinder.dart';
@@ -25,11 +26,11 @@ import 'widgets/theme/customTheme.dart';
 import 'widgets/theme/nierTheme.dart';
 import 'widgets/titlebar/Titlebar.dart';
 
-void main() {
-  loggingWrapper(init);
+void main(List<String> args) {
+  loggingWrapper(() => init(args));
 }
 
-void init() async {
+void init(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
 
   runApp(const SplashScreen());
@@ -41,25 +42,25 @@ void init() async {
       minimumSize: Size(400, 200),
       titleBarStyle: TitleBarStyle.hidden,
     );
-    windowManager.waitUntilReadyToShow(windowOptions, () async {
+    unawaited(windowManager.waitUntilReadyToShow(windowOptions, () async {
       await windowManager.show();
       var windowPos = await windowManager.getPosition();
       if (windowPos.dy < 50)
         await windowManager.setPosition(windowPos.translate(0, 50));
       // await windowManager.focus();
-    });
+    }));
   }
   else if (isMobile) {
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.leanBack);
+    await SystemChrome.setEnabledSystemUIMode(SystemUiMode.leanBack);
     await ensureHasStoragePermission();
   }
 
   startSyncServer();
-  findAssetsDir();
-  idLookup.init();
+  unawaited(findAssetsDir());
+  unawaited(idLookup.init());
   await PreferencesData().load();
-  wemFilesLookup.updateIndex();
-  FlutterWindowClose.setWindowShouldCloseHandler(beforeExitConfirmation);
+  unawaited(wemFilesLookup.updateIndex());
+  unawaited(FlutterWindowClose.setWindowShouldCloseHandler(beforeExitConfirmation));
 
   ErrorWidget.builder = (FlutterErrorDetails details) {
     return Center(
@@ -86,6 +87,11 @@ void init() async {
   };
 
   runApp(const MyApp());
+
+  unawaited(waitForNextFrame().then((_) {
+    for (var arg in args)
+      areasManager.openFile(arg);
+  }));
 }
 
 final _rootKey = GlobalKey<ScaffoldState>(debugLabel: "RootGlobalKey");
