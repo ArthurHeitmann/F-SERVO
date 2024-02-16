@@ -26,4 +26,7 @@ class IsLoadingStatus extends ChangeNotifier {
 final isLoadingStatus = IsLoadingStatus();
 
 final ValueListNotifier<String> messageLog = ValueListNotifier<String>([], fileId: null)
-  ..addListener(() => print("messageLog: ${messageLog.last}"));
+  ..addListener(() {
+    if (messageLog.isNotEmpty)
+      print("messageLog: ${messageLog.last}");
+  });

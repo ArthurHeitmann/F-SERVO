@@ -9,7 +9,6 @@ import 'package:path/path.dart';
 import 'package:tuple/tuple.dart';
 
 import '../../../fileTypeUtils/dat/datExtractor.dart';
-import '../../../fileTypeUtils/dat/datRepacker.dart';
 import '../../../fileTypeUtils/mcd/defaultFontKerningMap.dart';
 import '../../../fileTypeUtils/mcd/fontAtlasGeneratorTypes.dart';
 import '../../../fileTypeUtils/mcd/mcdIO.dart';
@@ -24,7 +23,6 @@ import '../../events/statusInfo.dart';
 import '../../hasUuid.dart';
 import '../../listNotifier.dart';
 import '../../openFiles/openFilesManager.dart';
-import '../../preferencesData.dart';
 import '../../undoable.dart';
 import '../openFileTypes.dart';
 
@@ -975,14 +973,7 @@ class McdData extends _McdFilePart {
 
     // export dtt
     var dttPath = dirname(textureWtpPath!.value);
-    var prefs = PreferencesData();
-    if (prefs.dataExportPath?.value == "") {
-      showToast("Couldn't export DTT file: no export path set");
-    } else {
-      var dttName = basename(dttPath);
-      var exportPath = join(prefs.dataExportPath!.value, getDatFolder(dttName), dttName);
-      await repackDat(dttPath, exportPath);
-    }
+    await exportDat(dttPath);
 
     print("Generated font texture with ${symbols.length} symbols");
 
