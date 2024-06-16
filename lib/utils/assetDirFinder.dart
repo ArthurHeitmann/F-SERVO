@@ -5,6 +5,8 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 
+import '../stateManagement/events/statusInfo.dart';
+
 String? assetsDir;
 Completer<void> _assetDirSearchCompleter = Completer();
 Future<void> assetDirDone = _assetDirSearchCompleter.future;
@@ -66,12 +68,10 @@ Future<bool> hasMagickBins() async {
     .map((f) => basename(f.path))
     .toList();
   _hasMagickBinsComplete = true;
-  _hasMagickBins = magickFiles.contains("magick.exe") && magickFiles.contains("magickLin");
+  _hasMagickBins = magickFiles.contains("magick.exe");
   if (_hasMagickBins) {
     if (Platform.isWindows)
       magickBinPath = join(magickDir, "magick.exe");
-    else
-      magickBinPath = join(magickDir, "magickLin");
   }
   return _hasMagickBins;
 }
@@ -149,6 +149,7 @@ Future<bool> hasPython() async {
     _hasPythonComplete = true;
     return true;
   }
+  messageLog.add("Missing 'python' or 'python3' in PATH");
   _hasPythonComplete = true;
   return false;
 }

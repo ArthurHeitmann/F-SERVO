@@ -537,7 +537,11 @@ class BnkSegmentData with HasUuid, Undoable implements Disposable {
       // var maxMarkerPos = markers.map((m) => m.pos.value).reduce(max);
       // newSegment.fDuration = maxMarkerPos - minMarkerPos.toDouble();
       // newSegment.fDuration = maxMarkerPos.toDouble();
-      var maxTrackEndTime = tracks.map((t) => t.clips.map((c) => c.xOff.value + c.srcDuration.value + c.endTrim.value).reduce(max)).reduce(max);
+      var maxTrackEndTime = tracks.map(
+        (t) => t.clips
+          .map((c) => c.xOff.value + c.srcDuration.value + c.endTrim.value)
+          .fold(0, max)
+      ).reduce(max);
       newSegment.fDuration = maxTrackEndTime.toDouble();
     }
     for (var i = 0; i < markers.length; i++) {
