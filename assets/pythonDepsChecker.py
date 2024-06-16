@@ -18,7 +18,7 @@ def checkPythonDependency(dependency: PythonDependency) -> bool:
 	try:
 		if not importlib.util.find_spec(dependency.moduleName):
 			print(f"Module {dependency.moduleName} not found, installing...")
-			subprocess.check_call(["python", "-m", "pip", "install", dependency.pipName])
+			subprocess.check_call([sys.executable, "-m", "pip", "install", dependency.pipName])
 			print(f"Module {dependency.moduleName} installed.")
 		return True
 	except Exception as e:
