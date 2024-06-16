@@ -16,6 +16,7 @@ dependencies:
   convert: ^3.1.1
   crclib: ^3.0.0
   cross_file: ^0.3.3+1
+  csv: ^6.0.0
   desktop_drop: ^0.4.4
   euc: ^1.0.6+8
   file_picker: ^6.1.1
