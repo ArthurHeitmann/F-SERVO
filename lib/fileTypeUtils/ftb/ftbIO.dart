@@ -37,26 +37,28 @@ class FtbFileTexture {
   int width;
   int height;
   int u0;
-  int u2;
-  int u22;
+  double widthInverse;
+  double heightInverse;
 
-  FtbFileTexture(this.index, this.width, this.height, this.u0, this.u2, this.u22);
+  FtbFileTexture(this.index, this.width, this.height, this.u0) :
+    widthInverse = 1 / width,
+    heightInverse = 1 / height;
 
   FtbFileTexture.read(ByteDataWrapper bytes) :
     index = bytes.readUint16(),
     width = bytes.readUint16(),
     height = bytes.readUint16(),
     u0 = bytes.readUint16(),
-    u2 = bytes.readUint32(),
-    u22 = bytes.readUint32();
+    widthInverse = bytes.readFloat32(),
+    heightInverse = bytes.readFloat32();
   
   void write(ByteDataWrapper bytes) {
     bytes.writeUint16(index);
     bytes.writeUint16(width);
     bytes.writeUint16(height);
     bytes.writeUint16(u0);
-    bytes.writeUint32(u2);
-    bytes.writeUint32(u22);
+    bytes.writeFloat32(widthInverse);
+    bytes.writeFloat32(heightInverse);
   }
 }
 

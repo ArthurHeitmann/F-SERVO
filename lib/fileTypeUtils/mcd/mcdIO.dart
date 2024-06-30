@@ -82,11 +82,11 @@ class McdFileGlyph {
   final double width;
   final double height;
   final double above;
-  final double below;
+  final double horizontalSpacing;
   final double horizontal;
 
   McdFileGlyph(this.textureId, this.u1, this.v1, this.u2, this.v2, this.width,
-      this.height, this.above, this.below, this.horizontal);
+      this.height, this.above, this.horizontalSpacing, this.horizontal);
   
   McdFileGlyph.read(ByteDataWrapper bytes) :
     textureId = bytes.readUint32(),
@@ -97,7 +97,7 @@ class McdFileGlyph {
     width = bytes.readFloat32(),
     height = bytes.readFloat32(),
     above = bytes.readFloat32(),
-    below = bytes.readFloat32(),
+    horizontalSpacing = bytes.readFloat32(),
     horizontal = bytes.readFloat32();
   
   void write(ByteDataWrapper bytes) {
@@ -109,7 +109,7 @@ class McdFileGlyph {
     bytes.writeFloat32(width);
     bytes.writeFloat32(height);
     bytes.writeFloat32(above);
-    bytes.writeFloat32(below);
+    bytes.writeFloat32(horizontalSpacing);
     bytes.writeFloat32(horizontal);
   }
 }
@@ -118,24 +118,24 @@ class McdFileFont {
   final int id;
   final double width;
   final double height;
-  final double below;
-  final double horizontal;
+  final double horizontalSpacing;
+  final double verticalSpacing;
 
-  McdFileFont(this.id, this.width, this.height, this.below, this.horizontal);
+  McdFileFont(this.id, this.width, this.height, this.horizontalSpacing, this.verticalSpacing);
   
   McdFileFont.read(ByteDataWrapper bytes) :
     id = bytes.readUint32(),
     width = bytes.readFloat32(),
     height = bytes.readFloat32(),
-    below = bytes.readFloat32(),
-    horizontal = bytes.readFloat32();
+    horizontalSpacing = bytes.readFloat32(),
+    verticalSpacing = bytes.readFloat32();
   
   void write(ByteDataWrapper bytes) {
     bytes.writeUint32(id);
     bytes.writeFloat32(width);
     bytes.writeFloat32(height);
-    bytes.writeFloat32(below);
-    bytes.writeFloat32(horizontal);
+    bytes.writeFloat32(horizontalSpacing);
+    bytes.writeFloat32(verticalSpacing);
   }
 }
 
@@ -196,21 +196,21 @@ class McdFileLine {
   final int padding;
   final int lettersCount;
   final int length2;
-  final double below;
-  final double horizontal;
+  final double horizontalSpacing;
+  final double verticalSpacing;
   final List<McdFileLetter> letters;
   late final int terminator;
 
   McdFileLine(this.lettersOffset, this.padding, this.lettersCount, this.length2,
-      this.below, this.horizontal, this.letters, this.terminator);
+      this.horizontalSpacing, this.verticalSpacing, this.letters, this.terminator);
   
   McdFileLine.read(ByteDataWrapper bytes, List<McdFileSymbol> symbols) :
     lettersOffset = bytes.readUint32(),
     padding = bytes.readUint32(),
     lettersCount = bytes.readUint32(),
     length2 = bytes.readUint32(),
-    below = bytes.readFloat32(),
-    horizontal = bytes.readFloat32(),
+    horizontalSpacing = bytes.readFloat32(),
+    verticalSpacing = bytes.readFloat32(),
     letters = [] {
     int pos = bytes.position;
     bytes.position = lettersOffset;
@@ -232,8 +232,8 @@ class McdFileLine {
     bytes.writeUint32(padding);
     bytes.writeUint32(lettersCount);
     bytes.writeUint32(length2);
-    bytes.writeFloat32(below);
-    bytes.writeFloat32(horizontal);
+    bytes.writeFloat32(horizontalSpacing);
+    bytes.writeFloat32(verticalSpacing);
 
     var pos = bytes.position;
     bytes.position = lettersOffset;

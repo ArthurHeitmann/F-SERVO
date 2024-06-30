@@ -208,7 +208,7 @@ class _TableEditorState extends ChangeNotifierState<TableEditor> {
                   padding: const EdgeInsets.all(8.0),
                   child: Text(
                     widget.config.name,
-                    style: Theme.of(context).textTheme.headline6,
+                    style: Theme.of(context).textTheme.titleLarge,
                   ),
                 ),
               ),

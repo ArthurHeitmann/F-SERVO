@@ -124,7 +124,7 @@ Future<void> processFile(String ftbPath) async {
     });
 
     // crop and save
-    var crop = copyCrop(pngFiles[ftbChar.texId], cropU1, cropV1, width, height);
+    var crop = copyCrop(pngFiles[ftbChar.texId], x: cropU1, y: cropV1, width: width, height: height);
     await File(outFileName).writeAsBytes(encodePng(crop));
   }
 

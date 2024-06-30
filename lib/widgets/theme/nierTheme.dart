@@ -119,7 +119,6 @@ class NierNierThemeExtension extends NierThemeExtension {
       popupMenuTheme: const PopupMenuThemeData(
         color: _ncLight2,
       ),
-      toggleableActiveColor: _ncCyan,
       colorScheme: const ColorScheme.light(
         primary: _ncCyan,
         secondary: _ncCyan,

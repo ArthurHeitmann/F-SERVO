@@ -1,5 +1,4 @@
 
-import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
@@ -9,7 +8,9 @@ import 'package:path/path.dart';
 import 'package:tuple/tuple.dart';
 
 import '../../../fileTypeUtils/ftb/ftbIO.dart';
-import '../../../fileTypeUtils/mcd/fontAtlasGeneratorTypes.dart';
+import '../../../fileTypeUtils/textures/fontAtlasGenerator.dart';
+import '../../../fileTypeUtils/textures/fontAtlasGeneratorTypes.dart';
+import '../../../fileTypeUtils/textures/ddsConverter.dart';
 import '../../../fileTypeUtils/wta/wtaReader.dart';
 import '../../../utils/assetDirFinder.dart';
 import '../../../utils/utils.dart';
@@ -33,7 +34,6 @@ class FtbFileData extends OpenFileData {
 
     ftbData?.dispose();
     ftbData = await FtbData.fromFtbFile(path);
-    await ftbData!.extractTextures();
 
     await super.load();
   }
@@ -78,10 +78,9 @@ class FtbFileData extends OpenFileData {
 
 class FtbTexture {
   int width, height;
-  int u_1, u_2;
   String? extractedPngPath;
 
-  FtbTexture(this.width, this.height, this.u_1, this.u_2);
+  FtbTexture(this.width, this.height);
 }
 
 class FtbChar {
@@ -89,10 +88,10 @@ class FtbChar {
   int texId;
   int width;
   int height;
-  int u;
-  int v;
+  int x;
+  int y;
 
-  FtbChar(this.char, this.texId, this.width, this.height, this.u, this.v);
+  FtbChar(this.char, this.texId, this.width, this.height, this.x, this.y);
 }
 
 class FtbData extends ChangeNotifier {
@@ -127,7 +126,7 @@ class FtbData extends ChangeNotifier {
     var ftbFile = await FtbFile.fromFile(path);
     var ftbData = FtbData(
       ftbFile.header.magic,
-      ftbFile.textures.map((e) => FtbTexture(e.width, e.height, e.u2, e.u22)).toList(),
+      ftbFile.textures.map((e) => FtbTexture(e.width, e.height)).toList(),
       ftbFile.chars.map((e) => FtbChar(e.char, e.texId, e.width, e.height, e.u, e.v)).toList(),
       path,
       wtaPath, wtpPath,
@@ -142,6 +141,8 @@ class FtbData extends ChangeNotifier {
       McdData.fontOverrides.add(fontOverride);
     }
 
+    await ftbData.extractTextures();
+
     return ftbData;
   }
 
@@ -155,8 +156,9 @@ class FtbData extends ChangeNotifier {
       if (fontSymbol != null) {
         fallback = CliImgOperationDrawFromTexture(
           i, 0,
-          fontSymbol.x, fontSymbol.y,
-          fontSymbol.width, fontSymbol.height,
+          fontSymbol.getX(), fontSymbol.getY(),
+          fontSymbol.getWidth(), fontSymbol.getHeight(),
+          1.0,
         );
       }
       imgOperations.add(CliImgOperationDrawFromFont(
@@ -172,34 +174,7 @@ class FtbData extends ChangeNotifier {
         2048,
         { fontId: font }, imgOperations
     );
-    var cliJson = jsonEncode(cliArgs.toJson());
-    cliJson = base64Encode(utf8.encode(cliJson));
-
-    // run cli tool
-    var cliToolPath = join(assetsDir!, "FontAtlasGenerator", "__init__.py");
-    var cliToolProcess = await Process.start(pythonCmd!, [cliToolPath]);
-    cliToolProcess.stdin.writeln(cliJson);
-    cliToolProcess.stdin.close();
-    var stdout = cliToolProcess.stdout.transform(utf8.decoder).join();
-    var stderr = cliToolProcess.stderr.transform(utf8.decoder).join();
-    if (await cliToolProcess.exitCode != 0) {
-      showToast("Font atlas generator failed");
-      print(await stdout);
-      print(await stderr);
-      throw Exception("Font atlas generator failed for file $path");
-    }
-    // parse cli output
-    FontAtlasGenResult atlasInfo;
-    try {
-      var atlasInfoJson = jsonDecode(await stdout);
-      atlasInfo = FontAtlasGenResult.fromJson(atlasInfoJson);
-    } catch (e) {
-      showToast("Font atlas generator failed");
-      print(e);
-      print(await stdout);
-      print(await stderr);
-      throw Exception("Font atlas generator failed");
-    }
+    var atlasInfo = await runFontAtlasGenerator(cliArgs);
     // convert png to dds (.wtp)
     var result = await Process.run(
       magickBinPath!,
@@ -249,11 +224,12 @@ class FtbData extends ChangeNotifier {
     CliFontOptions? font = CliFontOptions(
       fontOverride.fontPath.value,
       fontHeight.toInt(),
-      fontOverride.scale.value.toDouble(),
       (fontOverride.letXPadding.value * scaleFact).toInt(),
       (fontOverride.letYPadding.value * scaleFact).toInt(),
       (fontOverride.xOffset.value * scaleFact).toDouble(),
       (fontOverride.yOffset.value * scaleFact).toDouble(),
+      1.0,
+      fontOverride.strokeWidth.value.toInt(),
     );
     const textureBatchesCount = 4;
     var charsPerBatch = (chars.length / textureBatchesCount).ceil();
@@ -299,7 +275,7 @@ class FtbData extends ChangeNotifier {
     for (int i = 0; i < textureBatches.length; i++) {
       var texSize = textureBatches[i].item2;
       if (i >= textures.length) {
-        textures.add(FtbTexture(texSize, texSize, textures.last.u_1, textures.last.u_2));
+        textures.add(FtbTexture(texSize, texSize));
       }
       var texture = textures[i];
       texture.width = texSize;
@@ -312,8 +288,8 @@ class FtbData extends ChangeNotifier {
     for (var i = 0; i < chars.length; i++) {
       var char = chars[i];
       var symbol = textureBatches[batchI].item1[batchJ];
-      char.u = symbol.x;
-      char.v = symbol.y;
+      char.x = symbol.x;
+      char.y = symbol.y;
       char.width = symbol.width;
       char.height = symbol.height;
       char.texId = batchI;
@@ -337,12 +313,12 @@ class FtbData extends ChangeNotifier {
 
     var ftbTextures = textures.map((tex) => FtbFileTexture(0,
         tex.width, tex.height,
-        0, tex.u_1, tex.u_2
+        0
     )).toList();
 
     var ftbChars = chars.map((e) => FtbFileChar(
         e.char.codeUnitAt(0), e.texId, e.width, e.height,
-        e.u, e.v
+        e.x, e.y
     )).toList();
 
     var ftbFile = FtbFile(ftbHeader, ftbTextures, ftbChars);
@@ -360,7 +336,7 @@ class FtbData extends ChangeNotifier {
     }
 
     var wtpBytes = await File(wtpPath).readAsBytes();
-    var extractDir = join(dirname(wtpPath), "textures");
+    var extractDir = join(dirname(wtpPath), "${basename(wtpPath)}_extracted");
     await Directory(extractDir).create(recursive: true);
     for (var i = 0; i < textures.length; i++) {
       // extract dds
@@ -371,38 +347,37 @@ class FtbData extends ChangeNotifier {
       await File(ddsSavePath).writeAsBytes(texBytes);
       // convert dds to png
       var pngSavePath = join(extractDir, "$i.png");
-      var result = await Process.run(magickBinPath!, [ddsSavePath, pngSavePath]);
-      if (result.exitCode != 0) {
-        showToast("Failed to convert dds to png");
-        print(result.stdout);
-        print(result.stderr);
-        throw Exception("ImageMagick failed");
-      }
+      await ddsToPng(ddsSavePath, pngSavePath);
       textures[i].extractedPngPath = pngSavePath;
     }
   }
 
   McdFont asMcdFont(int forTexIndex) {
+    Map<int, McdFontSymbol> supportedSymbols = {};
+    for (var c in chars.where((c) => c.texId == forTexIndex)) {
+      var texture = textures[c.texId];
+      supportedSymbols[c.char.codeUnitAt(0)] = McdFontSymbol(
+        c.char.codeUnitAt(0), c.char,
+        Offset(c.x / texture.width, c.y / texture.height),
+        Offset((c.x + c.width) / texture.width, (c.y + c.height) / texture.height),
+        Size(c.width.toDouble(), c.height.toDouble()),
+        SizeInt(texture.width, texture.height),
+        fontId,
+        MappedKerningGetter({})
+      );
+    }
     return McdFont(
       fontId,
-      chars[0].width, chars[0].height, 0,
-      {
-        for (var c in chars.where((c) => c.texId == forTexIndex))
-          c.char.codeUnitAt(0): McdFontSymbol(
-              c.char.codeUnitAt(0), c.char,
-              c.u, c.v,
-              c.width, c.height,
-              fontId
-          )
-      },
+      chars[0].width.toDouble(), chars[0].height.toDouble(), 0,
+      supportedSymbols,
     );
   }
 
   FtbData copy() {
     return FtbData(
       _magic,
-      textures.map((e) => FtbTexture(e.width, e.height, e.u_1, e.u_2)).toList(),
-      chars.map((e) => FtbChar(e.char, e.texId, e.width, e.height, e.u, e.v)).toList(),
+      textures.map((e) => FtbTexture(e.width, e.height)).toList(),
+      chars.map((e) => FtbChar(e.char, e.texId, e.width, e.height, e.x, e.y)).toList(),
       path, wtaPath, wtpPath, wtaFile,
     );
   }

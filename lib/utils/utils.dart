@@ -777,3 +777,19 @@ void timeFunc(String name, void Function() func) {
   sw.stop();
   print("$name: ${sw.elapsedMilliseconds}ms");
 }
+
+Future<List<T>> futuresWaitBatched<T>(Iterable<Future<T>> futures, int batchSize) async {
+  var iterator = futures.iterator;
+  List<T> results = [];
+  List<Future<T>> batch = [];
+  while (iterator.moveNext()) {
+    batch.add(iterator.current);
+    if (batch.length == batchSize) {
+      results.addAll(await Future.wait(batch));
+      batch.clear();
+    }
+  }
+  if (batch.isNotEmpty)
+    results.addAll(await Future.wait(batch));
+  return results;
+}

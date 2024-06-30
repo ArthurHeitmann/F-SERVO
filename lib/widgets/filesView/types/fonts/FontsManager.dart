@@ -44,12 +44,12 @@ class __McdFontsManagerState extends ChangeNotifierState<FontsManager> {
       "TTF/OTF Path",
       "",
       "fallback only",
-      "absScale",
-      "relScale",
+      "scale",
       "xPadding",
       "yPadding",
       "xOffset",
       "yOffset",
+      "thickness",
       "",
       ""
     ];
@@ -148,10 +148,6 @@ class __McdFontsManagerState extends ChangeNotifierState<FontsManager> {
                     ),
                     makePropEditor(
                       McdData.fontOverrides[i].heightScale,
-                      const PropTFOptions(hintText: "absScale", constraints: BoxConstraints.tightFor(height: 30)),
-                    ),
-                    makePropEditor(
-                      McdData.fontOverrides[i].scale,
                       const PropTFOptions(hintText: "scale", constraints: BoxConstraints.tightFor(height: 30)),
                     ),
                     makePropEditor(
@@ -169,6 +165,10 @@ class __McdFontsManagerState extends ChangeNotifierState<FontsManager> {
                     makePropEditor(
                       McdData.fontOverrides[i].yOffset,
                       const PropTFOptions(hintText: "Y Offset", constraints: BoxConstraints.tightFor(height: 30)),
+                    ),
+                    makePropEditor(
+                      McdData.fontOverrides[i].strokeWidth,
+                      const PropTFOptions(hintText: "thickness", constraints: BoxConstraints.tightFor(height: 30)),
                     ),
                     SmallButton(
                       onPressed: () => McdData.fontOverrides.removeAt(i).dispose(),
@@ -201,6 +201,15 @@ class __McdFontsManagerState extends ChangeNotifierState<FontsManager> {
                 makePropEditor(
                   McdData.fontAtlasLetterSpacing,
                   const PropTFOptions(hintText: "Letter Spacing", constraints: BoxConstraints.tightFor(height: 30, width: 50)),
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                const Text("Resolution Scale: "),
+                makePropEditor(
+                  McdData.fontAtlasResolutionScale,
+                  const PropTFOptions(hintText: "Resolution Scale", constraints: BoxConstraints.tightFor(height: 30, width: 50)),
                 ),
               ],
             ),

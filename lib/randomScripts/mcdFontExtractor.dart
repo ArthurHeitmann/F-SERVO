@@ -139,8 +139,8 @@ Future<void> processFile(String mcd) async {
       charsMeta[fontId] = {
         "width": font.width,
         "height": font.height,
-        "below": font.below,
-        "horizontal": font.horizontal,
+        "below": font.horizontalSpacing,
+        "horizontal": font.verticalSpacing,
         "usedBy": [],
         "symbols": []
       };
@@ -171,14 +171,14 @@ Future<void> processFile(String mcd) async {
       "width": glyph.width,
       "height": glyph.height,
       "above": glyph.above,
-      "below": glyph.below,
+      "below": glyph.horizontalSpacing,
       "horizontal": glyph.horizontal,
     });
     tCropPrep.stop();
 
     // crop and save
     tCrop.start();
-    var crop = copyCrop(pngFile, cropU1, cropV1, glyph.width.toInt(), glyph.height.toInt());
+    var crop = copyCrop(pngFile, x: cropU1, y: cropV1, width: glyph.width.toInt(), height: glyph.height.toInt());
     await File(outFileName).writeAsBytes(encodePng(crop));
     tCrop.stop();
   }

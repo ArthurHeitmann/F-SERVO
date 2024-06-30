@@ -14,8 +14,9 @@ class CliImgOperationDrawFromTexture extends CliImgOperation {
   final int srcY;
   final int width;
   final int height;
+  final double resolutionScale;
 
-  CliImgOperationDrawFromTexture(int id, this.srcTexId, this.srcX, this.srcY, this.width, this.height) : super(0, id);
+  CliImgOperationDrawFromTexture(int id, this.srcTexId, this.srcX, this.srcY, this.width, this.height, this.resolutionScale) : super(0, id);
 
   @override
   Map<String, dynamic> toJson() {
@@ -27,6 +28,7 @@ class CliImgOperationDrawFromTexture extends CliImgOperation {
       "srcY": srcY,
       "width": width,
       "height": height,
+      "resolutionScale": resolutionScale,
     };
   }
 }
@@ -54,23 +56,25 @@ class CliImgOperationDrawFromFont extends CliImgOperation {
 class CliFontOptions {
   final String fontPath;
   final int fontHeight;
-  final double fontScale;
   final int letXPadding;
   final int letYPadding;
   final double letXOffset;
   final double letYOffset;
+  final double resolutionScale;
+  final int strokeWidth;
 
-  CliFontOptions(this.fontPath, this.fontHeight, this.fontScale, this.letXPadding, this.letYPadding, this.letXOffset, this.letYOffset);
+  CliFontOptions(this.fontPath, this.fontHeight, this.letXPadding, this.letYPadding, this.letXOffset, this.letYOffset, this.resolutionScale, this.strokeWidth);
 
   Map<String, dynamic> toJson() {
     return {
       "path": fontPath,
       "height": fontHeight,
-      "scale": fontScale,
       "letXPadding": letXPadding,
       "letYPadding": letYPadding,
       "letXOffset": letXOffset,
       "letYOffset": letYOffset,
+      "resolutionScale": resolutionScale,
+      "strokeWidth": strokeWidth,
     };
   }
 }
@@ -110,11 +114,9 @@ class FontAtlasGenSymbol {
 }
 
 class FontAtlasGenResultFontParams {
-  final int baseline;
   final double scale;
 
   FontAtlasGenResultFontParams.fromJson(Map<String, dynamic> map) :
-    baseline = map["baseline"],
     scale = map["scale"];
 }
 

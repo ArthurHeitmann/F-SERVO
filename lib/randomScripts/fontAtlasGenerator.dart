@@ -33,7 +33,7 @@ Future<void> genAtlas(String fontDir) async {
   // generate atlas
   // { code, char, x, y, width, height }[]
   List<Map<String, dynamic>> atlasSymbols = [];
-  var atlas = Image(atlasWidth.toInt(), atlasHeight.toInt());
+  var atlas = Image(width: atlasWidth.toInt(), height: atlasHeight.toInt());
   double x = 0;
   double y = 0;
   for (var symbol in symbols) {
@@ -45,7 +45,7 @@ Future<void> genAtlas(String fontDir) async {
     var charImage = decodePng(await File(imgPath).readAsBytes())!;
     if (charImage.width != width || charImage.height != height)
       print("Warning: $imgPath has wrong size ${charImage.width} x ${charImage.height} instead of $width x $height");
-    copyInto(atlas, charImage, dstX: x.toInt(), dstY: y.toInt());
+    compositeImage(atlas, charImage, dstX: x.toInt(), dstY: y.toInt());
     atlasSymbols.add({
       "code": charCode,
       "char": char,
