@@ -12,6 +12,8 @@ Future<void> pngToDds(String ddsPath, String pngPath) async {
     [pngPath, "-define", "dds:mipmaps=0", ddsPath]
   );
   if (result.exitCode != 0) {
+    messageLog.add("stdout: ${result.stdout}");
+    messageLog.add("stderr: ${result.stderr}");
     messageLog.add("Failed to convert texture to DDS: ${result.stderr}");
     throw Exception("Failed to convert texture to DDS: ${result.stderr}");
   }

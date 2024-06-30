@@ -1,7 +1,9 @@
 import '../utils/ByteDataWrapper.dart';
 
 class FtbFileHeader {
-  List<int> magic;
+  List<int> start;
+  int globalKerning;
+  int null0;
   int texturesCount;
   int unknown;
   int charsCount;
@@ -9,10 +11,12 @@ class FtbFileHeader {
   int charsOffset;
   int charsOffset2;
 
-  FtbFileHeader(this.magic, this.texturesCount, this.unknown, this.charsCount, this.texturesOffset, this.charsOffset, this.charsOffset2);
+  FtbFileHeader(this.start, this.globalKerning, this.null0, this.texturesCount, this.unknown, this.charsCount, this.texturesOffset, this.charsOffset, this.charsOffset2);
 
   FtbFileHeader.read(ByteDataWrapper bytes) :
-    magic = bytes.readUint8List(118),
+    start = bytes.readUint8List(114),
+    globalKerning = bytes.readInt16(),
+    null0 = bytes.readUint16(),
     texturesCount = bytes.readUint16(),
     unknown = bytes.readUint16(),
     charsCount = bytes.readUint16(),
@@ -21,8 +25,10 @@ class FtbFileHeader {
     charsOffset2 = bytes.readUint32();
   
   void write(ByteDataWrapper bytes) {
-    for (var b in magic)
+    for (var b in start)
       bytes.writeUint8(b);
+    bytes.writeInt16(globalKerning);
+    bytes.writeUint16(null0);
     bytes.writeUint16(texturesCount);
     bytes.writeUint16(unknown);
     bytes.writeUint16(charsCount);

@@ -11,11 +11,15 @@ import '../../../fileTypeUtils/ftb/ftbIO.dart';
 import '../../../fileTypeUtils/textures/fontAtlasGenerator.dart';
 import '../../../fileTypeUtils/textures/fontAtlasGeneratorTypes.dart';
 import '../../../fileTypeUtils/textures/ddsConverter.dart';
+import '../../../fileTypeUtils/ttf/ttf.dart';
+import '../../../fileTypeUtils/utils/ByteDataWrapper.dart';
 import '../../../fileTypeUtils/wta/wtaReader.dart';
 import '../../../utils/assetDirFinder.dart';
 import '../../../utils/utils.dart';
 import '../../../widgets/filesView/FileType.dart';
+import '../../Property.dart';
 import '../../changesExporter.dart';
+import '../../events/statusInfo.dart';
 import '../../undoable.dart';
 import '../openFileTypes.dart';
 import 'McdFileData.dart';
@@ -44,6 +48,36 @@ class FtbFileData extends OpenFileData {
     var datDir = dirname(path);
     changedDatFiles.add(datDir);
     await super.save();
+    await processChangedFiles();
+  }
+
+  Future<void> addCharsFromFront(String fontPath) async {
+    Iterable<String> fontChars;
+    try {
+      var bytes = await ByteDataWrapper.fromFile(fontPath);
+      var ttf = TtfFile.read(bytes);
+      fontChars = ttf.allChars();
+    } catch (e) {
+      showToast("Failed to read font file");
+      rethrow;
+    }
+    ftbData!.pendingNewChars.clear();
+    for (var char in fontChars) {
+      if (ftbData!.chars.any((c) => c.char == char))
+        continue;
+      var code = char.codeUnitAt(0);
+      if (code < 0x20 || code >= 0x7F && code < 0xA0 || code >= 0x7FFF)
+        continue;
+      ftbData!.pendingNewChars.add(FtbPendingChar(char, fontPath));
+    }
+    var newChars = ftbData!.pendingNewChars.map((c) => c.char).toList();
+    if (newChars.isEmpty) {
+      showToast("No new chars to add");
+      return;
+    }
+    await save();
+    showToast("Added ${newChars.length} new chars");
+    messageLog.add("New chars: ${newChars.join(", ")}");
   }
 
   @override
@@ -83,19 +117,52 @@ class FtbTexture {
   FtbTexture(this.width, this.height);
 }
 
-class FtbChar {
-  String char;
+abstract class FtbCharBase {
+  final String char;
+
+  FtbCharBase(this.char);
+
+  CliImgOperation getImgOperation(int i, bool hasOverride, CliImgOperationDrawFromTexture? Function() getFallback);
+}
+class FtbChar extends FtbCharBase {
   int texId;
   int width;
   int height;
   int x;
   int y;
 
-  FtbChar(this.char, this.texId, this.width, this.height, this.x, this.y);
+  FtbChar(super.char, this.texId, this.width, this.height, this.x, this.y);
+
+  @override
+  CliImgOperation getImgOperation(int i, bool hasOverride, CliImgOperationDrawFromTexture? Function() getFallback) {
+    if (!hasOverride)
+      return getFallback()!;
+    return CliImgOperationDrawFromFont(
+      i, char, 0, getFallback(),
+    );
+  }
+}
+
+class FtbPendingChar extends FtbCharBase {
+  final String fontPath;
+
+  FtbPendingChar(super.char, this.fontPath);
+
+  @override
+  CliImgOperation getImgOperation(int i, bool hasOverride, CliImgOperationDrawFromTexture? Function() getFallback) {
+    return CliImgOperationDrawFromFont(
+      i, char, 1, null,
+    );
+  }
+
+  FtbChar toDefaultChar() {
+    return FtbChar(char, 0, 0, 0, 0, 0);
+  }
 }
 
 class FtbData extends ChangeNotifier {
   final List<int> _magic;
+  final NumberProp kerning;
   List<FtbTexture> textures;
   List<FtbChar> chars;
   String path;
@@ -103,9 +170,11 @@ class FtbData extends ChangeNotifier {
   String wtpPath;
   WtaFile wtaFile;
   int fontId;
+  List<FtbPendingChar> pendingNewChars = [];
 
-  FtbData(this._magic, this.textures, this.chars, this.path, this.wtaPath, this.wtpPath, this.wtaFile)
-      : fontId = int.parse(basenameWithoutExtension(path).substring(5));
+  FtbData(this._magic, int kerning, this.textures, this.chars, this.path, this.wtaPath, this.wtpPath, this.wtaFile) :
+    kerning = NumberProp(kerning, true, fileId: null),
+    fontId = int.parse(basenameWithoutExtension(path).substring(5));
 
   static Future<FtbData> fromFtbFile(String path) async{
     var name = basenameWithoutExtension(path);
@@ -125,7 +194,8 @@ class FtbData extends ChangeNotifier {
 
     var ftbFile = await FtbFile.fromFile(path);
     var ftbData = FtbData(
-      ftbFile.header.magic,
+      ftbFile.header.start,
+      ftbFile.header.globalKerning,
       ftbFile.textures.map((e) => FtbTexture(e.width, e.height)).toList(),
       ftbFile.chars.map((e) => FtbChar(e.char, e.texId, e.width, e.height, e.u, e.v)).toList(),
       path,
@@ -146,50 +216,50 @@ class FtbData extends ChangeNotifier {
     return ftbData;
   }
 
-  Future<Tuple2<List<FontAtlasGenSymbol>, int>> generateTextureBatch(int i, List<FtbChar> chars, CliFontOptions font, String ddsPath) async {
+  Future<Tuple2<List<FontAtlasGenSymbol>, int>> generateTextureBatch(int batchI, List<FtbCharBase> chars, CliFontOptions? fontOverride, CliFontOptions? newFont, List<String> textures, String ddsPath) async {
     List<CliImgOperation> imgOperations = [];
-    var fallbackSymbols = McdData.availableFonts[fontId]?.supportedSymbols;
+    var usedCharsMap = {
+      for (var c in chars)
+        if (c is FtbChar)
+          c.char: c
+    };
+    var hasOverride = fontOverride != null;
     for (int i = 0; i < chars.length; i++) {
       var char = chars[i];
-      CliImgOperationDrawFromTexture? fallback;
-      var fontSymbol = fallbackSymbols?[char.char.codeUnitAt(0)];
-      if (fontSymbol != null) {
-        fallback = CliImgOperationDrawFromTexture(
-          i, 0,
-          fontSymbol.getX(), fontSymbol.getY(),
-          fontSymbol.getWidth(), fontSymbol.getHeight(),
-          1.0,
-        );
-      }
-      imgOperations.add(CliImgOperationDrawFromFont(
-        i, char.char, fontId, fallback,
-      ));
+      imgOperations.add(char.getImgOperation(i, hasOverride, () {
+        var currentChar = usedCharsMap[char.char];
+        if (currentChar != null)
+          return CliImgOperationDrawFromTexture(
+            i, currentChar.texId,
+            currentChar.x, currentChar.y,
+            currentChar.width, currentChar.height,
+            1.0,
+          );
+        return null;
+      }));
     }
 
-    var fallbackTexPath = McdData.availableFonts[fontId]!.atlasTexturePath;
     var texPngPath = "${ddsPath.substring(0, ddsPath.length - 4)}.png";
+    var fonts = {
+      if (fontOverride != null) 0: fontOverride,
+      if (newFont != null) 1: newFont,
+    };
     var cliArgs = FontAtlasGenCliOptions(
-        texPngPath, [fallbackTexPath],
+        texPngPath, textures,
         McdData.fontAtlasLetterSpacing.value.toInt(),
         2048,
-        { fontId: font }, imgOperations
+        fonts,
+        imgOperations,
     );
     var atlasInfo = await runFontAtlasGenerator(cliArgs);
-    // convert png to dds (.wtp)
-    var result = await Process.run(
-      magickBinPath!,
-      [texPngPath, "-define", "dds:mipmaps=0", ddsPath],
-    );
-    if (result.exitCode != 0) {
-      showToast("ImageMagick failed");
-      print(result.stdout);
-      print(result.stderr);
-      throw Exception("ImageMagick failed");
-    }
+    await pngToDds(ddsPath, texPngPath);
 
-    print("Generated font atlas $i with ${atlasInfo.symbols.length} symbols");
+    messageLog.add("Generated font atlas $batchI with ${atlasInfo.symbols.length} symbols");
 
-    return Tuple2(atlasInfo.symbols.values.toList(), atlasInfo.texSize);
+    var generatedSymbolEntries = atlasInfo.symbols.entries.toList();
+    generatedSymbolEntries.sort((a, b) => a.key.compareTo(b.key));
+    var generatedSymbols = generatedSymbolEntries.map((e) => e.value).toList();
+    return Tuple2(generatedSymbols, atlasInfo.texSize);
   }
 
   Future<void> generateTexture() async {
@@ -212,37 +282,63 @@ class FtbData extends ChangeNotifier {
       showToast("No font override for font $fontId");
       throw Exception("No font override for font $fontId");
     }
-    if (!await File(fontOverride.fontPath.value).exists()) {
+    var hasOverrideFont = await File(fontOverride.fontPath.value).exists();
+    if (pendingNewChars.isEmpty && fontOverride.fontPath.value.isNotEmpty && !hasOverrideFont) {
       showToast("Font path is invalid");
       throw Exception("Font path is invalid");
     }
 
-    // generate cli json args
+    // font settings
     var heightScale = fontOverride.heightScale.value.toDouble();
     var fontHeight = McdData.availableFonts[fontId]!.fontHeight * heightScale;
-    var scaleFact = 44 / fontHeight;
-    CliFontOptions? font = CliFontOptions(
+    CliFontOptions? overrideFont = hasOverrideFont ? CliFontOptions(
       fontOverride.fontPath.value,
       fontHeight.toInt(),
-      (fontOverride.letXPadding.value * scaleFact).toInt(),
-      (fontOverride.letYPadding.value * scaleFact).toInt(),
-      (fontOverride.xOffset.value * scaleFact).toDouble(),
-      (fontOverride.yOffset.value * scaleFact).toDouble(),
+      (fontOverride.letXPadding.value * heightScale).toInt(),
+      (fontOverride.letYPadding.value * heightScale).toInt(),
+      (fontOverride.xOffset.value * heightScale).toDouble(),
+      (fontOverride.yOffset.value * heightScale).toDouble(),
       1.0,
       fontOverride.strokeWidth.value.toInt(),
-    );
+    ) : null;
+    var newFonts = pendingNewChars.map((c) => c.fontPath).toSet();
+    if (newFonts.length > 1)
+      throw Exception("Multiple new fonts");
+    CliFontOptions? newFont = newFonts.isNotEmpty ? CliFontOptions(
+      newFonts.first,
+      fontHeight.toInt(),
+      (fontOverride.letXPadding.value * heightScale).toInt(),
+      (fontOverride.letYPadding.value * heightScale).toInt(),
+      (fontOverride.xOffset.value * heightScale).toDouble(),
+      (fontOverride.yOffset.value * heightScale).toDouble(),
+      1.0,
+      fontOverride.strokeWidth.value.toInt(),
+    ) : null;
+    // temporary source texture copies
+    List<String> sourceTextures = await Future.wait(textures.map((tex) async {
+      var texPath = tex.extractedPngPath!;
+      var copyPath = "${withoutExtension(texPath)}_copy.png";
+      await File(texPath).copy(copyPath);
+      return copyPath;
+    }));
+    // split chars into batches
     const textureBatchesCount = 4;
-    var charsPerBatch = (chars.length / textureBatchesCount).ceil();
-    List<List<FtbChar>> charsBatches = [];
-    for (int i = 0; i < chars.length; i += charsPerBatch) {
-      var batch = chars.sublist(i, min(i + charsPerBatch, chars.length));
+    var allChars = [...chars, ...pendingNewChars];
+    var charsPerBatch = (allChars.length / textureBatchesCount).ceil();
+    List<List<FtbCharBase>> charsBatches = [];
+    for (int i = 0; i < allChars.length; i += charsPerBatch) {
+      var batch = allChars.sublist(i, min(i + charsPerBatch, allChars.length));
       charsBatches.add(batch);
     }
-    var ddsPaths = List.generate(textureBatchesCount, (i) => join(dirname(wtpPath), "${basename(wtpPath)}_$i.dds"));
+    var ddsPaths = List.generate(textureBatchesCount, (i) => join(dirname(wtpPath), "${basename(wtpPath)}_extracted", "$i.dds"));
     var textureBatches = await Future.wait(List.generate(
-        textureBatchesCount,
-            (i) => generateTextureBatch(i, charsBatches[i], font, ddsPaths[i])
+      textureBatchesCount,
+        (i) => generateTextureBatch(i, charsBatches[i], overrideFont, newFont, sourceTextures, ddsPaths[i])
     ));
+    // cleanup
+    await Future.wait(sourceTextures.map((e) => File(e).delete()));
+
+
     var wtpSizes = await Future.wait(ddsPaths.map((e) => File(e).length()));
 
     // update .wta
@@ -283,6 +379,13 @@ class FtbData extends ChangeNotifier {
       texture.extractedPngPath = "${ddsPaths[i].substring(0, ddsPaths[i].length - 4)}.png";
     }
 
+    // add new chars
+    for (var c in pendingNewChars) {
+      chars.add(c.toDefaultChar());
+    }
+    pendingNewChars.clear();
+
+    // update char data
     var batchI = 0;
     var batchJ = 0;
     for (var i = 0; i < chars.length; i++) {
@@ -299,6 +402,7 @@ class FtbData extends ChangeNotifier {
         batchJ = 0;
       }
     }
+    chars.sort((a, b) => a.char.compareTo(b.char));
 
     notifyListeners();
 
@@ -309,7 +413,7 @@ class FtbData extends ChangeNotifier {
     await generateTexture();
 
     var charsOffset = 0x88 + textures.length * 0x10;
-    var ftbHeader = FtbFileHeader(_magic, textures.length, 0, chars.length, 0x88, charsOffset, charsOffset);
+    var ftbHeader = FtbFileHeader(_magic, kerning.value.toInt(), 0, textures.length, 0, chars.length, 0x88, charsOffset, charsOffset);
 
     var ftbTextures = textures.map((tex) => FtbFileTexture(0,
         tex.width, tex.height,
@@ -376,6 +480,7 @@ class FtbData extends ChangeNotifier {
   FtbData copy() {
     return FtbData(
       _magic,
+      kerning.value.toInt(),
       textures.map((e) => FtbTexture(e.width, e.height)).toList(),
       chars.map((e) => FtbChar(e.char, e.texId, e.width, e.height, e.x, e.y)).toList(),
       path, wtaPath, wtpPath, wtaFile,

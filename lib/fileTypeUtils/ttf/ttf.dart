@@ -123,6 +123,13 @@ class Cmap {
     numTables = bytes.readUint16();
     encodingRecords = List.generate(numTables, (i) => EncodingRecord.read(bytes, cmapOffset));
   }
+
+  Iterable<String> allChars() {
+    return encodingRecords
+      .map((r) => r.allChars())
+      .expand((c) => c)
+      .toSet();
+  }
 }
 
 class EncodingRecord {
@@ -139,6 +146,10 @@ class EncodingRecord {
     bytes.position = cmapOffset + offset;
     format = CmapFormat.read(bytes);
     bytes.position = previous;
+  }
+
+  Iterable<String> allChars() {
+    return format?.allChars() ?? [];
   }
 }
 abstract class CmapFormat {
@@ -163,6 +174,8 @@ abstract class CmapFormat {
   }
 
   int? getGlyphIndex(String char);
+  
+  Iterable<String> allChars();
 }
 class CmapFormat0 implements CmapFormat {
   late final int format;
@@ -185,6 +198,15 @@ class CmapFormat0 implements CmapFormat {
     if (code >= 256)
       return null;
     return glyphIndexArray[code];
+  }
+
+  @override
+  Iterable<String> allChars() {
+    return glyphIndexArray
+      .asMap()
+      .entries
+      .where((e) => e.value != 0)
+      .map((e) => String.fromCharCode(e.key));
   }
 }
 class CmapFormat4 implements CmapFormat {
@@ -245,6 +267,11 @@ class CmapFormat4 implements CmapFormat {
     int code = char.codeUnitAt(0);
     return glyphToIndexMap[code];
   }
+
+  @override
+  Iterable<String> allChars() {
+    return glyphToIndexMap.keys.map((c) => String.fromCharCode(c));
+  }
 }
 class CmapFormat6 implements CmapFormat {
   late final int format;
@@ -271,6 +298,15 @@ class CmapFormat6 implements CmapFormat {
     if (code < firstCode || code >= firstCode + entryCount)
       return null;
     return glyphIndexArray[code - firstCode];
+  }
+
+  @override
+  Iterable<String> allChars() {
+    return glyphIndexArray
+      .asMap()
+      .entries
+      .where((e) => e.value != 0)
+      .map((e) => String.fromCharCode(e.key + firstCode));
   }
 }
 class CmapFormat1213 implements CmapFormat {
@@ -301,6 +337,14 @@ class CmapFormat1213 implements CmapFormat {
     else
       return group.id;
   }
+
+  @override
+  Iterable<String> allChars() {
+    return groupRecords
+      .map((group) => Iterable.generate(group.endCharCode - group.startCharCode + 1, (i) => group.startCharCode + i))
+      .expand((c) => c)
+      .map((c) => String.fromCharCode(c));
+  }
 }
 class GroupRecord extends Range {
   late final int id;
@@ -324,6 +368,11 @@ class CmapFormatUnknown implements CmapFormat {
   @override
   int? getGlyphIndex(String char) {
     return null;
+  }
+
+  @override
+  Iterable<String> allChars() {
+    return [];
   }
 }
 
@@ -1024,5 +1073,9 @@ class TtfFile {
 
   double getKerningScaled(String left, String right, int fontSize) {
     return getKerning(left, right) * fontSize / head.unitsPerEm;
+  }
+
+  Iterable<String> allChars() {
+    return cmap.allChars();
   }
 }

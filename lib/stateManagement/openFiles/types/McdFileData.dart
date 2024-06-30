@@ -2,7 +2,6 @@
 
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
@@ -1029,9 +1028,9 @@ class McdData extends _McdFilePart {
         ]);
       }
       else if (isFallbackOnly || isOverridden) {
+        var scaleFact = fontOverridesMap[fontId]!.heightScale.value * McdData.fontAtlasResolutionScale.value.toDouble();
         var fontHeight = (availableFonts[fontId]!.fontHeight * fontOverridesMap[fontId]!.heightScale.value).toInt();
         if (!fonts.containsKey(fontId)) {
-          var scaleFact = 44 / fontHeight;
           fonts[fontId] = CliFontOptions(
             fontOverridesMap[fontId]!.fontPath.value,
             fontHeight,

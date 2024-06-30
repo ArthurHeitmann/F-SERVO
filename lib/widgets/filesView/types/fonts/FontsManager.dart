@@ -6,6 +6,7 @@ import 'dart:math';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../stateManagement/Property.dart';
 import '../../../../stateManagement/openFiles/types/McdFileData.dart';
 import '../../../../utils/utils.dart';
 import '../../../misc/ChangeNotifierWidget.dart';
@@ -20,8 +21,10 @@ import '../../../theme/customTheme.dart';
 class FontsManager extends ChangeNotifierWidget {
   final McdData? mcd;
   final int singleFontId;
+  final bool showResolutionScale;
+  final List<(String, Prop)> additionalProps;
 
-  FontsManager({super.key, this.mcd, this.singleFontId = -1}) : super(notifier: McdData.fontOverrides);
+  FontsManager({super.key, this.mcd, this.singleFontId = -1, this.showResolutionScale = true, this.additionalProps = const []}) : super(notifier: McdData.fontOverrides);
 
   @override
   State<FontsManager> createState() => __McdFontsManagerState();
@@ -124,7 +127,7 @@ class __McdFontsManagerState extends ChangeNotifierState<FontsManager> {
                     PrimaryPropTextField(
                       prop: McdData.fontOverrides[i].fontPath,
                       options: const PropTFOptions(hintText: "Font Path", constraints: BoxConstraints.tightFor(height: 30)),
-                      validatorOnChange: (str) => File(str).existsSync() ? null : "File not found",
+                      validatorOnChange: (str) => str.isEmpty || File(str).existsSync() ? null : "File not found",
                       onValid: (str) => McdData.fontOverrides[i].fontPath.value = str,
                     ),
                     SmallButton(
@@ -197,20 +200,29 @@ class __McdFontsManagerState extends ChangeNotifierState<FontsManager> {
               ),
             Row(
               children: [
-                const Text("Letter Spacing: "),
+                const Text("Letter Padding: "),
                 makePropEditor(
                   McdData.fontAtlasLetterSpacing,
-                  const PropTFOptions(hintText: "Letter Spacing", constraints: BoxConstraints.tightFor(height: 30, width: 50)),
+                  const PropTFOptions(hintText: "Letter Padding", constraints: BoxConstraints.tightFor(height: 30, width: 50)),
                 ),
-              ],
-            ),
-            Row(
-              children: [
-                const Text("Resolution Scale: "),
-                makePropEditor(
-                  McdData.fontAtlasResolutionScale,
-                  const PropTFOptions(hintText: "Resolution Scale", constraints: BoxConstraints.tightFor(height: 30, width: 50)),
-                ),
+                if (widget.showResolutionScale)
+                  ...[
+                    const SizedBox(width: 20),
+                    const Text("Resolution Scale: "),
+                    makePropEditor(
+                      McdData.fontAtlasResolutionScale,
+                      const PropTFOptions(hintText: "Resolution Scale", constraints: BoxConstraints.tightFor(height: 30, width: 50)),
+                    ),
+                  ],
+                for (var (label, prop) in widget.additionalProps)
+                  ...[
+                    const SizedBox(width: 20),
+                    Text("$label: "),
+                    makePropEditor(
+                      prop,
+                      PropTFOptions(hintText: label, constraints: const BoxConstraints.tightFor(height: 30, width: 50)),
+                    ),
+                  ],
               ],
             ),
             if (widget.mcd != null)
