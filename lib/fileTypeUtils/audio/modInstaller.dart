@@ -31,7 +31,7 @@ Future<void> installMod(String waiPath) async {
     var fs = InputFileStream(zipPath);
     var archive = ZipDecoder().decodeBuffer(fs);
     extractArchiveToDisk(archive, tmpDir.path);
-    fs.close();
+    await fs.close();
 
     var metadataFile = join(dirname(waiPath), audioModsMetadataFileName);
     var metadata = await AudioModsMetadata.fromFile(metadataFile);

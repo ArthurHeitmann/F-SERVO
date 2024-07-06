@@ -36,6 +36,12 @@ Music replacement & loop point editing
 ![image](https://github.com/ArthurHeitmann/F-SERVO/assets/37270165/36770284-fb7d-4293-9656-d64e28f3e74f)  
 MCD editing
 
+## Support
+
+- Open an issue on this repository
+- [Nier Discord modding server](https://discord.gg/ngAK7rT)
+- My Discord name: @raiderbv
+
 ## Building (for developers only)
 
 1. [Setup Flutter for Windows](https://docs.flutter.dev/get-started/install/windows)
