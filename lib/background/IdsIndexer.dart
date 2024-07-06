@@ -328,7 +328,7 @@ class IdsIndexer {
       }
     }
     else if (indexPath.endsWith(".dat")) {
-      _indexDatContents(indexPath);
+      unawaited(_indexDatContents(indexPath));
     }
     else if (indexPath.endsWith(".pak")) {
       String datExtractDir = dirname(indexPath);
@@ -337,7 +337,7 @@ class IdsIndexer {
       String pakName = basename(indexPath);
       String pakExtractDir = join(datExtractDir, "pakExtracted", pakName);
       var pakBytes = await ByteDataWrapper.fromFile(indexPath);
-      _indexPakContents(datPath, indexPath, pakExtractDir, pakBytes);
+      unawaited(_indexPakContents(datPath, indexPath, pakExtractDir, pakBytes));
     }
     else if (indexPath.endsWith(".yax") || indexPath.endsWith(".xml")) {
       String pakExtractDir = dirname(indexPath);
@@ -349,7 +349,7 @@ class IdsIndexer {
 
       if (indexPath.endsWith(".yax")) {
         var yaxBytes = await ByteDataWrapper.fromFile(indexPath);
-        _indexYaxContents(datPath, pakPath, indexPath, yaxBytes);
+        unawaited(_indexYaxContents(datPath, pakPath, indexPath, yaxBytes));
       }
       else {
         String xml = await File(indexPath).readAsString();
@@ -366,23 +366,19 @@ class IdsIndexer {
   }
 
   Future<void> _indexAllIdsInDir(String dir) async {
-    List<Future<void>> futures = [];
-    var files = Directory(dir)
+    var files = await Directory(dir)
       .list(recursive: true)
-      .where((f) => f is File && f.path.endsWith(".dat"));
-    await for (var entry in files) {
-      if (_stop)
-        return;
-
-      futures.add(_indexDatContents(entry.path));
-    }
-    await Future.wait(futures);
+      .where((f) => f is File && f.path.endsWith(".dat"))
+      .toList();
+    await futuresWaitBatched(
+      files.map((f) => _indexDatContents(f.path)),
+      10,
+    );
   }
 
   Future<void> _indexDatContents(String datPath) async {
     if (_stop)
       return;
-    // List<Future<void>> futures = [];
     var fileName = basename(datPath);
     var datFolder = dirname(datPath);
     var datExtractDir = join(datFolder, "nier2blender_extracted", fileName);
@@ -391,8 +387,6 @@ class IdsIndexer {
       await _indexDatExtractDir(datPath, datExtractDir);
     else
       await _indexDatFile(datPath, datExtractDir);
-
-    // await Future.wait(futures);
   }
 
   Future<void> _indexDatExtractDir(String datPath, String datExtractDir) async {
@@ -420,15 +414,12 @@ class IdsIndexer {
   Future<void> _indexPakContents(String datPath, String pakPath, String pakExtractPath, ByteDataWrapper bytes) async {
     if (_stop)
       return;
-    List<Future<void>> futures = [];
     var pakInfoPath = join(pakExtractPath, "pakInfo.json");
 
     if (await File(pakInfoPath).exists())
       await _indexPakInfo(datPath, pakPath, pakExtractPath, pakInfoPath);
     else
       await _indexPakFiles(datPath, pakPath, pakExtractPath, bytes);
-
-    await Future.wait(futures);
   }
 
   Future<void> _indexPakInfo(String datPath, String pakPath, String pakExtractPath, String pakInfoPath) async {var pakInfoJson = jsonDecode(await File(pakInfoPath).readAsString());

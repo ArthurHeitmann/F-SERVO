@@ -157,7 +157,7 @@ class IdLookup with Initializable {
       if (lvl4Paths.any((path) => isWithin(path, file.path)))
         continue;
       if (file is ExtractableHierarchyEntry) {
-        _openFilesWorker.addIndexingPaths([file.extractedPath]);
+        unawaited(_openFilesWorker.addIndexingPaths([file.extractedPath]));
         _openHierarchyFiles.add(file);
       }
     }
@@ -167,7 +167,7 @@ class IdLookup with Initializable {
         continue;
       var file = _openHierarchyFiles[i];
       if (file is ExtractableHierarchyEntry) {
-        _openFilesWorker.removeIndexingPaths([file.extractedPath]);
+        unawaited(_openFilesWorker.removeIndexingPaths([file.extractedPath]));
       }
       _openHierarchyFiles.removeAt(i);
     }

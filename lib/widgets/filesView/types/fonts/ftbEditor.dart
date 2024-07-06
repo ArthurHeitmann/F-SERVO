@@ -60,6 +60,8 @@ class _FtbEditorState extends ChangeNotifierState<FtbEditor> {
       child: Column(
         children: [
           const SizedBox(height: 35),
+          if (widget.file.ftbData!.fontId == 0)
+            const Text("font_00 is not used in-game and not supported", style: TextStyle(color: Colors.red)),
           FontsManager(
             singleFontId: widget.file.ftbData!.fontId,
             showResolutionScale: false,

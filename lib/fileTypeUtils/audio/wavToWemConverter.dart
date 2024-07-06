@@ -21,7 +21,7 @@ Future<String> _makeWwiseProject(bool isBgm) async {
   var fs = InputFileStream(wwiseProjectTemplate);
   var archive = ZipDecoder().decodeBuffer(fs);
   extractArchiveToDisk(archive, tempProjectDir);
-  fs.close();
+  await fs.close();
 
   return tempProjectDir;
 }

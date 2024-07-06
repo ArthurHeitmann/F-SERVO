@@ -192,6 +192,9 @@ class FtbData extends ChangeNotifier {
     }
     var wtaFile = await WtaFile.readFromFile(wtaPath);
 
+    if (basenameWithoutExtension(path).contains("font_00"))
+      showToast("font_00 is not used in-game and not supported");
+
     var ftbFile = await FtbFile.fromFile(path);
     var ftbData = FtbData(
       ftbFile.header.start,

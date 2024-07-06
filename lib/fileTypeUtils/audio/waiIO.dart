@@ -383,7 +383,7 @@ class WaiFile {
 }
 
 Future<void> makeWsp(List<WemStruct> wemFiles, Map<int, String> idToWemFiles, String savePath) async {
-  backupFile(savePath);
+  await backupFile(savePath);
   var wsp = await File(savePath).open(mode: FileMode.write);
   try {
     var sortedWemFiles = wemFiles.toList();
