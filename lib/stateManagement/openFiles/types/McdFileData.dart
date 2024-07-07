@@ -607,9 +607,9 @@ class McdData extends _McdFilePart {
     try {
       textureSize = await getImageSize(wtpPath);
     }
-    catch (e) {
+    catch (e, s) {
       showToast("Unable to read ${basename(wtpPath)} file!");
-      print(e);
+      print("$e\n$s");
       throw Exception("Unable to read $wtpPath");
     }
 

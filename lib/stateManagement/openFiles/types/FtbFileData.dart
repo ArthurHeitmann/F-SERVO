@@ -57,8 +57,9 @@ class FtbFileData extends OpenFileData {
       var bytes = await ByteDataWrapper.fromFile(fontPath);
       var ttf = TtfFile.read(bytes);
       fontChars = ttf.allChars();
-    } catch (e) {
+    } catch (e, s) {
       showToast("Failed to read font file");
+      print("$e\n$s");
       rethrow;
     }
     ftbData!.pendingNewChars.clear();

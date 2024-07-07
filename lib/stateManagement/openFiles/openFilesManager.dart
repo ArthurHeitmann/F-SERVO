@@ -259,8 +259,9 @@ class OpenFilesAreasManager with HasUuid, Undoable implements Disposable {
       ]);
       onSaveAll.notifyListeners();
       await processChangedFiles();
-    } catch (e) {
+    } catch (e, s) {
       showToast("Error saving files");
+      print("$e\n$s");
       rethrow;
     } finally {
       isLoadingStatus.popIsLoading();

@@ -125,8 +125,9 @@ Stream<ExtractedInnerFile> extractDatFilesAsStream(String datPath) async* {
         bytes.makeSubView(fileSizes[i])
       );
     }
-  } catch (e) {
+  } catch (e, s) {
     print("Error while extracting dat files from $datPath");
+    print("$e\n$s");
     return;
   }
 }

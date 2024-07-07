@@ -37,9 +37,9 @@ class WemFilesLookup {
       if (await Directory(dataPath).exists()) {
         await _indexDir(dataPath, recursive: false);
       }
-    } catch (e) {
+    } catch (e, s) {
       print("Error indexing WAI files:");
-      print(e);
+      print("$e\n$s");
     }
 
     loadingCompleter!.complete();

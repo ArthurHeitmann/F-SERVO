@@ -31,9 +31,9 @@ Future<FontAtlasGenResult> runFontAtlasGenerator(FontAtlasGenCliOptions options)
   try {
     var atlasInfoJson = jsonDecode(await stdout);
     return FontAtlasGenResult.fromJson(atlasInfoJson);
-  } catch (e) {
+  } catch (e, s) {
     showToast("Font atlas generator failed");
-    print(e);
+    print("$e\n$s");
     print(await stdout);
     print(await stderr);
     throw Exception("Font atlas generator failed");

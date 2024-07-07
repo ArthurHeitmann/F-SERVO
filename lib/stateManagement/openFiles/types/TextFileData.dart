@@ -24,9 +24,9 @@ class TextFileData extends OpenFileData {
     loadingState.value = LoadingState.loading;
     try {
       text.value = await File(path).readAsString();
-    } catch (e) {
+    } catch (e, s) {
       text.value = "[Error loading file]";
-      print(e);
+      print("$e\n$s");
     }
     await super.load();
   }
