@@ -53,7 +53,7 @@ MCD editing
       ```bat
       git submodule update --init
       ```
-   2. Download additional assets from [here](https://github.com/ArthurHeitmann/F-SERVO/releases/tag/assetsV0.6.0) and extract the folders inside into the `assets` folder. (This is so that the raw git repo isn't 100+ MB large)
+   2. Download additional assets from [here](https://github.com/ArthurHeitmann/F-SERVO/releases/tag/assetsV0.7.0) and extract the folders inside into the `assets` folder. (This is so that the raw git repo isn't 100+ MB large)
 
 4. Update dependencies with
    ```bat
