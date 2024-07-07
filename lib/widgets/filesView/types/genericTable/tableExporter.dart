@@ -81,8 +81,8 @@ Future<void> loadTableFromJson(CustomTableConfig tableConfig) async {
     for (int i = 0; i < table.length; i++) {
       tableConfig.updateRowWith(i, table[i]);
     }
-  } catch (e) {
-    print(e);
+  } catch (e, s) {
+    print("$e\n$s");
     showToast("Failed to load table from JSON");
   }
 }
@@ -105,8 +105,8 @@ Future<void> loadTableFromCsv(CustomTableConfig tableConfig) async {
     for (int i = 0; i < table.length; i++) {
       tableConfig.updateRowWith(i, table[i]);
     }
-  } catch (e) {
-    print(e);
+  } catch (e, s) {
+    print("$e\n$s");
     showToast("Failed to load table from CSV");
   }
 }

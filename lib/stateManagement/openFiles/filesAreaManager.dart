@@ -176,8 +176,9 @@ class FilesAreaManager with HasUuid, Undoable implements Disposable {
       await Future.wait(
           files.where((file) => file.hasUnsavedChanges.value)
               .map((file) => file.save()));
-    } catch (e) {
+    } catch (e, s) {
       print("Error while saving all files");
+      print("$e\n$s");
       rethrow;
     }
   }

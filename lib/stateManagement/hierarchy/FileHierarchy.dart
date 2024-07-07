@@ -199,8 +199,8 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
     else {
       try {
         datFilePaths = await getDatFileList(datExtractDir);
-      } catch (e) {
-        print(e);
+      } catch (e, s) {
+        print("$e\n$s");
       }
       //check if extracted folder actually contains all dat files
       if (datFilePaths == null || await Future.any(datFilePaths.map((name) async => !await File(name).exists()))) {

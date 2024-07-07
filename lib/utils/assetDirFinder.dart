@@ -127,9 +127,9 @@ Future<bool> checkPythonVersion(String cmd) async {
       return false;
     
     return true;
-  } catch (e) {
+  } catch (e, s) {
     print("Error checking python version");
-    print(e);
+    print("$e\n$s");
     return false;
   }
 }

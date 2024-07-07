@@ -31,9 +31,9 @@ class WemFilesLookup {
       await _indexDir(waiExtractDir);
       if (prefs.wemExtractDir != null && prefs.wemExtractDir!.value.isNotEmpty)
         await _indexDir(prefs.wemExtractDir!.value);
-    } catch (e) {
+    } catch (e, s) {
       print("Error indexing WAI files:");
-      print(e);
+      print("$e\n$s");
     }
 
     loadingCompleter!.complete();

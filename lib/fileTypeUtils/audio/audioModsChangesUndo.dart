@@ -90,9 +90,9 @@ Future<void> revertAllAudioMods(String waiPath) async {
         await File(changedFile).delete();
       await File(backupPath).rename(changedFile);
       restoreCount++;
-    } catch (e) {
+    } catch (e, s) {
       messageLog.add("Failed to restore $changedFile");
-      print(e);
+      print("$e\n$s");
       warningCount++;
     }
   }

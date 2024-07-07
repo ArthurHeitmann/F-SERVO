@@ -25,8 +25,8 @@ Future<bool> beforeExitConfirmation() async {
 
   try {
     await beforeExitCleanup();
-  } catch (e) {
-    print(e);
+  } catch (e, s) {
+    print("$e\n$s");
   }
 
   return true;

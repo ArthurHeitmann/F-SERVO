@@ -19,9 +19,9 @@ class FontOverridesApplyButton extends StatelessWidget {
         .where((file) => file is McdFileData || file is FtbFileData);
       await Future.wait(savableFiles.map((f) => f.save()));
       messageLog.add("Done :>");
-    } catch (e) {
+    } catch (e, s) {
       messageLog.add("Error :/");
-      print(e);
+      print("$e\n$s");
     } finally {
       await processChangedFiles();
       isLoadingStatus.popIsLoading();

@@ -5,7 +5,6 @@ import 'package:archive/archive_io.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart';
 
-import '../../stateManagement/events/statusInfo.dart';
 import '../../stateManagement/preferencesData.dart';
 import '../../utils/utils.dart';
 import '../utils/ByteDataWrapper.dart';
@@ -64,7 +63,6 @@ Future<void> installMod(String waiPath) async {
     }
 
     showToast("Mod installed successfully :)");
-    messageLog.add("Mod installed successfully :)");
   } catch (e) {
     // restore original files
     for (var file in changedFiles) {
