@@ -73,6 +73,7 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
     if (files.isEmpty)
       return;
     OpenFileData? firstFile;
+    int openedFiles = 0;
     const fileExplorerExtensions = { ".pak", ...datExtensions, ".yax", ".bin", ".wai", ".wsp", ...bxmExtensions, ".bnk", ".cpk" };
     for (var file in files) {
       bool isSaveSlotData = file.name.startsWith("SlotData_") && file.name.endsWith(".dat");
@@ -80,9 +81,12 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
         var entry = await openHierarchyManager.openFile(file.path);
         if (entry?.isOpenable == true)
           entry!.onOpen();
+        if (entry != null)
+          openedFiles++;
         continue;
       }
       var newFileData = areasManager.openFile(file.path, toArea: widget.viewArea);
+      openedFiles++;
       firstFile ??= newFileData;
     }
     if (firstFile != null)
@@ -90,7 +94,7 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
     windowManager.focus();
     setState(() {});
 
-    messageLog.add("Opened ${pluralStr(files.length, "file")}");
+    messageLog.add("Opened ${pluralStr(openedFiles, "file")}");
   }
 
   @override

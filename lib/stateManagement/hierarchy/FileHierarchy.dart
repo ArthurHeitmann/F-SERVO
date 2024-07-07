@@ -11,6 +11,7 @@ import '../../fileTypeUtils/audio/bnkExtractor.dart';
 import '../../fileTypeUtils/audio/bnkIO.dart';
 import '../../fileTypeUtils/audio/waiExtractor.dart';
 import '../../fileTypeUtils/bxm/bxmReader.dart';
+import '../../fileTypeUtils/cpk/cpkExtractor.dart';
 import '../../fileTypeUtils/dat/datExtractor.dart';
 import '../../fileTypeUtils/pak/pakExtractor.dart';
 import '../../fileTypeUtils/ruby/pythonRuby.dart';
@@ -155,10 +156,10 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
           [".wtb"],
           () async => openWtbFile(filePath, parent: parent)
         ),
-        // Tuple2(
-        //   [".cpk"],
-        //   () async => openCpkFile(filePath, parent: parent)
-        // ),
+        Tuple2(
+          [".cpk"],
+          () => openCpkFile(filePath, parent: parent)
+        ),
         Tuple2(
           [".est", ".sst"],
           () async => openGenericFile<EstHierarchyEntry>(filePath, parent, (n, p) => EstHierarchyEntry(n, p))
@@ -484,12 +485,12 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
     return wtaEntry;
   }
   
-  // Future<HierarchyEntry?> openCpkFile(String filePath, {HierarchyEntry? parent}) async {
-  //   var extractedDir = await extractCpkWithPrompt(filePath);
-  //   if (extractedDir != null)
-  //     revealFileInExplorer(extractedDir);
-  //   return null;
-  // }
+  Future<HierarchyEntry?> openCpkFile(String filePath, {HierarchyEntry? parent}) async {
+    var extractedDir = await extractCpkWithPrompt(filePath);
+    if (extractedDir != null)
+      revealFileInExplorer(extractedDir);
+    return null;
+  }
 
   @override
   void remove(HierarchyEntry child, { bool dispose = false }) {

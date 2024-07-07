@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../../stateManagement/events/statusInfo.dart';
 import '../../stateManagement/hierarchy/FileHierarchy.dart';
+import '../../stateManagement/hierarchy/HierarchyEntryTypes.dart';
 import '../../utils/utils.dart';
 import '../../widgets/theme/customTheme.dart';
 import '../misc/ChangeNotifierWidget.dart';
@@ -25,15 +26,16 @@ class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
   bool expandSearch = false;
 
   void openFile(DropDoneDetails details) async {
-    List<Future> futures = [];
+    List<Future<HierarchyEntry?>> futures = [];
 
     for (var file in details.files) {
       futures.add(openHierarchyManager.openFile(file.path));
     }
 
-    await Future.wait(futures);
+    var openedFiles = await Future.wait(futures);
+    var filesCount = openedFiles.where((f) => f != null).length;
 
-    messageLog.add("Opened ${pluralStr(details.files.length, "file")}");
+    messageLog.add("Opened ${pluralStr(filesCount, "file")}");
   }
 
   Future<void> openFilePicker() async {
@@ -41,11 +43,12 @@ class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
     if (files == null)
       return;
 
-    await Future.wait(
+    var openedFiles = await Future.wait(
       files.files.map((f) => openHierarchyManager.openFile(f.path!))
     );
+    var filesCount = openedFiles.where((f) => f != null).length;
 
-    messageLog.add("Opened ${pluralStr(files.files.length, "file")}");
+    messageLog.add("Opened ${pluralStr(filesCount, "file")}");
   }
 
   @override
