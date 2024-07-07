@@ -473,6 +473,23 @@ class McdParagraph extends _McdFilePart {
     fontId.restoreWith(paragraph.fontId);
     lines.restoreWith(paragraph.lines);
   }
+  
+  Map toJson() {
+    return {
+      "fontId": fontId.value,
+      "lines": lines.map((l) => l.text.value).toList(),
+    };
+  }
+
+  McdParagraph.fromJson(super.file, Map json) :
+    fontId = NumberProp(json["fontId"], true, fileId: file),
+    lines = ValueListNotifier(
+      (json["lines"] as List).map((l) => McdLine(file, StringProp(l, fileId: file))).toList(),
+      fileId: file
+    ) {
+    fontId.addListener(onDataChanged);
+    lines.addListener(onDataChanged);
+  }
 }
 
 class McdEvent extends _McdFilePart {
@@ -545,6 +562,20 @@ class McdEvent extends _McdFilePart {
     var event = snapshot as McdEvent;
     name.restoreWith(event.name);
     paragraphs.restoreWith(event.paragraphs);
+  }
+  
+  List toJson() {
+    return paragraphs.map((p) => p.toJson()).toList();
+  }
+  
+  McdEvent.fromJson(super.file, String name, List paragraphs) :
+    name = StringProp(name, fileId: file),
+    paragraphs = ValueListNotifier(
+      paragraphs.map((p) => McdParagraph.fromJson(file, p)).toList(),
+      fileId: file
+    ) {
+    this.name.addListener(onDataChanged);
+    this.paragraphs.addListener(onDataChanged);
   }
 }
 
@@ -1163,6 +1194,20 @@ class McdData extends _McdFilePart {
         return !isSupportedByAvailableFonts;
       })
       .toSet();
+  }
+
+  Map toJson() {
+    return {
+      for (var event in events)
+        event.name.value: event.toJson()
+    };
+  }
+
+  void fromJson(Map json) {
+    events.clear();
+    for (var entry in json.entries) {
+      events.add(McdEvent.fromJson(file, entry.key, entry.value));
+    }
   }
 
   @override
