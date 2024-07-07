@@ -3,7 +3,10 @@ import 'dart:io';
 
 import 'package:path/path.dart';
 
+import '../../main.dart';
 import '../../stateManagement/events/statusInfo.dart';
+import '../../stateManagement/preferencesData.dart';
+import '../../widgets/misc/fileSelectionDialog.dart';
 import '../utils/ByteDataWrapperRA.dart';
 import 'cpk.dart';
 
@@ -39,25 +42,25 @@ Future<List<String>> extractCpk(String cpkPath, { String? extractDir, bool logPr
   }
 }
 
-// Future<String?> extractCpkWithPrompt(String cpkPath) async {
-//   var prefs = PreferencesData();
-//   var lastExtractDir = prefs.lastCpkExtractDir;
-//   bool useLastExtractDir = lastExtractDir != null && lastExtractDir.value.isNotEmpty && await Directory(lastExtractDir.value).exists();
-//   var extractDirSel = await fileSelectionDialog(
-//     getGlobalContext(),
-//     selectionType: SelectionType.folder,
-//     title: "Select folder to extract to",
-//     initialDirectory: useLastExtractDir ? lastExtractDir.value : null,
-//   );
-//   if (extractDirSel == null)
-//     return null;
-//   prefs.lastCpkExtractDir!.value = extractDirSel;
-//
-//   try {
-//     isLoadingStatus.pushIsLoading();
-//     await extractCpk(cpkPath, extractDir: extractDirSel);
-//   } finally {
-//     isLoadingStatus.popIsLoading();
-//   }
-//   return extractDir;
-// }
+Future<String?> extractCpkWithPrompt(String cpkPath) async {
+  var prefs = PreferencesData();
+  var lastExtractDir = prefs.lastCpkExtractDir;
+  bool useLastExtractDir = lastExtractDir != null && lastExtractDir.value.isNotEmpty && await Directory(lastExtractDir.value).exists();
+  var extractDirSel = await fileSelectionDialog(
+    getGlobalContext(),
+    selectionType: SelectionType.folder,
+    title: "Select folder to extract to",
+    initialDirectory: useLastExtractDir ? lastExtractDir.value : null,
+  );
+  if (extractDirSel == null)
+    return null;
+  prefs.lastCpkExtractDir!.value = extractDirSel;
+
+  try {
+    isLoadingStatus.pushIsLoading();
+    await extractCpk(cpkPath, extractDir: extractDirSel);
+  } finally {
+    isLoadingStatus.popIsLoading();
+  }
+  return extractDirSel;
+}
