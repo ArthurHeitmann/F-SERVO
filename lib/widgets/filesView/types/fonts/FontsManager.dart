@@ -53,6 +53,7 @@ class __McdFontsManagerState extends ChangeNotifierState<FontsManager> {
       "xOffset",
       "yOffset",
       "thickness",
+      "shadow blur",
       "",
       ""
     ];
@@ -72,8 +73,9 @@ class __McdFontsManagerState extends ChangeNotifierState<FontsManager> {
               8: FixedColumnWidth(70 + 8),
               9: FixedColumnWidth(70 + 8),
               10: FixedColumnWidth(70 + 8),
-              11: FixedColumnWidth(30 + 8),
-              12: FixedColumnWidth(16),
+              11: FixedColumnWidth(100 + 8),
+              12: FixedColumnWidth(30 + 8),
+              13: FixedColumnWidth(16),
             },
             defaultVerticalAlignment: TableCellVerticalAlignment.middle,
             children: [
@@ -172,6 +174,10 @@ class __McdFontsManagerState extends ChangeNotifierState<FontsManager> {
                     makePropEditor(
                       McdData.fontOverrides[i].strokeWidth,
                       const PropTFOptions(hintText: "thickness", constraints: BoxConstraints.tightFor(height: 30)),
+                    ),
+                    makePropEditor(
+                      McdData.fontOverrides[i].rgbBlurSize,
+                      const PropTFOptions(hintText: "shadow", constraints: BoxConstraints.tightFor(height: 30)),
                     ),
                     SmallButton(
                       onPressed: () => McdData.fontOverrides.removeAt(i).dispose(),

@@ -304,6 +304,7 @@ class FtbData extends ChangeNotifier {
       (fontOverride.yOffset.value * heightScale).toDouble(),
       1.0,
       fontOverride.strokeWidth.value.toInt(),
+      fontOverride.rgbBlurSize.value.toDouble(),
     ) : null;
     var newFonts = pendingNewChars.map((c) => c.fontPath).toSet();
     if (newFonts.length > 1)
@@ -317,6 +318,7 @@ class FtbData extends ChangeNotifier {
       (fontOverride.yOffset.value * heightScale).toDouble(),
       1.0,
       fontOverride.strokeWidth.value.toInt(),
+      fontOverride.rgbBlurSize.value.toDouble(),
     ) : null;
     // temporary source texture copies
     List<String> sourceTextures = await Future.wait(textures.map((tex) async {

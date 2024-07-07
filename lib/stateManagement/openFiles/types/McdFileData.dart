@@ -305,6 +305,7 @@ class McdFontOverride with HasUuid implements Disposable {
   final NumberProp xOffset;
   final NumberProp yOffset;
   final NumberProp strokeWidth;
+  final NumberProp rgbBlurSize;
   final BoolProp isFallbackOnly;
 
   McdFontOverride(int firstFontId) :
@@ -316,6 +317,7 @@ class McdFontOverride with HasUuid implements Disposable {
     xOffset = NumberProp(0.0, false, fileId: null),
     yOffset = NumberProp(0.0, false, fileId: null),
     strokeWidth = NumberProp(0, true, fileId: null),
+    rgbBlurSize = NumberProp(0.0, false, fileId: null),
     isFallbackOnly = BoolProp(false, fileId: null);
 
   @override
@@ -328,6 +330,7 @@ class McdFontOverride with HasUuid implements Disposable {
     xOffset.dispose();
     heightScale.dispose();
     strokeWidth.dispose();
+    rgbBlurSize.dispose();
     isFallbackOnly.dispose();
   }
 }
@@ -1071,6 +1074,7 @@ class McdData extends _McdFilePart {
             fontOverridesMap[fontId]!.yOffset.value * scaleFact,
             McdData.fontAtlasResolutionScale.value.toDouble(),
             fontOverridesMap[fontId]!.strokeWidth.value.toInt(),
+            fontOverridesMap[fontId]!.rgbBlurSize.value.toDouble(),
           );
         }
         imgOperations.add(CliImgOperationDrawFromFont(

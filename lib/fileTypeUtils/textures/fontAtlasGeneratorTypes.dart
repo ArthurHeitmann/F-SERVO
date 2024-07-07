@@ -62,8 +62,9 @@ class CliFontOptions {
   final double letYOffset;
   final double resolutionScale;
   final int strokeWidth;
+  final double rgbBlurSize;
 
-  CliFontOptions(this.fontPath, this.fontHeight, this.letXPadding, this.letYPadding, this.letXOffset, this.letYOffset, this.resolutionScale, this.strokeWidth);
+  CliFontOptions(this.fontPath, this.fontHeight, this.letXPadding, this.letYPadding, this.letXOffset, this.letYOffset, this.resolutionScale, this.strokeWidth, this.rgbBlurSize);
 
   Map<String, dynamic> toJson() {
     return {
@@ -75,6 +76,7 @@ class CliFontOptions {
       "letYOffset": letYOffset,
       "resolutionScale": resolutionScale,
       "strokeWidth": strokeWidth,
+      "rgbBlurSize": rgbBlurSize,
     };
   }
 }
