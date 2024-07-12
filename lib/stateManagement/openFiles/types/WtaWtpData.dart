@@ -58,11 +58,7 @@ class WtaWtpData extends OpenFileData {
       throw Exception("Can't find corresponding WTP file in ${dttDir ?? datDir}");
     }
 
-    String extractDir;
-    if (dttDir != null)
-      extractDir = join(dttDir, "textures");
-    else
-      extractDir = join(datDir, "nier2blender_extracted", basename(path));
+    String extractDir = join(dttDir ?? datDir, "${basename(path)}_extracted");
     await Directory(extractDir).create(recursive: true);
 
     textures?.dispose();

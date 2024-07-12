@@ -266,11 +266,7 @@ class _SearchTextServiceWorker extends _SearchServiceWorker<SearchOptionsText> {
           .where((fse) => fse is! File || options.fileExtensions.contains(path.extension(fse.path)))
           .toList();
       }
-      List<Future> futures = [];
-      for (var dir in dirList) {
-        futures.add(_search(dir.path, test));
-      }
-      await Future.wait(futures);
+      await futuresWaitBatched(dirList.map((dir) => _search(dir.path, test)), 20);
     }
   }
 
@@ -372,11 +368,7 @@ class _SearchIdServiceWorker extends _SearchServiceWorker<SearchOptionsId> {
           .where((fse) => fse is! File || options.fileExtensions.contains(path.extension(fse.path)))
           .toList();
       }
-      List<Future> futures = [];
-      for (var dir in dirList) {
-        futures.add(_search(dir.path));
-      }
-      await Future.wait(futures);
+      await futuresWaitBatched(dirList.map((dir) => _search(dir.path)), 20);
     }
   }
 

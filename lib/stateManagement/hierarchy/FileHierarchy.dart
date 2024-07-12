@@ -64,7 +64,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
     children.addListener(() => filteredTreeIsDirty.value = true);
     _onSearchChangedThrottled = debounce(() => filteredTreeIsDirty.value = true, 500);
     search.addListener(() {
-      var (overThreshold, count) = hasOverXChildren(500*1000);
+      var (overThreshold, _) = hasOverXChildren(500*1000);
       if (overThreshold)
         _onSearchChangedThrottled();
       else
@@ -196,9 +196,13 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
       await extractDatFiles(datPath, shouldExtractPakFiles: true);
     }
     else {
-      datFilePaths = await getDatFileList(datExtractDir);
+      try {
+        datFilePaths = await getDatFileList(datExtractDir);
+      } catch (e) {
+        print(e);
+      }
       //check if extracted folder actually contains all dat files
-      if (await Future.any(datFilePaths.map((name) async => !await File(name).exists()))) {
+      if (datFilePaths == null || await Future.any(datFilePaths.map((name) async => !await File(name).exists()))) {
         await extractDatFiles(datPath, shouldExtractPakFiles: true);
       }
     }

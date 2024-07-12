@@ -38,10 +38,10 @@ Future<String?> textDialog(BuildContext context, { required String title, String
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: Theme.of(context).textTheme.headline6),
+              Text(title, style: Theme.of(context).textTheme.titleLarge),
               if (body != null) ...[
                 const SizedBox(height: 8),
-                Text(body, style: Theme.of(context).textTheme.bodyText2),
+                Text(body, style: Theme.of(context).textTheme.bodyMedium),
               ],
               const SizedBox(height: 16),
               ConstrainedBox(
