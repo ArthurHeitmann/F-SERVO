@@ -80,7 +80,7 @@ class _McdEditorState extends ChangeNotifierState<McdEditor> {
                 _McdEditorBody(file: widget.file, mcd: widget.file.mcdData!),
                 FontsManager(mcd: widget.file.mcdData!),
                 McdFontDebugger(
-                  texturePath: widget.file.mcdData!.textureWtpPath.value,
+                  texturePath: widget.file.mcdData!.textureWtpPath!.value,
                   fonts: widget.file.mcdData!.usedFonts.values.toList(),
                 ),
               ] : List.filled(3, loadingIndicator),

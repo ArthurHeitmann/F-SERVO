@@ -94,47 +94,86 @@ class EstUnknownTypeEntry extends EstTypeEntry {
 
 /*
 typedef struct {
-	int16   u_a;
-	int16   effect_length;
-	uint32  u_c <format=hex>;
-	uint32  u_d;
-	int16   anchor_bone;
-	int16   u_e[7];
-	uint32  uf[9];
+	int16 u_a;
+	int16 u_b;
+	uint32 u_c <format=hex>;
+	uint32 u_d <format=hex>;
+	int16 some_kind_of_count; // 0 - 8
+	int16 anchor_bone;
+	int16 u1; // -1 - 25
+	int16 null0; // -1 - 25
+	uint16 u2;
+	int16 u3;
+	int16 u4;
+	int16 u5;
+	int16 u6;
+	byte null1;
+	float u7;
+	ubyte u8;
+	uint32 null2[7];
 } part_s; 
 */
 /// EffectParticleGenerationData
 class EstTypePartEntry extends EstTypeEntry {
   late int u_a;
-  late int effect_length;
+  late int u_b;
   late int u_c;
   late int u_d;
+  late int some_kind_of_count;
   late int anchor_bone;
-  late List<int> u_e;
-  late List<int> uf;
+  late int u1;
+  late int null0;
+  late int u2;
+  late int u3;
+  late int u4;
+  late int u5;
+  late int u6;
+  late int null1;
+  late double u7;
+  late int u8;
+  late List<int> null2;
 
   EstTypePartEntry.read(ByteDataWrapper bytes, EstTypeHeader header) {
     this.header = header;
     u_a = bytes.readInt16();
-    effect_length = bytes.readInt16();
+    u_b = bytes.readInt16();
     u_c = bytes.readUint32();
     u_d = bytes.readUint32();
+    some_kind_of_count = bytes.readInt16();
     anchor_bone = bytes.readInt16();
-    u_e = bytes.asInt16List(7);
-    uf = bytes.asUint32List(9);
+    u1 = bytes.readInt16();
+    null0 = bytes.readInt16();
+    u2 = bytes.readUint16();
+    u3 = bytes.readInt16();
+    u4 = bytes.readInt16();
+    u5 = bytes.readInt16();
+    u6 = bytes.readInt16();
+    null1 = bytes.readUint8();
+    u7 = bytes.readFloat32();
+    u8 = bytes.readUint8();
+    null2 = bytes.asUint32List(7);
   }
 
   @override
   void write(ByteDataWrapper bytes) {
     bytes.writeInt16(u_a);
-    bytes.writeInt16(effect_length);
+    bytes.writeInt16(u_b);
     bytes.writeUint32(u_c);
     bytes.writeUint32(u_d);
+    bytes.writeInt16(some_kind_of_count);
     bytes.writeInt16(anchor_bone);
-    for (var e in u_e)
-      bytes.writeInt16(e);
-    for (var f in uf)
-      bytes.writeUint32(f);
+    bytes.writeInt16(u1);
+    bytes.writeInt16(null0);
+    bytes.writeUint16(u2);
+    bytes.writeInt16(u3);
+    bytes.writeInt16(u4);
+    bytes.writeInt16(u5);
+    bytes.writeInt16(u6);
+    bytes.writeUint8(null1);
+    bytes.writeFloat32(u7);
+    bytes.writeUint8(u8);
+    for (var n in null2)
+      bytes.writeUint32(n);
   }
 }
 
@@ -364,12 +403,7 @@ typedef struct {
 	float u_i4[4];
 	float u_j;
 	float brightness;
-	float u_n;
-	float u_o;
-	uint32 u_p<format=hex>;
-	uint32 u_q<format=hex>;
-	uint32 u_r<format=hex>;
-	float u_s[12];
+	float null[17];
 } tex_s;
 */
 /// EffectTextureInfoData
@@ -396,12 +430,7 @@ class EstTypeTexEntry extends EstTypeEntry {
   late List<double> u_i4;
   late double u_j;
   late double brightness;
-  late double u_n;
-  late double u_o;
-  late int u_p;
-  late int u_q;
-  late int u_r;
-  late List<double> u_s;
+  late List<double> null0;
 
   EstTypeTexEntry.read(ByteDataWrapper bytes, EstTypeHeader header) {
     this.header = header;
@@ -427,12 +456,7 @@ class EstTypeTexEntry extends EstTypeEntry {
     u_i4 = bytes.readFloat32List(4);
     u_j = bytes.readFloat32();
     brightness = bytes.readFloat32();
-    u_n = bytes.readFloat32();
-    u_o = bytes.readFloat32();
-    u_p = bytes.readUint32();
-    u_q = bytes.readUint32();
-    u_r = bytes.readUint32();
-    u_s = bytes.readFloat32List(12);
+    null0 = bytes.readFloat32List(17);
   }
 
   @override
@@ -461,12 +485,7 @@ class EstTypeTexEntry extends EstTypeEntry {
       bytes.writeFloat32(i);
     bytes.writeFloat32(u_j);
     bytes.writeFloat32(brightness);
-    bytes.writeFloat32(u_n);
-    bytes.writeFloat32(u_o);
-    bytes.writeUint32(u_p);
-    bytes.writeUint32(u_q);
-    bytes.writeUint32(u_r);
-    for (var s in u_s)
+    for (var s in null0)
       bytes.writeFloat32(s);
   }
 }
@@ -750,6 +769,48 @@ class EstTypeMjcmEntry extends EstTypeEntry {
     bytes.writeFloat32(move_speed);
     bytes.writeFloat32(move_speed_acceletarion);
     for (var a in u_a_4)
+      bytes.writeFloat32(a);
+  }
+}
+
+/*
+typedef struct {
+	float u_a[24];
+} pssa_s;
+*/
+/// EffectPosSinAnimation
+class EstTypePssaEntry extends EstTypeEntry {
+  late List<double> u_a;
+
+  EstTypePssaEntry.read(ByteDataWrapper bytes, EstTypeHeader header) {
+    this.header = header;
+    u_a = bytes.readFloat32List(24);
+  }
+
+  @override
+  void write(ByteDataWrapper bytes) {
+    for (var a in u_a)
+      bytes.writeFloat32(a);
+  }
+}
+
+/*
+typedef struct {
+	float u_a[20];
+} fvwk_s <bgcolor = 0x00F0FF00>;
+*/
+/// EffectFreeVecWork
+class EstTypeFvwkEntry extends EstTypeEntry {
+  late List<double> u_a;
+
+  EstTypeFvwkEntry.read(ByteDataWrapper bytes, EstTypeHeader header) {
+    this.header = header;
+    u_a = bytes.readFloat32List(20);
+  }
+
+  @override
+  void write(ByteDataWrapper bytes) {
+    for (var a in u_a)
       bytes.writeFloat32(a);
   }
 }

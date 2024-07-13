@@ -38,7 +38,7 @@ class _ExtractFilesToolState extends State<ExtractFilesTool> {
     ("Extract DAT", extractDat),
     ("Extract Textures", extractWta),
     ("Extract Audio", extractBnk),
-    ("Convert Scripts", convertScripts),
+    // ("Convert Scripts", convertScripts),
     ("Convert BXM", convertBxm),
   ];
 

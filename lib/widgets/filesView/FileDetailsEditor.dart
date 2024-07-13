@@ -90,7 +90,7 @@ class _FileDetailsEditorState extends ChangeNotifierState<FileDetailsEditor> {
       if (currentFile.selectedEntry.value?.record != null)
         return EstRecordDetailsEditor(record: currentFile.selectedEntry.value!.record!);
       if (currentFile.selectedEntry.value?.entry != null)
-        return EstEntryDetailsEditor(entry: currentFile.selectedEntry.value!.entry!);
+        return EstEntryDetailsEditor(entry: currentFile.selectedEntry.value!.entry!, showUnknown: true);
     }
     return Container();
   }
