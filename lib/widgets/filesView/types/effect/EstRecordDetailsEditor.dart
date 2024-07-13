@@ -32,7 +32,7 @@ class _EstRecordDetailsEditorState extends ChangeNotifierState<EstRecordDetailsE
           const SizedBox(height: 8),
           const Divider(height: 1),
           const SizedBox(height: 6),
-          EstEntryDetailsEditor(entry: entry),
+          EstEntryDetailsEditor(entry: entry, showUnknown: false),
           const SizedBox(height: 8),
         ]
       ],

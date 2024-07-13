@@ -454,7 +454,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
     else {
       wtpPath = join(datDir, wtpName);
       if (!await File(wtpPath).exists()) {
-        showToast("Can't find corresponding WTP file");
+        // showToast("Can't find corresponding WTP file");
         throw Exception("Can't find corresponding WTP file");
       }
     }
