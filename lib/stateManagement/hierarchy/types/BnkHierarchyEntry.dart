@@ -29,7 +29,7 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
     return BnkHierarchyEntry(name.takeSnapshot() as StringProp, path, extractedPath, bnk);
   }
 
-  Future<void> generateHierarchy(String bnkName) async {
+  Future<void> generateHierarchy(String bnkName, bool collapseCategories) async {
     var bnkHeader = bnk.chunks.whereType<BnkHeader>().first;
     var bnkId = bnkHeader.bnkId;
     var hircChunk = bnk.chunks.whereType<BnkHircChunk>().firstOrNull;
@@ -426,7 +426,7 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
         addToTopLevel(gameParamEntry, gameParamParentEntry);
       }
     }
-    var objectHierarchyParentEntry = BnkSubCategoryParentHierarchyEntry("Object Hierarchy");
+    var objectHierarchyParentEntry = BnkSubCategoryParentHierarchyEntry("Object Hierarchy", isCollapsed: collapseCategories);
     add(objectHierarchyParentEntry);
     int directChildren = 0;
     // Add children to parents using parent ids
@@ -470,7 +470,7 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
       }
     }
 
-    var eventHierarchyParentEntry = BnkSubCategoryParentHierarchyEntry("Event Hierarchy");
+    var eventHierarchyParentEntry = BnkSubCategoryParentHierarchyEntry("Event Hierarchy", isCollapsed: collapseCategories);
     add(eventHierarchyParentEntry);
     eventEntries.sort((a, b) {
       if (a.entryName != null && b.entryName != null)
