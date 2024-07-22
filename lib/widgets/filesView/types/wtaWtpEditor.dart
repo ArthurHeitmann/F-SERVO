@@ -52,7 +52,9 @@ class _TexturesTableConfig with CustomTableConfig {
     return RowConfig(
       key: Key(textures[index].uuid),
       cells: [
-        PropCellConfig(prop: textures[index].id),
+        textures[index].id != null
+          ? PropCellConfig(prop: textures[index].id!)
+          : CustomWidgetCellConfig(const SizedBox.shrink()),
         PropCellConfig(prop: textures[index].path),
         CustomWidgetCellConfig(IconButton(
           icon: const Icon(Icons.folder, size: 20),

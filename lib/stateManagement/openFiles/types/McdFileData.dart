@@ -655,7 +655,7 @@ class McdData extends _McdFilePart {
 
     // glyphs
     var wta = await WtaFile.readFromFile(textureWtaPath!.value);
-    var texId = wta.textureIdx.first;
+    var texId = wta.textureIdx!.first;
     var texSize = await getDdsFileSize(textureWtpPath!.value);
     var exportGlyphs = usedSymbols.map((usedSym) {
       var sym = usedFonts[usedSym.fontId]!.supportedSymbols[usedSym.code]!;

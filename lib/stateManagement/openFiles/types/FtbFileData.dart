@@ -281,9 +281,8 @@ class FtbData extends ChangeNotifier {
     // add new idx, flag info entries
     for (int i = wtaFile.header.numTex; i < textureBatches.length; i++) {
       wtaFile.header.numTex++;
-      wtaFile.textureIdx.add(randomId());
+      wtaFile.textureIdx!.add(randomId());
       wtaFile.textureFlags.add(wtaFile.textureFlags.last);
-      wtaFile.textureInfo.add(wtaFile.textureInfo.last);
     }
     wtaFile.updateHeader();
     await wtaFile.writeToFile(wtaPath);
