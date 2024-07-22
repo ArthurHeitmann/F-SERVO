@@ -1,0 +1,42 @@
+name: CI Windows
+
+on:
+  push:
+    branches:
+      - master
+      - mgrr
+      - gh-actions
+
+jobs:
+  flutter-build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      
+      - name: Download assets
+        run: |
+          $url = "https://github.com/ArthurHeitmann/F-SERVO/releases/download/assetsV0.7.0/assets.7z"
+          $output = "${{ runner.temp }}\assets.7z"
+          Invoke-WebRequest -Uri $url -OutFile $output
+      - name: Extract assets
+        run: 7z x ${{ runner.temp }}/assets.7z -o.\assets
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.2'
+
+      - name: Get Packages
+        run: flutter pub get
+
+      - name: Build Release
+        run: flutter build windows --release
+
+      - name: Archive Release
+        uses: actions/upload-artifact@v2
+        with:
+          name: windows
+          path: build/windows/x64/runner/Release
