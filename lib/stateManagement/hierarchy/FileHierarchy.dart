@@ -203,16 +203,19 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
         print("$e\n$s");
       }
       //check if extracted folder actually contains all dat files
-      if (datFilePaths == null || await Future.any(datFilePaths.map((name) async => !await File(name).exists()))) {
+      if (datFilePaths == null || datFilePaths.isNotEmpty && await Future.any(datFilePaths.map((name) async => !await File(name).exists()))) {
         await extractDatFiles(datPath, shouldExtractPakFiles: true);
       }
     }
 
+
     var datEntry = DatHierarchyEntry(StringProp(fileName, fileId: null), datPath, datExtractDir);
-    if (parent != null)
+    if (parent != null) {
+      datEntry.isCollapsed.value = true;
       parent.add(datEntry);
-    else
+    } else {
       add(datEntry);
+    }
 
     await datEntry.loadChildren(datFilePaths);
 
@@ -414,7 +417,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
 
     var hircChunk = bnk.chunks.whereType<BnkHircChunk>().firstOrNull;
     if (hircChunk != null) {
-      await bnkEntry.generateHierarchy(hircChunk);
+      await bnkEntry.generateHierarchy(hircChunk, (parent?.children.length ?? 0) >= 4);
     }
 
     if (parent != null)

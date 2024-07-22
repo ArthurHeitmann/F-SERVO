@@ -20,7 +20,7 @@ Future<String> _makeWwiseProject(bool isBgm) async {
 
   var fs = InputFileStream(wwiseProjectTemplate);
   var archive = ZipDecoder().decodeBuffer(fs);
-  extractArchiveToDisk(archive, tempProjectDir);
+  await extractArchiveToDisk(archive, tempProjectDir);
   await fs.close();
 
   return tempProjectDir;
