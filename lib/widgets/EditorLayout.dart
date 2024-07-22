@@ -1,17 +1,28 @@
 import 'package:flutter/material.dart';
 
+import '../stateManagement/preferencesData.dart';
 import 'FileHierarchyExplorer/FileExplorer.dart';
 import 'FileHierarchyExplorer/fileMetaEditor.dart';
 import 'filesView/OpenFilesAreas.dart';
 import 'layout/rightSidebar.dart';
 import 'layout/searchPanel.dart';
 import 'layout/sidebar.dart';
+import 'misc/ChangeNotifierWidget.dart';
 import 'misc/ResizableWidget.dart';
 import 'tools/toolsOverview.dart';
 
-class EditorLayout extends StatelessWidget {
-  const EditorLayout({super.key});
+class EditorLayout extends ChangeNotifierWidget {
+  final ValueNotifier<bool> moveFilePropertiesToRight;
 
+  EditorLayout({super.key, required PreferencesData prefs}) :
+    moveFilePropertiesToRight = prefs.moveFilePropertiesToRight!,
+    super(notifier: prefs.moveFilePropertiesToRight);
+
+  @override
+  State<EditorLayout> createState() => _EditorLayoutState();
+}
+
+class _EditorLayoutState extends ChangeNotifierState<EditorLayout> {
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -25,11 +36,14 @@ class EditorLayout extends StatelessWidget {
               icon: Icons.folder,
               child: ResizableWidget(
                 axis: Axis.vertical,
-                percentages: const [0.75, 0.25],
+                percentages: widget.moveFilePropertiesToRight.value
+                  ? const [1.0]
+                  : const [0.75, 0.25],
                 draggableThickness: 5,
                 children: [
                   FileExplorer(),
-                  FileMetaEditor()
+                  if (!widget.moveFilePropertiesToRight.value)
+                    FileMetaEditor()
                 ],
               ),
             ),
@@ -46,7 +60,7 @@ class EditorLayout extends StatelessWidget {
           ],
         ),
         Expanded(child: OpenFilesAreas()),
-        RightSidebar(),
+        RightSidebar(moveFilePropertiesToRight: widget.moveFilePropertiesToRight),
       ],
     );
   }

@@ -158,7 +158,7 @@ class MyAppBody extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               TitleBar(),
-              const Expanded(child: EditorLayout()),
+              Expanded(child: EditorLayout(prefs: PreferencesData())),
               Divider(height: 1, color: getTheme(context).dividerColor),
               const Statusbar(),
             ],

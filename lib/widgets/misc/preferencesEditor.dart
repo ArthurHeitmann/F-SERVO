@@ -133,8 +133,14 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
       const SizedBox(height: 40,),
       Row(
         children: [
-          const Text("Prefer opening some files in VS Code:", overflow: TextOverflow.ellipsis,),
+          const Text("Prefer opening some files in VS Code ", overflow: TextOverflow.ellipsis,),
           BoolPropSwitch(prop: widget.prefs.preferVsCode!),
+        ],
+      ),
+      Row(
+        children: [
+          const Text("Move file properties to right sidebar", overflow: TextOverflow.ellipsis,),
+          BoolPropSwitch(prop: widget.prefs.moveFilePropertiesToRight!),
         ],
       ),
       const SizedBox(height: 40,),
