@@ -22,6 +22,7 @@ jobs:
           $output = "${{ runner.temp }}\assets.7z"
           Invoke-WebRequest -Uri $url -OutFile $output
       - name: Extract assets
+        shell: cmd
         run: 7z x ${{ runner.temp }}/assets.7z -o.\assets
 
       - name: Setup Flutter
