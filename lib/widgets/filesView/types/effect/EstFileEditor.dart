@@ -37,6 +37,19 @@ class _EstFileEditorState extends ChangeNotifierState<EstFileEditor> {
     super.initState();
   }
 
+  void copyAllEntries() {
+    var json = {
+      "type": _JsonCopyType.entryList.index,
+      "data": widget.file.records
+        .map((record) => record.entries
+          .map((entry) => entry.toJson())
+          .toList()
+        )
+        .toList()
+    };
+    _copyJson(json);
+  }
+
   void pasteEntries() async {
     var jsonStr = await getClipboardText();
     if (jsonStr == null) {
@@ -50,19 +63,36 @@ class _EstFileEditorState extends ChangeNotifierState<EstFileEditor> {
       showToast("Invalid json");
       return;
     }
-    if (json is Map)
-      json = [json];
-    if (json is! List) {
+    if (json is! Map) {
       showToast("Invalid json");
       return;
     }
-    var entries = json.map((e) => EstEntryWrapper.fromJson(e, widget.file.uuid));
-    widget.file.records.add(EstRecordWrapper(
-      ValueListNotifier(entries.toList(), fileId: widget.file.uuid),
-      widget.file.uuid,
-    ));
+    var type = json["type"];
+    var data = json["data"];
+    if (type is! int || type < 0 || type >= _JsonCopyType.values.length) {
+      showToast("Invalid json");
+      return;
+    }
+    if (type == _JsonCopyType.entryList.index && data is! List) {
+      showToast("Invalid json");
+      return;
+    }
+    if (type == _JsonCopyType.record.index && data is! Map) {
+      showToast("Invalid json");
+      return;
+    }
+    if (type == _JsonCopyType.record.index)
+      data = [[data]];
+    for (var record in (data as List).cast<List>()) {
+      var entries = record
+        .map((e) => EstEntryWrapper.fromJson(e, widget.file.uuid))
+        .toList();
+      widget.file.records.add(EstRecordWrapper(
+        ValueListNotifier(entries, fileId: widget.file.uuid),
+        widget.file.uuid,
+      ));
+    }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -100,14 +130,27 @@ class _EstFileEditorState extends ChangeNotifierState<EstFileEditor> {
                 ),
                 const Divider(height: 1, thickness: 1,),
               ],
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: _EntryIconButton(
-                  icon: Icons.paste,
-                  onPressed: pasteEntries,
-                  iconSize: 16,
-                  splashRadius: 18,
-                ),
+              Row(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: _EntryIconButton(
+                      icon: Icons.copy_all,
+                      onPressed: copyAllEntries,
+                      iconSize: 16,
+                      splashRadius: 18,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: _EntryIconButton(
+                      icon: Icons.paste,
+                      onPressed: pasteEntries,
+                      iconSize: 16,
+                      splashRadius: 18,
+                    ),
+                  ),
+                ],
               ),
             ],
           );
@@ -163,13 +206,16 @@ class _EstRecordEditorState extends ChangeNotifierState<_EstRecordEditor> {
       return;
     }
     if (json is! Map) {
-      if (json is List)
-        showToast("Only single entries can be pasted");
-      else
-        showToast("Invalid json");
+      showToast("Invalid json");
       return;
     }
-    var entry = EstEntryWrapper.fromJson(json, widget.fileId);
+    var type = json["type"];
+    var data = json["data"];
+    if (type != _JsonCopyType.record.index) {
+      showToast("Can only paste single entries, not full records");
+      return;
+    }
+    var entry = EstEntryWrapper.fromJson(data, widget.fileId);
     if (widget.record.entries.any((e) => e.entry.header.id == entry.entry.header.id)) {
       showToast("Entry of this type already exists");
       return;
@@ -183,9 +229,14 @@ class _EstRecordEditorState extends ChangeNotifierState<_EstRecordEditor> {
   }
 
   void copyEntries() {
-    var json = widget.record.entries
-      .map((entry) => entry.toJson())
-      .toList();
+    var json = {
+      "type": _JsonCopyType.entryList.index,
+      "data": [
+        widget.record.entries
+          .map((entry) => entry.toJson())
+          .toList()
+      ]
+    };
     _copyJson(json);
   }
 
@@ -254,7 +305,7 @@ class _EstEntryWidget extends ChangeNotifierWidget {
     required this.entry,
     required this.onRemove,
     required this.selectedEntry,
-  }) : super(notifier: selectedEntry);
+  }) : super(key: Key(entry.uuid), notifier: selectedEntry);
 
   @override
   State<_EstEntryWidget> createState() => _EstEntryWidgetState();
@@ -298,7 +349,10 @@ class _EstEntryWidgetState extends ChangeNotifierState<_EstEntryWidget> {
             ),
             const SizedBox(width: 10),
             _EntryIconButton(
-              onPressed: () => _copyJson(widget.entry.toJson()),
+              onPressed: () => _copyJson({
+                "type": _JsonCopyType.record.index,
+                "data": widget.entry.toJson()
+              }),
               icon: Icons.copy,
             ),
             _EntryCheckbox(prop: widget.entry.isEnabled),
@@ -404,6 +458,11 @@ class _EntryCheckbox extends StatelessWidget {
       ),
     );
   }
+}
+
+enum _JsonCopyType {
+  entryList,
+  record
 }
 
 void _copyJson(Object json) {
