@@ -1153,6 +1153,7 @@ class McdData extends _McdFilePart {
     // update size in wta file
     var wta = await WtaFile.readFromFile(textureWtaPath.value);
     wta.textureSizes[0] = texFileSize;
+    wta.updateHeader();
     await wta.writeToFile(textureWtaPath.value);
 
     // export dtt
