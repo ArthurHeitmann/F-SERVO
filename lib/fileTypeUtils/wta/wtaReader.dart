@@ -116,7 +116,11 @@ class WtaFile {
   }
 
   Future<void> writeToFile(String path) async {
-    var fileSize = header.offsetTextureInfo + textureInfo.length * 0x14;
+    int fileSize;
+    if (header.offsetTextureInfo > 0)
+      fileSize = header.offsetTextureInfo + textureInfo.length * 0x14;
+    else
+      fileSize = header.offsetTextureIdx + textureIdx.length * 4;
     var bytes = ByteDataWrapper.allocate(fileSize);
     header.write(bytes);
     
@@ -136,9 +140,11 @@ class WtaFile {
     for (var i = 0; i < textureIdx.length; i++)
       bytes.writeUint32(textureIdx[i]);
     
-    bytes.position = header.offsetTextureInfo;
-    for (var i = 0; i < textureInfo.length; i++)
-      textureInfo[i].write(bytes);
+    if (header.offsetTextureInfo > 0) {
+      bytes.position = header.offsetTextureInfo;
+      for (var i = 0; i < textureInfo.length; i++)
+        textureInfo[i].write(bytes);
+    }
 
     await bytes.save(path);
   }

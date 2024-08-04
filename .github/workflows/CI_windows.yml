@@ -5,6 +5,7 @@ on:
     branches:
       - master
       - mgrr
+      - transformers
       - gh-actions
 
 jobs:
