@@ -718,36 +718,38 @@ class EstTypeMjcmEntry extends EstTypeEntry {
   late int size_1;
   late int size_2;
   late List<int> u_a_1;
-  late int effect_lines_type_maybe;
-  late int unk_1;
-  late int unk_2;
-  late int effect_lines_size_maybe;
-  late double part_size;
-  late double move_speed_on_player_x;
-  late double move_speed_on_player_y;
-  late List<double> u_a_3;
-  late double move_speed_on_player_z;
-  late double move_speed;
-  late double move_speed_acceletarion;
-  late List<double> u_a_4;
+  int? effect_lines_type_maybe;
+  int? unk_1;
+  int? unk_2;
+  int? effect_lines_size_maybe;
+  double? part_size;
+  double? move_speed_on_player_x;
+  double? move_speed_on_player_y;
+  List<double>? u_a_3;
+  double? move_speed_on_player_z;
+  double? move_speed;
+  double? move_speed_acceletarion;
+  List<double>? u_a_4;
 
   EstTypeMjcmEntry.read(ByteDataWrapper bytes, EstTypeHeader header) {
     this.header = header;
     size_1 = bytes.readInt16();
     size_2 = bytes.readInt16();
     u_a_1 = bytes.asInt16List(6);
-    effect_lines_type_maybe = bytes.readInt16();
-    unk_1 = bytes.readInt16();
-    unk_2 = bytes.readInt16();
-    effect_lines_size_maybe = bytes.readInt16();
-    part_size = bytes.readFloat32();
-    move_speed_on_player_x = bytes.readFloat32();
-    move_speed_on_player_y = bytes.readFloat32();
-    u_a_3 = bytes.readFloat32List(4);
-    move_speed_on_player_z = bytes.readFloat32();
-    move_speed = bytes.readFloat32();
-    move_speed_acceletarion = bytes.readFloat32();
-    u_a_4 = bytes.readFloat32List(4);
+    if (header.size > 16) {
+      effect_lines_type_maybe = bytes.readInt16();
+      unk_1 = bytes.readInt16();
+      unk_2 = bytes.readInt16();
+      effect_lines_size_maybe = bytes.readInt16();
+      part_size = bytes.readFloat32();
+      move_speed_on_player_x = bytes.readFloat32();
+      move_speed_on_player_y = bytes.readFloat32();
+      u_a_3 = bytes.readFloat32List(4);
+      move_speed_on_player_z = bytes.readFloat32();
+      move_speed = bytes.readFloat32();
+      move_speed_acceletarion = bytes.readFloat32();
+      u_a_4 = bytes.readFloat32List(4);
+    }
   }
 
   @override
@@ -756,20 +758,22 @@ class EstTypeMjcmEntry extends EstTypeEntry {
     bytes.writeInt16(size_2);
     for (var a in u_a_1)
       bytes.writeInt16(a);
-    bytes.writeInt16(effect_lines_type_maybe);
-    bytes.writeInt16(unk_1);
-    bytes.writeInt16(unk_2);
-    bytes.writeInt16(effect_lines_size_maybe);
-    bytes.writeFloat32(part_size);
-    bytes.writeFloat32(move_speed_on_player_x);
-    bytes.writeFloat32(move_speed_on_player_y);
-    for (var a in u_a_3)
-      bytes.writeFloat32(a);
-    bytes.writeFloat32(move_speed_on_player_z);
-    bytes.writeFloat32(move_speed);
-    bytes.writeFloat32(move_speed_acceletarion);
-    for (var a in u_a_4)
-      bytes.writeFloat32(a);
+    if (header.size > 16) {
+      bytes.writeInt16(effect_lines_type_maybe!);
+      bytes.writeInt16(unk_1!);
+      bytes.writeInt16(unk_2!);
+      bytes.writeInt16(effect_lines_size_maybe!);
+      bytes.writeFloat32(part_size!);
+      bytes.writeFloat32(move_speed_on_player_x!);
+      bytes.writeFloat32(move_speed_on_player_y!);
+      for (var a in u_a_3!)
+        bytes.writeFloat32(a);
+      bytes.writeFloat32(move_speed_on_player_z!);
+      bytes.writeFloat32(move_speed!);
+      bytes.writeFloat32(move_speed_acceletarion!);
+      for (var a in u_a_4!)
+        bytes.writeFloat32(a);
+    }
   }
 }
 
