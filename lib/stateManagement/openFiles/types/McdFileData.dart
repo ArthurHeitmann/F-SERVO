@@ -380,9 +380,15 @@ class McdLine extends _McdFilePart {
       else if (char == "<" && i + 5 <= str.length && str.substring(i, i + 5) == "<Alt>") {
         letters.add(McdFileLetter(0x8020, 121, const []));
         i += 4;
-      } else if (char == "<" && i + 11 <= str.length && str.substring(i, i + 11) == "<Special_0x")
-        throw Exception("Special symbols are not supported");
-      else {
+      } else if (char == "<" && i + 11 <= str.length && str.substring(i, i + 11) == "<Special_0x") {
+        var specialStr = str.substring(i + 11);
+        specialStr = specialStr.substring(0, specialStr.indexOf(">"));
+        var pair = specialStr.split("_");
+        var code = int.parse(pair[0], radix: 16);
+        var code2 = int.parse(pair[1]);
+        letters.add(McdFileLetter(code, code2, const []));
+        i += 11 + specialStr.length;
+      } else {
         var charCode = char.codeUnitAt(0);
         final symbolIndex = symbols.indexWhere((s) => s.charCode == charCode && s.fontId == fontId);
         if (symbolIndex == -1)
