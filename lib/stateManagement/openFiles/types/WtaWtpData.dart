@@ -49,13 +49,13 @@ class WtaWtpData extends OpenFileData {
       else {
         wtpPath = join(datDir, wtpName);
         if (!await File(wtpPath!).exists()) {
-          showToast("Can't find corresponding WTP file");
-          throw Exception("Can't find corresponding WTP file");
+          showToast("Can't find corresponding WTP file for $wtaName.wta in ${dttDir ?? datDir}");
+          throw Exception("Can't find corresponding WTP file for $wtaName");
         }
       }
     }
     if (!isWtb && wtpPath == null) {
-      showToast("Can't find corresponding WTP file");
+      showToast("Can't find corresponding WTP file in ${dttDir ?? datDir}");
       throw Exception("Can't find corresponding WTP file in ${dttDir ?? datDir}");
     }
 

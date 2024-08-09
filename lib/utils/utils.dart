@@ -599,7 +599,12 @@ Future<void> exportDat(String datFolder, { bool checkForNesting = false }) async
     }
   }
   var datExportPath = join(datExportDir, datName);
-  await repackDat(datFolder, datExportPath);
+  try {
+    await repackDat(datFolder, datExportPath);
+  } catch (e) {
+    messageLog.add("Failed to export $datName: $e");
+    rethrow;
+  }
 
   if (recursive)
     await exportDat(datExportDir, checkForNesting: true);
