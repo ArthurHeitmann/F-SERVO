@@ -18,12 +18,10 @@ class HashInfo {
   }
 
   int _calculateShift() {
-    for (int i = 0; i < 31; i++) {
-      if (1 << i >= inFiles.length)
-        return 31 - i;
-    }
-
-    return 0;
+    int count = inFiles.length;
+    if (count <= 1)
+      count += 1;
+    return 32 - count.bitLength;
   }
 
   void _generateInfo() {
