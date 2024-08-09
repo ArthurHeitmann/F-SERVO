@@ -293,7 +293,7 @@ class McdLocalFont extends McdFont {
     return McdLocalFont(fontId, font.width, font.height, font.horizontalSpacing, supportedSymbols, kerningCache);
   }
 
-  McdLocalFont.zero() : kerningCache = {}, super(0, 0, 4, -6, {});
+  McdLocalFont.zero() : kerningCache = {}, super(0, 9, 48, -9, {});
 }
 
 class McdFontOverride with HasUuid implements Disposable {
@@ -768,7 +768,7 @@ class McdData extends _McdFilePart {
     var exportFonts = usedFontIds
       .map((id) {
         if (id == 0)
-          return McdLocalFont.zero();
+          return usedFonts[id] ?? McdLocalFont.zero();
         return usedFonts[id]!;
       })
       .map((f) {

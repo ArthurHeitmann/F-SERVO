@@ -155,6 +155,7 @@ class WtaFile {
     header.offsetTextureSizes = alignTo(header.offsetTextureOffsets + textureOffsets.length * 4, 32);
     header.offsetTextureFlags = alignTo(header.offsetTextureSizes + textureSizes.length * 4, 32);
     header.offsetTextureIdx = alignTo(header.offsetTextureFlags + textureFlags.length * 4, 32);
-    header.offsetTextureInfo = alignTo(header.offsetTextureIdx + textureIdx.length * 4, 32);
+    if (header.offsetTextureInfo > 0)
+      header.offsetTextureInfo = alignTo(header.offsetTextureIdx + textureIdx.length * 4, 32);
   }
 }
