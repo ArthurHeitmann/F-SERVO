@@ -64,7 +64,7 @@ Future<void> repackDat(String datDir, String exportPath) async {
   List<int> fileOffsets = [];
   var currentOffset = hashMapOffset + hashMapSize;
   for (int i = 0; i < fileList.length; i++) {
-    currentOffset = (currentOffset / 16).ceil() * 16;
+    currentOffset = (currentOffset / 32).ceil() * 32;
     fileOffsets.add(currentOffset);
     currentOffset += fileSizes[i];
   }
