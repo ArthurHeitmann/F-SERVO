@@ -7,6 +7,8 @@ import 'hasUuid.dart';
 import 'miscValues.dart';
 
 mixin Undoable on HasUuid {
+  bool historyEnabled = true;
+
   Undoable takeSnapshot();
   void restoreWith(Undoable snapshot);
 }

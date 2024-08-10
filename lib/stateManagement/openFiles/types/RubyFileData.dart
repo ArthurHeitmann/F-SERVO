@@ -5,7 +5,7 @@ import '../../changesExporter.dart';
 import 'TextFileData.dart';
 
 class RubyFileData extends TextFileData {
-  RubyFileData(super.name, super.path, { super.secondaryName })
+  RubyFileData(super.name, super.path, { super.secondaryName, super.initText })
       : super(icon: Icons.code);
 
   @override
@@ -16,6 +16,6 @@ class RubyFileData extends TextFileData {
 
   @override
   TextFileData copyBase() {
-    return RubyFileData(name.value, path);
+    return RubyFileData(name.value, path, initText: text.value);
   }
 }

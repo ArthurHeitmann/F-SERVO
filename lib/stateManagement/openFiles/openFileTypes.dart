@@ -1,16 +1,20 @@
 
 // ignore_for_file: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
 
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 
 import '../../utils/Disposable.dart';
+import '../../utils/utils.dart';
 import '../../widgets/filesView/FileType.dart';
 import '../hasUuid.dart';
 import '../miscValues.dart';
 import '../undoable.dart';
 import 'types/BnkFilePlaylistData.dart';
+import 'types/BxmFileData.dart';
 import 'types/EstFileData.dart';
 import 'types/FtbFileData.dart';
 import 'types/McdFileData.dart';
@@ -56,8 +60,20 @@ abstract class OpenFileData with HasUuid, Undoable, Disposable, HasUndoHistory {
   }
 
   factory OpenFileData.from(String name, String path, { String? secondaryName, OptionalFileInfo? optionalInfo }) {
-    if (path.endsWith(".xml"))
+    if (path.endsWith(".xml")) {
+      if (bxmExtensions.any((ext) => withoutExtension(path).endsWith(ext)))
+        return BxmFileData(name, withoutExtension(path), secondaryName: secondaryName);
+      if (!RegExp(r"^\d+$").hasMatch(basenameWithoutExtension(path))) {
+        var pathNoExt = withoutExtension(path);
+        for (var ext in bxmExtensions) {
+          var bxmPath = pathNoExt + ext;
+          if (File(bxmPath).existsSync())
+            return BxmFileData(name, bxmPath, secondaryName: secondaryName);
+        }
+      }
       return XmlFileData(name, path, secondaryName: secondaryName);
+    }else if (bxmExtensions.any((ext) => path.endsWith(ext)))
+      return BxmFileData(name, path, secondaryName: secondaryName);
     else if (path.endsWith(".rb"))
       return RubyFileData(name, path, secondaryName: secondaryName);
     else if (path.endsWith(".tmd"))

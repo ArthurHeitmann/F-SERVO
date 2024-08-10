@@ -131,9 +131,17 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
         ],
       ),
       const SizedBox(height: 40,),
+      const Text("Text editor:", style: sectionHeaderStyle,),
+      const SizedBox(height: 10,),
       Row(
         children: [
-          const Text("Prefer opening some files in VS Code ", overflow: TextOverflow.ellipsis,),
+          const Text("Use builtin VS Code editor:", overflow: TextOverflow.ellipsis,),
+          BoolPropSwitch(prop: widget.prefs.useMonacoEditor!),
+        ],
+      ),
+      Row(
+        children: [
+          const Text("Prefer opening text files in VS Code:", overflow: TextOverflow.ellipsis,),
           BoolPropSwitch(prop: widget.prefs.preferVsCode!),
         ],
       ),

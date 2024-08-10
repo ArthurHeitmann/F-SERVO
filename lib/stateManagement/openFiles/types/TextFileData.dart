@@ -12,9 +12,9 @@ class TextFileData extends OpenFileData {
   late final StringProp text;
   int cursorOffset = 0;
 
-  TextFileData(super.name, super.path, { super.secondaryName, IconData? icon, super.iconColor })
+  TextFileData(super.name, super.path, { super.secondaryName, IconData? icon, super.iconColor, String? initText })
       : super(type: FileType.text, icon: icon ?? Icons.text_fields) {
-    text = StringProp("Loading...", fileId: uuid);
+    text = StringProp(initText ?? "Loading...", fileId: uuid);
   }
 
   @override
@@ -39,7 +39,7 @@ class TextFileData extends OpenFileData {
 
   @protected
   TextFileData copyBase() {
-    return TextFileData(name.value, path);
+    return TextFileData(name.value, path, initText: text.value);
   }
 
   @override
@@ -48,7 +48,6 @@ class TextFileData extends OpenFileData {
     snapshot.optionalInfo = optionalInfo;
     snapshot.setHasUnsavedChanges(hasUnsavedChanges.value);
     snapshot.loadingState.value = loadingState.value;
-    snapshot.text.value = text.value;
     snapshot.cursorOffset = cursorOffset;
     snapshot.overrideUuid(uuid);
     return snapshot;

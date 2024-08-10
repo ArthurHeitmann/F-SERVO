@@ -592,6 +592,7 @@ class _SearchGroupResultState extends State<_SearchGroupResult> {
           var file = areasManager.openFile(result.filePath);
           if (result is SearchResultText) {
             await file.load();
+            await waitForNextFrame();
             jumpToStream.add(JumpToLineEvent(file, result.lineNum));
           }
           else if (result is SearchResultId) {

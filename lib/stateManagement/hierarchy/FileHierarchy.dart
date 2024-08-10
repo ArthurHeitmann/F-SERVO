@@ -176,6 +176,10 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
         messageLog.add("${basename(filePath)} not opened");
         return null;
       }
+    } catch(e, s) {
+      print("$e\n$s");
+      messageLog.add("Failed to open ${basename(filePath)}");
+      return null;
     } finally {
       isLoadingStatus.popIsLoading();
     }
