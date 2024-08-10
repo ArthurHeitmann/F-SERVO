@@ -19,6 +19,8 @@ enum ThemeType {
 }
 
 class SavableProp<T> extends ValueProp<T> {
+  @override
+  bool historyEnabled = true;
   final String key;
 
   SavableProp(this.key, SharedPreferences prefs, T fallback)
@@ -74,6 +76,7 @@ class PreferencesData extends OpenFileData {
   SavableProp<bool>? exportPaks;
   SavableProp<bool>? convertXmls;
   SavableProp<bool>? preferVsCode;
+  SavableProp<bool>? useMonacoEditor;
   SavableProp<bool>? pauseAudioOnFileChange;
   SavableProp<ThemeType>? themeType;
   SavableProp<String>? waiExtractDir;
@@ -118,6 +121,7 @@ class PreferencesData extends OpenFileData {
     exportPaks = SavableProp<bool>("exportPak", _prefs!, true);
     convertXmls = SavableProp<bool>("convertXml", _prefs!, true);
     preferVsCode = SavableProp<bool>("preferVsCode", _prefs!, false);
+    useMonacoEditor = SavableProp<bool>("useMonacoEditor", _prefs!, true);
     pauseAudioOnFileChange = SavableProp<bool>("pauseAudioOnFileChange", _prefs!, false);
     themeType = SavableProp<ThemeType>("themeType", _prefs!, ThemeType.dark);
     waiExtractDir = SavableProp<String>("waiExtractDir", _prefs!, "");

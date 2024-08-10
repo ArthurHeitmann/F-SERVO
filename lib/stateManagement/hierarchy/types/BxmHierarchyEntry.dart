@@ -22,16 +22,6 @@ class BxmHierarchyEntry extends GenericFileHierarchyEntry {
     return BxmHierarchyEntry(name.takeSnapshot() as StringProp, path);
   }
 
-  @override
-  Future<void> onOpen() async {
-    if (await tryOpenInVsCode()) {
-      openInVsCode(vsCodeEditingPath);
-      return;
-    }
-
-    showToast("Can't open BXM files. Right click to convert");
-  }
-
   Future<void> toXml() async {
     await convertBxmFileToXml(path, xmlPath);
     showToast("Saved to ${basename(xmlPath)}");

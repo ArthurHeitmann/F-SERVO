@@ -68,7 +68,8 @@ class OpenFilesAreasManager with HasUuid, Undoable implements Disposable {
   }
 
   void onFileUndoEvent(OpenFileData file) {
-    file.onUndoableEvent();
+    if (file.historyEnabled && file.loadingState.value != LoadingState.loading)
+      file.onUndoableEvent();
   }
 
   void onFileIdUndoEvent(OpenFileId id) {

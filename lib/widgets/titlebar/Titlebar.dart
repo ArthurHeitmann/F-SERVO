@@ -78,13 +78,13 @@ class TitleBarState extends ChangeNotifierState<TitleBar> with WindowListener {
                   padding: EdgeInsets.zero,
                   splashRadius: 14,
                   icon: const Icon(Icons.undo, size: 17),
-                  onPressed: file?.canUndo ?? false ? file!.undo : null,
+                  onPressed: (file?.canUndo ?? false) && (file?.historyEnabled ?? false) ? file!.undo : null,
                 ),
                 IconButton(
                   padding: EdgeInsets.zero,
                   splashRadius: 14,
                   icon: const Icon(Icons.redo, size: 17),
-                  onPressed: file?.canRedo ?? false ? file!.redo : null,
+                  onPressed: (file?.canRedo ?? false) && (file?.historyEnabled ?? false) ? file!.redo : null,
                 ),
                 Tooltip(
                   message: "Save all changed files",

@@ -63,6 +63,8 @@ abstract class ValueProp<T> extends ValueNotifier<T> with Prop<T>, HasUuid {
 
 class HexProp extends ValueProp<int> {
   @override
+  bool historyEnabled = true;
+  @override
   final PropType type = PropType.hexInt;
 
   String? _strVal;
@@ -120,6 +122,8 @@ class HexProp extends ValueProp<int> {
 }
 
 class NumberProp extends ValueProp<num> {
+  @override
+  bool historyEnabled = true;
   final bool isInteger;
 
   @override
@@ -148,6 +152,8 @@ class NumberProp extends ValueProp<num> {
 
 class FloatProp extends ValueProp<double> {
   @override
+  bool historyEnabled = true;
+  @override
   final PropType type = PropType.float;
 
   FloatProp(super.value, { required super.fileId });
@@ -169,6 +175,8 @@ class FloatProp extends ValueProp<double> {
 }
 
 class VectorProp extends ChangeNotifier with Prop<List<num>>, IterableMixin<NumberProp>, HasUuid {
+  @override
+  bool historyEnabled = true;
   @override
   final OpenFileId? fileId;
   @override
@@ -235,6 +243,8 @@ class VectorProp extends ChangeNotifier with Prop<List<num>>, IterableMixin<Numb
 
 class StringProp extends ValueProp<String> {
   @override
+  bool historyEnabled = true;
+  @override
   final PropType type = PropType.string;
   
   String Function(String)? transform;
@@ -271,6 +281,8 @@ class StringProp extends ValueProp<String> {
 
 class BoolProp extends ValueProp<bool> {
   @override
+  bool historyEnabled = true;
+  @override
   final PropType type = PropType.bool;
 
   BoolProp(super.value, { required super.fileId });
@@ -292,6 +304,8 @@ class BoolProp extends ValueProp<bool> {
 }
 
 class AudioSampleNumberProp extends ValueProp<int> {
+  @override
+  bool historyEnabled = true;
   final int samplesPerSecond;
   
   @override

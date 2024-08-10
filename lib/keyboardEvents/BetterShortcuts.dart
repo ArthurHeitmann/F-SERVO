@@ -1,4 +1,5 @@
 
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -19,7 +20,25 @@ class KeyCombo {
   }
 }
 
+class ManualKeyEvent {
+  final LogicalKeyboardKey key;
+  final Set<ModifierKey> modifiers;
+
+  ManualKeyEvent(this.key, {bool ctrl = false, bool alt = false, bool shift = false, bool meta = false})
+    : modifiers = {
+      if (ctrl)
+        ModifierKey.controlModifier,
+      if (alt)
+        ModifierKey.altModifier,
+      if (shift)
+        ModifierKey.shiftModifier,
+      if (meta)
+        ModifierKey.metaModifier,
+    };
+}
+
 class BetterShortcuts extends StatefulWidget {
+  static final StreamController<ManualKeyEvent> _manualKeyEvents = StreamController.broadcast();
   final Map<KeyCombo, Intent> shortcuts;
   final Map<Type, Action<Intent>> actions;
   final Widget child;
@@ -28,21 +47,28 @@ class BetterShortcuts extends StatefulWidget {
 
   @override
   State<BetterShortcuts> createState() => _BetterShortcutsState();
+
+  static void sendKeyEvent(ManualKeyEvent event) {
+    _manualKeyEvents.add(event);
+  }
 }
 
 class _BetterShortcutsState extends State<BetterShortcuts> {
   KeyDataCallback? prevKeyDataCallback;
+  late StreamSubscription<ManualKeyEvent> _manualKeyEventSubscription;
 
   @override
   void initState() {
     prevKeyDataCallback = window.onKeyData;
     HardwareKeyboard.instance.addHandler(onKey);
+    _manualKeyEventSubscription = BetterShortcuts._manualKeyEvents.stream.listen(onManualKeyEvent);
     super.initState();
   }
 
   @override
   void dispose() {
     HardwareKeyboard.instance.removeHandler(onKey);
+    _manualKeyEventSubscription.cancel();
     super.dispose();
   }
 
@@ -75,12 +101,33 @@ class _BetterShortcutsState extends State<BetterShortcuts> {
     return false;
   }
 
+  void onManualKeyEvent(ManualKeyEvent event) {
+    for (var shortcut in widget.shortcuts.entries) {
+      if (_matchesManual(shortcut.key, event)) {
+        final action = widget.actions[shortcut.value.runtimeType];
+        if (action != null) {
+          // ignore: invalid_use_of_protected_member
+          action.invoke(shortcut.value);
+          return;
+        }
+      }
+    }
+  }
+
   bool _matches(KeyCombo keyCombo, Set<ModifierKey> pressedModifiers) {
     if (pressedModifiers.length != keyCombo.modifiers.length)
       return false;
     if (!pressedModifiers.containsAll(keyCombo.modifiers))
       return false;
     return HardwareKeyboard.instance.logicalKeysPressed.contains(keyCombo.key);
+  }
+
+  bool _matchesManual(KeyCombo keyCombo, ManualKeyEvent event) {
+    if (event.modifiers.length != keyCombo.modifiers.length)
+      return false;
+    if (!event.modifiers.containsAll(keyCombo.modifiers))
+      return false;
+    return event.key == keyCombo.key;
   }
 
   @override
