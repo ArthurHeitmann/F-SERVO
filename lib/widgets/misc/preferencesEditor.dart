@@ -145,12 +145,6 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
           BoolPropSwitch(prop: widget.prefs.preferVsCode!),
         ],
       ),
-      Row(
-        children: [
-          const Text("Move file properties to right sidebar", overflow: TextOverflow.ellipsis,),
-          BoolPropSwitch(prop: widget.prefs.moveFilePropertiesToRight!),
-        ],
-      ),
       const SizedBox(height: 40,),
     ];
   }
@@ -252,6 +246,13 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
             makeThemeSelectable(context, ThemeType.nier, const Color.fromARGB(255, 218, 212, 187), const Color.fromARGB(255, 78, 75, 61)),
           ],
         ),
+      ),
+      const SizedBox(height: 20,),
+      Row(
+        children: [
+          const Text("Move file properties to right sidebar", overflow: TextOverflow.ellipsis,),
+          BoolPropSwitch(prop: widget.prefs.moveFilePropertiesToRight!),
+        ],
       ),
     ];
   }
