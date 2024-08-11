@@ -25,14 +25,12 @@ jobs:
         shell: cmd
         run: 7z x ${{ runner.temp }}/assets.7z -o.\assets
           
-      - name: Download visual c++ redistributable
+      - name: Download and install visual c++ redistributable
         run: |
-          $url = "https://aka.ms/vs/17/release/vc_redist.x64.exe"
-          $output = "${{ runner.temp }}\vc_redist.x64.exe"
-          Invoke-WebRequest -Uri $url -OutFile $output
-      - name: Install visual c++ 2022 redistributable
-        shell: cmd
-        run: ${{ runner.temp }}\vc_redist.x64.exe /quiet /install
+          Invoke-WebRequest -Uri "https://aka.ms/vs/17/release/vc_redist.x64.exe" -OutFile "${{ runner.temp }}\vc_redist.x64.exe"
+          Invoke-WebRequest -Uri "https://aka.ms/vs/17/release/vc_redist.x86.exe" -OutFile "${{ runner.temp }}\vc_redist.x86.exe"
+          ${{ runner.temp }}\vc_redist.x64.exe /quiet /install
+          ${{ runner.temp }}\vc_redist.x86.exe /quiet /install
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -52,8 +50,8 @@ jobs:
           $destination2 = "build\windows\x64\runner\Release\data\flutter_assets\assets\bins\vgmStream"
           foreach ($dll in $dlls_names) {
             Copy-Item -Path "C:\Windows\System32\$dll" -Destination $destination1 -Force
-            Copy-Item -Path "C:\Windows\System32\$dll" -Destination $destination2 -Force
           }
+          Copy-Item -Path "C:\Windows\SysWOW64\vcruntime140.dll" -Destination $destination2 -Force
 
       - name: Archive Release
         uses: actions/upload-artifact@v2
