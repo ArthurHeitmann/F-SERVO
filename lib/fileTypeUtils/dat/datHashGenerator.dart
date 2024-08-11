@@ -1,4 +1,6 @@
 
+import 'dart:math';
+
 import '../../utils/utils.dart';
 
 // From https://github.com/xxk-i/DATrepacker
@@ -21,7 +23,7 @@ class HashInfo {
     int count = inFiles.length;
     if (count <= 1)
       count += 1;
-    return 32 - count.bitLength;
+    return max(24, 32 - count.bitLength);
   }
 
   void _generateInfo() {
