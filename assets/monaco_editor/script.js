@@ -1,4 +1,6 @@
 
+let wordWrap = true;
+
 window.addEventListener("load", () => {
 	const params = new URLSearchParams(window.location.search);
 	const lang = params.get("lang") || null;
@@ -11,6 +13,7 @@ window.addEventListener("load", () => {
 			theme: theme,
 			automaticLayout: true,
 			smoothScrolling: true,
+			wordWrap: wordWrap ? "on" : "off",
 		});
 		textEditor.getModel().onDidChangeContent(onModelContentChange);
 		window.textEditor = textEditor;
@@ -76,6 +79,14 @@ window.addEventListener("keydown", (e) => {
 				altKey: e.altKey,
 				metaKey: e.metaKey,
 			},
-		})
+		});
+		return;
+	}
+
+	if (e.altKey && e.key === "z") {
+		wordWrap = !wordWrap;
+		textEditor.updateOptions({
+			wordWrap: wordWrap ? "on" : "off",
+		});
 	}
 });
