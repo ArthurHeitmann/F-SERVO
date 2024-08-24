@@ -274,6 +274,9 @@ enum BnkHircType {
   musicTrack(0x0B),
   musicSwitch(0x0C),
   musicPlaylist(0x0D),
+  attenuation(0x0E),
+  fxCustom(0x12),
+  fxShareSet(0x13),
   unknown(-1);
 
   final int value;
@@ -330,7 +333,13 @@ BnkHircChunkBase _makeNextHircChunk(ByteDataWrapper bytes) {
       return BnkMusicSwitch.read(bytes);
     case BnkHircType.musicPlaylist:
       return BnkMusicPlaylist.read(bytes);
-    default: return BnkHircUnknownChunk.read(bytes);
+    case BnkHircType.attenuation:
+      return BnkAttenuation.read(bytes);
+    case BnkHircType.fxCustom:
+    case BnkHircType.fxShareSet:
+      return BnkFxCustom.read(bytes);
+    default:
+      return BnkHircUnknownChunk.read(bytes);
   }
 }
 
@@ -354,7 +363,7 @@ class BnkHircUnknownChunk extends BnkHircChunkBase {
   int calculateSize() => data.length;
 }
 
-mixin BnkHircChunkWithBaseParamsGetter {
+mixin BnkHircChunkWithBaseParamsGetter on BnkHircChunkBase {
   BnkNodeBaseParams getBaseParams();
 }
 
@@ -965,17 +974,16 @@ class BnkMusicMarker {
   }
 }
 
-class BnkMusicNodeParams with BnkHircChunkWithBaseParams {
+class BnkMusicNodeParams {
   // late int uFlags;
+  late BnkNodeBaseParams baseParams;
   late BnkChildren childrenList;
   late BnkAkMeterInfo meterInfo;
   late int bMeterInfoFlag;
   late int uNumStingers;
   late List<BnkAkStinger> stingers;
 
-  BnkMusicNodeParams(BnkNodeBaseParams baseParams, this.childrenList, this.meterInfo, this.bMeterInfoFlag, this.uNumStingers, this.stingers) {
-    this.baseParams = baseParams;
-  }
+  BnkMusicNodeParams(this.baseParams, this.childrenList, this.meterInfo, this.bMeterInfoFlag, this.uNumStingers, this.stingers);
 
   BnkMusicNodeParams.read(ByteDataWrapper bytes) {
     // uFlags = bytes.readUint8();
@@ -1272,21 +1280,21 @@ class BnkFadeParams {
 }
 
 class BnkRtpcGraphPoint {
-  late double to;
-  late double from;
+  late double x;
+  late double y;
   late int interpolation;
 
-  BnkRtpcGraphPoint(this.to, this.from, this.interpolation);
+  BnkRtpcGraphPoint(this.x, this.y, this.interpolation);
 
   BnkRtpcGraphPoint.read(ByteDataWrapper bytes) {
-    to = bytes.readFloat32();
-    from = bytes.readFloat32();
+    x = bytes.readFloat32();
+    y = bytes.readFloat32();
     interpolation = bytes.readUint32();
   }
 
   void write(ByteDataWrapper bytes) {
-    bytes.writeFloat32(to);
-    bytes.writeFloat32(from);
+    bytes.writeFloat32(x);
+    bytes.writeFloat32(y);
     bytes.writeUint32(interpolation);
   }
 
@@ -1450,6 +1458,8 @@ class BnkPropValue {
   int calcChunkSize() {
     return 1 + cProps + cProps * 4;
   }
+
+  Iterable<(int, num)> get props => Iterable.generate(cProps, (i) => (pID[i], values[i].number));
 }
 
 class BnkPropRangedValue {
@@ -2005,6 +2015,447 @@ class BnkNodeBaseParams {
   }
 }
 
+class BnkAttenuation extends BnkHircChunkBase {
+  late int bIsConeEnabled;
+  late BnkConeParams? coneParams;
+  late List<int> curveToUse;
+  late int numCurves;
+  late List<BnkConversionTable> curves;
+  late int ulNumRTPC;
+  late List<BnkRtpc> rtpcs;
+
+  BnkAttenuation(super.type, super.size, super.uid, this.bIsConeEnabled, this.coneParams, this.curveToUse, this.numCurves, this.curves, this.ulNumRTPC, this.rtpcs);
+
+  BnkAttenuation.read(ByteDataWrapper bytes) : super.read(bytes) {
+    bIsConeEnabled = bytes.readUint8();
+    if (bIsConeEnabled != 0)
+      coneParams = BnkConeParams.read(bytes);
+    curveToUse = List.generate(4, (index) => bytes.readInt8());
+    numCurves = bytes.readUint8();
+    curves = List.generate(numCurves, (index) => BnkConversionTable.read(bytes));
+    ulNumRTPC = bytes.readUint16();
+    rtpcs = List.generate(ulNumRTPC, (index) => BnkRtpc.read(bytes));
+  }
+
+  @override
+  void write(ByteDataWrapper bytes) {
+    super.write(bytes);
+    bytes.writeUint8(bIsConeEnabled);
+    if (bIsConeEnabled != 0)
+      coneParams!.write(bytes);
+    for (var i = 0; i < 4; i++)
+      bytes.writeInt8(curveToUse[i]);
+    bytes.writeUint8(numCurves);
+    for (var i = 0; i < numCurves; i++)
+      curves[i].write(bytes);
+    bytes.writeUint16(ulNumRTPC);
+    for (var i = 0; i < ulNumRTPC; i++)
+      rtpcs[i].write(bytes);
+  }
+
+  @override
+  int calculateSize() {
+    return (
+      1 +
+      (bIsConeEnabled != 0 ? coneParams!.calcChunkSize() : 0) +
+      4 +
+      1 +
+      curves.fold<int>(0, (prev, c) => prev + c.calcChunkSize()) +
+      2 +
+      rtpcs.fold<int>(0, (prev, r) => prev + r.calcChunkSize())
+    ) ;
+  }
+}
+
+class BnkConeParams {
+  late double fInsideDegrees;
+  late double fOUtsideDegrees;
+  late double fOutsideVolume;
+  late double fLoPass;
+
+  BnkConeParams(this.fInsideDegrees, this.fOUtsideDegrees, this.fOutsideVolume, this.fLoPass);
+
+  BnkConeParams.read(ByteDataWrapper bytes) {
+    fInsideDegrees = bytes.readFloat32();
+    fOUtsideDegrees = bytes.readFloat32();
+    fOutsideVolume = bytes.readFloat32();
+    fLoPass = bytes.readFloat32();
+  }
+
+  void write(ByteDataWrapper bytes) {
+    bytes.writeFloat32(fInsideDegrees);
+    bytes.writeFloat32(fOUtsideDegrees);
+    bytes.writeFloat32(fOutsideVolume);
+    bytes.writeFloat32(fLoPass);
+  }
+
+  int calcChunkSize() {
+    return 16;
+  }
+}
+
+class BnkConversionTable {
+  late int eScaling;
+  late int ulSize;
+  late List<BnkRtpcGraphPoint> rtpcGraphPoint;
+
+  BnkConversionTable(this.eScaling, this.ulSize, this.rtpcGraphPoint);
+
+  BnkConversionTable.read(ByteDataWrapper bytes) {
+    eScaling = bytes.readUint8();
+    ulSize = bytes.readUint16();
+    rtpcGraphPoint = List.generate(ulSize, (index) => BnkRtpcGraphPoint.read(bytes));
+  }
+
+  void write(ByteDataWrapper bytes) {
+    bytes.writeUint8(eScaling);
+    bytes.writeUint16(ulSize);
+    for (var i = 0; i < ulSize; i++)
+      rtpcGraphPoint[i].write(bytes);
+  }
+
+  int calcChunkSize() {
+    return 3 + rtpcGraphPoint.fold<int>(0, (prev, r) => prev + r.calcChunkSize());
+  }
+}
+
+class BnkFxCustom extends BnkHircChunkBase {
+  late int fxId;
+  late int uSize;
+  late BnkPluginData pluginData;
+  late int uNumBankData;
+  late List<BnkMediaMap> media;
+  late BnkInitialRTPC rtpc;
+
+  BnkFxCustom(super.type, super.size, super.uid, this.fxId, this.uSize, this.pluginData, this.uNumBankData, this.media, this.rtpc);
+
+  BnkFxCustom.read(ByteDataWrapper bytes) : super.read(bytes) {
+    fxId = bytes.readUint32();
+    uSize = bytes.readUint32();
+    pluginData = BnkPluginData.fromId(bytes, fxId, uSize);
+    uNumBankData = bytes.readUint8();
+    media = List.generate(uNumBankData, (index) => BnkMediaMap.read(bytes));
+    rtpc = BnkInitialRTPC.read(bytes);
+  }
+
+  @override
+  void write(ByteDataWrapper bytes) {
+    super.write(bytes);
+    bytes.writeUint32(fxId);
+    bytes.writeUint32(uSize);
+    pluginData.write(bytes);
+    bytes.writeUint8(uNumBankData);
+    for (var i = 0; i < uNumBankData; i++)
+      media[i].write(bytes);
+    rtpc.write(bytes);
+  }
+
+  @override
+  int calculateSize() {
+    return 8 + pluginData.calcChunkSize() + 1 + media.fold<int>(0, (prev, m) => prev + m.calcChunkSize()) + rtpc.calcChunkSize();
+  }
+
+  bool get isShareSet => type == BnkHircType.fxShareSet.index;
+}
+
+abstract class BnkPluginData {
+  void write(ByteDataWrapper bytes);
+
+  int calcChunkSize();
+
+  static BnkPluginData fromId(ByteDataWrapper bytes, int fxId, int size) {
+    switch (fxId) {
+      case 0x00640002:
+        return BnkFxSineParams.read(bytes, size);
+      case 0x00650002:
+        return BnkFxSilenceParams.read(bytes, size);
+      case 0x00760003:
+        return BnkRoomVerbFXParams.read(bytes, size);
+      default:
+        return BnkPluginDataUnknown.read(bytes, size);
+    }
+  }
+}
+
+class BnkFxSineParams extends BnkPluginData {
+  late double fFrequency;
+  late double fGain;
+  late double fDuration;
+  late int uChannelMask;
+
+  BnkFxSineParams(this.fFrequency, this.fGain, this.fDuration, this.uChannelMask);
+
+  BnkFxSineParams.read(ByteDataWrapper bytes, int size) {
+    if (size != 16)
+      throw Exception('Invalid size $size for BnkFxSrcSilenceParams');
+    fFrequency = bytes.readFloat32();
+    fGain = bytes.readFloat32();
+    fDuration = bytes.readFloat32();
+    uChannelMask = bytes.readUint32();
+  }
+
+  @override
+  void write(ByteDataWrapper bytes) {
+    bytes.writeFloat32(fFrequency);
+    bytes.writeFloat32(fGain);
+    bytes.writeFloat32(fDuration);
+    bytes.writeUint32(uChannelMask);
+  }
+
+  @override
+  int calcChunkSize() {
+    return 16;
+  }
+}
+
+class BnkFxSilenceParams extends BnkPluginData {
+  late double fDuration;
+  late double fRandomizedLengthMinus;
+  late double fRandomizedLengthPlus;
+
+  BnkFxSilenceParams(this.fDuration, this.fRandomizedLengthMinus, this.fRandomizedLengthPlus);
+
+  BnkFxSilenceParams.read(ByteDataWrapper bytes, int size) {
+    if (size != 12)
+      throw Exception('Invalid size $size for BnkFxSrcSilenceParams');
+    fDuration = bytes.readFloat32();
+    fRandomizedLengthMinus = bytes.readFloat32();
+    fRandomizedLengthPlus = bytes.readFloat32();
+  }
+
+  @override
+  void write(ByteDataWrapper bytes) {
+    bytes.writeFloat32(fDuration);
+    bytes.writeFloat32(fRandomizedLengthMinus);
+    bytes.writeFloat32(fRandomizedLengthPlus);
+  }
+
+  @override
+  int calcChunkSize() {
+    return 12;
+  }
+}
+
+class BnkRoomVerbFXParams extends BnkPluginData {
+  late double fDecayTime;
+  late double fHFDamping;
+  late double fDiffusion;
+  late double fStereoWidth;
+  late double fFilter1Gain;
+  late double fFilter1Freq;
+  late double fFilter1Q;
+  late double fFilter2Gain;
+  late double fFilter2Freq;
+  late double fFilter2Q;
+  late double fFilter3Gain;
+  late double fFilter3Freq;
+  late double fFilter3Q;
+  late double fFrontLevel;
+  late double fRearLevel;
+  late double fCenterLevel;
+  late double fLFELevel;
+  late double fDryLevel;
+  late double fERLevel;
+  late double fReverbLevel;
+  late int bEnableEarlyReflections;
+  late int uERPattern;
+  late double fReverbDelay;
+  late double fRoomSize;
+  late double fERFrontBackDelay;
+  late double fDensity;
+  late double fRoomShape;
+  late int uNumReverbUnits;
+  late int bEnableToneControls;
+  late int eFilter1Pos;
+  late int eFilter1Curve;
+  late int eFilter2Pos;
+  late int eFilter2Curve;
+  late int eFilter3Pos;
+  late int eFilter3Curve;
+  late double fInputCenterLevel;
+  late double fInputLFELevel;
+  late double fDensityDelayMin;
+  late double fDensityDelayMax;
+  late double fDensityDelayRdmPerc;
+  late double fRoomShapeMin;
+  late double fRoomShapeMax;
+  late double fDiffusionDelayScalePerc;
+  late double fDiffusionDelayMax;
+  late double fDiffusionDelayRdmPerc;
+  late double fDCFilterCutFreq;
+  late double fReverbUnitInputDelay;
+  late double fReverbUnitInputDelayRmdPerc;
+
+  BnkRoomVerbFXParams(
+    this.fDecayTime, this.fHFDamping, this.fDiffusion, this.fStereoWidth,
+    this.fFilter1Gain, this.fFilter1Freq, this.fFilter1Q,
+    this.fFilter2Gain, this.fFilter2Freq, this.fFilter2Q,
+    this.fFilter3Gain, this.fFilter3Freq, this.fFilter3Q,
+    this.fFrontLevel, this.fRearLevel, this.fCenterLevel, this.fLFELevel,
+    this.fDryLevel, this.fERLevel, this.fReverbLevel,
+    this.bEnableEarlyReflections, this.uERPattern, this.fReverbDelay,
+    this.fRoomSize, this.fERFrontBackDelay, this.fDensity, this.fRoomShape,
+    this.uNumReverbUnits, this.bEnableToneControls, this.eFilter1Pos, this.eFilter1Curve,
+    this.eFilter2Pos, this.eFilter2Curve, this.eFilter3Pos, this.eFilter3Curve,
+    this.fInputCenterLevel, this.fInputLFELevel,
+    this.fDensityDelayMin, this.fDensityDelayMax, this.fDensityDelayRdmPerc,
+    this.fRoomShapeMin, this.fRoomShapeMax, this.fDiffusionDelayScalePerc,
+    this.fDiffusionDelayMax, this.fDiffusionDelayRdmPerc, this.fDCFilterCutFreq,
+    this.fReverbUnitInputDelay, this.fReverbUnitInputDelayRmdPerc
+  );
+
+  BnkRoomVerbFXParams.read(ByteDataWrapper bytes, int size) {
+    if (size != 186)
+      throw Exception('Invalid size $size for BnkRoomVerbFXParams');
+    fDecayTime = bytes.readFloat32();
+    fHFDamping = bytes.readFloat32();
+    fDiffusion = bytes.readFloat32();
+    fStereoWidth = bytes.readFloat32();
+    fFilter1Gain = bytes.readFloat32();
+    fFilter1Freq = bytes.readFloat32();
+    fFilter1Q = bytes.readFloat32();
+    fFilter2Gain = bytes.readFloat32();
+    fFilter2Freq = bytes.readFloat32();
+    fFilter2Q = bytes.readFloat32();
+    fFilter3Gain = bytes.readFloat32();
+    fFilter3Freq = bytes.readFloat32();
+    fFilter3Q = bytes.readFloat32();
+    fFrontLevel = bytes.readFloat32();
+    fRearLevel = bytes.readFloat32();
+    fCenterLevel = bytes.readFloat32();
+    fLFELevel = bytes.readFloat32();
+    fDryLevel = bytes.readFloat32();
+    fERLevel = bytes.readFloat32();
+    fReverbLevel = bytes.readFloat32();
+    bEnableEarlyReflections = bytes.readUint8();
+    uERPattern = bytes.readUint32();
+    fReverbDelay = bytes.readFloat32();
+    fRoomSize = bytes.readFloat32();
+    fERFrontBackDelay = bytes.readFloat32();
+    fDensity = bytes.readFloat32();
+    fRoomShape = bytes.readFloat32();
+    uNumReverbUnits = bytes.readUint32();
+    bEnableToneControls = bytes.readUint8();
+    eFilter1Pos = bytes.readUint32();
+    eFilter1Curve = bytes.readUint32();
+    eFilter2Pos = bytes.readUint32();
+    eFilter2Curve = bytes.readUint32();
+    eFilter3Pos = bytes.readUint32();
+    eFilter3Curve = bytes.readUint32();
+    fInputCenterLevel = bytes.readFloat32();
+    fInputLFELevel = bytes.readFloat32();
+    fDensityDelayMin = bytes.readFloat32();
+    fDensityDelayMax = bytes.readFloat32();
+    fDensityDelayRdmPerc = bytes.readFloat32();
+    fRoomShapeMin = bytes.readFloat32();
+    fRoomShapeMax = bytes.readFloat32();
+    fDiffusionDelayScalePerc = bytes.readFloat32();
+    fDiffusionDelayMax = bytes.readFloat32();
+    fDiffusionDelayRdmPerc = bytes.readFloat32();
+    fDCFilterCutFreq = bytes.readFloat32();
+    fReverbUnitInputDelay = bytes.readFloat32();
+    fReverbUnitInputDelayRmdPerc = bytes.readFloat32();
+  }
+
+  @override
+  void write(ByteDataWrapper bytes) {
+    bytes.writeFloat32(fDecayTime);
+    bytes.writeFloat32(fHFDamping);
+    bytes.writeFloat32(fDiffusion);
+    bytes.writeFloat32(fStereoWidth);
+    bytes.writeFloat32(fFilter1Gain);
+    bytes.writeFloat32(fFilter1Freq);
+    bytes.writeFloat32(fFilter1Q);
+    bytes.writeFloat32(fFilter2Gain);
+    bytes.writeFloat32(fFilter2Freq);
+    bytes.writeFloat32(fFilter2Q);
+    bytes.writeFloat32(fFilter3Gain);
+    bytes.writeFloat32(fFilter3Freq);
+    bytes.writeFloat32(fFilter3Q);
+    bytes.writeFloat32(fFrontLevel);
+    bytes.writeFloat32(fRearLevel);
+    bytes.writeFloat32(fCenterLevel);
+    bytes.writeFloat32(fLFELevel);
+    bytes.writeFloat32(fDryLevel);
+    bytes.writeFloat32(fERLevel);
+    bytes.writeFloat32(fReverbLevel);
+    bytes.writeUint8(bEnableEarlyReflections);
+    bytes.writeUint32(uERPattern);
+    bytes.writeFloat32(fReverbDelay);
+    bytes.writeFloat32(fRoomSize);
+    bytes.writeFloat32(fERFrontBackDelay);
+    bytes.writeFloat32(fDensity);
+    bytes.writeFloat32(fRoomShape);
+    bytes.writeUint32(uNumReverbUnits);
+    bytes.writeUint8(bEnableToneControls);
+    bytes.writeUint32(eFilter1Pos);
+    bytes.writeUint32(eFilter1Curve);
+    bytes.writeUint32(eFilter2Pos);
+    bytes.writeUint32(eFilter2Curve);
+    bytes.writeUint32(eFilter3Pos);
+    bytes.writeUint32(eFilter3Curve);
+    bytes.writeFloat32(fInputCenterLevel);
+    bytes.writeFloat32(fInputLFELevel);
+    bytes.writeFloat32(fDensityDelayMin);
+    bytes.writeFloat32(fDensityDelayMax);
+    bytes.writeFloat32(fDensityDelayRdmPerc);
+    bytes.writeFloat32(fRoomShapeMin);
+    bytes.writeFloat32(fRoomShapeMax);
+    bytes.writeFloat32(fDiffusionDelayScalePerc);
+    bytes.writeFloat32(fDiffusionDelayMax);
+    bytes.writeFloat32(fDiffusionDelayRdmPerc);
+    bytes.writeFloat32(fDCFilterCutFreq);
+    bytes.writeFloat32(fReverbUnitInputDelay);
+    bytes.writeFloat32(fReverbUnitInputDelayRmdPerc);
+  }
+
+  @override
+  int calcChunkSize() {
+    return 186;
+  }
+}
+class BnkPluginDataUnknown extends BnkPluginData {
+  late List<int> data;
+
+  BnkPluginDataUnknown(this.data);
+
+  BnkPluginDataUnknown.read(ByteDataWrapper bytes, int size) {
+    data = List.generate(size, (index) => bytes.readUint8());
+  }
+
+  @override
+  void write(ByteDataWrapper bytes) {
+    for (var i = 0; i < data.length; i++)
+      bytes.writeUint8(data[i]);
+  }
+
+  @override
+  int calcChunkSize() {
+    return data.length;
+  }
+}
+
+class BnkMediaMap {
+  late int index;
+  late int sourceId;
+
+  BnkMediaMap(this.index, this.sourceId);
+
+  BnkMediaMap.read(ByteDataWrapper bytes) {
+    index = bytes.readUint8();
+    sourceId = bytes.readUint32();
+  }
+
+  void write(ByteDataWrapper bytes) {
+    bytes.writeUint8(index);
+    bytes.writeUint32(sourceId);
+  }
+
+  int calcChunkSize() {
+    return 5;
+  }
+}
+
 class BnkEvent extends BnkHircChunkBase {
   late int ulActionListSize;
   late List<int> ids;
@@ -2382,6 +2833,13 @@ class BnkMediaInformation {
   }
 }
 
+mixin BnkActionParamsHasExceptions {
+  BnkExceptParams get exceptions;
+}
+mixin BnkActionParamsHasBitVector {
+  int get byBitVector;
+}
+
 class BnkExceptParams {
   late int ulExceptionListSize;
   late List<int> ids;
@@ -2464,9 +2922,11 @@ class BnkSwitchActionParams implements ActionSpecificParams {
 }
 
 const _activeActionAdditionalActionTypes = {0x403, 0x503, 0x202, 0x203, 0x204, 0x205, 0x208, 0x209, 0x302, 0x303, 0x304, 0x305, 0x308, 0x309};
-class BnkActiveActionParams implements ActionSpecificParams {
+class BnkActiveActionParams with BnkActionParamsHasExceptions, BnkActionParamsHasBitVector implements ActionSpecificParams {
+  @override
   late int byBitVector;
   int? byBitVector2;
+  @override
   late BnkExceptParams exceptions;
 
   BnkActiveActionParams(this.byBitVector, this.exceptions);
@@ -2557,13 +3017,15 @@ const setGameParamType = 0x1300;
 const resetGameParamType = 0x1400;
 const gameParamActionTypes = { setGameParamType, resetGameParamType };
 const _propActionActionTypes = { 0x0800, 0x0900, 0x0A00, 0x0B00, 0x0C00, 0x0D00, 0x0E00, 0x0F00, 0x2000, 0x3000 };
-class BnkValueActionParams implements ActionSpecificParams {
+class BnkValueActionParams with BnkActionParamsHasExceptions, BnkActionParamsHasBitVector implements ActionSpecificParams {
   final int actionType;
+  @override
   late int byBitVector;
   ActionSpecificParams? specificParams;
-  late int ulExceptionListSize;
+  @override
+  late BnkExceptParams exceptions;
 
-  BnkValueActionParams(this.actionType, this.byBitVector, this.specificParams, this.ulExceptionListSize);
+  BnkValueActionParams(this.actionType, this.byBitVector, this.specificParams, this.exceptions);
 
   BnkValueActionParams.read(ByteDataWrapper bytes, this.actionType) {
     byBitVector = bytes.readUint8();
@@ -2572,7 +3034,7 @@ class BnkValueActionParams implements ActionSpecificParams {
     } else if (_propActionActionTypes.contains(actionType)) {
       specificParams = BnkPropActionParams.read(bytes);
     }
-    ulExceptionListSize = bytes.readUint32();
+    exceptions = BnkExceptParams.read(bytes);
   }
 
   @override
@@ -2580,29 +3042,30 @@ class BnkValueActionParams implements ActionSpecificParams {
     bytes.writeUint8(byBitVector);
     if (specificParams != null)
       specificParams!.write(bytes);
-    bytes.writeUint32(ulExceptionListSize);
+    exceptions.write(bytes);
   }
 
   @override
   int calcChunkSize() {
-    return 1 + (specificParams?.calcChunkSize() ?? 0) + 4;
+    return 1 + (specificParams?.calcChunkSize() ?? 0) + exceptions.calcChunkSize();
   }
 }
 
-class BnkPlayActionParams implements ActionSpecificParams {
-  late int eFadeCurve;
+class BnkPlayActionParams with BnkActionParamsHasBitVector implements ActionSpecificParams {
+  @override
+  late int byBitVector;
   late int fileID;
 
-  BnkPlayActionParams(this.eFadeCurve, this.fileID);
+  BnkPlayActionParams(this.byBitVector, this.fileID);
 
   BnkPlayActionParams.read(ByteDataWrapper bytes) {
-    eFadeCurve = bytes.readUint8();
+    byBitVector = bytes.readUint8();
     fileID = bytes.readUint32();
   }
 
   @override
   void write(ByteDataWrapper bytes) {
-    bytes.writeUint8(eFadeCurve);
+    bytes.writeUint8(byBitVector);
     bytes.writeUint32(fileID);
   }
 
@@ -2612,29 +3075,66 @@ class BnkPlayActionParams implements ActionSpecificParams {
   }
 }
 
-class BnkBypassFXActionParams implements ActionSpecificParams {
+class BnkBypassFXActionParams with BnkActionParamsHasExceptions implements ActionSpecificParams {
   late int bIsBypass;
   late int uTargetMask;
+  @override
   late BnkExceptParams exceptions;
 
   BnkBypassFXActionParams(this.bIsBypass, this.uTargetMask, this.exceptions);
 
   BnkBypassFXActionParams.read(ByteDataWrapper bytes) {
     bIsBypass = bytes.readUint8();
-    uTargetMask = bytes.readUint8();
+    uTargetMask = bytes.readInt8();
     exceptions = BnkExceptParams.read(bytes);
   }
 
   @override
   void write(ByteDataWrapper bytes) {
     bytes.writeUint8(bIsBypass);
-    bytes.writeUint8(uTargetMask);
+    bytes.writeInt8(uTargetMask);
     exceptions.write(bytes);
   }
 
   @override
   int calcChunkSize() {
     return 1*2 + exceptions.calcChunkSize();
+  }
+}
+
+class BnkSeekActionParams with BnkActionParamsHasExceptions implements ActionSpecificParams {
+  late int bIsSeekRelativeToDuration;
+  late double fSeekValue;
+  late double fSeekValueMin;
+  late double fSeekValueMax;
+  late int bSnapToNearestMarker;
+  @override
+  late BnkExceptParams exceptions;
+
+  BnkSeekActionParams(this.bIsSeekRelativeToDuration, this.fSeekValue, this.fSeekValueMin, this.fSeekValueMax, this.bSnapToNearestMarker, this.exceptions);
+
+  BnkSeekActionParams.read(ByteDataWrapper bytes) {
+    bIsSeekRelativeToDuration = bytes.readUint8();
+    fSeekValue = bytes.readFloat32();
+    fSeekValueMin = bytes.readFloat32();
+    fSeekValueMax = bytes.readFloat32();
+    bSnapToNearestMarker = bytes.readUint8();
+    exceptions = BnkExceptParams.read(bytes);
+  }
+
+  @override
+  void write(ByteDataWrapper bytes) {
+    bytes.writeUint8(bIsSeekRelativeToDuration);
+    bytes.writeFloat32(fSeekValue);
+    bytes.writeFloat32(fSeekValueMin);
+    bytes.writeFloat32(fSeekValueMax);
+    bytes.writeUint8(bSnapToNearestMarker);
+    exceptions.write(bytes);
+  }
+
+  @override
+  int calcChunkSize() {
+    return 1 + 3*4 + 1 + exceptions.calcChunkSize();
   }
 }
 
@@ -2665,14 +3165,17 @@ class BnkActionInitialParams implements ActionSpecificParams {
   int calcChunkSize() {
     return 4 + 1 + propValues.calcChunkSize() + rangedPropValues.calcChunkSize();
   }
+
+  bool get isBus => (idExt_4 & 0x1) == 1;
 }
 
-const _activeActionParamsActionsTypes = {0x0100, 0x0200, 0x0300};
-const _playActionParamsActionsTypes = {0x0400};
+const _activeActionParamsActionsTypes = {0x0100, 0x0200, 0x0300, 0x2200};
+const _playActionParamsActionsTypes = {0x0400, 0x0500, 0x2300};
 const _bypassFXActionParamsActionsTypes = {0x1A00, 0x1B00};
 const _valueActionParamsActionsTypes = { 0x0600, 0x0700, 0x0800, 0x0900, 0x0A00, 0x0B00, 0x0C00, 0x0D00, 0x0E00, 0x0F00, 0x1300, 0x1400, 0x2000, 0x3000 };
 const _switchActionParamsActionsTypes = {0x1900};
 const _stateActionParamsActionsTypes = {0x1200};
+const _seekActionsTypes = {0x1E00};
 class BnkAction extends BnkHircChunkBase {
   late int ulActionType;
   late BnkActionInitialParams initialParams;
@@ -2696,6 +3199,8 @@ class BnkAction extends BnkHircChunkBase {
       specificParams = BnkSwitchActionParams.read(bytes);
     } else if (_stateActionParamsActionsTypes.contains(actionType)) {
       specificParams = BnkStateActionParams.read(bytes);
+    } else if (_seekActionsTypes.contains(actionType)) {
+      specificParams = BnkSeekActionParams.read(bytes);
     }
   }
 

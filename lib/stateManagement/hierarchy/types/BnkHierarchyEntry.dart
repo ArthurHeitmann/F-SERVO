@@ -11,6 +11,7 @@ import '../../../fileTypeUtils/audio/removePrefetchWems.dart';
 import '../../../fileTypeUtils/audio/wemIdsToNames.dart';
 import '../../../fileTypeUtils/audio/wwiseObjectPath.dart';
 import '../../../utils/utils.dart';
+import '../../../utils/wwiseProjectGenerator/wwiseProjectGenerator.dart';
 import '../../Property.dart';
 import '../../openFiles/types/WemFileData.dart';
 import '../../undoable.dart';
@@ -103,6 +104,9 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
             var srcId = src.fileID;
             await addWemChild(srcId);
           }
+        }
+        for (var rtpc in baseParams.rtpc.rtpc) {
+          addGroupUsage(usedGameParameters, rtpc.rtpcId, "");
         }
         if (hircChunk is BnkSound) {
           var srcId = hircChunk.bankData.mediaInformation.uFileID;
@@ -499,6 +503,17 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
         action: _generateCuesTxtFile,
       ),
       ...super.getContextMenuActions()
+    ];
+  }
+
+  @override
+  List<HierarchyEntryAction> getActions() {
+    return [
+      HierarchyEntryAction(
+        name: "Create Wwise project",
+        action: () => WwiseProjectGenerator.generateFromBnk(path, r"D:\delete\wwise project gen"),
+      ),
+      ...super.getActions()
     ];
   }
 

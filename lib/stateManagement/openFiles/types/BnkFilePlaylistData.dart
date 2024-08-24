@@ -60,8 +60,8 @@ class BnkClipRtpcPoint with HasUuid, Undoable implements Disposable {
     _setupListeners();
   }
   BnkClipRtpcPoint.fromAutomation(this.file, this.srcAutomation) :
-    x = NumberProp(srcAutomation.to * 1000, false, fileId: file),
-    y = NumberProp(srcAutomation.from, false, fileId: file),
+    x = NumberProp(srcAutomation.y * 1000, false, fileId: file),
+    y = NumberProp(srcAutomation.x, false, fileId: file),
     interpolationType = srcAutomation.interpolation {
     _setupListeners();
   }
@@ -81,8 +81,8 @@ class BnkClipRtpcPoint with HasUuid, Undoable implements Disposable {
   }
 
   void applyTo(BnkRtpcGraphPoint point) {
-    point.to = x.value.toDouble();
-    point.from = y.value.toDouble();
+    point.y = x.value.toDouble();
+    point.x = y.value.toDouble();
   }
 
   BnkClipRtpcPoint duplicate() {
