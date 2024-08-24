@@ -20,7 +20,7 @@ Future<void> saveEventsHierarchy(WwiseProjectGenerator project) async {
       shortIdHint: event.uid,
       children: [
         for (var actionId in event.ids)
-          if (actionsMap.containsKey(actionId))
+          if (project.options.actions && actionsMap.containsKey(actionId))
             WwiseAction(wuId: project.eventsWu.id, project: project, action: actionsMap[actionId]!)
       ]
     ), event.uid);

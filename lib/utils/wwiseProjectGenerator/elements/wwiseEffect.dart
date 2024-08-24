@@ -38,7 +38,7 @@ class WwiseEffect extends WwiseElement {
     for (var rtpc in effect.rtpc.rtpc) {
       var propConfig = config.rtpcProps[rtpc.paramID];
       if (propConfig == null) {
-        project.log(WwiseLogSeverity.error, "Unknown rtpc curve id ${rtpc.paramID} for effect plugin ${config.name}");
+        project.log(WwiseLogSeverity.warning, "Unknown rtpc curve id ${rtpc.paramID} for effect plugin ${config.name}");
         continue;
       }
       properties.add(WwiseProperty(propConfig.name, propConfig.type, project: project, rtpcs: [rtpc]));
@@ -48,12 +48,12 @@ class WwiseEffect extends WwiseElement {
   static WwiseEffect? fromId({required String wuId, required WwiseProjectGenerator project, required int id}) {
     var effect = project.hircChunkById<BnkFxCustom>(id);
     if (effect == null) {
-      project.log(WwiseLogSeverity.error, "Could not locate effect id $id");
+      project.log(WwiseLogSeverity.warning, "Could not locate effect id $id");
       return null;
     }
     var config = _pluginConfigs[effect.fxId];
     if (config == null) {
-      project.log(WwiseLogSeverity.error, "Unknown effect id ${effect.fxId}");
+      project.log(WwiseLogSeverity.warning, "Unknown effect id ${effect.fxId}");
       return null;
     }
     return WwiseEffect(wuId: wuId, project: project, effect: effect, config: config);
@@ -228,7 +228,7 @@ Future<void> saveEffectsIntoWu(WwiseProjectGenerator project) async {
       continue;
     var config = _pluginConfigs[effect.fxId];
     if (config == null) {
-      project.log(WwiseLogSeverity.error, "Unknown effect id ${effect.fxId}");
+      project.log(WwiseLogSeverity.warning, "Unknown effect id ${effect.fxId}");
       continue;
     }
     var effectElement = WwiseEffect(wuId: project.effectsWu.id, project: project, effect: effect, config: config);

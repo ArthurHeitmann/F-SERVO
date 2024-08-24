@@ -114,7 +114,7 @@ class WwiseAction extends WwiseElement {
         ? project.buses[action.initialParams.idExt]
         : project.lookupElement(idFnv: action.initialParams.idExt);
       if (action.initialParams.idExt != 0 && lookup == null)
-        project.log(WwiseLogSeverity.error, "Unknown action target ${action.initialParams.idExt}");
+        project.log(WwiseLogSeverity.warning, "Unknown action target ${action.initialParams.idExt}");
       elements.add(lookup);
     }
     // exceptions
@@ -129,7 +129,7 @@ class WwiseAction extends WwiseElement {
           ? project.buses[id]
           : project.lookupElement(idFnv: id);
         if (lookup == null && id != 0)
-          project.log(WwiseLogSeverity.error, "Unknown action exception $id");
+          project.log(WwiseLogSeverity.warning, "Unknown action exception $id");
         elements.add(lookup);
       }
     }
@@ -172,7 +172,7 @@ class WwiseAction extends WwiseElement {
     for (var (prop: prop, value: value) in valueProps) {
       var propInfo = _bnkPropToName[prop];
       if (propInfo == null) {
-        project.log(WwiseLogSeverity.error, "Unknown value property 0x${prop.toRadixString(16)}");
+        project.log(WwiseLogSeverity.warning, "Unknown value property 0x${prop.toRadixString(16)}");
         continue;
       }
       properties.add(WwiseProperty(propInfo.name, propInfo.type, value: (value.number / propInfo.div).toString()));
@@ -180,7 +180,7 @@ class WwiseAction extends WwiseElement {
     for (var (prop: prop, value: (min, max)) in rangedProps) {
       var propInfo = _bnkPropToName[prop];
       if (propInfo == null) {
-        project.log(WwiseLogSeverity.error, "Unknown ranged property 0x${prop.toRadixString(16)}");
+        project.log(WwiseLogSeverity.warning, "Unknown ranged property 0x${prop.toRadixString(16)}");
         continue;
       }
       properties.add(WwiseProperty(

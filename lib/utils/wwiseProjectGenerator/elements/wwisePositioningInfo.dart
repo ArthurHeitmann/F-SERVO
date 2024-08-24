@@ -18,7 +18,7 @@ XmlElement? makeWwisePositioningInfo(WwiseProjectGenerator project, WwiseElement
   if ((positioning.attenuationID ?? 0) != 0) {
     var attenuation = project.lookupElement(idFnv: positioning.attenuationID!) as WwiseAttenuation?;
     if (attenuation == null) {
-      project.log(WwiseLogSeverity.error, "Attenuation with ID ${positioning.attenuationID} not found");
+      project.log(WwiseLogSeverity.warning, "Attenuation with ID ${positioning.attenuationID} not found");
     } else {
       children.add(makeXmlElement(name: "AttenuationInfo", children: [
         makeXmlElement(

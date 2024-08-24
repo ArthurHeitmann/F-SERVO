@@ -1,8 +1,9 @@
 
-
+import 'dart:async';
 import 'dart:io';
 
 import 'package:archive/archive_io.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart';
 import 'package:xml/xml.dart';
@@ -12,9 +13,10 @@ import '../../fileTypeUtils/audio/bnkNotes.dart';
 import '../../fileTypeUtils/audio/wemIdsToNames.dart';
 import '../../fileTypeUtils/audio/wwiseObjectPath.dart';
 import '../../fileTypeUtils/utils/ByteDataWrapper.dart';
+import '../../fileTypeUtils/xml/xmlExtension.dart';
 import '../../fileTypeUtils/yax/japToEng.dart';
 import '../../stateManagement/events/statusInfo.dart';
-import '../utils.dart';
+import '../../stateManagement/listNotifier.dart';
 import 'elements/hierarchyBaseElements.dart';
 import 'elements/wwiseAttenuations.dart';
 import 'elements/wwiseBus.dart';
@@ -31,18 +33,73 @@ import 'wwiseAudioFilesPrepare.dart';
 import 'wwiseElement.dart';
 import 'wwiseElementBase.dart';
 import 'wwiseIdGenerator.dart';
+import 'wwiseProperty.dart';
 
+
+class WwiseProjectGeneratorOptions {
+  final bool audioHierarchy;
+  final bool wems;
+  final bool streaming;
+  final bool seekTable;
+  final bool translate;
+  final bool events;
+  final bool actions;
+
+  WwiseProjectGeneratorOptions({
+    this.audioHierarchy = true,
+    this.wems = true,
+    this.streaming = true,
+    this.seekTable = true,
+    this.translate = true,
+    this.events = true,
+    this.actions = true,
+  });
+
+  WwiseProjectGeneratorOptions copyWith({
+    bool? audioHierarchy,
+    bool? gameSyncs,
+    bool? wems,
+    bool? streaming,
+    bool? seekTable,
+    bool? translate,
+    bool? events,
+    bool? actions,
+  }) {
+    return WwiseProjectGeneratorOptions(
+      audioHierarchy: audioHierarchy ?? this.audioHierarchy,
+      wems: wems ?? this.wems,
+      streaming: streaming ?? this.streaming,
+      seekTable: seekTable ?? this.seekTable,
+      translate: translate ?? this.translate,
+      events: events ?? this.events,
+      actions: actions ?? this.actions,
+    );
+  }
+}
+
+class WwiseProjectGeneratorStatus {
+  final logs = ValueListNotifier<WwiseLog>([], fileId: null);
+  final currentMsg = ValueNotifier<String>("");
+  final isDone = ValueNotifier<bool>(false);
+
+  void dispose() {
+    logs.dispose();
+    currentMsg.dispose();
+    isDone.dispose();
+  }
+}
 
 class WwiseProjectGenerator {
   final String projectName;
   final String projectPath;
   final BnkFile bnk;
+  final WwiseProjectGeneratorOptions options;
+  final WwiseProjectGeneratorStatus status;
   late final Map<int, List<String>> bnkFolders;
   final List<BnkHircChunkBase> _hircChunks;
   final Map<String, WwiseElementBase> _elements = {};
   final Map<int, String> shortToFullId = {};
   final WwiseIdGenerator idGen;
-  final List<WwiseLog> _logs = [];
   final Map<int, WwiseAudioFile> soundFiles = {};
   final Map<int, WwiseSwitchOrStateGroup> stateGroups = {};
   final Map<int, WwiseSwitchOrStateGroup> switchGroups = {};
@@ -64,7 +121,7 @@ class WwiseProjectGenerator {
   late final WwiseWorkUnit triggersWu;
   late final String language;
 
-  WwiseProjectGenerator(this.projectName, this.projectPath, this.bnk, this._hircChunks)
+  WwiseProjectGenerator(this.projectName, this.projectPath, this.bnk, this._hircChunks, this.options, this.status)
     : idGen = WwiseIdGenerator(projectName) {
     var header = bnk.chunks.whereType<BnkHeader>().first;
     language = _languageIds[header.languageId] ?? "SFX";
@@ -81,18 +138,25 @@ class WwiseProjectGenerator {
       bnkStateChunks[state.uid] = state;
   }
   
-  static Future<void> generateFromBnk(String bnkPath, String savePath) async {
+  static Future<WwiseProjectGenerator?> generateFromBnk(String bnkPath, String savePath, WwiseProjectGeneratorOptions options, WwiseProjectGeneratorStatus status) async {
     try {
       isLoadingStatus.pushIsLoading();
+      status.logs.add(WwiseLog(WwiseLogSeverity.info,  "Starting to generate Wwise project..."));
       var projectName = basenameWithoutExtension(bnkPath);
       var projectPath = join(savePath, projectName);
       // clean
       if (await Directory(projectPath).exists()) {
-        await Directory(projectPath).delete(recursive: true);
+        try {
+          await Directory(projectPath).delete(recursive: true);
+        } catch (e) {
+          messageLog.add("$e");
+          status.logs.add(WwiseLog(WwiseLogSeverity.error,  "Failed to delete existing project directory"));
+          return null;
+        }
       }
       if (await File(projectPath).exists()) {
-        showToast("Error: $projectPath is a file");
-        return;
+          status.logs.add(WwiseLog(WwiseLogSeverity.error,  "$projectPath is a file"));
+        return null;
       }
       await Directory(projectPath).create(recursive: true);
       // extract
@@ -110,23 +174,28 @@ class WwiseProjectGenerator {
       var bnk = BnkFile.read(await ByteDataWrapper.fromFile(bnkPath));
       var hirc = bnk.chunks.whereType<BnkHircChunk>().firstOrNull;
       if (hirc == null) {
-        showToast("Error: BNK file has no HIRC chunk");
-        return;
+        status.logs.add(WwiseLog(WwiseLogSeverity.error,  ("Error: BNK file has no HIRC chunk")));
+        return null;
       }
       var hircChunks = hirc.chunks;
       // generate
-      var generator = WwiseProjectGenerator(projectName, projectPath, bnk, hircChunks);
-      await generator.run();
-      showToast("Generated wwise project $projectName");
+      var generator = WwiseProjectGenerator(projectName, projectPath, bnk, hircChunks, options, status);
+      unawaited(generator.run()
+        .catchError((e, st) {
+          messageLog.add("$e\n$st");
+          status.currentMsg.value = "Failed to generate Wwise project";
+        })
+        .whenComplete(() => isLoadingStatus.popIsLoading()));
+      return generator;
     } catch (e, st) {
       messageLog.add("$e\n$st");
-      showToast("Failed to generate Wwise project");
-    } finally {
-      isLoadingStatus.popIsLoading();
+      status.logs.add(WwiseLog(WwiseLogSeverity.error,  "Failed to generate Wwise project"));
     }
+    return null;
   }
 
   Future<void> run() async {
+    status.currentMsg.value = "Generating project...";
     var unknownChunks = hircChunksByType<BnkHircUnknownChunk>().toList();
     if (unknownChunks.isNotEmpty) {
       var chunkTypes = unknownChunks.map((c) => c.type).toSet();
@@ -163,13 +232,24 @@ class WwiseProjectGenerator {
       saveEffectsIntoWu(this),
       saveAttenuationsIntoWu(this),
       saveBusesIntoWu(this),
-      prepareWwiseAudioFiles(this).then((files) => soundFiles.addAll(files)),
+      if (options.seekTable)
+        _enableSeekTable(),
+      if (options.wems)
+        prepareWwiseAudioFiles(this).then((files) => soundFiles.addAll(files)),
       makeWwiseSoundBank(this),
     ]);
     idGen.init(this);
     
-    await saveHierarchyBaseElements(this);
-    await saveEventsHierarchy(this);
+    status.currentMsg.value = "Generating hierarchies...";
+
+    if (options.audioHierarchy)
+      await saveHierarchyBaseElements(this);
+    if (options.events)
+      await saveEventsHierarchy(this);
+
+    log(WwiseLogSeverity.info, "Project generated successfully");
+    status.currentMsg.value = "";
+    status.isDone.value = true;
   }
 
   Iterable<BnkHircChunkBase> get hircChunks => _hircChunks;
@@ -194,7 +274,7 @@ class WwiseProjectGenerator {
 
   void log(WwiseLogSeverity severity, String message) {
     messageLog.add(message);
-    _logs.add(WwiseLog(severity, message));
+    status.logs.add(WwiseLog(severity, message));
   }
 
   String? getComment(int? id) {
@@ -203,9 +283,28 @@ class WwiseProjectGenerator {
     var comment = wwiseIdToNote[id];
     if (comment == null)
       return null;
-    if (true) // TODO config
+    if (options.translate)
       return japToEng[comment] ?? comment;
-    // return comment;
+    return comment;
+  }
+
+  Future<void> _enableSeekTable() async {
+    var wuPath = join(projectPath, "Conversion Settings", "Factory Conversion Settings.wwu");
+    var wuDoc = XmlDocument.parse(await File(wuPath).readAsString());
+    var conversion = wuDoc.rootElement
+      .findAllElements("Conversion")
+      .where((e) => e.getAttribute("Name") == "Vorbis Quality High")
+      .first;
+    var pluginInfoList = conversion.findElements("ConversionPluginInfoList").first;
+    var conversionPluginInfo = pluginInfoList
+      .findElements("ConversionPluginInfo")
+      .where((e) => e.getAttribute("Platform") == "Windows")
+      .first;
+    var conversionPlugin = conversionPluginInfo.findElements("ConversionPlugin").first;
+    conversionPlugin.children.add(WwisePropertyList([
+      WwiseProperty("SeekTableGranularity", "int32", value: "0")
+    ]).toXml());
+    await File(wuPath).writeAsString(wuDoc.toPrettyString());
   }
 }
 

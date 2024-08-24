@@ -61,8 +61,11 @@ Future<Map<int, WwiseAudioFile>> prepareWwiseAudioFiles(WwiseProjectGenerator pr
   await Directory(sfxDir).create(recursive: true);
   await Directory(langDir).create(recursive: true);
   Future<Directory>? tmpDirLazy;
+  int processed = 0;
   try {
     await futuresWaitBatched(usedWemIds.map((id) async {
+      project.status.currentMsg.value = "Processing WEM files: $processed / ${usedWemIds.length}";
+      processed++;
       var srcId = id;
       var fileId = srcToFileIds[srcId];
       var trueId = srcId;
@@ -83,7 +86,7 @@ Future<Map<int, WwiseAudioFile>> prepareWwiseAudioFiles(WwiseProjectGenerator pr
       if (wemPath == null) {
         var file = internalWemFiles[srcId];
         if (file == null) {
-          project.log(WwiseLogSeverity.error, "WEM file ${wwiseIdToStr(srcId, alwaysIncludeId: true)} is not indexed or found in BNK file");
+          project.log(WwiseLogSeverity.warning, "WEM file ${wwiseIdToStr(srcId, alwaysIncludeId: true)} is not indexed or found in BNK file");
           return;
         }
         tmpDirLazy ??= Directory.systemTemp.createTemp("wwise_audio_files");

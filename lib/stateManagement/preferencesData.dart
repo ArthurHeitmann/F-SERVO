@@ -86,6 +86,7 @@ class PreferencesData extends OpenFileData {
   SavableProp<String>? wwise2012CliPath;
   SavableProp<String>? lastCpkExtractDir;
   SavableProp<String>? lastSearchDir;
+  SavableProp<String>? lastWwiseProjectDir;
 
   PreferencesData._() 
     : prefsFuture = SharedPreferences.getInstance(),
@@ -134,6 +135,7 @@ class PreferencesData extends OpenFileData {
     wwise2012CliPath = SavableProp<String>("wwise2012CliPath", _prefs!, "");
     lastCpkExtractDir = SavableProp<String>("lastCpkExtractDir", _prefs!, "");
     lastSearchDir = SavableProp<String>("lastSearchDir", _prefs!, "");
+    lastWwiseProjectDir = SavableProp<String>("lastWwiseProjectDir", _prefs!, "");
 
     await super.load();
     _loadingState = LoadingState.loaded;

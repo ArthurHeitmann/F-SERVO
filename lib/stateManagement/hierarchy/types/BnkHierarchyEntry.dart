@@ -11,7 +11,7 @@ import '../../../fileTypeUtils/audio/removePrefetchWems.dart';
 import '../../../fileTypeUtils/audio/wemIdsToNames.dart';
 import '../../../fileTypeUtils/audio/wwiseObjectPath.dart';
 import '../../../utils/utils.dart';
-import '../../../utils/wwiseProjectGenerator/wwiseProjectGenerator.dart';
+import '../../../widgets/misc/wwiseProjectGeneratorPopup.dart';
 import '../../Property.dart';
 import '../../openFiles/types/WemFileData.dart';
 import '../../undoable.dart';
@@ -511,7 +511,7 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
     return [
       HierarchyEntryAction(
         name: "Create Wwise project",
-        action: () => WwiseProjectGenerator.generateFromBnk(path, r"D:\delete\wwise project gen"),
+        action: () => showWwiseProjectGeneratorPopup(path),
       ),
       ...super.getActions()
     ];

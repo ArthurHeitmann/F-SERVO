@@ -37,9 +37,9 @@ class WwiseMusicTrack extends WwiseHierarchyElement<BnkMusicTrack> {
     name: "${wemIdsToNames[chunk.sources.first.sourceID] ?? wemIdsToNames[chunk.sources.first.fileID] ?? chunk.uid.toString()} Music Track",
     shortId: chunk.uid,
     properties: [
-      if ((chunk.sources.firstOrNull?.streamType ?? 0) >= 1)
+      if (project.options.streaming && (chunk.sources.firstOrNull?.streamType ?? 0) >= 1)
         WwiseProperty("IsStreamingEnabled", "bool", values: ["True"]),
-      if ((chunk.sources.firstOrNull?.streamType ?? 0) == 2)
+      if (project.options.streaming && (chunk.sources.firstOrNull?.streamType ?? 0) == 2)
         WwiseProperty("IsZeroLantency", "bool", values: ["True"]),
       if (chunk.iLookAheadTime != 100)
         WwiseProperty("LookAheadTime", "int16", value: chunk.iLookAheadTime.toString()),

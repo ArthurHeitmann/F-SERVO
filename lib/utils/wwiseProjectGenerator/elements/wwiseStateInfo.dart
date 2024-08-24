@@ -18,7 +18,7 @@ XmlElement? makeWwiseStatInfo(WwiseProjectGenerator project, List<BnkStateChunkG
     .map((id) {
       var group = project.stateGroups[id];
       if (group == null)
-        project.log(WwiseLogSeverity.error, "State group $id is not found");
+        project.log(WwiseLogSeverity.warning, "State group $id is not found");
       return group;
     })
     .whereType<WwiseSwitchOrStateGroup>()
@@ -52,7 +52,7 @@ XmlElement? makeWwiseStatInfo(WwiseProjectGenerator project, List<BnkStateChunkG
               .map((prop) {
                 var propInfo = _propIdToName[prop.$1];
                 if (propInfo == null) {
-                  project.log(WwiseLogSeverity.error, "Unknown property ${prop.$1}");
+                  project.log(WwiseLogSeverity.warning, "Unknown property ${prop.$1}");
                   return null;
                 }
                 return makeXmlElement(name: "Property", attributes: {"Name": propInfo.name, "Type": propInfo.type, "Value": prop.$2.toString()});

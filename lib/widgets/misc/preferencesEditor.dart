@@ -300,6 +300,12 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
           ),
         ],
       ),
+      const Row(
+        children: [
+          SizedBox(width: 20,),
+          Text("Folder where sound stream cpk files are extracted to"),
+        ],
+      ),
       RowSeparated(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [

@@ -16,15 +16,15 @@ XmlElement makeWwiseTransitionList(WwiseProjectGenerator project, String wuId, L
       var destPlItem = project.lookupElement(idFnv: transition.dstRule.uJumpToID) as WwiseElement?;
       var transSegment = project.lookupElement(idFnv: transition.musicTransition.segmentID) as WwiseElement?;
       if (transition.srcID > 0 && src == null) {
-        project.log(WwiseLogSeverity.error, "Transition source not found: ${wwiseIdToStr(transition.srcID)}");
+        project.log(WwiseLogSeverity.warning, "Transition source not found: ${wwiseIdToStr(transition.srcID)}");
         return null;
       }
       if (transition.dstID > 0 && dest == null) {
-        project.log(WwiseLogSeverity.error, "Transition destination not found: ${wwiseIdToStr(transition.dstID)}");
+        project.log(WwiseLogSeverity.warning, "Transition destination not found: ${wwiseIdToStr(transition.dstID)}");
         return null;
       }
       if (transition.dstRule.uJumpToID > 0 && destPlItem == null) {
-        project.log(WwiseLogSeverity.error, "Transition destination playlist item not found: ${wwiseIdToStr(transition.dstRule.uJumpToID)}");
+        project.log(WwiseLogSeverity.warning, "Transition destination playlist item not found: ${wwiseIdToStr(transition.dstRule.uJumpToID)}");
         return null;
       }
       String? srcCustomCueName = transition.srcRule.uMarkerID != 0 ? (project.lookupElement(idFnv: transition.srcRule.uMarkerID) as WwiseElement?)?.name : null;

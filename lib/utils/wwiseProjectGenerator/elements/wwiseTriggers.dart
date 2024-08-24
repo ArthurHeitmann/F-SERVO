@@ -54,7 +54,7 @@ XmlElement? makeStingerList(WwiseProjectGenerator project, String wuId, List<Bnk
     if (stinger.segmentID != 0) {
       segment = project.lookupElement(idFnv: stinger.segmentID) as WwiseElement?;
       if (segment == null)
-        project.log(WwiseLogSeverity.error, "Stinger segment not found: ${stinger.segmentID}");
+        project.log(WwiseLogSeverity.warning, "Stinger segment not found: ${stinger.segmentID}");
     }
     stingerElements.add(WwiseElement(
       project: project,

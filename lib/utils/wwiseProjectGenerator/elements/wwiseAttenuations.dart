@@ -55,7 +55,7 @@ class WwiseAttenuation extends WwiseElement {
     for (var rtpc in attenuation.rtpcs) {
       var config = _rtpcPropConfig[rtpc.paramID];
       if (config == null) {
-        project.log(WwiseLogSeverity.error, "Unknown rtpc curve id ${rtpc.paramID}");
+        project.log(WwiseLogSeverity.warning, "Unknown rtpc curve id ${rtpc.paramID}");
         continue;
       }
       properties.add(WwiseProperty(config.name, config.type, project: project, rtpcs: [rtpc]));

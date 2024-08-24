@@ -155,7 +155,7 @@ class WwiseHierarchyElement<T extends BnkHircChunkWithBaseParamsGetter> extends 
           pannerProps.add(WwiseProperty(prop.name, prop.type, value: value.number.toString()));
         }
         else {
-          project.log(WwiseLogSeverity.error, "Unknown property id $propId on ${chunk.uid}");
+          project.log(WwiseLogSeverity.warning, "Unknown property id $propId on ${chunk.uid}");
         }
         continue;
       }
@@ -164,7 +164,7 @@ class WwiseHierarchyElement<T extends BnkHircChunkWithBaseParamsGetter> extends 
     for (var (propId, value) in rangedProps) {
       var prop = _propIdToConfig[propId];
       if (prop == null) {
-        project.log(WwiseLogSeverity.error, "Unknown ranged property id $propId on ${chunk.uid}");
+        project.log(WwiseLogSeverity.warning, "Unknown ranged property id $propId on ${chunk.uid}");
         continue;
       }
       properties.add(WwiseProperty(
@@ -177,7 +177,7 @@ class WwiseHierarchyElement<T extends BnkHircChunkWithBaseParamsGetter> extends 
     for (var rtpc in baseParams.rtpc.rtpc) {
       var prop = _rtpcPropIdToName[rtpc.paramID];
       if (prop == null) {
-        project.log(WwiseLogSeverity.error, "Unknown rtpc id ${rtpc.paramID} on ${chunk.uid}");
+        project.log(WwiseLogSeverity.warning, "Unknown rtpc id ${rtpc.paramID} on ${chunk.uid}");
         continue;
       }
       properties.add(WwiseProperty(prop.name, prop.type, project: project, rtpcs: [rtpc]));
@@ -194,7 +194,7 @@ class WwiseHierarchyElement<T extends BnkHircChunkWithBaseParamsGetter> extends 
           continue;
         var effectRef = project.lookupElement(idFnv: effect.fxID) as WwiseEffect?;
         if (effectRef == null) {
-          project.log(WwiseLogSeverity.error, "Could not locate effect id ${effect.fxID}");
+          project.log(WwiseLogSeverity.warning, "Could not locate effect id ${effect.fxID}");
           continue;
         }
         if (effect.bIsShareSet != 0)
@@ -274,7 +274,7 @@ Future<void> saveHierarchyBaseElements(WwiseProjectGenerator project) async {
       element = WwiseMusicSwitch(project: project, wuId: imhWu.id, chunk: chunk);
     }
     else {
-      project.log(WwiseLogSeverity.error, "Unknown chunk type ${chunk.runtimeType}");
+      project.log(WwiseLogSeverity.warning, "Unknown chunk type ${chunk.runtimeType}");
     }
 
     if (element != null) {
@@ -294,7 +294,7 @@ Future<void> saveHierarchyBaseElements(WwiseProjectGenerator project) async {
     for (var (id, parentId, element) in elements.values) {
       var parent = elements[parentId];
       if (parent == null && parentId != 0) {
-        project.log(WwiseLogSeverity.error, "Could not find parent $parentId for $id");
+        project.log(WwiseLogSeverity.warning, "Could not find parent $parentId for $id");
         continue;
       }
       if (parent != null)
