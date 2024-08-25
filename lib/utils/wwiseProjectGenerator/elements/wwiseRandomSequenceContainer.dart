@@ -17,7 +17,7 @@ class RandomSequenceContainer extends WwiseHierarchyElement<BnkRandomSequence> {
   RandomSequenceContainer({required super.wuId, required super.project, required super.chunk}) :
     super(
       tagName: "RandomSequenceContainer",
-      name: makeElementName(project, id: chunk.uid, category: chunk.eMode == 1 ? "Sequence Container" : "Random Container", parentId: chunk.baseParams.directParentID, childIds: chunk.childrenList.ulChildIDs, addId: true),
+      name: makeElementName(project, id: chunk.uid, category: chunk.eMode == 1 ? "Sequence Container" : "Random Container", parentId: chunk.baseParams.directParentID, childIds: chunk.childrenList.ulChildIDs),
       shortId: chunk.uid,
       properties: [
         // play type

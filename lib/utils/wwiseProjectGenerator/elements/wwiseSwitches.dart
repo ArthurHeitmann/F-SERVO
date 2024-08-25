@@ -26,10 +26,12 @@ Future<void> saveSwitchesIntoWu(WwiseProjectGenerator project) async {
     }
   }
   
+  var noneHash = fnvHash("None");
   List<(int, WwiseElement)> switchGroups = usedSwitchGroupIds.entries
     .map((e) {
       var switchGroupId = e.key;
       var switchElementsAndIds = e.value
+        .where((id) => id != noneHash)
         .map((id) => (
           WwiseElement(
             wuId: project.switchesWu.id,

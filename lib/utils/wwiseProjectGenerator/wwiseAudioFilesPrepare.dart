@@ -118,7 +118,7 @@ void _collectWemIdStats(WwiseProjectGenerator project, Map<int, int> srcToFileId
     usedWemIds.add(info.sourceID);
     var isVoice = sound.bankData.mediaInformation.uSourceBits & 1 != 0;
     if (isVoice)
-      languageWemIds.add(info.uFileID);
+      languageWemIds.add(info.sourceID);
     if (sound.bankData.streamType == 2) {
       usedWemIds.add(info.uFileID);
       srcToFileId[info.sourceID] = info.uFileID;
@@ -131,7 +131,7 @@ void _collectWemIdStats(WwiseProjectGenerator project, Map<int, int> srcToFileId
       var isVoice = source.uSourceBits & 1 != 0;
       usedWemIds.add(source.sourceID);
       if (isVoice)
-        languageWemIds.add(source.fileID);
+        languageWemIds.add(source.sourceID);
       if (source.streamType == 2) {
         usedWemIds.add(source.fileID);
         srcToFileId[source.sourceID] = source.fileID;

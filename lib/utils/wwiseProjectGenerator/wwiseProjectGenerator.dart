@@ -83,7 +83,7 @@ class WwiseProjectGenerator {
   late final Map<int, List<String>> bnkFolders;
   final List<BnkHircChunkBase> _hircChunks;
   final Map<String, WwiseElementBase> _elements = {};
-  final Map<int, String> shortToFullId = {};
+  final Map<int, String> _shortToFullId = {};
   final WwiseIdGenerator idGen;
   final Map<int, Map<String, int>> _usedNamesByParent = {};
   final Map<int, WwiseAudioFile> soundFiles = {};
@@ -247,14 +247,14 @@ class WwiseProjectGenerator {
       return _elements[idV4];
     } else if (idFnv != null) {
       idGen.markIdUsed(idFnv);
-      return _elements[shortToFullId[idFnv]];
+      return _elements[_shortToFullId[idFnv]];
     }
     throw ArgumentError("idV4 or idFnv must be provided");
   }
   void putElement(WwiseElementBase element, {int? idFnv}) {
     _elements.putIfAbsent(element.id, () => element);
     if (idFnv != null) {
-      shortToFullId.putIfAbsent(idFnv, () => element.id);
+      _shortToFullId.putIfAbsent(idFnv, () => element.id);
     }
   }
 

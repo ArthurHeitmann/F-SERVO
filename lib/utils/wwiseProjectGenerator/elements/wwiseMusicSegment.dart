@@ -10,7 +10,7 @@ import 'wwiseTriggers.dart';
 class WwiseMusicSegment extends WwiseHierarchyElement<BnkMusicSegment> {
   WwiseMusicSegment({required super.wuId, required super.project, required super.chunk}) : super(
     tagName: "MusicSegment",
-    name: makeElementName(project, id: chunk.uid, category: "Music Segment", parentId: chunk.getBaseParams().directParentID, childIds: chunk.musicParams.childrenList.ulChildIDs, addId: true),
+    name: makeElementName(project, id: chunk.uid, category: "Music Segment", parentId: chunk.getBaseParams().directParentID, childIds: chunk.musicParams.childrenList.ulChildIDs),
     shortId: chunk.uid,
     properties: [
       if (chunk.wwiseMarkers.length >= 2)

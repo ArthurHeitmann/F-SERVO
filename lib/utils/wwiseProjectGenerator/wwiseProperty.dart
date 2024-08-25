@@ -43,9 +43,11 @@ class WwisePropertyList {
   }
 
   XmlElement toXml() {
+    var properties = _properties.entries.toList();
+    properties.sort((a, b) => a.key.compareTo(b.key));
     return makeXmlElement(
       name: "PropertyList",
-      children: _properties.values.map((e) => e.toXml()).toList(),
+      children: properties.map((e) => e.value.toXml()).toList(),
     );
   }
 

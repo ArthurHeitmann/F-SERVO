@@ -95,7 +95,7 @@ String getCommonString(List<String> strings) {
   return strings.first.substring(0, minLen);
 }
 
-String makeElementName(WwiseProjectGenerator project, {required int id, required String category, int parentId = 0, String? name, List<int>? childIds, bool addId = false}) {
+String makeElementName(WwiseProjectGenerator project, {required int id, required String category, int parentId = 0, String? name, List<int>? childIds}) {
   String? parentPrefix;
   if (parentId != 0 && project.options.namePrefix) {
     var parent = project.hircChunkById<BnkHircChunkBase>(parentId);
@@ -138,7 +138,7 @@ String makeElementName(WwiseProjectGenerator project, {required int id, required
   name ??= category;
   if (parentPrefix != null)
     name = parentPrefix + name;
-  if (addId && project.options.nameId)
+  if (project.options.nameId)
     name += " ($id)";
   return project.makeName(name, parentId);
 }

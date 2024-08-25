@@ -58,7 +58,7 @@ class _PlaylistItemHierarchy {
 class WwiseMusicPlaylist extends WwiseHierarchyElement<BnkMusicPlaylist> {
   WwiseMusicPlaylist({required super.wuId, required super.project, required super.chunk}) : super(
     tagName: "MusicPlaylistContainer",
-    name: makeElementName(project, id: chunk.uid, category: "Music Playlist Container", parentId: chunk.getBaseParams().directParentID, childIds: chunk.musicTransParams.musicParams.childrenList.ulChildIDs, addId: true),
+    name: makeElementName(project, id: chunk.uid, category: "Music Playlist Container", parentId: chunk.getBaseParams().directParentID, childIds: chunk.musicTransParams.musicParams.childrenList.ulChildIDs),
     shortId: chunk.uid
   );
   

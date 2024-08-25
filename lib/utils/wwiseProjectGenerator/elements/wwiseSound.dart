@@ -14,7 +14,7 @@ const _loopPropId = 0x07;
 class WwiseSound extends WwiseHierarchyElement<BnkSound> {
   WwiseSound({required super.wuId, required super.project, required super.chunk}) : super(
     tagName: "Sound",
-    name: makeElementName(project, id: chunk.uid, category: "Sound", name: wemIdsToNames[chunk.uid] ?? wemIdsToNames[chunk.bankData.mediaInformation.sourceID], parentId: chunk.baseParams.directParentID, addId: true),
+    name: makeElementName(project, id: chunk.uid, category: "Sound", name: wemIdsToNames[chunk.uid] ?? wemIdsToNames[chunk.bankData.mediaInformation.sourceID], parentId: chunk.baseParams.directParentID),
     shortId: chunk.uid,
     additionalAttributes: { "Type": chunk.bankData.mediaInformation.uSourceBits & 1 == 0 ? "SoundFX" : "Voice"},
     properties: [
