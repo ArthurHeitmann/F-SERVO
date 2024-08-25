@@ -49,11 +49,13 @@ class __WwiseProjectGeneratorPopupState extends State<_WwiseProjectGeneratorPopu
   final optAudioHierarchy = BoolProp(true, fileId: null);
   final optWems = BoolProp(true, fileId: null);
   final optStreaming = BoolProp(true, fileId: null);
+  final optStreamingPrefetch = BoolProp(true, fileId: null);
   final optSeekTable = BoolProp(true, fileId: null);
   final optTranslate = BoolProp(true, fileId: null);
+  final optNameId = BoolProp(false, fileId: null);
+  final optNamePrefix = BoolProp(true, fileId: null);
   final optEvents = BoolProp(true, fileId: null);
   final optActions = BoolProp(true, fileId: null);
-  final List<(String, BoolProp)> labeledOptions = [];
   final savePath = StringProp("", fileId: null);
   WwiseProjectGenerator? generator;
   bool hasStarted = false;
@@ -66,15 +68,6 @@ class __WwiseProjectGeneratorPopupState extends State<_WwiseProjectGeneratorPopu
     super.initState();
     if (!widget.bnkName.contains("BGM"))
       optSeekTable.value = false;
-    labeledOptions.addAll([
-      ("Actor-Mixer & Interactive Music Hierarchy", optAudioHierarchy),
-      ("Events", optEvents),
-      ("Actions", optActions),
-      ("WAV sources (requires \"WEM Extract Directory\" from settings)", optWems),
-      ("Use seek table for wems", optSeekTable),
-      ("Copy streaming settings", optStreaming),
-      ("Translate Japanese notes", optTranslate),
-    ]);
     var prefs = PreferencesData();
     savePath.value = prefs.lastWwiseProjectDir?.value ?? "";
     status.logs.addListener(onNewLog);
@@ -104,6 +97,20 @@ class __WwiseProjectGeneratorPopupState extends State<_WwiseProjectGeneratorPopu
   }
 
   List<Widget> _makeOptions(BuildContext context) {
+    var labeledOptions = [
+      ("Actor-Mixer & Interactive Music Hierarchy", optAudioHierarchy),
+      ("Events", optEvents),
+      ("Actions", optActions),
+      ("WAV sources (requires \"WEM Extract Directory\" from settings)", optWems),
+      ("Use seek table for wems", optSeekTable),
+      ("Copy streaming settings", optStreaming),
+      ("Copy streaming zero latency settings", optStreamingPrefetch),
+      ("Translate Japanese notes", optTranslate),
+    ];
+    var labeledNameOptions = [
+      ("Parent state  as prefix", optNamePrefix),
+      ("Object ID", optNameId),
+    ];
     return [
       Row(
         children: [
@@ -142,6 +149,31 @@ class __WwiseProjectGeneratorPopupState extends State<_WwiseProjectGeneratorPopu
             ),
           ],
         ),
+      Row(
+        children: [
+          Text("Name settings: ", style: Theme.of(context).textTheme.bodyMedium),
+          for (var (label, prop) in labeledNameOptions)
+            Row(
+              children: [
+                BoolPropCheckbox(prop: prop),
+                const SizedBox(width: 5),
+                GestureDetector(
+                  onTap: () => prop.value = !prop.value,
+                  child: Text(label, style: Theme.of(context).textTheme.bodyMedium)
+                ),
+              ],
+            ),
+        ],
+      ),
+      ChangeNotifierBuilder(
+        notifiers: [optNameId, optNamePrefix],
+        builder: (context) => Text(
+          "Preview: "
+          "${(optNamePrefix.value ? "[Intro] " : "")}"
+          "Stage_Prologue "
+          "${(optNameId.value ? "(715346925)" : "")}",
+        ),
+      ),
       const SizedBox(height: 15),
       Align(
         alignment: Alignment.center,
@@ -216,10 +248,13 @@ class __WwiseProjectGeneratorPopupState extends State<_WwiseProjectGeneratorPopu
       audioHierarchy: optAudioHierarchy.value,
       wems: optWems.value,
       streaming: optStreaming.value,
+      streamingPrefetch: optStreamingPrefetch.value,
       seekTable: optSeekTable.value,
       translate: optTranslate.value,
       events: optEvents.value,
       actions: optActions.value,
+      nameId: optNameId.value,
+      namePrefix: optNamePrefix.value,
     );
     hasStarted = true;
     setState(() {});

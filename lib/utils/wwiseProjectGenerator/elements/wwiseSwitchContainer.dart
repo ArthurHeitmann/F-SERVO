@@ -2,6 +2,7 @@
 import 'package:xml/xml.dart';
 
 import '../../../fileTypeUtils/audio/bnkIO.dart';
+import '../../../fileTypeUtils/audio/wemIdsToNames.dart';
 import '../../utils.dart';
 import '../wwiseElement.dart';
 import '../wwiseProperty.dart';
@@ -14,7 +15,7 @@ class WwiseSwitchContainer extends WwiseHierarchyElement<BnkSoundSwitch> {
   
   WwiseSwitchContainer({required super.wuId, required super.project, required super.chunk, required this.childElements}) : super(
     tagName: "SwitchContainer",
-    name: "${wwiseIdToStr(chunk.ulGroupID, fallbackPrefix: "Switch Container")} (${chunk.uid})",
+    name: makeElementName(project, id: chunk.uid, parentId: chunk.baseParams.directParentID, name: wemIdsToNames[chunk.ulGroupID], category: "Switch Container"),
     shortId: chunk.uid,
     properties: [
       if (chunk.eGroupType == 1)

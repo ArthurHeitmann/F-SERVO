@@ -14,7 +14,7 @@ class WwiseMusicSwitch extends WwiseHierarchyElement<BnkMusicSwitch> {
   WwiseMusicSwitch({required super.wuId, required super.project, required super.chunk}) :
     super(
       tagName: "MusicSwitchContainer",
-      name: "${wemIdsToNames[chunk.ulGroupID] ?? chunk.ulGroupID.toString()} Music Switch Container",
+      name: makeElementName(project, id: chunk.uid, parentId: chunk.getBaseParams().directParentID, name: wemIdsToNames[chunk.ulGroupID], category: "Music Switch Container"),
       shortId: chunk.uid,
       properties: [
         if (chunk.bIsContinuousValidation != 1)

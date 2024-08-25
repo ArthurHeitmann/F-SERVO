@@ -21,16 +21,18 @@ class WemFilesLookup {
     loadingCompleter = Completer();
     lookup.clear();
     var prefs = PreferencesData();
-    var waiExtractDir = prefs.waiExtractDir?.value;
-    if (waiExtractDir == null || waiExtractDir.isEmpty) {
+    var waiExtractDir = prefs.waiExtractDir?.value ?? "";
+    var wemExtractDir = prefs.wemExtractDir?.value ?? "";
+    if (waiExtractDir.isEmpty && wemExtractDir.isEmpty) {
       loadingCompleter!.complete();
       return;
     }
 
     try {
-      await _indexDir(waiExtractDir);
-      if (prefs.wemExtractDir != null && prefs.wemExtractDir!.value.isNotEmpty)
-        await _indexDir(prefs.wemExtractDir!.value);
+      if (waiExtractDir.isNotEmpty)
+        await _indexDir(waiExtractDir);
+      if (wemExtractDir.isNotEmpty)
+        await _indexDir(wemExtractDir);
     } catch (e, s) {
       print("Error indexing WAI files:");
       print("$e\n$s");

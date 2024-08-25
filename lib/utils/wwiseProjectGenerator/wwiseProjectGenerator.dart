@@ -40,41 +40,26 @@ class WwiseProjectGeneratorOptions {
   final bool audioHierarchy;
   final bool wems;
   final bool streaming;
+  final bool streamingPrefetch;
   final bool seekTable;
   final bool translate;
   final bool events;
   final bool actions;
+  final bool nameId;
+  final bool namePrefix;
 
   WwiseProjectGeneratorOptions({
-    this.audioHierarchy = true,
-    this.wems = true,
-    this.streaming = true,
-    this.seekTable = true,
-    this.translate = true,
-    this.events = true,
-    this.actions = true,
+    required this.audioHierarchy,
+    required this.wems,
+    required this.streaming,
+    required this.streamingPrefetch,
+    required this.seekTable,
+    required this.translate,
+    required this.events,
+    required this.actions,
+    required this.nameId,
+    required this.namePrefix,
   });
-
-  WwiseProjectGeneratorOptions copyWith({
-    bool? audioHierarchy,
-    bool? gameSyncs,
-    bool? wems,
-    bool? streaming,
-    bool? seekTable,
-    bool? translate,
-    bool? events,
-    bool? actions,
-  }) {
-    return WwiseProjectGeneratorOptions(
-      audioHierarchy: audioHierarchy ?? this.audioHierarchy,
-      wems: wems ?? this.wems,
-      streaming: streaming ?? this.streaming,
-      seekTable: seekTable ?? this.seekTable,
-      translate: translate ?? this.translate,
-      events: events ?? this.events,
-      actions: actions ?? this.actions,
-    );
-  }
 }
 
 class WwiseProjectGeneratorStatus {
@@ -100,6 +85,7 @@ class WwiseProjectGenerator {
   final Map<String, WwiseElementBase> _elements = {};
   final Map<int, String> shortToFullId = {};
   final WwiseIdGenerator idGen;
+  final Map<int, Map<String, int>> _usedNamesByParent = {};
   final Map<int, WwiseAudioFile> soundFiles = {};
   final Map<int, WwiseSwitchOrStateGroup> stateGroups = {};
   final Map<int, WwiseSwitchOrStateGroup> switchGroups = {};
@@ -286,6 +272,23 @@ class WwiseProjectGenerator {
     if (options.translate)
       return japToEng[comment] ?? comment;
     return comment;
+  }
+
+  String makeName(String name, int parentId) {
+    if (!_usedNamesByParent.containsKey(parentId))
+      _usedNamesByParent[parentId] = {};
+    var usedNames = _usedNamesByParent[parentId]!;
+    var i = _usedNamesByParent[parentId]![name] ?? 1;
+    var newName = name;
+    if (i > 1)
+      newName = "$name $i";
+    i++;
+    while (usedNames.containsKey(newName)) {
+      i++;
+      newName = "$name $i";
+    }
+    usedNames[name] = i;
+    return newName;
   }
 
   Future<void> _enableSeekTable() async {

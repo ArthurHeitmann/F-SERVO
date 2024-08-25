@@ -20,7 +20,7 @@ class WwiseSound extends WwiseHierarchyElement<BnkSound> {
     properties: [
       if (project.options.streaming && chunk.bankData.streamType >= 1)
         WwiseProperty("IsStreamingEnabled", "bool", values: ["True"]),
-      if (project.options.streaming && chunk.bankData.streamType == 2)
+      if (project.options.streaming && project.options.streamingPrefetch && chunk.bankData.streamType == 2)
         WwiseProperty("IsZeroLantency", "bool", values: ["True"]),
     ],
     children: [

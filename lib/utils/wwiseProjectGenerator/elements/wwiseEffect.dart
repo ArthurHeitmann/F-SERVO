@@ -25,7 +25,7 @@ class WwiseEffect extends WwiseElement {
     _config = config,
     super(
       tagName: "Effect",
-      name: wwiseIdToStr(effect.uid, fallbackPrefix: "Effect"),
+      name: makeElementName(project, id: effect.uid, category: "Effect"),
       shortId: effect.uid,
       comment: project.getComment(effect.uid),
       properties: config.handler(effect.pluginData),

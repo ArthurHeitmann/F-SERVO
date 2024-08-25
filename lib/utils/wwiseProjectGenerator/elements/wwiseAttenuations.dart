@@ -113,7 +113,7 @@ Future<void> saveAttenuationsIntoWu(WwiseProjectGenerator project) async {
     var attenuationElement = WwiseAttenuation(
       wuId: project.attenuationsWu.id,
       project: project,
-      name: wwiseIdToStr(attenuation.uid, fallbackPrefix: "Attenuation"),
+      name: makeElementName(project, id: attenuation.uid, category: "Attenuation"),
       attenuation: attenuation
     );
     project.attenuationsWu.children.add(attenuationElement);
