@@ -492,16 +492,7 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
   @override
   List<HierarchyEntryAction> getContextMenuActions() {
     return [
-      HierarchyEntryAction(
-        name: "Remove prefetch WEMs",
-        icon: Icons.playlist_remove,
-        action: _removePrefetchWems,
-      ),
-      HierarchyEntryAction(
-        name: "Generate cues info file",
-        icon: Icons.playlist_add_check,
-        action: _generateCuesTxtFile,
-      ),
+      ...getActions(),
       ...super.getContextMenuActions()
     ];
   }
@@ -511,7 +502,18 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
     return [
       HierarchyEntryAction(
         name: "Create Wwise project",
+        icon: Icons.drive_folder_upload,
         action: () => showWwiseProjectGeneratorPopup(path),
+      ),
+      HierarchyEntryAction(
+        name: "Remove prefetch WEMs",
+        icon: Icons.playlist_remove,
+        action: _removePrefetchWems,
+      ),
+      HierarchyEntryAction(
+        name: "Generate cues info file",
+        icon: Icons.playlist_add_check,
+        action: _generateCuesTxtFile,
       ),
       ...super.getActions()
     ];
