@@ -4,13 +4,55 @@ import 'dart:typed_data';
 import 'ByteDataWrapper.dart';
 
 
+class _BufferedReader {
+  final RandomAccessFile _file;
+  final Uint8List _buffer = Uint8List(_bufferCapacity);
+  static const int _bufferCapacity = 1024 * 1024;
+  int _position = 0;
+  int _bufferStart = 0;
+  int _bufferSize = -1;
+
+  _BufferedReader(this._file);
+  
+  Future<void> close() {
+    return _file.close();
+  }
+  
+  void setPosition(int pos) {
+    _position = pos;
+  }
+  
+  Future<Uint8List> read(int length) async {
+    if (length > _bufferCapacity) {
+      if (_position != _bufferStart)
+        await _file.setPosition(_position);
+      return _file.read(length);
+    }
+    if (_position < _bufferStart || _position + length > _bufferStart + _bufferCapacity || _bufferSize == -1) {
+      await _fillBuffer();
+    }
+    var bufferOffset = _position - _bufferStart;
+    if (bufferOffset >= _bufferSize) {
+      throw Exception("Reached end of file! Tried to read $length bytes at $_position when file only has ${_bufferStart + _bufferSize} bytes");
+    }
+    return _buffer.sublist(bufferOffset, bufferOffset + length);
+  }
+
+  Future<void> _fillBuffer() async {
+    await _file.setPosition(_position);
+    _bufferStart = _position;
+    _bufferSize = await _file.readInto(_buffer);
+  }
+}
+
 class ByteDataWrapperRA {
-  final RandomAccessFile file;
+  final _BufferedReader _file;
   Endian endian;
   final int length;
   int _position = 0;
   
-  ByteDataWrapperRA(this.file, this.length, { this.endian = Endian.little });
+  ByteDataWrapperRA(RandomAccessFile file, this.length, { this.endian = Endian.little })
+    : _file = _BufferedReader(file);
 
 
   static Future<ByteDataWrapperRA> fromFile(String path) async {
@@ -20,22 +62,22 @@ class ByteDataWrapperRA {
   }
 
   Future<void> close() async {
-    await file.close();
+    await _file.close();
   }
 
   int get position => _position;
 
-  Future<void> setPosition(int value) async {
+  void setPosition(int value) {
     if (value > length)
       throw RangeError.range(value, 0, length, "File size");
     
-    await file.setPosition(value);
+    _file.setPosition(value);
     _position = value;
   }
 
   Future<ByteData> _read(int length) async {
-    var bytes = await file.read(length);
-    await setPosition(_position + length);
+    var bytes = await _file.read(length);
+    setPosition(_position + length);
     return ByteData.view(bytes.buffer);
   }
 

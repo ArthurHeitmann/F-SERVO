@@ -73,7 +73,7 @@ class CpkTable {
     int rowsStart = bytes.position;
     List<List<CpkField>> rows = [];
     for (var i = 0; i < header.rowCount; i++) {
-      await bytes.setPosition(rowsStart);
+      bytes.setPosition(rowsStart);
       List<CpkField> row = [];
       for (var j = 0; j < header.fieldCount; j++)
         row.add(await CpkField.read(bytes, header));
@@ -110,29 +110,29 @@ class CpkTableDataPool {
   
   Future<String> readString(int offset) async {
     int pos = bytes.position;
-    await bytes.setPosition(stringPoolPosition + offset);
+    bytes.setPosition(stringPoolPosition + offset);
     String str = await bytes.readStringZeroTerminated();
-    await bytes.setPosition(pos);
+    bytes.setPosition(pos);
     return str;
   }
 
   Future<List<int>> readData(int offset, int length) async {
     int pos = bytes.position;
-    await bytes.setPosition(dataPoolPosition + offset);
+    bytes.setPosition(dataPoolPosition + offset);
     List<int> data;
     if (offset > 0 && length == 0) {
       print("WARNING: Untested code (:");
       int subLength = 0;
       if (await bytes.readString(4) == "@UTF") {
         subLength = await bytes.readUint32();
-        await bytes.setPosition(bytes.position - 4);
+        bytes.setPosition(bytes.position - 4);
       }
-      await bytes.setPosition(bytes.position - 4);
+      bytes.setPosition(bytes.position - 4);
       data = await bytes.readUint8List(subLength);
     } else {
       data = await bytes.readUint8List(length);
     }
-    await bytes.setPosition(pos);
+    bytes.setPosition(pos);
     return data;
   }
 
@@ -182,9 +182,9 @@ class CpkField {
       value = await _readValue(field, bytes, dataPool, false);
     } else if (isRowStorage) {
       int pos = bytes.position;
-      await bytes.setPosition(dataPool.currentRowStorePos);
+      bytes.setPosition(dataPool.currentRowStorePos);
       value = await _readValue(field, bytes, dataPool, true);
-      await bytes.setPosition(pos);
+      bytes.setPosition(pos);
     }
     field.value = value;
     
@@ -298,7 +298,7 @@ class CpkFileUncompressed extends CpkFile {
 
   @override
   Future<Uint8List> readData(ByteDataWrapperRA bytes) async {
-    await bytes.setPosition(dataOffset);
+    bytes.setPosition(dataOffset);
     return await bytes.readUint8List(dataSize);
   }
 }
@@ -321,7 +321,7 @@ class CpkFileCompressed extends CpkFile {
 
   static Future<CpkFileCompressed> read(String path, String name, ByteDataWrapperRA bytes, int compressedDataOffset) async {
     bytes.endian = Endian.little;
-    await bytes.setPosition(compressedDataOffset);
+    bytes.setPosition(compressedDataOffset);
     var id = await bytes.readString(8);
     var uncompressedSize = await bytes.readUint32();
     var compressedSize = await bytes.readUint32();
@@ -330,7 +330,7 @@ class CpkFileCompressed extends CpkFile {
 
   @override
   Future<Uint8List> readData(ByteDataWrapperRA bytes) async {
-    await bytes.setPosition(compressedDataOffset);
+    bytes.setPosition(compressedDataOffset);
     var compressedData = await bytes.readUint8List(compressedSize);
     var uncompressedHeader = await bytes.readUint8List(0x100);
     return decompress(compressedData, uncompressedHeader);
@@ -438,7 +438,7 @@ class Cpk {
       throw Exception("TocOffset field not found in header table");
     int tocOffset = tocOffsetField.value! as int;
 
-    await bytes.setPosition(tocOffset);
+    bytes.setPosition(tocOffset);
     var toc = await CpkSection.read(bytes);
 
     int contentDelta = min(tocOffset, contentOffset);
