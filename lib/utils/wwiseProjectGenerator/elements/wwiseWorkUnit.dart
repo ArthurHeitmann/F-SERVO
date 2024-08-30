@@ -8,11 +8,11 @@ import '../../utils.dart';
 import '../wwiseElement.dart';
 import '../wwiseElementBase.dart';
 import '../wwiseProjectGenerator.dart';
+import '../wwiseUtils.dart';
 
 class WwiseWorkUnit extends WwiseElementBase {
   final String path;
   final String tagName;
-  final String name;
   final String workUnitId;
   final List<XmlElement> defaultChildren;
   final String _folder;
@@ -22,7 +22,7 @@ class WwiseWorkUnit extends WwiseElementBase {
     required super.project,
     required this.path,
     required this.tagName,
-    required this.name,
+    required super.name,
     String? workUnitId,
     List<XmlElement>? defaultChildren,
     super. children,
@@ -52,21 +52,24 @@ class WwiseWorkUnit extends WwiseElementBase {
     );
   }
 
-  void addChild(WwiseElement child, int id) {
-    Iterable<String>? folders = project.bnkFolders[id];
+  void addWuChild(WwiseElement child, int id, String bnkName) {
+    child.bnkName = bnkName;
+    Iterable<String>? folders = getObjectFolder(bnkName, id);
     if (folders == null || folders.isEmpty) {
-      children.add(child);
+      addChild(child);
+      project.bnkTopLevelUuids.putIfAbsent(bnkName, () => {}).add(child.id);
       return;
     }
     if (folders.first == name || folders.first == _folder) {
       folders = folders.skip(1);
     }
-    _addChild(child, folders, this);
+    _addWuChild(child, folders, this, bnkName);
   }
 
-  void _addChild(WwiseElement child, Iterable<String> folders, WwiseElementBase parent) {
+  void _addWuChild(WwiseElement child, Iterable<String> folders, WwiseElementBase parent, String bnkName) {
     if (folders.length <= 1) {
-      parent.children.add(child);
+      parent.addChild(child);
+      project.bnkTopLevelUuids.putIfAbsent(bnkName, () => {}).add(child.id);
       return;
     }
     var folderName = folders.first;
@@ -76,9 +79,9 @@ class WwiseWorkUnit extends WwiseElementBase {
       .firstOrNull;
     if (folder == null) {
       folder = _WwiseFolder(project: project, wuId: id, name: folderName);
-      parent.children.add(folder);
+      parent.addChild(folder);
     }
-    _addChild(child, folders.skip(1), folder);
+    _addWuChild(child, folders.skip(1), folder, bnkName);
   }
 
   @override

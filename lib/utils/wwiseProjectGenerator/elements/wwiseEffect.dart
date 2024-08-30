@@ -223,7 +223,8 @@ List<WwiseProperty> _getRoomVerbProperties(BnkPluginData data) {
 }
 
 Future<void> saveEffectsIntoWu(WwiseProjectGenerator project) async {
-  for (var effect in project.hircChunksByType<BnkFxCustom>()) {
+  for (var effectC in project.hircChunksByType<BnkFxCustom>()) {
+    var effect = effectC.value;
     if (_ignorePluginIds.contains(effect.fxId))
       continue;
     var config = _pluginConfigs[effect.fxId];
@@ -233,7 +234,7 @@ Future<void> saveEffectsIntoWu(WwiseProjectGenerator project) async {
     }
     var effectElement = WwiseEffect(wuId: project.effectsWu.id, project: project, effect: effect, config: config);
     if (effect.isShareSet)
-      project.effectsWu.addChild(effectElement, effect.uid);
+      project.effectsWu.addWuChild(effectElement, effect.uid, effectC.name);
   }
 
   await project.effectsWu.save();

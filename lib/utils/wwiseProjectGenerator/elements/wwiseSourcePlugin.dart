@@ -12,7 +12,7 @@ const Map<int, _PluginConfig> _pluginConfigs = {
 };
 
 class WwiseSourcePlugin extends WwiseElement {
-  WwiseSourcePlugin._({required super.wuId, required super.project, required super.shortId, required _PluginConfig config, required BnkPluginData pluginData, required bool isVoice}) : super(
+  WwiseSourcePlugin._({required super.wuId, required super.project, required super.shortId, required _PluginConfig config, required BnkPluginData pluginData, required String language}) : super(
     tagName: "SourcePlugin",
     name: config.name,
     properties: config.handler(pluginData),
@@ -21,10 +21,10 @@ class WwiseSourcePlugin extends WwiseElement {
       "CompanyID": "0",
       "PluginID": config.pluginId,
     },
-    additionalChildren: [makeXmlElement(name: "Language", text: isVoice ? project.language : "SFX")],
+    additionalChildren: [makeXmlElement(name: "Language", text: language)],
   );
 
-  factory WwiseSourcePlugin({required String wuId, required WwiseProjectGenerator project, required int fxId, required bool isVoice}) {
+  factory WwiseSourcePlugin({required String wuId, required WwiseProjectGenerator project, required int fxId, required String language}) {
     var chunk = project.hircChunkById<BnkFxCustom>(fxId)!;
     var config = _pluginConfigs[chunk.fxId]!;
     return WwiseSourcePlugin._(
@@ -33,7 +33,7 @@ class WwiseSourcePlugin extends WwiseElement {
       shortId: fxId,
       config: config,
       pluginData: chunk.pluginData,
-      isVoice: isVoice,
+      language: language,
     );
   }
 

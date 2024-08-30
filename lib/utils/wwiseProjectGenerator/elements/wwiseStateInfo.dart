@@ -43,7 +43,7 @@ XmlElement? makeWwiseStatInfo(WwiseProjectGenerator project, List<BnkStateChunkG
   for (var stateGroup in states) {
     for (var state in stateGroup.state) {
       var stateRef = usedStates[stateGroup.ulStateGroupID]![state.ulStateID]!;
-      var stateChunk = project.bnkStateChunks[state.ulStateInstanceID]!;
+      var stateChunk = project.hircChunkById<BnkState>(state.ulStateInstanceID)!;
       customStates.add(
         makeXmlElement(name: "CustomState", children: [
           makeXmlElement(name: "StateRef", attributes: {"Name": stateRef.name, "ID": stateRef.uuid}),

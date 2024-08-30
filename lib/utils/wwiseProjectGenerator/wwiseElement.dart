@@ -10,7 +10,6 @@ import 'wwiseProperty.dart';
 class WwiseElement extends WwiseElementBase {
   final String wuId;
   final String tagName;
-  final String name;
   final int? shortId;
   final WwisePropertyList properties;
   final Map<String, String> additionalAttributes;
@@ -21,7 +20,7 @@ class WwiseElement extends WwiseElementBase {
     required this.wuId,
     required super.project,
     required this.tagName,
-    required this.name,
+    required super.name,
     super.id,
     this.shortId,
     int? shortIdHint,

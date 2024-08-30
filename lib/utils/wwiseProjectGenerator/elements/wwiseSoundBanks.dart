@@ -1,44 +1,63 @@
 
 import '../../utils.dart';
 import '../wwiseElement.dart';
+import '../wwiseElementBase.dart';
 import '../wwiseProjectGenerator.dart';
+import 'wwiseWorkUnit.dart';
 
 Future<void> makeWwiseSoundBank(WwiseProjectGenerator project) async {
   project.soundBanksWu.defaultChildren.clear();
-  project.soundBanksWu.children.add(
-    WwiseElement(
+  var wuChildren = [project.amhWu, project.imhWu, project.eventsWu];
+  void markBnkUsage(WwiseElementBase obj) {
+    for (var child in obj.children)
+      markBnkUsage(child);
+    var childBnkNames = obj.children
+      .map((e) => e.bnkName)
+      .whereType<String>()
+      .toSet();
+    if (childBnkNames.length != 1)
+      return;
+    if (obj.bnkName != null && obj.bnkName != childBnkNames.first)
+      return;
+    obj.bnkName = childBnkNames.first;
+  }
+  for (var obj in wuChildren)
+    markBnkUsage(obj);
+  
+  for (var bnkName in project.bnkNames) {
+    List<WwiseElementBase> topLevelObjects = [];
+    void findTopLevelObjects(WwiseElementBase obj) {
+      if (obj.bnkName == bnkName) {
+        topLevelObjects.add(obj);
+        return;
+      }
+      for (var child in obj.children)
+        findTopLevelObjects(child);
+    }
+    for (var obj in wuChildren)
+      findTopLevelObjects(obj);
+
+
+    project.soundBanksWu.addChild(WwiseElement(
       wuId: project.soundBanksWu.id,
       project: project,
       tagName: "SoundBank",
-      name: project.projectName,
+      name: bnkName,
       additionalChildren: [
         makeXmlElement(name: "ObjectInclusionList", children: [
-          makeXmlElement(name: "ObjectRef", attributes: {
-            "Name": project.amhWu.name,
-            "ID": project.amhWu.id,
-            "WorkUnitID": project.amhWu.workUnitId,
-            "Filter": "7",
-            "Origin": "Manual",
-          }),
-          makeXmlElement(name: "ObjectRef", attributes: {
-            "Name": project.imhWu.name,
-            "ID": project.imhWu.id,
-            "WorkUnitID": project.imhWu.workUnitId,
-            "Filter": "7",
-            "Origin": "Manual",
-          }),
-          makeXmlElement(name: "ObjectRef", attributes: {
-            "Name": project.eventsWu.name,
-            "ID": project.eventsWu.id,
-            "WorkUnitID": project.eventsWu.workUnitId,
-            "Filter": "7",
-            "Origin": "Manual",
-          }),
+          for (var element in topLevelObjects)
+            makeXmlElement(name: "ObjectRef", attributes: {
+              "Name": element.name,
+              "ID": element.id,
+              "WorkUnitID": element is WwiseElement ? element.wuId : (element as WwiseWorkUnit).workUnitId,
+              "Filter": "7",
+              "Origin": "Manual",
+            }),
         ]),
         makeXmlElement(name: "ObjectExclusionList"),
         makeXmlElement(name: "GameSyncExclusionList"),
       ]
-    )
-  );
+    ));
+  }
   await project.soundBanksWu.save();
 }

@@ -1,6 +1,7 @@
 
 import '../../fileTypeUtils/audio/bnkIO.dart';
 import '../../fileTypeUtils/audio/wemIdsToNames.dart';
+import '../../fileTypeUtils/audio/wwiseObjectPath.dart';
 import 'elements/hierarchyBaseElements.dart';
 import 'wwiseProjectGenerator.dart';
 
@@ -141,4 +142,12 @@ String makeElementName(WwiseProjectGenerator project, {required int id, required
   if (project.options.nameId)
     name += " ($id)";
   return project.makeName(name, parentId);
+}
+
+List<String>? getObjectFolder(String bnkName, int id) {
+  String? path;
+  path ??= wwiseBnkToIdObjectPath[bnkName]?[id];
+  path ??= wwiseBnkToIdObjectPath["Init"]?[id];
+  path ??= wwiseIdToObjectPath[id];
+  return path?.split("/").where((e) => e.isNotEmpty).toList();
 }

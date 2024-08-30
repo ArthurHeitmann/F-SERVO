@@ -9,13 +9,14 @@ Future<void> saveBusesIntoWu(WwiseProjectGenerator project) async {
   Set<int> usedBusIds = {};
   usedBusIds.add(masterBusHash);
   for (var chunk in project.hircChunksByType<BnkHircChunkWithBaseParamsGetter>()) {
-    var baseParams = chunk.getBaseParams();
+    var baseParams = chunk.value.getBaseParams();
     var busId = baseParams.overrideBusID;
     if (busId == 0)
       continue;
     usedBusIds.add(busId);
   }
-  for (var action in project.hircChunksByType<BnkAction>()) {
+  for (var actionC in project.hircChunksByType<BnkAction>()) {
+    var action = actionC.value;
     if (action.initialParams.isBus)
       usedBusIds.add(action.initialParams.idExt);
     var actionType = actionTypes[action.type];
@@ -49,13 +50,13 @@ Future<void> saveBusesIntoWu(WwiseProjectGenerator project) async {
         name: wwiseIdToStr(busId),
         shortIdHint: busId,
       );
-      masterAudioBus.children.add(bus);
+      masterAudioBus.addChild(bus);
     }
     else
       bus = project.defaultBus;
     project.buses[busId] = bus;
   }
-  masterAudioBus.children.sort((a, b) => a.name.compareTo(b.name));
-  wu.children.addAll(defaultBuses);
+  masterAudioBus.sortChildren((a, b) => a.name.compareTo(b.name));
+  wu.addAllChildren(defaultBuses);
   await wu.save();
 }

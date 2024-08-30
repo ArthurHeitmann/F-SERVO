@@ -9,12 +9,15 @@ import 'wwiseProjectGenerator.dart';
 
 abstract class WwiseElementBase {
   final String id;
+  final String name;
   final WwiseProjectGenerator project;
-  final List<WwiseElement> children;
+  final List<WwiseElement> _children;
+  Iterable<WwiseElement> get children => _children;
+  String? bnkName;
 
-  WwiseElementBase({required this.project, String? id, List<WwiseElement>? children})
+  WwiseElementBase({required this.project, required this.name, String? id, Iterable<WwiseElement>? children})
     : id = id ?? project.idGen.uuid(),
-      children = children ?? [] {
+      _children = children is List<WwiseElement> ? children : (children?.toList() ?? []) {
     project.putElement(this);
   }
 
@@ -26,5 +29,19 @@ abstract class WwiseElementBase {
       toXml(),
     ]);
     await File(path).writeAsString(doc.toPrettyString());
+  }
+
+  void addChild(WwiseElement child) {
+    _children.add(child);
+  }
+
+  addAllChildren(Iterable<WwiseElement> children) {
+    for (var child in children) {
+      addChild(child);
+    }
+  }
+
+  sortChildren([int Function(WwiseElement a, WwiseElement b)? compare]) {
+    _children.sort(compare);
   }
 }

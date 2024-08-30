@@ -2,7 +2,6 @@
 import '../../../fileTypeUtils/audio/bnkIO.dart';
 import '../../../fileTypeUtils/audio/wemIdsToNames.dart';
 import '../../utils.dart';
-import '../wwiseElement.dart';
 import '../wwiseProperty.dart';
 import '../wwiseUtils.dart';
 import 'hierarchyBaseElements.dart';
@@ -42,7 +41,7 @@ class WwiseMusicSwitch extends WwiseHierarchyElement<BnkMusicSwitch> {
       if (chunk.pAssocs.isNotEmpty)
         makeXmlElement(name: "GroupingList", children: chunk.pAssocs.map((sw) {
             var groupChild = group?.children.where((c) => c.id == sw.switchID).firstOrNull;
-            var child = project.lookupElement(idFnv: sw.nodeID) as WwiseElement?;
+            var child = project.lookupElement(idFnv: sw.nodeID);
             return makeXmlElement(name: "Grouping", children: [
               makeXmlElement(name: "SwitchRef", attributes: {"Name": groupChild?.name ?? "", "ID": groupChild?.uuid ?? wwiseNullId}),
               makeXmlElement(name: "ChildRef", attributes: {"Name": child?.name ?? "", "ID": child?.id ?? wwiseNullId}),

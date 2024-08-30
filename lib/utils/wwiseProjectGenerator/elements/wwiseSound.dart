@@ -12,7 +12,7 @@ import 'wwiseSourcePlugin.dart';
 const _loopPropId = 0x07;
 
 class WwiseSound extends WwiseHierarchyElement<BnkSound> {
-  WwiseSound({required super.wuId, required super.project, required super.chunk}) : super(
+  WwiseSound({required super.wuId, required super.project, required super.chunk, required String language}) : super(
     tagName: "Sound",
     name: makeElementName(project, id: chunk.uid, category: "Sound", name: wemIdsToNames[chunk.uid] ?? wemIdsToNames[chunk.bankData.mediaInformation.sourceID], parentId: chunk.baseParams.directParentID),
     shortId: chunk.uid,
@@ -25,7 +25,7 @@ class WwiseSound extends WwiseHierarchyElement<BnkSound> {
     ],
     children: [
       if (chunk.bankData.mediaInformation.uFileID == 0 && WwiseSourcePlugin.isSourcePlugin(project, chunk.bankData.mediaInformation.sourceID))
-        WwiseSourcePlugin(wuId: wuId, project: project, fxId: chunk.bankData.mediaInformation.sourceID, isVoice: chunk.bankData.mediaInformation.uSourceBits & 1 != 0)
+        WwiseSourcePlugin(wuId: wuId, project: project, fxId: chunk.bankData.mediaInformation.sourceID, language: language)
       else if (project.soundFiles.containsKey(chunk.bankData.mediaInformation.sourceID))
         WwiseAudioFileSource(wuId: wuId, project: project, audio: project.soundFiles[chunk.bankData.mediaInformation.sourceID]!),
     ],

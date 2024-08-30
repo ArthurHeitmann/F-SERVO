@@ -10,9 +10,9 @@ import '../../stateManagement/Property.dart';
 import '../../stateManagement/preferencesData.dart';
 import '../../utils/utils.dart';
 import '../../utils/wwiseProjectGenerator/wwiseProjectGenerator.dart';
+import '../propEditors/UnderlinePropTextField.dart';
 import '../propEditors/boolPropCheckbox.dart';
 import '../propEditors/primaryPropTextField.dart';
-import '../propEditors/propTextField.dart';
 import '../theme/customTheme.dart';
 import 'ChangeNotifierWidget.dart';
 import 'SmoothScrollBuilder.dart';
@@ -37,7 +37,7 @@ void showWwiseProjectGeneratorPopup(String bnkPath) {
 
 class _WwiseProjectGeneratorPopup extends StatefulWidget {
   final String bnkPath;
-  String get bnkName => basename(bnkPath);
+  String get bnkName => basenameWithoutExtension(bnkPath);
 
   const _WwiseProjectGeneratorPopup(this.bnkPath);
 
@@ -56,7 +56,9 @@ class __WwiseProjectGeneratorPopupState extends State<_WwiseProjectGeneratorPopu
   final optNamePrefix = BoolProp(true, fileId: null);
   final optEvents = BoolProp(true, fileId: null);
   final optActions = BoolProp(true, fileId: null);
-  final savePath = StringProp("", fileId: null);
+  late final StringProp projectName;
+  late final StringProp savePath;
+  late final List<String> bnkPaths;
   WwiseProjectGenerator? generator;
   bool hasStarted = false;
   final status = WwiseProjectGeneratorStatus();
@@ -69,14 +71,29 @@ class __WwiseProjectGeneratorPopupState extends State<_WwiseProjectGeneratorPopu
     if (!widget.bnkName.contains("BGM"))
       optSeekTable.value = false;
     var prefs = PreferencesData();
-    savePath.value = prefs.lastWwiseProjectDir?.value ?? "";
+    projectName = StringProp(widget.bnkName, fileId: null);
+    savePath = StringProp(prefs.lastWwiseProjectDir?.value ?? "", fileId: null);
     status.logs.addListener(onNewLog);
     status.isDone.addListener(() => setState(() {}));
+    bnkPaths = [widget.bnkPath];
   }
 
   @override
   void dispose() {
+    optAudioHierarchy.dispose();
+    optWems.dispose();
+    optStreaming.dispose();
+    optStreamingPrefetch.dispose();
+    optSeekTable.dispose();
+    optTranslate.dispose();
+    optNameId.dispose();
+    optNamePrefix.dispose();
+    optEvents.dispose();
+    optActions.dispose();
+    projectName.dispose();
+    savePath.dispose();
     status.dispose();
+    logScrollController.dispose();
     super.dispose();
   }
 
@@ -86,7 +103,7 @@ class __WwiseProjectGeneratorPopupState extends State<_WwiseProjectGeneratorPopu
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("Generate Wwise project for ${widget.bnkName}", style: Theme.of(context).textTheme.titleLarge),
+        Text("Generate Wwise project", style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 15),
         if (!hasStarted)
           ..._makeOptions(context)
@@ -112,10 +129,64 @@ class __WwiseProjectGeneratorPopupState extends State<_WwiseProjectGeneratorPopu
       ("Object ID", optNameId),
     ];
     return [
+      const Text("Source BNKs:"),
+      ConstrainedBox(
+        constraints: const BoxConstraints(maxHeight: 200),
+        child: SmoothSingleChildScrollView(
+          child: Column(
+            children: [
+              for (var (i, bnkPath) in bnkPaths.indexed)
+                Row(
+                  key: Key(bnkPath),
+                  children: [
+                    const SizedBox(width: 20),
+                    Text(basename(bnkPath)),
+                    const SizedBox(width: 10),
+                    IconButton(
+                      icon: const Icon(Icons.close, size: 16),
+                      splashRadius: 16,
+                      constraints: BoxConstraints.tight(const Size(30, 30)),
+                      padding: EdgeInsets.zero,
+                      onPressed: () {
+                        bnkPaths.removeAt(i);
+                        setState(() {});
+                      },
+                    ),
+                  ],
+                ),
+              Row(
+                children: [
+                  const SizedBox(width: 15),
+                  IconButton(
+                    icon: const Icon(Icons.add, size: 16),
+                    splashRadius: 16,
+                    padding: EdgeInsets.zero,
+                    constraints: BoxConstraints.tight(const Size(30, 30)),
+                    onPressed: () async {
+                      var files = await FilePicker.platform.pickFiles(
+                        type: FileType.custom,
+                        allowedExtensions: ["bnk"],
+                        allowMultiple: true,
+                        dialogTitle: "Select BNKs",
+                      );
+                      if (files == null)
+                        return;
+                      bnkPaths.addAll(files.paths.whereType<String>());
+                      setState(() {});
+                    },
+                  ),
+                ],
+              ),
+            ],
+          )
+        ),
+      ),
+      const SizedBox(height: 15),
+      const Text("Projects save path:"),
       Row(
         children: [
           Expanded(
-            child: PrimaryPropTextField(prop: savePath, options: const PropTFOptions(hintText: "Projects save path"))
+            child: PrimaryPropTextField(prop: savePath)
           ),
           const SizedBox(width: 10),
           SmallButton(
@@ -134,7 +205,17 @@ class __WwiseProjectGeneratorPopupState extends State<_WwiseProjectGeneratorPopu
         ],
       ),
       const SizedBox(height: 15),
-      Text("Include from BNK:", style: Theme.of(context).textTheme.bodyMedium),
+      Row(
+        children: [
+          const Text("Project name:"),
+          const SizedBox(width: 10),
+          Expanded(
+            child: UnderlinePropTextField(prop: projectName)
+          ),
+        ],
+      ),
+      const SizedBox(height: 15),
+      const Text("Include from BNK:"),
       const SizedBox(height: 2),
       for (var (label, prop) in labeledOptions)
         Row(
@@ -144,14 +225,14 @@ class __WwiseProjectGeneratorPopupState extends State<_WwiseProjectGeneratorPopu
             Expanded(
               child: GestureDetector(
                 onTap: () => prop.value = !prop.value,
-                child: Text(label, style: Theme.of(context).textTheme.bodyMedium, overflow: TextOverflow.ellipsis),
+                child: Text(label, overflow: TextOverflow.ellipsis),
               ),
             ),
           ],
         ),
       Row(
         children: [
-          Text("Name settings: ", style: Theme.of(context).textTheme.bodyMedium),
+          const Text("Name settings: "),
           for (var (label, prop) in labeledNameOptions)
             Row(
               children: [
@@ -159,7 +240,7 @@ class __WwiseProjectGeneratorPopupState extends State<_WwiseProjectGeneratorPopu
                 const SizedBox(width: 5),
                 GestureDetector(
                   onTap: () => prop.value = !prop.value,
-                  child: Text(label, style: Theme.of(context).textTheme.bodyMedium)
+                  child: Text(label)
                 ),
               ],
             ),
@@ -258,7 +339,13 @@ class __WwiseProjectGeneratorPopupState extends State<_WwiseProjectGeneratorPopu
     );
     hasStarted = true;
     setState(() {});
-    generator = await WwiseProjectGenerator.generateFromBnk(widget.bnkPath, savePath.value, options, status);
+    generator = await WwiseProjectGenerator.generateFromBnks(
+      projectName.value,
+      bnkPaths,
+      savePath.value,
+      options,
+      status,
+    );
     if (generator == null)
       return;
     setState(() {});

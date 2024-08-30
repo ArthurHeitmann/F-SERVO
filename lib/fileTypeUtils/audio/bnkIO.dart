@@ -189,7 +189,7 @@ class BnkWemFileInfo {
 }
 
 class BnkDataChunk extends BnkChunkBase {
-  List<List<int>> wemFiles = [];
+  List<Uint8List> wemFiles = [];
 
   BnkDataChunk(super.chunkId, super.chunkSize, this.wemFiles);
 
@@ -197,7 +197,7 @@ class BnkDataChunk extends BnkChunkBase {
     int initialPosition = bytes.position;
     for (var file in didx.files) {
       bytes.position = initialPosition + file.offset;
-      wemFiles.add(bytes.readUint8List(file.size));
+      wemFiles.add(bytes.asUint8List(file.size));
     }
     int remaining = chunkSize - (bytes.position - initialPosition);
     if (remaining > 0) {

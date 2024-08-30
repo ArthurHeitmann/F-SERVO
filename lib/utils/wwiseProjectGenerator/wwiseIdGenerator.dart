@@ -29,7 +29,7 @@ class WwiseIdGenerator {
       _usedIds.add(fnvHash(bus.name));
     }
     for (var chunk in project.hircChunks)
-      _usedIds.add(chunk.uid);
+      _usedIds.add(chunk.value.uid);
   }
 
   void markIdUsed(int id) {

@@ -10,9 +10,6 @@ import 'package:xml/xml.dart';
 
 import '../../fileTypeUtils/audio/bnkIO.dart';
 import '../../fileTypeUtils/audio/bnkNotes.dart';
-import '../../fileTypeUtils/audio/wemIdsToNames.dart';
-import '../../fileTypeUtils/audio/wwiseObjectPath.dart';
-import '../../fileTypeUtils/utils/ByteDataWrapper.dart';
 import '../../fileTypeUtils/xml/xmlExtension.dart';
 import '../../fileTypeUtils/yax/japToEng.dart';
 import '../../stateManagement/events/statusInfo.dart';
@@ -29,7 +26,7 @@ import 'elements/wwiseSwitchOrState.dart';
 import 'elements/wwiseSwitches.dart';
 import 'elements/wwiseTriggers.dart';
 import 'elements/wwiseWorkUnit.dart';
-import 'wwiseAudioFilesPrepare.dart';
+import 'bnkLoader.dart';
 import 'wwiseElement.dart';
 import 'wwiseElementBase.dart';
 import 'wwiseIdGenerator.dart';
@@ -77,11 +74,12 @@ class WwiseProjectGeneratorStatus {
 class WwiseProjectGenerator {
   final String projectName;
   final String projectPath;
-  final BnkFile bnk;
+  final List<String> bnkPaths;
+  final List<String> bnkNames = [];
   final WwiseProjectGeneratorOptions options;
   final WwiseProjectGeneratorStatus status;
-  late final Map<int, List<String>> bnkFolders;
-  final List<BnkHircChunkBase> _hircChunks;
+  final List<BnkContext<BnkHircChunkBase>> _hircChunks = [];
+  final Map<int, BnkContext<BnkHircChunkBase>> _hircChunksById = {};
   final Map<String, WwiseElementBase> _elements = {};
   final Map<int, String> _shortToFullId = {};
   final WwiseIdGenerator idGen;
@@ -91,7 +89,7 @@ class WwiseProjectGenerator {
   final Map<int, WwiseSwitchOrStateGroup> switchGroups = {};
   final Map<int, WwiseElement> gameParameters = {};
   final Map<int, WwiseElement> buses = {};
-  late final Map<int, BnkState> bnkStateChunks = {};
+  final Map<String, Set<String>> bnkTopLevelUuids = {};
   late final WwiseElement defaultConversion;
   late final WwiseElement defaultBus;
   late final WwiseWorkUnit attenuationsWu;
@@ -105,30 +103,14 @@ class WwiseProjectGenerator {
   late final WwiseWorkUnit statesWu;
   late final WwiseWorkUnit switchesWu;
   late final WwiseWorkUnit triggersWu;
-  late final String language;
 
-  WwiseProjectGenerator(this.projectName, this.projectPath, this.bnk, this._hircChunks, this.options, this.status)
-    : idGen = WwiseIdGenerator(projectName) {
-    var header = bnk.chunks.whereType<BnkHeader>().first;
-    language = _languageIds[header.languageId] ?? "SFX";
-    var bnkId = header.bnkId;
-    var bnkPaths = wwiseBnkToIdObjectPath[projectName] ?? wwiseBnkToIdObjectPath[wemIdsToNames[bnkId]] ?? wwiseIdToObjectPath;
-    Map<int, String> joinedBnkPaths = {};
-    joinedBnkPaths.addAll(wwiseBnkToIdObjectPath["Init"]!);
-    joinedBnkPaths.addAll(bnkPaths);
-    bnkFolders = {
-      for (var entry in joinedBnkPaths.entries)
-        entry.key: entry.value.split("/").where((e) => e.isNotEmpty).toList(),
-    };
-    for (var state in hircChunksByType<BnkState>())
-      bnkStateChunks[state.uid] = state;
-  }
+  WwiseProjectGenerator(this.projectName, this.projectPath, this.bnkPaths, this.options, this.status)
+    : idGen = WwiseIdGenerator(projectName);
   
-  static Future<WwiseProjectGenerator?> generateFromBnk(String bnkPath, String savePath, WwiseProjectGeneratorOptions options, WwiseProjectGeneratorStatus status) async {
+  static Future<WwiseProjectGenerator?> generateFromBnks(String projectName, List<String> bnkPaths, String savePath, WwiseProjectGeneratorOptions options, WwiseProjectGeneratorStatus status) async {
     try {
       isLoadingStatus.pushIsLoading();
       status.logs.add(WwiseLog(WwiseLogSeverity.info,  "Starting to generate Wwise project..."));
-      var projectName = basenameWithoutExtension(bnkPath);
       var projectPath = join(savePath, projectName);
       // clean
       if (await Directory(projectPath).exists()) {
@@ -156,16 +138,8 @@ class WwiseProjectGenerator {
       var wprojData = await File(wprojPathNew).readAsString();
       wprojData = wprojData.replaceAll("test_project", projectName);
       await File(wprojPathNew).writeAsString(wprojData);
-      // read bnk
-      var bnk = BnkFile.read(await ByteDataWrapper.fromFile(bnkPath));
-      var hirc = bnk.chunks.whereType<BnkHircChunk>().firstOrNull;
-      if (hirc == null) {
-        status.logs.add(WwiseLog(WwiseLogSeverity.error,  ("Error: BNK file has no HIRC chunk")));
-        return null;
-      }
-      var hircChunks = hirc.chunks;
       // generate
-      var generator = WwiseProjectGenerator(projectName, projectPath, bnk, hircChunks, options, status);
+      var generator = WwiseProjectGenerator(projectName, projectPath, bnkPaths, options, status);
       unawaited(generator.run()
         .catchError((e, st) {
           messageLog.add("$e\n$st");
@@ -182,11 +156,14 @@ class WwiseProjectGenerator {
 
   Future<void> run() async {
     status.currentMsg.value = "Generating project...";
+    await loadBnks(this, bnkPaths, bnkNames, _hircChunks, _hircChunksById, soundFiles);
+
     var unknownChunks = hircChunksByType<BnkHircUnknownChunk>().toList();
     if (unknownChunks.isNotEmpty) {
-      var chunkTypes = unknownChunks.map((c) => c.type).toSet();
+      var chunkTypes = unknownChunks.map((c) => c.value.type).toSet();
       log(WwiseLogSeverity.warning, "${unknownChunks.length} unknown chunks: ${chunkTypes.join(", ")}");
     }
+    
     await Future.wait([
       WwiseWorkUnit.emptyFromXml(this, join(projectPath, "Attenuations", _defaultWorkUnit)).then((wu) => attenuationsWu = wu),
       WwiseWorkUnit.emptyFromXml(this, join(projectPath, "Actor-Mixer Hierarchy", _defaultWorkUnit)).then((wu) => amhWu = wu),
@@ -200,6 +177,7 @@ class WwiseProjectGenerator {
       WwiseWorkUnit.emptyFromXml(this, join(projectPath, "Switches", _defaultWorkUnit)).then((wu) => switchesWu = wu),
       WwiseWorkUnit.emptyFromXml(this, join(projectPath, "Triggers", _defaultWorkUnit)).then((wu) => triggersWu = wu),
     ]);
+    
     var wprojPath = join(projectPath, "$projectName.wproj");
     var wprojDoc = XmlDocument.parse(await File(wprojPath).readAsString());
     var defaultConversionElement = wprojDoc.rootElement.findAllElements("DefaultConversion").first;
@@ -220,9 +198,6 @@ class WwiseProjectGenerator {
       saveBusesIntoWu(this),
       if (options.seekTable)
         _enableSeekTable(),
-      if (options.wems)
-        prepareWwiseAudioFiles(this).then((files) => soundFiles.addAll(files)),
-      makeWwiseSoundBank(this),
     ]);
     idGen.init(this);
     
@@ -232,15 +207,16 @@ class WwiseProjectGenerator {
       await saveHierarchyBaseElements(this);
     if (options.events)
       await saveEventsHierarchy(this);
+    await makeWwiseSoundBank(this);
 
     log(WwiseLogSeverity.info, "Project generated successfully");
     status.currentMsg.value = "";
     status.isDone.value = true;
   }
 
-  Iterable<BnkHircChunkBase> get hircChunks => _hircChunks;
-  Iterable<T> hircChunksByType<T>() => _hircChunks.whereType<T>();
-  T? hircChunkById<T>(int id) => _hircChunks.where((e) => e.uid == id).firstOrNull as T?;
+  Iterable<BnkContext<BnkHircChunkBase>> get hircChunks => _hircChunks;
+  Iterable<BnkContext<T>> hircChunksByType<T>() => _hircChunks.where((c) => c.value is T).map((c) => c.cast<T>());
+  T? hircChunkById<T>(int id) => _hircChunksById[id]?.value as T?;
 
   WwiseElementBase? lookupElement({String? idV4, int? idFnv}) {
     if (idV4 != null) {
@@ -325,45 +301,3 @@ class WwiseLog {
 }
 
 const _defaultWorkUnit = "Default Work Unit.wwu";
-
-const _languageIds = {
-  0x00: "SFX",
-  0x01: "Arabic",
-  0x02: "Bulgarian",
-  0x03: "Chinese(HK)",
-  0x04: "Chinese(PRC)",
-  0x05: "Chinese(Taiwan)",
-  0x06: "Czech",
-  0x07: "Danish",
-  0x08: "Dutch",
-  0x09: "English(Australia)",
-  0x0A: "English(India)",
-  0x0B: "English(UK)",
-  0x0C: "English(US)",
-  0x0D: "Finnish",
-  0x0E: "French(Canada)",
-  0x0F: "French(France)",
-  0x10: "German",
-  0x11: "Greek",
-  0x12: "Hebrew",
-  0x13: "Hungarian",
-  0x14: "Indonesian",
-  0x15: "Italian",
-  0x16: "Japanese",
-  0x17: "Korean",
-  0x18: "Latin",
-  0x19: "Norwegian",
-  0x1A: "Polish",
-  0x1B: "Portuguese(Brazil)",
-  0x1C: "Portuguese(Portugal)",
-  0x1D: "Romanian",
-  0x1E: "Russian",
-  0x1F: "Slovenian",
-  0x20: "Spanish(Mexico)",
-  0x21: "Spanish(Spain)",
-  0x22: "Spanish(US)",
-  0x23: "Swedish",
-  0x24: "Turkish",
-  0x25: "Ukrainian",
-  0x26: "Vietnamese",
-};

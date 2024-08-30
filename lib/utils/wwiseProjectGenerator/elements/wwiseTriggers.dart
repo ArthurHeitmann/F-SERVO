@@ -10,7 +10,9 @@ import '../wwiseUtils.dart';
 
 Future<void> saveTriggersIntoWu(WwiseProjectGenerator project) async {
   Set<int> usedTriggerIds = {};
-  for (var chunk in project.hircChunks) {
+  Map<int, String> triggerIdToBnk = {};
+  for (var chunkC in project.hircChunks) {
+    var chunk = chunkC.value;
     BnkMusicNodeParams? musicParams;
     if (chunk is BnkMusicSegment)
       musicParams = chunk.musicParams;
@@ -19,11 +21,14 @@ Future<void> saveTriggersIntoWu(WwiseProjectGenerator project) async {
     else if (chunk is BnkMusicSwitch)
       musicParams = chunk.musicTransParams.musicParams;
     if (musicParams != null) {
-      for (var stinger in musicParams.stingers)
+      for (var stinger in musicParams.stingers) {
         usedTriggerIds.add(stinger.triggerID);
+        triggerIdToBnk.putIfAbsent(stinger.triggerID, () => chunkC.name);
+      }
     }
     if (chunk is BnkAction && chunk.type & 0xFF00 == 0x1D00) {
       usedTriggerIds.add(chunk.initialParams.idExt);
+      triggerIdToBnk.putIfAbsent(chunk.initialParams.idExt, () => chunkC.name);
     }
   }
   
@@ -42,7 +47,7 @@ Future<void> saveTriggersIntoWu(WwiseProjectGenerator project) async {
     ..sort((a, b) => a.$2.name.compareTo(b.$2.name));
 
   for (var (id, param) in triggers)
-    project.triggersWu.addChild(param, id);
+    project.triggersWu.addWuChild(param, id, triggerIdToBnk[id]!);
   await project.triggersWu.save();
 }
 

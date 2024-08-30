@@ -11,10 +11,10 @@ import '../wwiseUtils.dart';
 XmlElement makeWwiseTransitionList(WwiseProjectGenerator project, String wuId, List<BnkMusicTransitionRule> transitions) {
   return makeXmlElement(name: "TransitionList", children: transitions
     .map((transition) {
-      var src = project.lookupElement(idFnv: transition.srcID) as WwiseElement?;
-      var dest = project.lookupElement(idFnv: transition.dstID) as WwiseElement?;
-      var destPlItem = project.lookupElement(idFnv: transition.dstRule.uJumpToID) as WwiseElement?;
-      var transSegment = project.lookupElement(idFnv: transition.musicTransition.segmentID) as WwiseElement?;
+      var src = project.lookupElement(idFnv: transition.srcID);
+      var dest = project.lookupElement(idFnv: transition.dstID);
+      var destPlItem = project.lookupElement(idFnv: transition.dstRule.uJumpToID);
+      var transSegment = project.lookupElement(idFnv: transition.musicTransition.segmentID);
       if (transition.srcID > 0 && src == null) {
         project.log(WwiseLogSeverity.warning, "Transition source not found: ${wwiseIdToStr(transition.srcID)}");
         return null;
@@ -27,8 +27,8 @@ XmlElement makeWwiseTransitionList(WwiseProjectGenerator project, String wuId, L
         project.log(WwiseLogSeverity.warning, "Transition destination playlist item not found: ${wwiseIdToStr(transition.dstRule.uJumpToID)}");
         return null;
       }
-      String? srcCustomCueName = transition.srcRule.uMarkerID != 0 ? (project.lookupElement(idFnv: transition.srcRule.uMarkerID) as WwiseElement?)?.name : null;
-      String? destCustomCueName = transition.dstRule.uMarkerID != 0 ? (project.lookupElement(idFnv: transition.dstRule.uMarkerID) as WwiseElement?)?.name : null;
+      String? srcCustomCueName = transition.srcRule.uMarkerID != 0 ? (project.lookupElement(idFnv: transition.srcRule.uMarkerID))?.name : null;
+      String? destCustomCueName = transition.dstRule.uMarkerID != 0 ? (project.lookupElement(idFnv: transition.dstRule.uMarkerID))?.name : null;
       return makeXmlElement(name: "Transition", children: [
         makeXmlElement(name: "Source", children: [
           if (transition.srcID == -1)
