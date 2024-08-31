@@ -96,6 +96,8 @@ void init(List<String> args) async {
 
 final _rootKey = GlobalKey<ScaffoldState>(debugLabel: "RootGlobalKey");
 
+final routeObserver = RouteObserver<Route>();
+
 BuildContext getGlobalContext() => _rootKey.currentContext!;
 
 class MyApp extends StatefulWidget {
@@ -137,6 +139,7 @@ class _MyAppState extends State<MyApp> {
         return MaterialApp(
           title: "F-SERVO",
           debugShowCheckedModeBanner: false,
+          navigatorObservers: [routeObserver],
           theme: PreferencesData().makeTheme(context),
           home: MyAppBody(key: _rootKey)
         );
