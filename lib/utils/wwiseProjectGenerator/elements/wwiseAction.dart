@@ -104,8 +104,8 @@ class WwiseAction extends WwiseElement {
     );
   
   @override
-  void oneTimeInit() {
-    super.oneTimeInit();
+  void initData() {
+    super.initData();
 
     List<WwiseElementBase?> elements = [];
     // target id
@@ -267,7 +267,7 @@ class WwiseAction extends WwiseElement {
     var xmlElements = elements
       .whereType<WwiseElement>()
       .map((e) => makeXmlElement(name: "Element", attributes: {"ID": project.idGen.uuid(), "Global": isSingle ? "false" : "true"}, children: [
-            makeXmlElement(name: "ObjectRef", attributes: {"Name": e.name, "ID": e.id, "WorkUnitID": e.wuId}),
+        makeXmlElement(name: "ObjectRef", attributes: {"Name": e.name, "ID": e.id, "WorkUnitID": e.wuId}),
       ]))
       .toList();
     if (xmlElements.isEmpty)

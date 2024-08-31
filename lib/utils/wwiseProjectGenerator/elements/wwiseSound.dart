@@ -1,6 +1,7 @@
 
 import '../../../fileTypeUtils/audio/bnkIO.dart';
 import '../../../fileTypeUtils/audio/wemIdsToNames.dart';
+import '../../../fileTypeUtils/audio/wwiseObjectPath.dart';
 import '../../utils.dart';
 import '../wwiseElement.dart';
 import '../wwiseProperty.dart';
@@ -14,7 +15,6 @@ const _loopPropId = 0x07;
 class WwiseSound extends WwiseHierarchyElement<BnkSound> {
   WwiseSound({required super.wuId, required super.project, required super.chunk, required String language}) : super(
     tagName: "Sound",
-    name: makeElementName(project, id: chunk.uid, category: "Sound", name: wemIdsToNames[chunk.uid] ?? wemIdsToNames[chunk.bankData.mediaInformation.sourceID], parentId: chunk.baseParams.directParentID),
     shortId: chunk.uid,
     additionalAttributes: { "Type": chunk.bankData.mediaInformation.uSourceBits & 1 == 0 ? "SoundFX" : "Voice"},
     properties: [
@@ -43,10 +43,29 @@ class WwiseSound extends WwiseHierarchyElement<BnkSound> {
         properties.add(WwiseProperty("IsLoopingInfinite", "bool", value: "True"));
     }
   }
+
+  @override
+  String getFallbackName() {
+    return makeElementName(project,
+      id: chunk.uid,
+      category: "Sound",
+      name: guessed.name.value ?? wemIdsToNames[chunk.uid] ?? wemIdsToNames[chunk.bankData.mediaInformation.sourceID],
+      parentId: chunk.baseParams.directParentID,
+    );
+  }
+
+  @override
+  void initNames() {
+    if (chunk.bankData.streamType == 0 || chunk.bankData.streamType == 2)
+      addGuessedFullPathFromId(inMemoryAudioBnkToIdObjectPath, chunk.bankData.mediaInformation.sourceID, false);
+    else if (chunk.bankData.streamType == 1)
+      addGuessedFullPathFromId(streamedAudioBnkToIdObjectPath, chunk.bankData.mediaInformation.sourceID, false);
+    super.initNames();
+  }
   
   @override
-  void oneTimeInit() {
-    super.oneTimeInit();
+  void initData() {
+    super.initData();
     var audioSource = children.firstOrNull;
     if (audioSource != null) {
       additionalChildren.add(makeXmlElement(name: "ActiveSourceList", children: [WwiseElement(

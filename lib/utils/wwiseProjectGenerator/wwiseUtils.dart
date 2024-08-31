@@ -144,10 +144,10 @@ String makeElementName(WwiseProjectGenerator project, {required int id, required
   return project.makeName(name, parentId);
 }
 
-List<String>? getObjectFolder(String bnkName, int id) {
+List<String>? getObjectPath(String bnkName, int id, Map<String, Map<int, String>> bnkToPath) {
   String? path;
-  path ??= wwiseBnkToIdObjectPath[bnkName]?[id];
-  path ??= wwiseBnkToIdObjectPath["Init"]?[id];
+  path ??= bnkToPath[bnkName]?[id];
+  path ??= bnkToPath["Init"]?[id];
   path ??= wwiseIdToObjectPath[id];
   return path?.split("/").where((e) => e.isNotEmpty).toList();
 }

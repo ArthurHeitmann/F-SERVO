@@ -17,7 +17,6 @@ class RandomSequenceContainer extends WwiseHierarchyElement<BnkRandomSequence> {
   RandomSequenceContainer({required super.wuId, required super.project, required super.chunk}) :
     super(
       tagName: "RandomSequenceContainer",
-      name: makeElementName(project, id: chunk.uid, category: chunk.eMode == 1 ? "Sequence Container" : "Random Container", parentId: chunk.baseParams.directParentID, childIds: chunk.childrenList.ulChildIDs),
       shortId: chunk.uid,
       properties: [
         // play type
@@ -62,10 +61,21 @@ class RandomSequenceContainer extends WwiseHierarchyElement<BnkRandomSequence> {
           WwiseProperty("GlobalOrPerObject", "int16", value: "0"),
       ]
     );
+
+  @override
+  String getFallbackName() {
+    return makeElementName(project,
+      id: chunk.uid,
+      category: chunk.eMode == 1 ? "Sequence Container" : "Random Container",
+      parentId: chunk.baseParams.directParentID,
+      childIds: chunk.childrenList.ulChildIDs,
+      name: guessed.name.value,
+    );
+  }
   
   @override
-  void oneTimeInit() {
-    super.oneTimeInit();
+  void initData() {
+    super.initData();
     for (var plItem in chunk.playlistItems) {
       if (plItem.weight == 50000)
         continue;

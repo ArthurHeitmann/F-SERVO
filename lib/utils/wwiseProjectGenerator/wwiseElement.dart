@@ -1,4 +1,5 @@
 
+import 'package:flutter/foundation.dart';
 import 'package:xml/xml.dart';
 
 import '../../fileTypeUtils/yax/japToEng.dart';
@@ -54,9 +55,21 @@ class WwiseElement extends WwiseElementBase {
     );
   }
 
-  void oneTimeInit() {
+  @mustCallSuper
+  void initNames() {
     for (var child in children) {
-      child.oneTimeInit();
+      child.initNames();
+    }
+    var guessedParentPath = guessed.parentPath.value;
+    if (guessedParentPath != null && parent != null) {
+      parent!.addGuessedFullPath(guessedParentPath, guessed.parentPath.isConfident);
+    }
+  }
+
+  @mustCallSuper
+  void initData() {
+    for (var child in children) {
+      child.initData();
     }
   }
 

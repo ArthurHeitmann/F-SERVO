@@ -13,17 +13,26 @@ class WwiseMusicSwitch extends WwiseHierarchyElement<BnkMusicSwitch> {
   WwiseMusicSwitch({required super.wuId, required super.project, required super.chunk}) :
     super(
       tagName: "MusicSwitchContainer",
-      name: makeElementName(project, id: chunk.uid, parentId: chunk.getBaseParams().directParentID, name: wemIdsToNames[chunk.ulGroupID], category: "Music Switch Container"),
       shortId: chunk.uid,
       properties: [
         if (chunk.bIsContinuousValidation != 1)
           WwiseProperty("ContinuePlay", "bool", value: "False"),
       ]
     );
+
+  @override
+  String getFallbackName() {
+    return makeElementName(project,
+      id: chunk.uid,
+      parentId: chunk.getBaseParams().directParentID,
+      name: guessed.name.value ?? wemIdsToNames[chunk.ulGroupID],
+      category: "Music Switch Container",
+    );
+  }
   
   @override
-  void oneTimeInit() {
-    super.oneTimeInit();
+  void initData() {
+    super.initData();
     additionalChildren.add(makeWwiseTransitionList(project, wuId, chunk.musicTransParams.rules));
     var stingerList = makeStingerList(project, wuId, chunk.musicTransParams.musicParams.stingers);
     if (stingerList != null)

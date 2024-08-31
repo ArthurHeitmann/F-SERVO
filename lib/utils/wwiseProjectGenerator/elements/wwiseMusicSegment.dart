@@ -10,17 +10,27 @@ import 'wwiseTriggers.dart';
 class WwiseMusicSegment extends WwiseHierarchyElement<BnkMusicSegment> {
   WwiseMusicSegment({required super.wuId, required super.project, required super.chunk}) : super(
     tagName: "MusicSegment",
-    name: makeElementName(project, id: chunk.uid, category: "Music Segment", parentId: chunk.getBaseParams().directParentID, childIds: chunk.musicParams.childrenList.ulChildIDs),
     shortId: chunk.uid,
     properties: [
       if (chunk.wwiseMarkers.length >= 2)
         WwiseProperty("EndPosition", "Real64", value: chunk.wwiseMarkers.last.fPosition.toString()),
     ]
   );
+
+  @override
+  String getFallbackName() {
+    return makeElementName(project,
+      id: chunk.uid,
+      category: "Music Segment",
+      parentId: chunk.getBaseParams().directParentID,
+      childIds: chunk.musicParams.childrenList.ulChildIDs,
+      name: guessed.name.value,
+    );
+  }
   
   @override
-  void oneTimeInit() {
-    super.oneTimeInit();
+  void initData() {
+    super.initData();
 
     var stingerList = makeStingerList(project, wuId, chunk.musicParams.stingers);
     if (stingerList != null)

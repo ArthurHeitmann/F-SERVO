@@ -3,6 +3,7 @@ import 'package:xml/xml.dart';
 
 import '../../../fileTypeUtils/audio/bnkIO.dart';
 import '../../../fileTypeUtils/audio/wemIdsToNames.dart';
+import '../../../fileTypeUtils/audio/wwiseObjectPath.dart';
 import '../../utils.dart';
 import '../wwiseProperty.dart';
 import '../wwiseUtils.dart';
@@ -34,7 +35,6 @@ const _bnkFadeInterpolationToWwiseShape = {
 class WwiseMusicTrack extends WwiseHierarchyElement<BnkMusicTrack> {
   WwiseMusicTrack({required super.wuId, required super.project, required super.chunk}) : super(
     tagName: "MusicTrack",
-    name: makeElementName(project, id: chunk.uid, parentId: chunk.baseParams.directParentID, name: wemIdsToNames[chunk.sources.first.sourceID] ?? wemIdsToNames[chunk.sources.first.fileID], category: "Music Track"),
     shortId: chunk.uid,
     properties: [
       if (project.options.streaming && (chunk.sources.firstOrNull?.streamType ?? 0) >= 1)
@@ -55,10 +55,31 @@ class WwiseMusicTrack extends WwiseHierarchyElement<BnkMusicTrack> {
     .whereType<WwiseAudioFileSource>()
     .toList(),
   );
-  
+
   @override
-  void oneTimeInit() {
-    super.oneTimeInit();
+  String getFallbackName() {
+    return makeElementName(project,
+      id: chunk.uid,
+      parentId: chunk.baseParams.directParentID,
+      name: guessed.name.value ?? wemIdsToNames[chunk.sources.first.sourceID] ?? wemIdsToNames[chunk.sources.first.fileID],
+      category: "Music Track",
+    );
+  }
+
+  @override
+  void initNames() {
+    for (var src in chunk.sources) {
+      if (src.streamType == 0 || src.streamType == 2)
+        addGuessedFullPathFromId(inMemoryAudioBnkToIdObjectPath, src.sourceID, false);
+      else if (src.streamType == 1)
+        addGuessedFullPathFromId(streamedAudioBnkToIdObjectPath, src.sourceID, false);
+    }
+    super.initNames();
+  }
+
+  @override
+  void initData() {
+    super.initData();
     additionalChildren.add(makeXmlElement(name: "SequenceList", children: [makeXmlElement(
       name: "MusicTrackSequence",
       attributes: {"Name": "", "ID": project.idGen.uuid()},

@@ -362,11 +362,11 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
     }
 
     // Add entries to hierarchy
-    Map<int, String> bnkPaths = wwiseBnkToIdObjectPath[bnkName] ?? wwiseBnkToIdObjectPath[wemIdsToNames[bnkId]] ?? wwiseIdToObjectPath;
+    Map<int, String> bnkPaths = wwiseObjectBnkToIdObjectPath[bnkName] ?? wwiseObjectBnkToIdObjectPath[wemIdsToNames[bnkId]] ?? wwiseIdToObjectPath;
     void addToTopLevel(BnkHircHierarchyEntry entry, BnkSubCategoryParentHierarchyEntry topLevelEntry) {
       var localBnkPaths = bnkPaths;
       if (!localBnkPaths.containsKey(entry.hirc?.uid ?? entry.id)) {
-        localBnkPaths = wwiseBnkToIdObjectPath["Init"]!;
+        localBnkPaths = wwiseObjectBnkToIdObjectPath["Init"]!;
         if (!localBnkPaths.containsKey(entry.hirc?.uid ?? entry.id)) {
           topLevelEntry.add(entry);
           return;

@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:path/path.dart';
 import 'package:xml/xml.dart';
 
+import '../../../fileTypeUtils/audio/wwiseObjectPath.dart';
 import '../../utils.dart';
 import '../wwiseElement.dart';
 import '../wwiseElementBase.dart';
@@ -54,7 +55,15 @@ class WwiseWorkUnit extends WwiseElementBase {
 
   void addWuChild(WwiseElement child, int id, Set<String> bnkNames) {
     child.parentBnks.addAll(bnkNames);
-    Iterable<String>? folders = getObjectFolder(bnkNames.first, id);
+    Iterable<String>? folders = getObjectPath(bnkNames.first, id, wwiseObjectBnkToIdObjectPath);
+    if (folders == null && child.guessed.parentPath.hasData) {
+      var childFolder = child.guessed.parentPath.value!;
+      folders = childFolder
+        .split("/")
+        .where((e) => e.isNotEmpty)
+        .followedBy([child.name])
+        .toList();
+    }
     if (folders == null || folders.isEmpty) {
       addChild(child);
       return;

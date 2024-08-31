@@ -58,13 +58,12 @@ class _PlaylistItemHierarchy {
 class WwiseMusicPlaylist extends WwiseHierarchyElement<BnkMusicPlaylist> {
   WwiseMusicPlaylist({required super.wuId, required super.project, required super.chunk}) : super(
     tagName: "MusicPlaylistContainer",
-    name: makeElementName(project, id: chunk.uid, category: "Music Playlist Container", parentId: chunk.getBaseParams().directParentID, childIds: chunk.musicTransParams.musicParams.childrenList.ulChildIDs),
     shortId: chunk.uid
   );
   
   @override
-  void oneTimeInit() {
-    super.oneTimeInit();
+  void initData() {
+    super.initData();
     additionalChildren.add(makeWwiseTransitionList(project, wuId, chunk.musicTransParams.rules));
     var stingerList = makeStingerList(project, wuId, chunk.musicTransParams.musicParams.stingers);
     if (stingerList != null)
@@ -74,5 +73,16 @@ class WwiseMusicPlaylist extends WwiseHierarchyElement<BnkMusicPlaylist> {
       name: "Playlist",
       children: [hierarchy.toElement(project, wuId).toXml()],
     ));
+  }
+
+  @override
+  String getFallbackName() {
+    return makeElementName(project,
+      id: chunk.uid,
+      category: "Music Playlist Container",
+      parentId: chunk.getBaseParams().directParentID,
+      childIds: chunk.musicTransParams.musicParams.childrenList.ulChildIDs,
+      name: guessed.name.value,
+    );
   }
 }

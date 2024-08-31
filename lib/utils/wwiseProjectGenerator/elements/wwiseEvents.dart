@@ -31,7 +31,7 @@ Future<void> saveEventsHierarchy(WwiseProjectGenerator project) async {
     );
   }
   for (var child in project.eventsWu.children) {
-    child.oneTimeInit();
+    child.initData();
   }
 
   await project.eventsWu.save();

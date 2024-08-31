@@ -1,8 +1,8 @@
 
-import 'package:flutter/foundation.dart';
 import 'package:xml/xml.dart';
 
 import '../../../fileTypeUtils/audio/bnkIO.dart';
+import '../../../fileTypeUtils/audio/wwiseObjectPath.dart';
 import '../wwiseBlendContainer.dart';
 import '../wwiseElement.dart';
 import '../wwiseProjectGenerator.dart';
@@ -61,12 +61,22 @@ const _rtpcPropIdToName = {
 class WwiseHierarchyElement<T extends BnkHircChunkWithBaseParamsGetter> extends WwiseElement {
   final T chunk;
 
-  WwiseHierarchyElement({required super.wuId, required super.project, required super.tagName, required super.name, required this.chunk, super.shortId, super.properties, super.additionalAttributes, super.children});
+  WwiseHierarchyElement({required super.wuId, required super.project, required super.tagName, required this.chunk, super.name, super.shortId, super.properties, super.additionalAttributes, super.children});
 
   @override
-  @mustCallSuper
-  void oneTimeInit() {
-    super.oneTimeInit();
+  void initNames() {
+    var baseParams = chunk.getBaseParams();
+    for (var stateGroup in baseParams.states.stateGroup) {
+      for (var state in stateGroup.state) {
+        addGuessedFullPathFromId(customStateBnkToIdObjectPath, state.ulStateInstanceID, true);
+      }
+    }
+    super.initNames();
+  }
+
+  @override
+  void initData() {
+    super.initData();
     var baseParams = chunk.getBaseParams();
     if (baseParams.overrideBusID != 0 && baseParams.directParentID != 0)
       properties.add(WwiseProperty("OverrideOutput", "bool", value: "True"));
@@ -293,6 +303,7 @@ Future<void> saveHierarchyBaseElements(WwiseProjectGenerator project) async {
     (imhWu, imhElements),
   ];
   for (var (workUnit, elements) in hierarchies) {
+    List<(WwiseElement element, int id, Set<String> bnkNames)> wuChildren = [];
     for (var (id, parentId, element) in elements.values) {
       var parent = elements[parentId];
       if (parent == null && parentId != 0) {
@@ -302,10 +313,12 @@ Future<void> saveHierarchyBaseElements(WwiseProjectGenerator project) async {
       if (parent != null)
         parent.$3.addChild(element);
       else
-        workUnit.addWuChild(element, id, element.parentBnks);
+        wuChildren.add((element, id, element.parentBnks));
     }
-    for (var child in workUnit.children) {
-      child.oneTimeInit();
+    for (var (element, id, bnkNames) in wuChildren) {
+      element.initNames();
+      element.initData();
+      workUnit.addWuChild(element, id, bnkNames);
     }
     await workUnit.save();
   }

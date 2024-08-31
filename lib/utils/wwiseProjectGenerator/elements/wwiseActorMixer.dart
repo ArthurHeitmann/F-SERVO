@@ -5,5 +5,16 @@ import 'hierarchyBaseElements.dart';
 
 class WwiseActorMixer extends WwiseHierarchyElement<BnkActorMixer> {
   WwiseActorMixer({required super.wuId, required super.project, required super.chunk}) :
-    super(tagName: "ActorMixer", name: makeElementName(project, id: chunk.uid, parentId: chunk.baseParams.directParentID, category: "Actor Mixer"), shortId: chunk.uid);
+    super(tagName: "ActorMixer", shortId: chunk.uid);
+
+  @override
+  String getFallbackName() {
+    return makeElementName(
+      project,
+      id: chunk.uid,
+      parentId: chunk.baseParams.directParentID,
+      category: "Actor Mixer",
+      name: guessed.name.value,
+    );
+  }
 }

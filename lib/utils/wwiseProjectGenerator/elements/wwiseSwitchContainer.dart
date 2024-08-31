@@ -15,7 +15,6 @@ class WwiseSwitchContainer extends WwiseHierarchyElement<BnkSoundSwitch> {
   
   WwiseSwitchContainer({required super.wuId, required super.project, required super.chunk, required this.childElements}) : super(
     tagName: "SwitchContainer",
-    name: makeElementName(project, id: chunk.uid, parentId: chunk.baseParams.directParentID, name: wemIdsToNames[chunk.ulGroupID], category: "Switch Container"),
     shortId: chunk.uid,
     properties: [
       if (chunk.eGroupType == 1)
@@ -24,10 +23,20 @@ class WwiseSwitchContainer extends WwiseHierarchyElement<BnkSoundSwitch> {
         WwiseProperty("PlayMechanismStepOrContinuous", "int16", value: "0"),
     ]
   );
+
+  @override
+  String getFallbackName() {
+    return makeElementName(project,
+      id: chunk.uid,
+      parentId: chunk.baseParams.directParentID,
+      name: guessed.name.value ?? wemIdsToNames[chunk.ulGroupID],
+      category: "Switch Container",
+    );
+  }
   
   @override
-  void oneTimeInit() {
-    super.oneTimeInit();
+  void initData() {
+    super.initData();
     WwiseSwitchOrStateGroup? group;
     if (chunk.eGroupType == 0) {  // switch
       group = project.switchGroups[chunk.ulGroupID];
