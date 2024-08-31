@@ -27,7 +27,7 @@ Future<void> saveEventsHierarchy(WwiseProjectGenerator project) async {
         ]
       ),
       event.uid,
-      eventC.name,
+      eventC.names,
     );
   }
   for (var child in project.eventsWu.children) {

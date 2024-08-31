@@ -12,14 +12,12 @@ Future<void> makeWwiseSoundBank(WwiseProjectGenerator project) async {
     for (var child in obj.children)
       markBnkUsage(child);
     var childBnkNames = obj.children
-      .map((e) => e.bnkName)
+      .map((e) => e.parentBnks)
+      .expand((e) => e)
       .whereType<String>()
       .toSet();
-    if (childBnkNames.length != 1)
-      return;
-    if (obj.bnkName != null && obj.bnkName != childBnkNames.first)
-      return;
-    obj.bnkName = childBnkNames.first;
+    if (childBnkNames.length == 1)
+      obj.parentBnks.addAll(childBnkNames);
   }
   for (var obj in wuChildren)
     markBnkUsage(obj);
@@ -27,7 +25,7 @@ Future<void> makeWwiseSoundBank(WwiseProjectGenerator project) async {
   for (var bnkName in project.bnkNames) {
     List<WwiseElementBase> topLevelObjects = [];
     void findTopLevelObjects(WwiseElementBase obj) {
-      if (obj.bnkName == bnkName) {
+      if (obj.parentBnks.contains(bnkName)) {
         topLevelObjects.add(obj);
         return;
       }

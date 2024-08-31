@@ -9,14 +9,14 @@ import '../wwiseUtils.dart';
 
 Future<void> saveGameParametersIntoWu(WwiseProjectGenerator project) async {
   Set<int> usedGameParameterIds = {};
-  Map<int, String> parameterIdToBnk = {};
+  Map<int, Set<String>> parameterIdToBnk = {};
   Map<int, ({double min, double max})> valueMinMax = {};
   Map<int, ({double min, double max})> graphMinMax = {};
   for (var chunk in project.hircChunksByType<BnkHircChunkWithBaseParamsGetter>()) {
     var baseParams = chunk.value.getBaseParams();
     for (var rtpc in baseParams.rtpc.rtpc) {
       usedGameParameterIds.add(rtpc.rtpcId);
-      parameterIdToBnk.putIfAbsent(rtpc.rtpcId, () => chunk.name);
+      parameterIdToBnk.putIfAbsent(rtpc.rtpcId, () =>{}).addAll(chunk.names);
       var allX = rtpc.rtpcGraphPoint.map((e) => e.x).toList();
       var minX = allX.reduce((value, element) => value < element ? value : element);
       var maxX = allX.reduce((value, element) => value > element ? value : element);
@@ -30,7 +30,7 @@ Future<void> saveGameParametersIntoWu(WwiseProjectGenerator project) async {
     if (specificParams is BnkValueActionParams) {
       if (gameParamActionTypes.contains(action.ulActionType & 0xFF00)) {
         usedGameParameterIds.add(action.initialParams.idExt);
-        parameterIdToBnk.putIfAbsent(action.initialParams.idExt, () => actionC.name);
+        parameterIdToBnk.putIfAbsent(action.initialParams.idExt, () => {}).addAll(actionC.names);
         var subParams = specificParams.specificParams;
         if (subParams is BnkGameParameterParams) {
           var value = subParams.base;

@@ -7,11 +7,11 @@ import 'wwiseSwitchOrState.dart';
 
 Future<void> saveSwitchesIntoWu(WwiseProjectGenerator project) async {
   Map<int, Set<int>> usedSwitchGroupIds = {};
-  Map<int, String> groupIdToBnk = {};
+  Map<int, Set<String>> groupIdToBnk = {};
   for (var musicSwitchC in project.hircChunksByType<BnkMusicSwitch>()) {
     var musicSwitch = musicSwitchC.value;
     addWwiseGroupUsage(usedSwitchGroupIds, musicSwitch.ulGroupID, musicSwitch.ulDefaultSwitch);
-    groupIdToBnk.putIfAbsent(musicSwitch.ulGroupID, () => musicSwitchC.name);
+    groupIdToBnk.putIfAbsent(musicSwitch.ulGroupID, () => {}).addAll(musicSwitchC.names);
     for (var switchAssoc in musicSwitch.pAssocs) {
       addWwiseGroupUsage(usedSwitchGroupIds, musicSwitch.ulGroupID, switchAssoc.switchID);
     }
@@ -19,7 +19,7 @@ Future<void> saveSwitchesIntoWu(WwiseProjectGenerator project) async {
   for (var musicSwitchC in project.hircChunksByType<BnkSoundSwitch>()) {
     var musicSwitch = musicSwitchC.value;
     addWwiseGroupUsage(usedSwitchGroupIds, musicSwitch.ulGroupID, musicSwitch.ulDefaultSwitch);
-    groupIdToBnk.putIfAbsent(musicSwitch.ulGroupID, () => musicSwitchC.name);
+    groupIdToBnk.putIfAbsent(musicSwitch.ulGroupID, () => {}).addAll(musicSwitchC.names);
     for (var switchAssoc in musicSwitch.switches) {
       addWwiseGroupUsage(usedSwitchGroupIds, musicSwitch.ulGroupID, switchAssoc.ulSwitchID);
     }
@@ -28,7 +28,7 @@ Future<void> saveSwitchesIntoWu(WwiseProjectGenerator project) async {
     var params = action.value.specificParams;
     if (params is BnkSwitchActionParams) {
       addWwiseGroupUsage(usedSwitchGroupIds, params.ulSwitchGroupID, params.ulSwitchStateID);
-      groupIdToBnk.putIfAbsent(params.ulSwitchGroupID, () => action.name);
+      groupIdToBnk.putIfAbsent(params.ulSwitchGroupID, () => {}).addAll(action.names);
     }
   }
   

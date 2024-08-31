@@ -52,24 +52,22 @@ class WwiseWorkUnit extends WwiseElementBase {
     );
   }
 
-  void addWuChild(WwiseElement child, int id, String bnkName) {
-    child.bnkName = bnkName;
-    Iterable<String>? folders = getObjectFolder(bnkName, id);
+  void addWuChild(WwiseElement child, int id, Set<String> bnkNames) {
+    child.parentBnks.addAll(bnkNames);
+    Iterable<String>? folders = getObjectFolder(bnkNames.first, id);
     if (folders == null || folders.isEmpty) {
       addChild(child);
-      project.bnkTopLevelUuids.putIfAbsent(bnkName, () => {}).add(child.id);
       return;
     }
     if (folders.first == name || folders.first == _folder) {
       folders = folders.skip(1);
     }
-    _addWuChild(child, folders, this, bnkName);
+    _addWuChild(child, folders, this);
   }
 
-  void _addWuChild(WwiseElement child, Iterable<String> folders, WwiseElementBase parent, String bnkName) {
+  void _addWuChild(WwiseElement child, Iterable<String> folders, WwiseElementBase parent) {
     if (folders.length <= 1) {
       parent.addChild(child);
-      project.bnkTopLevelUuids.putIfAbsent(bnkName, () => {}).add(child.id);
       return;
     }
     var folderName = folders.first;
@@ -81,7 +79,7 @@ class WwiseWorkUnit extends WwiseElementBase {
       folder = _WwiseFolder(project: project, wuId: id, name: folderName);
       parent.addChild(folder);
     }
-    _addWuChild(child, folders.skip(1), folder, bnkName);
+    _addWuChild(child, folders.skip(1), folder);
   }
 
   @override

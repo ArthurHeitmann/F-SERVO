@@ -13,7 +13,7 @@ abstract class WwiseElementBase {
   final WwiseProjectGenerator project;
   final List<WwiseElement> _children;
   Iterable<WwiseElement> get children => _children;
-  String? bnkName;
+  final Set<String> parentBnks = {};
 
   WwiseElementBase({required this.project, required this.name, String? id, Iterable<WwiseElement>? children})
     : id = id ?? project.idGen.uuid(),

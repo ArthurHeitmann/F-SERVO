@@ -8,13 +8,13 @@ import 'wwiseSwitchOrState.dart';
 
 Future<void> saveStatesIntoWu(WwiseProjectGenerator project) async {
   Map<int, Set<int>> usedStateGroupIds = {};
-  Map<int, String> groupIdToBnk = {};
+  Map<int, Set<String>> groupIdToBnk = {};
   for (var baseChunk in project.hircChunksByType<BnkHircChunkWithBaseParamsGetter>()) {
     var baseParams = baseChunk.value.getBaseParams();
     for (var stateGroup in baseParams.states.stateGroup) {
       for (var state in stateGroup.state) {
         addWwiseGroupUsage(usedStateGroupIds, stateGroup.ulStateGroupID, state.ulStateID);
-        groupIdToBnk.putIfAbsent(stateGroup.ulStateGroupID, () => baseChunk.name);
+        groupIdToBnk.putIfAbsent(stateGroup.ulStateGroupID, () => {}).addAll(baseChunk.names);
       }
     }
   }
@@ -22,7 +22,7 @@ Future<void> saveStatesIntoWu(WwiseProjectGenerator project) async {
     var actionParams = action.value.specificParams;
     if (actionParams is BnkStateActionParams) {
       addWwiseGroupUsage(usedStateGroupIds, actionParams.ulStateGroupID, actionParams.ulTargetStateID);
-      groupIdToBnk.putIfAbsent(actionParams.ulStateGroupID, () => action.name);
+      groupIdToBnk.putIfAbsent(actionParams.ulStateGroupID, () => {}).addAll(action.names);
     }
   }
   

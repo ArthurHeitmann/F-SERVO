@@ -234,7 +234,7 @@ Future<void> saveEffectsIntoWu(WwiseProjectGenerator project) async {
     }
     var effectElement = WwiseEffect(wuId: project.effectsWu.id, project: project, effect: effect, config: config);
     if (effect.isShareSet)
-      project.effectsWu.addWuChild(effectElement, effect.uid, effectC.name);
+      project.effectsWu.addWuChild(effectElement, effect.uid, effectC.names);
   }
 
   await project.effectsWu.save();

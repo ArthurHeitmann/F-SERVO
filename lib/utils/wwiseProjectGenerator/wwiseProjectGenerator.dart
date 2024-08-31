@@ -89,7 +89,6 @@ class WwiseProjectGenerator {
   final Map<int, WwiseSwitchOrStateGroup> switchGroups = {};
   final Map<int, WwiseElement> gameParameters = {};
   final Map<int, WwiseElement> buses = {};
-  final Map<String, Set<String>> bnkTopLevelUuids = {};
   late final WwiseElement defaultConversion;
   late final WwiseElement defaultBus;
   late final WwiseWorkUnit attenuationsWu;

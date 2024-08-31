@@ -228,8 +228,8 @@ class WwiseHierarchyElement<T extends BnkHircChunkWithBaseParamsGetter> extends 
 Future<void> saveHierarchyBaseElements(WwiseProjectGenerator project) async {
   var amhWu = project.amhWu;
   var imhWu = project.imhWu;
-  Map<int, (int id, int parentId, String bnkName, WwiseHierarchyElement element)> amhElements = {};
-  Map<int, (int id, int parentId, String bnkName, WwiseHierarchyElement element)> imhElements = {};
+  Map<int, (int id, int parentId, WwiseHierarchyElement element)> amhElements = {};
+  Map<int, (int id, int parentId, WwiseHierarchyElement element)> imhElements = {};
   for (var chunkContext in project.hircChunksByType<BnkHircChunkWithBaseParamsGetter>()) {
     var chunk = chunkContext.value;
     var baseParams = chunk.getBaseParams();
@@ -253,7 +253,7 @@ Future<void> saveHierarchyBaseElements(WwiseProjectGenerator project) async {
       var children = amhElements
         .values
         .where((e) => e.$2 == id)
-        .map((e) => e.$4)
+        .map((e) => e.$3)
         .toList();
       element = WwiseSwitchContainer(project: project, wuId: amhWu.id, chunk: chunk, childElements: children);
       isAmh = true;
@@ -279,10 +279,11 @@ Future<void> saveHierarchyBaseElements(WwiseProjectGenerator project) async {
     }
 
     if (element != null) {
+      element.parentBnks.addAll(chunkContext.names);
       if (isAmh) {
-        amhElements[id] = (id, parent, chunkContext.name, element);
+        amhElements[id] = (id, parent, element);
       } else {
-        imhElements[id] = (id, parent, chunkContext.name, element);
+        imhElements[id] = (id, parent, element);
       }
     }
   }
@@ -292,16 +293,16 @@ Future<void> saveHierarchyBaseElements(WwiseProjectGenerator project) async {
     (imhWu, imhElements),
   ];
   for (var (workUnit, elements) in hierarchies) {
-    for (var (id, parentId, bnkName, element) in elements.values) {
+    for (var (id, parentId, element) in elements.values) {
       var parent = elements[parentId];
       if (parent == null && parentId != 0) {
         project.log(WwiseLogSeverity.warning, "Could not find parent $parentId for $id");
         continue;
       }
       if (parent != null)
-        parent.$4.addChild(element);
+        parent.$3.addChild(element);
       else
-        workUnit.addWuChild(element, id, bnkName);
+        workUnit.addWuChild(element, id, element.parentBnks);
     }
     for (var child in workUnit.children) {
       child.oneTimeInit();

@@ -10,7 +10,7 @@ import '../wwiseUtils.dart';
 
 Future<void> saveTriggersIntoWu(WwiseProjectGenerator project) async {
   Set<int> usedTriggerIds = {};
-  Map<int, String> triggerIdToBnk = {};
+  Map<int, Set<String>> triggerIdToBnk = {};
   for (var chunkC in project.hircChunks) {
     var chunk = chunkC.value;
     BnkMusicNodeParams? musicParams;
@@ -23,12 +23,12 @@ Future<void> saveTriggersIntoWu(WwiseProjectGenerator project) async {
     if (musicParams != null) {
       for (var stinger in musicParams.stingers) {
         usedTriggerIds.add(stinger.triggerID);
-        triggerIdToBnk.putIfAbsent(stinger.triggerID, () => chunkC.name);
+        triggerIdToBnk.putIfAbsent(stinger.triggerID, () => {}).addAll(chunkC.names);
       }
     }
     if (chunk is BnkAction && chunk.type & 0xFF00 == 0x1D00) {
       usedTriggerIds.add(chunk.initialParams.idExt);
-      triggerIdToBnk.putIfAbsent(chunk.initialParams.idExt, () => chunkC.name);
+      triggerIdToBnk.putIfAbsent(chunk.initialParams.idExt, () => {}).addAll(chunkC.names);
     }
   }
   
