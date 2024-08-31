@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
+import '../../main.dart';
 import '../../utils/utils.dart';
 import '../theme/customTheme.dart';
 
@@ -31,7 +32,7 @@ class Sidebar extends StatefulWidget {
   State<Sidebar> createState() => _SidebarState();
 }
 
-class _SidebarState extends State<Sidebar> {
+class _SidebarState extends State<Sidebar> with RouteAware {
   int _selectedIndex = 0;
   double _width = 0;
   bool _isExpanded = true;
@@ -53,13 +54,42 @@ class _SidebarState extends State<Sidebar> {
         )
       );
       Overlay.of(context).insert(_draggableOverlayEntry!);
+      routeObserver.subscribe(this, ModalRoute.of(context)!);
     });
   }
 
   @override
   void dispose() {
     _draggableOverlayEntry?.remove();
+    routeObserver.unsubscribe(this);
     super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    onNavigatorChange();
+  }
+  @override
+  void didPushNext() {
+    onNavigatorChange();
+  }
+  void onNavigatorChange() {
+    if (ModalRoute.of(context)?.isCurrent == true) {
+      if (_draggableOverlayEntry == null) {
+        _draggableOverlayEntry = OverlayEntry(
+          builder: (context) => _ResizeHandle(
+            layerLink: _layerLink,
+            switcherPosition: widget.switcherPosition,
+            onWidthChanged: (w) => _onDrag(context, w),
+          )
+        );
+        Overlay.of(context).insert(_draggableOverlayEntry!);
+      }
+    }
+    else {
+      _draggableOverlayEntry?.remove();
+      _draggableOverlayEntry = null;
+    }
   }
 
   void _onDrag(BuildContext overlayContext, double width) {
