@@ -27,7 +27,7 @@ class WwiseSwitchContainer extends WwiseHierarchyElement<BnkSoundSwitch> {
   @override
   String getFallbackName() {
     return makeElementName(project,
-      id: chunk.uid,
+      id: newShortId!,
       parentId: chunk.baseParams.directParentID,
       name: guessed.name.value ?? wemIdsToNames[chunk.ulGroupID],
       category: "Switch Container",

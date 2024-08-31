@@ -13,7 +13,7 @@ class WwiseBlendContainer extends WwiseHierarchyElement<BnkLayerContainer> {
   @override
   String getFallbackName() {
     return makeElementName(project,
-      id: chunk.uid,
+      id: newShortId!,
       category: "Blend Container",
       parentId: chunk.baseParams.directParentID,
       childIds: chunk.childrenList.ulChildIDs,

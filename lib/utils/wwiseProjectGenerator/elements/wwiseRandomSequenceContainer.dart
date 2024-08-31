@@ -65,7 +65,7 @@ class RandomSequenceContainer extends WwiseHierarchyElement<BnkRandomSequence> {
   @override
   String getFallbackName() {
     return makeElementName(project,
-      id: chunk.uid,
+      id: newShortId!,
       category: chunk.eMode == 1 ? "Sequence Container" : "Random Container",
       parentId: chunk.baseParams.directParentID,
       childIds: chunk.childrenList.ulChildIDs,

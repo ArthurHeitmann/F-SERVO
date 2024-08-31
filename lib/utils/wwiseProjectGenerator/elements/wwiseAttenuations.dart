@@ -30,6 +30,7 @@ class WwiseAttenuation extends WwiseElement {
   WwiseAttenuation({required super.wuId, required super.project, required super.name, required this.attenuation}) : super(
     tagName: "Attenuation",
     shortId: attenuation.uid,
+    shortIdType: ShortIdType.object,
     properties: [
       if (attenuation.bIsConeEnabled != 0) ...[
         WwiseProperty("ConeUse", "bool", values: ["True"]),

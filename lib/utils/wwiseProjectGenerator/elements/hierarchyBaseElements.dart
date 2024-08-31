@@ -61,7 +61,9 @@ const _rtpcPropIdToName = {
 class WwiseHierarchyElement<T extends BnkHircChunkWithBaseParamsGetter> extends WwiseElement {
   final T chunk;
 
-  WwiseHierarchyElement({required super.wuId, required super.project, required super.tagName, required this.chunk, super.name, super.shortId, super.properties, super.additionalAttributes, super.children});
+  WwiseHierarchyElement({required super.wuId, required super.project, required super.tagName, required this.chunk, super.name, super.shortId, super.properties, super.additionalAttributes, super.children}) : super(
+    shortIdType: ShortIdType.object,
+  );
 
   @override
   void initNames() {

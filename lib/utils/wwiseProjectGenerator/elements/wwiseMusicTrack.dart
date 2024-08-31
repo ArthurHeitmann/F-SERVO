@@ -59,7 +59,7 @@ class WwiseMusicTrack extends WwiseHierarchyElement<BnkMusicTrack> {
   @override
   String getFallbackName() {
     return makeElementName(project,
-      id: chunk.uid,
+      id: newShortId!,
       parentId: chunk.baseParams.directParentID,
       name: guessed.name.value ?? wemIdsToNames[chunk.sources.first.sourceID] ?? wemIdsToNames[chunk.sources.first.fileID],
       category: "Music Track",

@@ -32,6 +32,7 @@ class _PlaylistItemHierarchy {
       tagName: "MusicPlaylistItem",
       name: "",
       shortId: item.playlistItemId,
+      shortIdType: ShortIdType.object,
       properties: [
         if (item.segmentId > 0)
           WwiseProperty("PlaylistItemType", "int16", value: "1"),
@@ -78,7 +79,7 @@ class WwiseMusicPlaylist extends WwiseHierarchyElement<BnkMusicPlaylist> {
   @override
   String getFallbackName() {
     return makeElementName(project,
-      id: chunk.uid,
+      id: newShortId!,
       category: "Music Playlist Container",
       parentId: chunk.getBaseParams().directParentID,
       childIds: chunk.musicTransParams.musicParams.childrenList.ulChildIDs,

@@ -11,7 +11,7 @@ class WwiseActorMixer extends WwiseHierarchyElement<BnkActorMixer> {
   String getFallbackName() {
     return makeElementName(
       project,
-      id: chunk.uid,
+      id: newShortId!,
       parentId: chunk.baseParams.directParentID,
       category: "Actor Mixer",
       name: guessed.name.value,

@@ -47,7 +47,7 @@ class WwiseSound extends WwiseHierarchyElement<BnkSound> {
   @override
   String getFallbackName() {
     return makeElementName(project,
-      id: chunk.uid,
+      id: newShortId!,
       category: "Sound",
       name: guessed.name.value ?? wemIdsToNames[chunk.uid] ?? wemIdsToNames[chunk.bankData.mediaInformation.sourceID],
       parentId: chunk.baseParams.directParentID,

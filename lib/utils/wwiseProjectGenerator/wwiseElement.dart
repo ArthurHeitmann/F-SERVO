@@ -8,10 +8,17 @@ import 'wwiseElementBase.dart';
 import 'wwiseProjectGenerator.dart';
 import 'wwiseProperty.dart';
 
+enum ShortIdType {
+  other, object, wem
+}
+
 class WwiseElement extends WwiseElementBase {
   final String wuId;
   final String tagName;
   final int? shortId;
+  int? _randomShortId;
+  int? get newShortId => _randomShortId ?? shortId;
+  final ShortIdType shortIdType;
   final WwisePropertyList properties;
   final Map<String, String> additionalAttributes;
   final List<XmlElement> additionalChildren;
@@ -24,6 +31,7 @@ class WwiseElement extends WwiseElementBase {
     required super.name,
     super.id,
     this.shortId,
+    this.shortIdType = ShortIdType.other,
     int? shortIdHint,
     List<WwiseProperty>? properties,
     super.children,
@@ -38,6 +46,21 @@ class WwiseElement extends WwiseElementBase {
   {
     if (shortId != null || shortIdHint != null)
       project.putElement(this, idFnv: shortId ?? shortIdHint!);
+      
+    if (shortId != null) {
+      switch (shortIdType) {
+        case ShortIdType.object:
+          if (project.options.randomObjId)
+            _randomShortId = project.idGen.shortId();
+          break;
+        case ShortIdType.wem:
+          if (project.options.randomWemId)
+            _randomShortId = project.idGen.wemId();
+          break;
+        default:
+          break;
+      }
+    }
   }
 
   factory WwiseElement.fromXml(String wuId, WwiseProjectGenerator project, XmlElement element) {
@@ -88,8 +111,8 @@ class WwiseElement extends WwiseElementBase {
       attributes: {
         "Name": name,
         "ID": id,
-        if (shortId != null)
-          "ShortID": shortId.toString(),
+        if (newShortId != null)
+          "ShortID": newShortId.toString(),
         ...getAdditionalAttributes(),
       },
       children: [

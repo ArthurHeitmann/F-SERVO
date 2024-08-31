@@ -44,6 +44,8 @@ class WwiseProjectGeneratorOptions {
   final bool actions;
   final bool nameId;
   final bool namePrefix;
+  final bool randomObjId;
+  final bool randomWemId;
 
   WwiseProjectGeneratorOptions({
     required this.audioHierarchy,
@@ -56,6 +58,8 @@ class WwiseProjectGeneratorOptions {
     required this.actions,
     required this.nameId,
     required this.namePrefix,
+    required this.randomObjId,
+    required this.randomWemId,
   });
 }
 

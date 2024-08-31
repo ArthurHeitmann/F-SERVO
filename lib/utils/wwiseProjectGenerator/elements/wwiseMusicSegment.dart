@@ -20,7 +20,7 @@ class WwiseMusicSegment extends WwiseHierarchyElement<BnkMusicSegment> {
   @override
   String getFallbackName() {
     return makeElementName(project,
-      id: chunk.uid,
+      id: newShortId!,
       category: "Music Segment",
       parentId: chunk.getBaseParams().directParentID,
       childIds: chunk.musicParams.childrenList.ulChildIDs,

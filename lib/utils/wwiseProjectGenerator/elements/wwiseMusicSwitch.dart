@@ -23,7 +23,7 @@ class WwiseMusicSwitch extends WwiseHierarchyElement<BnkMusicSwitch> {
   @override
   String getFallbackName() {
     return makeElementName(project,
-      id: chunk.uid,
+      id: newShortId!,
       parentId: chunk.getBaseParams().directParentID,
       name: guessed.name.value ?? wemIdsToNames[chunk.ulGroupID],
       category: "Music Switch Container",

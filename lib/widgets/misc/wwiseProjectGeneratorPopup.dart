@@ -12,11 +12,10 @@ import '../../utils/utils.dart';
 import '../../utils/wwiseProjectGenerator/wwiseProjectGenerator.dart';
 import '../propEditors/UnderlinePropTextField.dart';
 import '../propEditors/boolPropCheckbox.dart';
-import '../propEditors/primaryPropTextField.dart';
+import '../propEditors/propTextField.dart';
 import '../theme/customTheme.dart';
 import 'ChangeNotifierWidget.dart';
 import 'SmoothScrollBuilder.dart';
-import 'smallButton.dart';
 
 void showWwiseProjectGeneratorPopup(String bnkPath) {
   showDialog(
@@ -27,8 +26,8 @@ void showWwiseProjectGeneratorPopup(String bnkPath) {
       child: Padding(
         padding: const EdgeInsets.all(12.0),
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 600),
-          child: _WwiseProjectGeneratorPopup(bnkPath)
+          constraints: BoxConstraints(maxWidth: 600, maxHeight: MediaQuery.of(context).size.height - 100),
+          child: _WwiseProjectGeneratorPopup(bnkPath),
         ),
       ),
     )
@@ -56,6 +55,8 @@ class __WwiseProjectGeneratorPopupState extends State<_WwiseProjectGeneratorPopu
   final optNamePrefix = BoolProp(true, fileId: null);
   final optEvents = BoolProp(true, fileId: null);
   final optActions = BoolProp(true, fileId: null);
+  final randomObjId = BoolProp(false, fileId: null);
+  final randomWemId = BoolProp(false, fileId: null);
   late final StringProp projectName;
   late final StringProp savePath;
   late final List<String> bnkPaths;
@@ -90,6 +91,8 @@ class __WwiseProjectGeneratorPopupState extends State<_WwiseProjectGeneratorPopu
     optNamePrefix.dispose();
     optEvents.dispose();
     optActions.dispose();
+    randomObjId.dispose();
+    randomWemId.dispose();
     projectName.dispose();
     savePath.dispose();
     status.dispose();
@@ -99,34 +102,41 @@ class __WwiseProjectGeneratorPopupState extends State<_WwiseProjectGeneratorPopu
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text("Generate Wwise project", style: Theme.of(context).textTheme.titleLarge),
-        const SizedBox(height: 15),
-        if (!hasStarted)
-          ..._makeOptions(context)
-        else
-          ..._makeStatus(context),
-      ],
+    return SmoothSingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("Generate Wwise project", style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 15),
+          if (!hasStarted)
+            ..._makeOptions(context)
+          else
+            ..._makeStatus(context),
+        ],
+      ),
     );
   }
 
   List<Widget> _makeOptions(BuildContext context) {
-    var labeledOptions = [
-      ("Actor-Mixer & Interactive Music Hierarchy", optAudioHierarchy),
-      ("Events", optEvents),
-      ("Actions", optActions),
-      ("WAV sources (requires \"WEM Extract Directory\" from settings)", optWems),
-      ("Use seek table for wems", optSeekTable),
-      ("Copy streaming settings", optStreaming),
-      ("Copy streaming zero latency settings", optStreamingPrefetch),
-      ("Translate Japanese notes", optTranslate),
+    var includeOptions = [
+      ("Object Hierarchy", optAudioHierarchy, Icons.account_tree_rounded, null),
+      ("Events", optEvents, Icons.priority_high, null),
+      ("Actions", optActions, Icons.keyboard_double_arrow_right, null),
+      ("WAV sources*", optWems, Icons.audio_file, "requires \"WEM Extract Directory\" from settings"),
+    ];
+    var audioOptions = [
+      ("Seek table", optSeekTable, Icons.skip_next_rounded),
+      ("Enable streaming", optStreaming, Icons.download),
+      ("Enable zero latency", optStreamingPrefetch, Icons.bolt),
     ];
     var labeledNameOptions = [
-      ("Parent state  as prefix", optNamePrefix),
+      ("Parent state as prefix", optNamePrefix),
       ("Object ID", optNameId),
+    ];
+    var randomOptions = [
+      ("Object IDs", randomObjId),
+      ("WEM IDs", randomWemId),
     ];
     return [
       const Text("Source BNKs:"),
@@ -186,11 +196,13 @@ class __WwiseProjectGeneratorPopupState extends State<_WwiseProjectGeneratorPopu
       Row(
         children: [
           Expanded(
-            child: PrimaryPropTextField(prop: savePath)
+            child: UnderlinePropTextField(prop: savePath)
           ),
           const SizedBox(width: 10),
-          SmallButton(
+          IconButton(
             constraints: BoxConstraints.tight(const Size(30, 30)),
+            splashRadius: 17,
+            padding: EdgeInsets.zero,
             onPressed: () async {
               var dir = await FilePicker.platform.getDirectoryPath(
                 dialogTitle: "Select project save path",
@@ -200,60 +212,65 @@ class __WwiseProjectGeneratorPopupState extends State<_WwiseProjectGeneratorPopu
               savePath.value = dir;
               PreferencesData().lastWwiseProjectDir!.value = dir;
             },
-            child: const Icon(Icons.folder, size: 17,),
+            icon: const Icon(Icons.folder, size: 17,),
           )
         ],
       ),
-      const SizedBox(height: 15),
       Row(
         children: [
           const Text("Project name:"),
           const SizedBox(width: 10),
-          Expanded(
-            child: UnderlinePropTextField(prop: projectName)
-          ),
+          UnderlinePropTextField(prop: projectName, options: const PropTFOptions(useIntrinsicWidth: true)),
         ],
       ),
       const SizedBox(height: 15),
       const Text("Include from BNK:"),
       const SizedBox(height: 2),
-      for (var (label, prop) in labeledOptions)
-        Row(
-          children: [
-            BoolPropCheckbox(prop: prop),
-            const SizedBox(width: 10),
-            Expanded(
-              child: GestureDetector(
-                onTap: () => prop.value = !prop.value,
-                child: Text(label, overflow: TextOverflow.ellipsis),
-              ),
-            ),
-          ],
-        ),
       Row(
         children: [
-          const Text("Name settings: "),
+          for (var (label, prop, icon, tooltip) in includeOptions)
+            ..._makePropCheckbox(prop, label, tooltip: tooltip, icon: icon),
+        ],
+      ),
+      const SizedBox(height: 15),
+      const Text("Audio settings:"),
+      Row(
+        children: [
+          for (var (label, prop, icon) in audioOptions)
+            ..._makePropCheckbox(prop, label, icon: icon),
+        ],
+      ),
+      const SizedBox(height: 15),
+      const Text("Other settings:"),
+      const SizedBox(height: 2),
+      Row(
+        children: [
+          const Text("Randomize      "),
+          for (var (label, prop) in randomOptions)
+            ..._makePropCheckbox(prop, label),
+        ],
+      ),
+      Row(
+        children: [
+          const Text("Name settings  "),
           for (var (label, prop) in labeledNameOptions)
-            Row(
-              children: [
-                BoolPropCheckbox(prop: prop),
-                const SizedBox(width: 5),
-                GestureDetector(
-                  onTap: () => prop.value = !prop.value,
-                  child: Text(label)
-                ),
-              ],
-            ),
+            ..._makePropCheckbox(prop, label),
         ],
       ),
       ChangeNotifierBuilder(
         notifiers: [optNameId, optNamePrefix],
         builder: (context) => Text(
-          "Preview: "
+          "                Preview: "
           "${(optNamePrefix.value ? "[Intro] " : "")}"
           "Stage_Prologue "
           "${(optNameId.value ? "(715346925)" : "")}",
         ),
+      ),
+      Row(
+        children: [
+          const Text("Translate notes"),
+            ..._makePropCheckbox(optTranslate, "Japanese to English", icon: Icons.translate_rounded),
+        ],
       ),
       const SizedBox(height: 15),
       Align(
@@ -262,6 +279,31 @@ class __WwiseProjectGeneratorPopupState extends State<_WwiseProjectGeneratorPopu
           onPressed: generate,
           style: getTheme(context).dialogPrimaryButtonStyle,
           child: const Text("Generate"),
+        ),
+      ),
+    ];
+  }
+
+  List<Widget> _makePropCheckbox(BoolProp prop, String label, {IconData? icon, String? tooltip}) {
+    return [
+      BoolPropCheckbox(prop: prop),
+      GestureDetector(
+        onTap: () => prop.value = !prop.value,
+        child: Row(
+          children: [
+            if (icon != null) ...[
+              // const SizedBox(width: 2),
+              Icon(icon, size: 16),
+            ],
+            const SizedBox(width: 5),
+            tooltip == null
+              ? Text(label, overflow: TextOverflow.ellipsis)
+              : Tooltip(
+                  message: tooltip,
+                  child: Text(label, overflow: TextOverflow.ellipsis),
+                ),
+            const SizedBox(width: 5),
+          ],
         ),
       ),
     ];
@@ -336,6 +378,8 @@ class __WwiseProjectGeneratorPopupState extends State<_WwiseProjectGeneratorPopu
       actions: optActions.value,
       nameId: optNameId.value,
       namePrefix: optNamePrefix.value,
+      randomObjId: randomObjId.value,
+      randomWemId: randomWemId.value,
     );
     hasStarted = true;
     setState(() {});

@@ -15,6 +15,7 @@ class WwiseSourcePlugin extends WwiseElement {
   WwiseSourcePlugin._({required super.wuId, required super.project, required super.shortId, required _PluginConfig config, required BnkPluginData pluginData, required String language}) : super(
     tagName: "SourcePlugin",
     name: config.name,
+    shortIdType: ShortIdType.object,
     properties: config.handler(pluginData),
     additionalAttributes: {
       "PluginName": config.name,

@@ -13,6 +13,7 @@ class WwiseAudioFileSource extends WwiseElement {
     tagName: "AudioFileSource",
     name: audio.name,
     shortId: audio.nextWemId(project.idGen),
+    shortIdType: ShortIdType.wem,
     comment: project.getComment(audio.id) ?? project.getComment(audio.prefetchId)
   );
 
