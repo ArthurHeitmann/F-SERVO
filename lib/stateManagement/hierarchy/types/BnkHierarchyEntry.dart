@@ -55,13 +55,13 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
       if (hirc is BnkMusicPlaylist)
         entryPath = "$path#p=${hirc.uid}";
       else
-        entryPath = path;
+        entryPath = "";
       List<int> parentId = [];
       List<int> childIds = [];
       List<(bool, List<String>)> props = [];
       List<TransitionRule> transitionRules = [];
       if (hirc is BnkHircChunkWithBaseParamsGetter) {
-        var hircChunk = hirc as BnkHircChunkWithBaseParamsGetter;
+        var hircChunk = hirc;
         var baseParams = hircChunk.getBaseParams();
         parentId.add(baseParams.directParentID);
         if (parentId.last == 0)

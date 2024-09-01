@@ -86,6 +86,12 @@ class DatHierarchyEntry extends ExtractableHierarchyEntry {
     });
   }
 
+  Future<void> reloadChildren() async {
+    for (var child in children.toList())
+      remove(child, dispose: true);
+    await loadChildren(null);
+  }
+
   Future<void> addNewRubyScript() async {
     if (await confirmDialog(getGlobalContext(), title: "Add new Ruby Script?") != true)
       return;
@@ -131,6 +137,11 @@ class DatHierarchyEntry extends ExtractableHierarchyEntry {
   List<HierarchyEntryAction> getContextMenuActions() {
     return [
       ...getActions(),
+      HierarchyEntryAction(
+        name: "Reload children",
+        icon: Icons.refresh,
+        action: reloadChildren,
+      ),
       ...super.getContextMenuActions()
     ];
   }
