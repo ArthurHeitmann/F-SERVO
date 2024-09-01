@@ -1,4 +1,5 @@
 
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
@@ -45,18 +46,18 @@ class _WwiseProjectGeneratorPopup extends StatefulWidget {
 }
 
 class __WwiseProjectGeneratorPopupState extends State<_WwiseProjectGeneratorPopup> {
-  final optAudioHierarchy = BoolProp(true, fileId: null);
-  final optWems = BoolProp(true, fileId: null);
-  final optStreaming = BoolProp(true, fileId: null);
-  final optStreamingPrefetch = BoolProp(true, fileId: null);
-  final optSeekTable = BoolProp(true, fileId: null);
-  final optTranslate = BoolProp(true, fileId: null);
-  final optNameId = BoolProp(false, fileId: null);
-  final optNamePrefix = BoolProp(true, fileId: null);
-  final optEvents = BoolProp(true, fileId: null);
-  final optActions = BoolProp(true, fileId: null);
-  final randomObjId = BoolProp(false, fileId: null);
-  final randomWemId = BoolProp(false, fileId: null);
+  late final BoolProp optAudioHierarchy;
+  late final BoolProp optWems;
+  late final BoolProp optStreaming;
+  late final BoolProp optStreamingPrefetch;
+  late final BoolProp optSeekTable;
+  late final BoolProp optTranslate;
+  late final BoolProp optNameId;
+  late final BoolProp optNamePrefix;
+  late final BoolProp optEvents;
+  late final BoolProp optActions;
+  late final BoolProp randomObjId;
+  late final BoolProp randomWemId;
   late final StringProp projectName;
   late final StringProp savePath;
   late final List<String> bnkPaths;
@@ -69,9 +70,20 @@ class __WwiseProjectGeneratorPopupState extends State<_WwiseProjectGeneratorPopu
   @override
   void initState() {
     super.initState();
-    if (!widget.bnkName.contains("BGM"))
-      optSeekTable.value = false;
     var prefs = PreferencesData();
+    var lastSettings = jsonDecode(prefs.lastWwiseProjectSettingsJson?.value ?? "{}") as Map;
+    optAudioHierarchy = BoolProp(lastSettings["optAudioHierarchy"] as bool? ?? true, fileId: null);
+    optWems = BoolProp(lastSettings["optWems"] as bool? ?? true, fileId: null);
+    optStreaming = BoolProp(lastSettings["optStreaming"] as bool? ?? true, fileId: null);
+    optStreamingPrefetch = BoolProp(lastSettings["optStreamingPrefetch"] as bool? ?? true, fileId: null);
+    optSeekTable = BoolProp(widget.bnkName.contains("BGM"), fileId: null);
+    optTranslate = BoolProp(lastSettings["optTranslate"] as bool? ?? true, fileId: null);
+    optNameId = BoolProp(lastSettings["optNameId"] as bool? ?? false, fileId: null);
+    optNamePrefix = BoolProp(lastSettings["optNamePrefix"] as bool? ?? true, fileId: null);
+    optEvents = BoolProp(lastSettings["optEvents"] as bool? ?? true, fileId: null);
+    optActions = BoolProp(lastSettings["optActions"] as bool? ?? true, fileId: null);
+    randomObjId = BoolProp(lastSettings["randomObjId"] as bool? ?? false, fileId: null);
+    randomWemId = BoolProp(lastSettings["randomWemId"] as bool? ?? false, fileId: null);
     projectName = StringProp(widget.bnkName, fileId: null);
     savePath = StringProp(prefs.lastWwiseProjectDir?.value ?? "", fileId: null);
     status.logs.addListener(onNewLog);
@@ -381,6 +393,21 @@ class __WwiseProjectGeneratorPopupState extends State<_WwiseProjectGeneratorPopu
       randomObjId: randomObjId.value,
       randomWemId: randomWemId.value,
     );
+    var prefs = PreferencesData();
+    prefs.lastWwiseProjectSettingsJson!.value = jsonEncode({
+      "optAudioHierarchy": optAudioHierarchy.value,
+      "optWems": optWems.value,
+      "optStreaming": optStreaming.value,
+      "optStreamingPrefetch": optStreamingPrefetch.value,
+      "optSeekTable": optSeekTable.value,
+      "optTranslate": optTranslate.value,
+      "optNameId": optNameId.value,
+      "optNamePrefix": optNamePrefix.value,
+      "optEvents": optEvents.value,
+      "optActions": optActions.value,
+      "randomObjId": randomObjId.value,
+      "randomWemId": randomWemId.value,
+    });
     hasStarted = true;
     setState(() {});
     generator = await WwiseProjectGenerator.generateFromBnks(
