@@ -36,7 +36,7 @@ class SavableProp<T> extends ValueProp<T> {
     if (T == ThemeType)
       return val != null ? ThemeType.values[val as int] as T : null;
     if (T == List || T == Map)
-      return val != null ? jsonDecode(val as String) as T : null;
+      return val is String ? jsonDecode(val) as T : val as T?;
     return val as T?;
   } 
   

@@ -207,7 +207,12 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
         print("$e\n$s");
       }
       //check if extracted folder actually contains all dat files
-      if (datFilePaths == null || datFilePaths.isNotEmpty && await Future.any(datFilePaths.map((name) async => !await File(name).exists()))) {
+      var shouldExtractDatFiles = false;
+      if (!shouldExtractDatFiles)
+        shouldExtractDatFiles = datFilePaths == null;
+      if (!shouldExtractDatFiles)
+        shouldExtractDatFiles = datFilePaths.isNotEmpty && await Future.any(datFilePaths.map((name) async => !await File(name).exists()));
+      if (shouldExtractDatFiles) {
         await extractDatFiles(datPath, shouldExtractPakFiles: true);
       }
     }
@@ -463,7 +468,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
     else {
       wtpPath = join(datDir, wtpName);
       if (!await File(wtpPath).exists()) {
-        showToast("Can't find corresponding WTP file");
+        messageLog.add("Can't find WTP file of ${basename(wtaPath)}");
         throw Exception("Can't find corresponding WTP file");
       }
     }
