@@ -79,8 +79,6 @@ class DatHierarchyEntry extends ExtractableHierarchyEntry {
         rubyScriptGroup.isCollapsed.value = true;
     }
 
-    for (var child in children)
-      print("${child.name.value} ${child.runtimeType} ${child.priority}");
     sortChildren((a, b) {
       if (a.priority != b.priority)
         return b.priority - a.priority;
