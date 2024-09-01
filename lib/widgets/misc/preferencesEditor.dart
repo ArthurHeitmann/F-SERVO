@@ -69,13 +69,13 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
     var exportPathProp = widget.prefs.dataExportPath;
     var exportOptions = [
       widget.prefs.exportDats,
-      widget.prefs.exportPaks,
-      widget.prefs.convertXmls,
+      // widget.prefs.exportPaks,
+      // widget.prefs.convertXmls,
     ];
     const exportOptionLabels = [
-      "Export .dat files",
-      "Export .pak files",
-      "Convert .xml to .yax files",
+      "Export changed .dat files",
+      // "Export .pak files",
+      // "Convert .xml to .yax files",
     ];
     if (exportPathProp == null || exportOptions.any((e) => e == null))
       return [];
@@ -128,6 +128,13 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
               ],
             ),
           )
+        ],
+      ),
+      const SizedBox(height: 10,),
+      Row(
+        children: [
+          const Text("When extracting DAT, overwrite all files:", overflow: TextOverflow.ellipsis,),
+          BoolPropSwitch(prop: widget.prefs.datReplaceOnExtract!),
         ],
       ),
       const SizedBox(height: 40,),

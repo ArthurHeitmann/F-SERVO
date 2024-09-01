@@ -83,6 +83,7 @@ class PreferencesData extends OpenFileData {
   SavableProp<bool>? convertXmls;
   SavableProp<bool>? preferVsCode;
   SavableProp<bool>? useMonacoEditor;
+  SavableProp<bool>? datReplaceOnExtract;
   SavableProp<bool>? pauseAudioOnFileChange;
   SavableProp<bool>? moveFilePropertiesToRight;
   SavableProp<ThemeType>? themeType;
@@ -135,6 +136,7 @@ class PreferencesData extends OpenFileData {
     convertXmls = SavableProp<bool>("convertXml", _prefs!, true);
     preferVsCode = SavableProp<bool>("preferVsCode", _prefs!, false);
     useMonacoEditor = SavableProp<bool>("useMonacoEditor", _prefs!, true);
+    datReplaceOnExtract = SavableProp<bool>("datReplaceOnExtract", _prefs!, false);
     pauseAudioOnFileChange = SavableProp<bool>("pauseAudioOnFileChange", _prefs!, false);
     moveFilePropertiesToRight = SavableProp<bool>("moveFilePropertiesToRight", _prefs!, false);
     themeType = SavableProp<ThemeType>("themeType", _prefs!, ThemeType.dark);
