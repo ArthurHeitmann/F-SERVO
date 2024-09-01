@@ -2,6 +2,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:desktop_drop/desktop_drop.dart';
+import 'package:dotted_border/dotted_border.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
@@ -65,7 +67,8 @@ class __WwiseProjectGeneratorPopupState extends State<_WwiseProjectGeneratorPopu
   bool hasStarted = false;
   final status = WwiseProjectGeneratorStatus();
   final logScrollController = ScrollController();
-  bool isScrollQueue = false;
+  bool isScrollQueued = false;
+  bool isDroppingFile = false;
 
   @override
   void initState() {
@@ -119,7 +122,7 @@ class __WwiseProjectGeneratorPopupState extends State<_WwiseProjectGeneratorPopu
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("Generate Wwise project", style: Theme.of(context).textTheme.titleLarge),
+          Text("Generate Wwise project (experimental)", style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 15),
           if (!hasStarted)
             ..._makeOptions(context)
@@ -151,59 +154,14 @@ class __WwiseProjectGeneratorPopupState extends State<_WwiseProjectGeneratorPopu
       ("WEM IDs", randomWemId),
     ];
     return [
-      const Text("Source BNKs:"),
-      ConstrainedBox(
-        constraints: const BoxConstraints(maxHeight: 200),
-        child: SmoothSingleChildScrollView(
-          child: Column(
-            children: [
-              for (var (i, bnkPath) in bnkPaths.indexed)
-                Row(
-                  key: Key(bnkPath),
-                  children: [
-                    const SizedBox(width: 20),
-                    Text(basename(bnkPath)),
-                    const SizedBox(width: 10),
-                    IconButton(
-                      icon: const Icon(Icons.close, size: 16),
-                      splashRadius: 16,
-                      constraints: BoxConstraints.tight(const Size(30, 30)),
-                      padding: EdgeInsets.zero,
-                      onPressed: () {
-                        bnkPaths.removeAt(i);
-                        setState(() {});
-                      },
-                    ),
-                  ],
-                ),
-              Row(
-                children: [
-                  const SizedBox(width: 15),
-                  IconButton(
-                    icon: const Icon(Icons.add, size: 16),
-                    splashRadius: 16,
-                    padding: EdgeInsets.zero,
-                    constraints: BoxConstraints.tight(const Size(30, 30)),
-                    onPressed: () async {
-                      var files = await FilePicker.platform.pickFiles(
-                        type: FileType.custom,
-                        allowedExtensions: ["bnk"],
-                        allowMultiple: true,
-                        dialogTitle: "Select BNKs",
-                      );
-                      if (files == null)
-                        return;
-                      bnkPaths.addAll(files.paths.whereType<String>());
-                      setState(() {});
-                    },
-                  ),
-                ],
-              ),
-            ],
-          )
-        ),
+      Row(
+        children: [
+          const Text("Project name:"),
+          const SizedBox(width: 10),
+          UnderlinePropTextField(prop: projectName, options: const PropTFOptions(useIntrinsicWidth: true)),
+        ],
       ),
-      const SizedBox(height: 15),
+      const SizedBox(height: 5),
       const Text("Projects save path:"),
       Row(
         children: [
@@ -228,12 +186,56 @@ class __WwiseProjectGeneratorPopupState extends State<_WwiseProjectGeneratorPopu
           )
         ],
       ),
-      Row(
-        children: [
-          const Text("Project name:"),
-          const SizedBox(width: 10),
-          UnderlinePropTextField(prop: projectName, options: const PropTFOptions(useIntrinsicWidth: true)),
-        ],
+      const SizedBox(height: 5),
+      const Text("Source BNKs:"),
+      ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 50, maxHeight: 200),
+        child: DropTarget(
+          onDragEntered: (_) => setState(() => isDroppingFile = true),
+          onDragExited: (_) => setState(() => isDroppingFile = false),
+          onDragDone: (details) {
+            isDroppingFile = false;
+            var newBnks = details.files
+              .map((f) => f.path)
+              .where((f) => f.endsWith(".bnk"))
+              .where((f) => !bnkPaths.contains(f))
+              .toList();
+            bnkPaths.addAll(newBnks);
+            setState(() {});
+          },
+          child: Stack(
+            children: [
+              _makeBnkList(context),
+              if (isDroppingFile)
+                Positioned.fill(
+                  child: Align(
+                    alignment: Alignment.center,
+                    child: DottedBorder(
+                      strokeWidth: 2,
+                      color: getTheme(context).textColor!.withOpacity(0.25),
+                      radius: const Radius.circular(12),
+                      borderType: BorderType.RRect,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.25),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.file_download_outlined, size: 20),
+                            const SizedBox(width: 5),
+                            Text("Drop BNK files", style: Theme.of(context).textTheme.bodyLarge),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
       const SizedBox(height: 15),
       const Text("Include from BNK:"),
@@ -294,6 +296,79 @@ class __WwiseProjectGeneratorPopupState extends State<_WwiseProjectGeneratorPopu
         ),
       ),
     ];
+  }
+
+  Widget _makeBnkList(context) {
+    return Row(
+      children: [
+        Expanded(
+          child: SmoothSingleChildScrollView(
+            child: Column(
+              children: [
+                for (var (i, bnkPath) in bnkPaths.indexed)
+                  Row(
+                    key: Key(bnkPath),
+                    children: [
+                      const SizedBox(width: 20),
+                      Text(basename(bnkPath)),
+                      const SizedBox(width: 10),
+                      IconButton(
+                        icon: const Icon(Icons.close, size: 16),
+                        splashRadius: 16,
+                        constraints: BoxConstraints.tight(const Size(30, 30)),
+                        padding: EdgeInsets.zero,
+                        onPressed: () {
+                          bnkPaths.removeAt(i);
+                          setState(() {});
+                        },
+                      ),
+                    ],
+                  ),
+                Row(
+                  children: [
+                    const SizedBox(width: 15),
+                    IconButton(
+                      icon: const Icon(Icons.add, size: 16),
+                      splashRadius: 16,
+                      padding: EdgeInsets.zero,
+                      constraints: BoxConstraints.tight(const Size(30, 30)),
+                      onPressed: () async {
+                        var files = await FilePicker.platform.pickFiles(
+                          type: FileType.custom,
+                          allowedExtensions: ["bnk"],
+                          allowMultiple: true,
+                          dialogTitle: "Select BNKs",
+                        );
+                        if (files == null)
+                          return;
+                        bnkPaths.addAll(files.paths.whereType<String>());
+                        setState(() {});
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            )
+          ),
+        ),
+        Tooltip(
+          message: "Drop BNK files here",
+          child: Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: getTheme(context).textColor!.withOpacity(0.25), width: 2),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            padding: const EdgeInsets.all(3),
+            child: Icon(
+              Icons.file_download_outlined,
+              color: getTheme(context).textColor!.withOpacity(0.5),
+              size: 30,
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+      ],
+    );
   }
 
   List<Widget> _makePropCheckbox(BoolProp prop, String label, {IconData? icon, String? tooltip}) {
@@ -423,15 +498,15 @@ class __WwiseProjectGeneratorPopupState extends State<_WwiseProjectGeneratorPopu
   }
 
   void onNewLog() {
-    if (isScrollQueue)
+    if (isScrollQueued)
       return;
-    isScrollQueue = true;
+    isScrollQueued = true;
     waitForNextFrame().then((_) {
       try {
         logScrollController.jumpTo(logScrollController.position.maxScrollExtent);
       // ignore: empty_catches
       } catch (e) {}
-      isScrollQueue = false;
+      isScrollQueued = false;
     });
   }
 

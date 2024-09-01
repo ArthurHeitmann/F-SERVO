@@ -54,6 +54,7 @@ class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
   @override
   Widget build(BuildContext context) {
     return DropTarget(
+      enable: ModalRoute.of(context)!.isCurrent,
       onDragEntered: (details) => setState(() => isDroppingFile = true),
       onDragExited: (details) => setState(() => isDroppingFile = false),
       onDragDone: (details) {
