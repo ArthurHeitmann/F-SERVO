@@ -13,7 +13,7 @@ class BxmHierarchyEntry extends GenericFileHierarchyEntry {
 
   BxmHierarchyEntry(StringProp name, String path)
       : xmlPath = "$path.xml",
-        super(name, path, false, true) {
+        super(name, path, false, true, priority: 10) {
     supportsVsCodeEditing = true;
   }
 

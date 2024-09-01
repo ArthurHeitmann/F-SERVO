@@ -4,7 +4,7 @@ import '../HierarchyEntryTypes.dart';
 
 class EstHierarchyEntry extends GenericFileHierarchyEntry {
   EstHierarchyEntry(StringProp name, String path)
-      : super(name, path, false, true);
+      : super(name, path, false, true, priority: 5);
 
   @override
   HierarchyEntry clone() {

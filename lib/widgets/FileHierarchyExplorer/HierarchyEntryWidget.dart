@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import '../../stateManagement/hierarchy/FileHierarchy.dart';
 import '../../stateManagement/hierarchy/HierarchyEntryTypes.dart';
 import '../../stateManagement/hierarchy/types/BnkHierarchyEntry.dart';
+import '../../stateManagement/hierarchy/types/BxmHierarchyEntry.dart';
 import '../../stateManagement/hierarchy/types/DatHierarchyEntry.dart';
+import '../../stateManagement/hierarchy/types/EstHierarchyEntry.dart';
 import '../../stateManagement/hierarchy/types/McdHierarchyEntry.dart';
 import '../../stateManagement/hierarchy/types/PakHierarchyEntry.dart';
 import '../../stateManagement/hierarchy/types/RubyScriptHierarchyEntry.dart';
@@ -12,6 +14,8 @@ import '../../stateManagement/hierarchy/types/SaveSlotDataHierarchyEntry.dart';
 import '../../stateManagement/hierarchy/types/SmdHierarchyEntry.dart';
 import '../../stateManagement/hierarchy/types/TmdHierarchyEntry.dart';
 import '../../stateManagement/hierarchy/types/WaiHierarchyEntries.dart';
+import '../../stateManagement/hierarchy/types/WtaHierarchyEntry.dart';
+import '../../stateManagement/hierarchy/types/WtbHierarchyEntry.dart';
 import '../../stateManagement/miscValues.dart';
 import '../../utils/utils.dart';
 import '../../widgets/theme/customTheme.dart';
@@ -44,6 +48,12 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
       return Icon(Icons.subtitles, color: iconColor, size: 15);
     else if (widget.entry is RubyScriptGroupHierarchyEntry)
       return null;
+    else if (widget.entry is EstHierarchyEntry)
+      return Icon(Icons.flare, color: iconColor, size: 15);
+    else if (widget.entry is BxmHierarchyEntry)
+      return Icon(Icons.code, color: iconColor, size: 15);
+    else if (widget.entry is WtaHierarchyEntry || widget.entry is WtbHierarchyEntry)
+      return Icon(Icons.photo_library, color: iconColor, size: 15);
     else if (widget.entry is WemHierarchyEntry)
       return Icon(Icons.music_note, color: iconColor, size: 15);
     else if (widget.entry is BnkHierarchyEntry)

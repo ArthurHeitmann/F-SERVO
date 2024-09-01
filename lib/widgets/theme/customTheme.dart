@@ -266,20 +266,18 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
       if (entry.type == "WEM")
         return filetypeGroupColor!;
       else if (entry.type == "Event")
-        return filetypeDatColor!;
+        return filetypePakColor!;
       else if (entry.type == "Action")
-        return filetypeDocColor!;
+        return titleBarButtonCloseColor!;
       else if (entry.type == "MusicPlaylist")
         return filetypePakColor!;
-      else
-        return Colors.white;
     }
     if (entry is BnkSubCategoryParentHierarchyEntry) {
       if (entry.isFolder)
         return filetypeDatColor!;
     }
 
-    return Colors.white;
+    return textColor!;
   }
 }
 

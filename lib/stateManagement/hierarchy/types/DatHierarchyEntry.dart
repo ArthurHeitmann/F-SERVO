@@ -16,7 +16,7 @@ import 'XmlScriptHierarchyEntry.dart';
 
 class DatHierarchyEntry extends ExtractableHierarchyEntry {
   DatHierarchyEntry(StringProp name, String path, String extractedPath)
-      : super(name, path, extractedPath, true, false);
+      : super(name, path, extractedPath, true, false, priority: 1000);
 
   @override
   Undoable takeSnapshot() {
@@ -79,12 +79,11 @@ class DatHierarchyEntry extends ExtractableHierarchyEntry {
         rubyScriptGroup.isCollapsed.value = true;
     }
 
+    for (var child in children)
+      print("${child.name.value} ${child.runtimeType} ${child.priority}");
     sortChildren((a, b) {
-      if (a is! FileHierarchyEntry || b is! FileHierarchyEntry)
-        return a.name.value.toLowerCase().compareTo(b.name.value.toLowerCase());
-      var extCmp = extension(a.path).compareTo(extension(b.path));
-      if (extCmp != 0)
-        return extCmp;
+      if (a.priority != b.priority)
+        return b.priority - a.priority;
       return a.name.value.toLowerCase().compareTo(b.name.value.toLowerCase());
     });
   }

@@ -24,7 +24,7 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
   final BnkFile bnk;
 
   BnkHierarchyEntry(StringProp name, String path, this.extractedPath, this.bnk)
-      : super(name, path, true, false);
+      : super(name, path, true, false, priority: 50);
 
   @override
   HierarchyEntry clone() {
@@ -486,8 +486,6 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
       addToTopLevel(entry, eventHierarchyParentEntry);
     if (eventEntries.length > 50)
       eventHierarchyParentEntry.isCollapsed.value = true;
-
-    print("Total tree size: ${countAllRec()}");
   }
 
   @override
