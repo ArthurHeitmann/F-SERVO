@@ -109,6 +109,10 @@ class DatHierarchyEntry extends ExtractableHierarchyEntry {
     await exportDat(extractedPath, checkForNesting: true);
   }
 
+  Future<void> repackOverwriteDatAction() async {
+    await exportDat(extractedPath, overwriteOriginal: true);
+  }
+
   @override
   List<HierarchyEntryAction> getActions() {
     var scriptRelatedClasses = [RubyScriptGroupHierarchyEntry, RubyScriptHierarchyEntry, XmlScriptHierarchyEntry, PakHierarchyEntry];
@@ -117,6 +121,11 @@ class DatHierarchyEntry extends ExtractableHierarchyEntry {
         name: "Repack DAT",
         icon: Icons.file_upload,
         action: repackDatAction,
+      ),
+      HierarchyEntryAction(
+        name: "Repack DAT (overwrite)",
+        icon: Icons.file_upload,
+        action: repackOverwriteDatAction,
       ),
       HierarchyEntryAction(
         name: "Change packed files",

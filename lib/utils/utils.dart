@@ -546,7 +546,7 @@ Future<List<String>> _getDatFileListFromMetadata(String metadataPath) async {
   return files;
 }
 
-Future<void> exportDat(String datFolder, { bool checkForNesting = false }) async {
+Future<void> exportDat(String datFolder, { bool checkForNesting = false, bool overwriteOriginal = false }) async {
   var exportDir = PreferencesData().dataExportPath?.value ?? "";
   if (exportDir.isNotEmpty && !await Directory(exportDir).exists()) {
     messageLog.add("Export path does not exist: $exportDir");
@@ -556,7 +556,10 @@ Future<void> exportDat(String datFolder, { bool checkForNesting = false }) async
   String datExportDir = "";
   bool recursive = false;
   // check if this DAT is inside another DAT
-  if (checkForNesting) {
+  if (overwriteOriginal) {
+    datExportDir = dirname(dirname(datFolder));
+  }
+  if (checkForNesting && datExportDir.isEmpty) {
     var parentDirs = [dirname(datFolder), dirname(dirname(datFolder))];
     for (var parentDir in parentDirs) {
       if (!await Directory(parentDir).exists())
