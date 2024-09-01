@@ -233,6 +233,7 @@ class __AutocompleteOverlayState extends State<_AutocompleteOverlay> with ArrowN
                             isSelected: index == focusedIndex,
                             scale: 0.85,
                             reserveIconSpace: false,
+                            selectionChangeStream: selectionChangeStream.stream,
                             onPressed: () => onOptionSelected(option),
                           );
                         },

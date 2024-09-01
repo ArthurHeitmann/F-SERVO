@@ -14,16 +14,18 @@ import 'mousePosition.dart';
 class SelectionPopupConfig<T> {
   final IconData? icon;
   final String name;
+  final Key? key;
   final T Function() getValue;
 
   const SelectionPopupConfig({
     this.icon,
     required this.name,
+    this.key,
     required this.getValue,
   });
 }
 
-Future<T?> showSelectionPopup<T>(BuildContext context, List<SelectionPopupConfig<T>> configs) {
+Future<T?> showSelectionPopup<T>(BuildContext context, List<SelectionPopupConfig<T>> configs, { double? width }) {
   var completer = Completer<T?>();
   
   var pos = MousePosition.pos;
@@ -37,6 +39,7 @@ Future<T?> showSelectionPopup<T>(BuildContext context, List<SelectionPopupConfig
       child: _SelectionContextMenu(
         pos: pos,
         configs: configs,
+        width: width,
         completer: completer,
       ),
     ),
@@ -48,16 +51,18 @@ Future<T?> showSelectionPopup<T>(BuildContext context, List<SelectionPopupConfig
 class _SelectionContextMenu extends StatefulWidget {
   final Offset pos;
   final List<SelectionPopupConfig> configs;
+  final double? width;
   final Completer completer;
 
-  const _SelectionContextMenu({required this.configs, required this.completer, required this.pos});
+  const _SelectionContextMenu({required this.configs, required this.completer, required this.pos, this.width});
 
   @override
   State<_SelectionContextMenu> createState() => _SelectionContextMenuState();
 }
 
 class _SelectionContextMenuState extends State<_SelectionContextMenu> with ArrowNavigationList {
-  static const popupWidth = 400.0;
+  static const popupWidthDefault = 400.0;
+  double get popupWidth => widget.width ?? popupWidthDefault;
   static const maxPopupHeight = 210.0;
   static const entryHeight = 28.0;
   static const screenPadding = 10.0;
@@ -92,18 +97,19 @@ class _SelectionContextMenuState extends State<_SelectionContextMenu> with Arrow
     return prepareLayout(context,
       child: setupShortcuts(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(minWidth: popupWidth, maxWidth: popupWidth, maxHeight: maxPopupHeight),
+          constraints: BoxConstraints(minWidth: popupWidth, maxWidth: popupWidth, maxHeight: maxPopupHeight),
           child: SmoothSingleChildScrollView(
             child: Column(
               children: [
                 makeSearchBar(),
                 for (int i = 0; i < searchedConfigs.length; i++)
                   SelectableListEntry(
-                    key: Key(searchedConfigs[i].name),
+                    key: searchedConfigs[i].key ?? Key(searchedConfigs[i].name),
                     height: entryHeight,
                     icon: searchedConfigs[i].icon,
                     text: searchedConfigs[i].name,
                     isSelected: i == focusedIndex,
+                    selectionChangeStream: selectionChangeStream.stream,
                     onPressed: () {
                       widget.completer.complete(searchedConfigs[i].getValue());
                       Navigator.of(context).pop();

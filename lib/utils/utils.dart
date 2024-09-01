@@ -793,3 +793,20 @@ Future<List<T>> futuresWaitBatched<T>(Iterable<Future<T>> futures, int batchSize
     results.addAll(await Future.wait(batch));
   return results;
 }
+
+String trimFilePath(String path, int maxLength) {
+  if (path.length <= maxLength)
+    return path;
+  var sep = path.contains("\\") ? "\\" : "/";
+  var parts = path.split(sep);
+  List<String> usedParts = [];
+  int usedLength = parts.last.length;
+  usedParts.add(parts.last);
+  parts.removeLast();
+  while (parts.isNotEmpty && usedLength + parts.last.length + 1 <= maxLength) {
+    usedLength += parts.last.length + 1;
+    usedParts.insert(0, parts.last);
+    parts.removeLast();
+  }
+  return "...$sep${usedParts.join(sep)}";
+}

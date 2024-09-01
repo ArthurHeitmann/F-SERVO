@@ -1,10 +1,12 @@
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../utils/utils.dart';
 import '../theme/customTheme.dart';
 
-class SelectableListEntry extends StatelessWidget {
+class SelectableListEntry extends StatefulWidget {
   final double height;
   final IconData? icon;
   final bool reserveIconSpace;
@@ -12,6 +14,7 @@ class SelectableListEntry extends StatelessWidget {
   final bool isSelected;
   final VoidCallback? onPressed;
   final double scale;
+  final Stream<void> selectionChangeStream;
 
   const SelectableListEntry({
     super.key,
@@ -20,13 +23,36 @@ class SelectableListEntry extends StatelessWidget {
     this.reserveIconSpace = true,
     required this.text,
     this.isSelected = false,
+    required this.selectionChangeStream,
     this.onPressed,
     this.scale = 1.0,
   });
 
   @override
+  State<SelectableListEntry> createState() => _SelectableListEntryState();
+}
+
+class _SelectableListEntryState extends State<SelectableListEntry> {
+  late StreamSubscription<void> selectionChangeStreamSubscription;
+  bool hasPendingChange = false;
+
+  @override
+  void initState() {
+    selectionChangeStreamSubscription = widget.selectionChangeStream.listen((_) {
+      hasPendingChange = true;
+    });
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    selectionChangeStreamSubscription.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (isSelected) {
+    if (widget.isSelected && hasPendingChange) {
       if (context.findRenderObject() == null)
         waitForNextFrame().then((_) {
           scrollIntoViewOptionally(context, duration: Duration.zero, smallStep: true);
@@ -34,26 +60,27 @@ class SelectableListEntry extends StatelessWidget {
       else
         scrollIntoViewOptionally(context, duration: Duration.zero, smallStep: true);
     }
+    hasPendingChange = false;
     return SizedBox(
-      height: height,
+      height: widget.height,
       child: TextButton.icon(
-        icon: Icon(icon, size: reserveIconSpace ? 22 * scale : 0,),
+        icon: Icon(widget.icon, size: widget.reserveIconSpace ? 22 * widget.scale : 0,),
         style: ButtonStyle(
           padding: MaterialStateProperty.all(EdgeInsets.zero),
           foregroundColor: MaterialStateProperty.all(getTheme(context).textColor),
-          backgroundColor: MaterialStateProperty.all(isSelected ? Theme.of(context).highlightColor : Colors.transparent),
+          backgroundColor: MaterialStateProperty.all(widget.isSelected ? Theme.of(context).highlightColor : Colors.transparent),
           overlayColor: MaterialStateProperty.all(Theme.of(context).highlightColor.withOpacity(0.075)),
         ),
         label: SizedBox(
-          height: height * 0.9,
+          height: widget.height * 0.9,
           child: Row(
             children: [
               Expanded(
                 child: Tooltip(
-                  message: text.length > 36 ? text : "",
+                  message: widget.text.length > 44 ? widget.text : "",
                   child: Text(
-                    text,
-                    textScaleFactor: scale,
+                    widget.text,
+                    textScaleFactor: widget.scale,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -61,7 +88,7 @@ class SelectableListEntry extends StatelessWidget {
             ],
           ),
         ),
-        onPressed: onPressed,
+        onPressed: widget.onPressed,
       ),
     );
   }
