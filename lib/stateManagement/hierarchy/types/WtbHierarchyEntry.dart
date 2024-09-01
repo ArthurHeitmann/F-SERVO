@@ -4,7 +4,7 @@ import '../HierarchyEntryTypes.dart';
 
 class WtbHierarchyEntry extends GenericFileHierarchyEntry {
   WtbHierarchyEntry(StringProp name, String path)
-      : super(name, path, false, true);
+      : super(name, path, false, true, priority: 21);
 
   @override
   HierarchyEntry clone() {

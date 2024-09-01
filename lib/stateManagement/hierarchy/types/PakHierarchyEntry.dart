@@ -26,7 +26,7 @@ class PakHierarchyEntry extends ExtractableHierarchyEntry {
   final Map<int, HapGroupHierarchyEntry> _flatGroups = {};
 
   PakHierarchyEntry(StringProp name, String path, String extractedPath)
-      : super(name, path, extractedPath, true, false);
+      : super(name, path, extractedPath, true, false, priority: 500);
 
   Future<void> readGroups(String groupsXmlPath, HierarchyEntry? parent) async {
     var groupsFile = File(groupsXmlPath);

@@ -19,7 +19,7 @@ class XmlScriptHierarchyEntry extends FileHierarchyEntry {
   final StringProp hapName = StringProp("", fileId: null);
 
   XmlScriptHierarchyEntry(StringProp name, String path, { bool? preferVsCode })
-      : super(name, path, false, true)
+      : super(name, path, false, true, priority: 15)
   {
     this.name.transform = (str) {
       if (hapName.value.isNotEmpty)

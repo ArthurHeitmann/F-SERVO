@@ -123,8 +123,9 @@ abstract class HierarchyEntry with HasUuid, Undoable, HierarchyEntryBase {
   final bool isCollapsible;
   final ValueNotifier<bool> isCollapsed = ValueNotifier(false);
   final bool isOpenable;
+  final int priority;
 
-  HierarchyEntry(this.name, this.isSelectable, this.isCollapsible, this.isOpenable) {
+  HierarchyEntry(this.name, this.isSelectable, this.isCollapsible, this.isOpenable, { this.priority = 0 }) {
     children.addListener(() => openHierarchyManager.filteredTreeIsDirty.value = true);
     isCollapsed.addListener(() => openHierarchyManager.collapsedTreeIsDirty.value = true);
   }
@@ -199,7 +200,7 @@ abstract class FileHierarchyEntry extends HierarchyEntry {
   final String path;
   bool supportsVsCodeEditing = false;
 
-  FileHierarchyEntry(StringProp name, this.path, bool isCollapsible, bool isOpenable)
+  FileHierarchyEntry(StringProp name, this.path, bool isCollapsible, bool isOpenable, { super.priority = 1 })
     : super(name, true, isCollapsible, isOpenable);
 
   @override
@@ -235,7 +236,7 @@ abstract class FileHierarchyEntry extends HierarchyEntry {
 }
 
 abstract class GenericFileHierarchyEntry extends FileHierarchyEntry {
-  GenericFileHierarchyEntry(super.name, super.path, super.isCollapsible, super.isOpenable);
+  GenericFileHierarchyEntry(super.name, super.path, super.isCollapsible, super.isOpenable, { super.priority = 1 });
   
   HierarchyEntry clone();
 
@@ -261,7 +262,7 @@ abstract class GenericFileHierarchyEntry extends FileHierarchyEntry {
 abstract class ExtractableHierarchyEntry extends FileHierarchyEntry {
   final String extractedPath;
 
-  ExtractableHierarchyEntry(StringProp name, String filePath, this.extractedPath, bool isCollapsible, bool isOpenable)
+  ExtractableHierarchyEntry(StringProp name, String filePath, this.extractedPath, bool isCollapsible, bool isOpenable, { super.priority = 1 })
     : super(name, filePath, isCollapsible, isOpenable);
 
   @override

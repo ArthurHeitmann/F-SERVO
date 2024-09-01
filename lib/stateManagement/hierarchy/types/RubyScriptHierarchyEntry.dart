@@ -15,7 +15,7 @@ import 'DatHierarchyEntry.dart';
 
 class RubyScriptGroupHierarchyEntry extends HierarchyEntry {
   RubyScriptGroupHierarchyEntry()
-    : super(StringProp("Ruby Scripts", fileId: null), false, true, false);
+    : super(StringProp("Ruby Scripts", fileId: null), false, true, false, priority: 100);
 
   @override
   Undoable takeSnapshot() {

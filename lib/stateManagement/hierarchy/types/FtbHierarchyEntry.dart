@@ -4,7 +4,7 @@ import '../HierarchyEntryTypes.dart';
 
 class FtbHierarchyEntry extends GenericFileHierarchyEntry {
   FtbHierarchyEntry(StringProp name, String path)
-      : super(name, path, false, true);
+      : super(name, path, false, true, priority: 30);
 
   @override
   HierarchyEntry clone() {

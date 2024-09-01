@@ -212,7 +212,6 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
       }
     }
 
-
     var datEntry = DatHierarchyEntry(StringProp(fileName, fileId: null), datPath, datExtractDir);
     if (parent != null) {
       datEntry.isCollapsed.value = true;
