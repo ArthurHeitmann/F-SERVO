@@ -243,7 +243,7 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
           hircEntries[targetId] = child;
         }
         if (uidNameStr.isEmpty && actionTypes.containsKey(hirc.ulActionType))
-          uidNameStr = actionTypes[hirc.ulActionType]!;
+          uidNameStr = _actionIdToStr(hirc.ulActionType);
         props.addAll(BnkHircHierarchyEntry.makePropsFromParams(hirc.initialParams.propValues, hirc.initialParams.rangedPropValues));
         var specificParams = hirc.specificParams;
         if (specificParams is BnkSwitchActionParams) {
@@ -842,4 +842,20 @@ class FadeParams {
   }
 
   bool get isDefault => curve == "Linear" && time == 0 && offset == 0;
+}
+
+String _actionIdToStr(int id) {
+  const gameObjectFlag = 0x01;
+  const allFlag = 0x04;
+  const allExceptFlag = 0x08;
+  var name = actionTypes[id]!.split("_").first;
+  if (id & allFlag != 0 && name != "SetState")
+    name += " All";
+  else if (id & allExceptFlag != 0)
+    name += " All Except";
+  if (id & gameObjectFlag != 0)
+    name += " (Game Object)";
+  else
+    name += " (Global)";
+  return name;
 }
