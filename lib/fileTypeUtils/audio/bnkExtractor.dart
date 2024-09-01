@@ -2,13 +2,12 @@
 import 'dart:io';
 
 import 'package:path/path.dart';
-import 'package:tuple/tuple.dart';
 
 import '../utils/ByteDataWrapper.dart';
 import 'bnkIO.dart';
 import 'wemIdsToNames.dart';
 
-Future<List<Tuple2<int, String>>> extractBnkWems(BnkFile bnk, String extractPath, [bool noExtract = false]) async {
+Future<List<({int id, String path, bool isPrefetched})>> extractBnkWems(BnkFile bnk, String extractPath, [bool noExtract = false]) async {
   if (!bnk.chunks.any((chunk) => chunk.chunkId == "DIDX")) {
     print("No DIDX chunk found in BNK");
     return [];
@@ -22,9 +21,25 @@ Future<List<Tuple2<int, String>>> extractBnkWems(BnkFile bnk, String extractPath
   var data = bnk.chunks.whereType<BnkDataChunk>().first.wemFiles.toList();
   assert(didx.length == data.length);
 
+  Set<int> prefetchedIds = {};
+  var hirc = bnk.chunks.whereType<BnkHircChunk>().first;
+  for (var chunk in hirc.chunks) {
+    List<({int id, int streamType})> sources = [];
+    if (chunk is BnkSound) {
+      sources.add((id: chunk.bankData.mediaInformation.sourceID, streamType: chunk.bankData.streamType));
+    } else if (chunk is BnkMusicTrack) {
+      for (var src in chunk.sources)
+        sources.add((id: src.sourceID, streamType: src.streamType));
+    }
+    for (var src in sources) {
+      if (src.streamType == 2)
+        prefetchedIds.add(src.id);
+    }
+  }
+
   await Directory(extractPath).create(recursive: true);
 
-  List<Tuple2<int, String>> wems = [];
+  List<({int id, String path, bool isPrefetched})> wems = [];
   for (int i = 0; i < didx.length; i++) {
     var entry = didx[i];
     var wemId = entry.id;
@@ -33,7 +48,7 @@ Future<List<Tuple2<int, String>>> extractBnkWems(BnkFile bnk, String extractPath
     var bytes = data[i];
 
     var savePath = join(extractPath, wemFileName);
-    wems.add(Tuple2(wemId, savePath));
+    wems.add((id: wemId, path: savePath, isPrefetched: prefetchedIds.contains(wemId)));
     if (noExtract)
       continue;
     var byteData = ByteDataWrapper.allocate(bytes.length);
@@ -48,5 +63,5 @@ Future<List<String>> extractBnkWemsFromPath(String bnkPath) async {
   var bnk = BnkFile.read(await ByteDataWrapper.fromFile(bnkPath));
   var extractPath = join(dirname(bnkPath), "${basename(bnkPath)}_extracted");
   var wems = await extractBnkWems(bnk, extractPath);
-  return wems.map((e) => e.item2).toList();
+  return wems.map((e) => e.path).toList();
 }

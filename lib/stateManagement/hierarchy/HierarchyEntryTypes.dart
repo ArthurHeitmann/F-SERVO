@@ -245,6 +245,7 @@ abstract class GenericFileHierarchyEntry extends FileHierarchyEntry {
     entry.overrideUuid(uuid);
     entry.isSelected.value = isSelected.value;
     entry.isCollapsed.value = isCollapsed.value;
+    entry.optionalFileInfo = optionalFileInfo;
     entry.replaceWith(children.map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
     return entry;
   }

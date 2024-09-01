@@ -7,6 +7,7 @@ import 'package:path/path.dart';
 
 import '../../../background/wemFilesIndexer.dart';
 import '../../../fileTypeUtils/audio/bnkIO.dart';
+import '../../../fileTypeUtils/audio/convertStreamedToInMemory.dart';
 import '../../../fileTypeUtils/audio/removePrefetchWems.dart';
 import '../../../fileTypeUtils/audio/wemIdsToNames.dart';
 import '../../../fileTypeUtils/audio/wwiseObjectPath.dart';
@@ -86,7 +87,7 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
             }
           }
         }
-        Future<void> addWemChild(int srcId) async {
+        Future<void> addWemChild(int srcId, int streamType) async {
           var srcName = wemIdsToNames.containsKey(srcId) ? "${wemIdsToNames[srcId]!} ($srcId)" : srcId.toString();
           var wemPath = await wemFilesLookup.lookupWithAdditionalDir(srcId, extractedPath);
           if (hircEntries.containsKey(srcId)) {
@@ -95,14 +96,14 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
           }
           else {
             var srcEntry = BnkHircHierarchyEntry(srcName, wemPath ?? "", "WEM", id: srcId, parentIds: [hirc.uid]);
-            srcEntry.optionalFileInfo = OptionalWemData(path, WemSource.bnk);
+            srcEntry.optionalFileInfo = OptionalWemData(path, WemSource.bnk, isStreamed: streamType > 0, isPrefetched: streamType == 2);
             hircEntries[srcId] = srcEntry;
           }
         }
         if (hircChunk is BnkMusicTrack) {
           for (var src in hircChunk.sources) {
             var srcId = src.fileID;
-            await addWemChild(srcId);
+            await addWemChild(srcId, src.streamType);
           }
         }
         for (var rtpc in baseParams.rtpc.rtpc) {
@@ -112,7 +113,7 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
           var srcId = hircChunk.bankData.mediaInformation.uFileID;
           if (srcId == bnkId)
             srcId = hircChunk.bankData.mediaInformation.sourceID;
-          await addWemChild(srcId);
+          await addWemChild(srcId, hircChunk.bankData.streamType);
         }
         if (hircChunk is BnkMusicSwitch) {
           if (wemIdsToNames.containsKey(hircChunk.ulGroupID))
@@ -667,6 +668,7 @@ class BnkHircHierarchyEntry extends GenericFileHierarchyEntry {
 
   @override
   List<HierarchyEntryAction> getContextMenuActions() {
+    var fileInfo = optionalFileInfo;
     return [
       if (entryName != null || wemIdsToNames.containsKey(id))
         HierarchyEntryAction(
@@ -679,6 +681,12 @@ class BnkHircHierarchyEntry extends GenericFileHierarchyEntry {
         icon: Icons.copy,
         action: () => copyToClipboard(id.toString()),
       ),
+      if (fileInfo is OptionalWemData && (fileInfo.isStreamed || fileInfo.isPrefetched))
+        HierarchyEntryAction(
+          name: "Make in memory",
+          icon: Icons.swap_horiz,
+          action: () => convertStreamedToInMemory(fileInfo.bnkPath, id),
+        ),
       ...super.getContextMenuActions(),
     ];
   }

@@ -58,8 +58,10 @@ enum WemSource {
 class OptionalWemData extends OptionalFileInfo {
   final String bnkPath;
   final WemSource source;
+  final bool isStreamed;
+  final bool isPrefetched;
 
-  const OptionalWemData(this.bnkPath, this.source);
+  const OptionalWemData(this.bnkPath, this.source, { this.isStreamed = false, this.isPrefetched = false });
 }
 
 class WemFileData extends OpenFileData with AudioFileData {

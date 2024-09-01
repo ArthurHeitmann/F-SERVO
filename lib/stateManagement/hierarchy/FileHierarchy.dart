@@ -411,10 +411,10 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
     var wemParentEntry = BnkSubCategoryParentHierarchyEntry("WEM files");
     bnkEntry.add(wemParentEntry);
     wemParentEntry.addAll(wemFiles.map((e) => WemHierarchyEntry(
-      StringProp(basename(e.item2), fileId: null),
-      e.item2,
-      e.item1,
-      OptionalWemData(bnkPath, WemSource.bnk)
+      StringProp(basename(e.path), fileId: null),
+      e.path,
+      e.id,
+      OptionalWemData(bnkPath, WemSource.bnk, isStreamed: e.isPrefetched, isPrefetched: e.isPrefetched)
     )));
     if (wemFiles.length > 8)
       wemParentEntry.isCollapsed.value = true;

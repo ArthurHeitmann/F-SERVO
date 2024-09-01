@@ -7,6 +7,7 @@ import 'package:path/path.dart';
 
 import '../../../fileTypeUtils/audio/audioModPacker.dart';
 import '../../../fileTypeUtils/audio/audioModsChangesUndo.dart';
+import '../../../fileTypeUtils/audio/convertStreamedToInMemory.dart';
 import '../../../fileTypeUtils/audio/modInstaller.dart';
 import '../../../fileTypeUtils/audio/waiExtractor.dart';
 import '../../../fileTypeUtils/audio/wemToWavConverter.dart';
@@ -178,12 +179,19 @@ class WemHierarchyEntry extends GenericFileHierarchyEntry {
 
   @override
   List<HierarchyEntryAction> getActions() {
+    var fileInfo = optionalFileInfo;
     return [
       HierarchyEntryAction(
         name: "Save as WAV",
         icon: Icons.file_download,
         action: exportAsWav,
       ),
+      if (fileInfo is OptionalWemData && fileInfo.isPrefetched)
+        HierarchyEntryAction(
+          name: "Make in memory",
+          icon: Icons.swap_horiz,
+          action: () => convertStreamedToInMemory(fileInfo.bnkPath, wemId),
+        ),
       ...super.getActions(),
     ];
   }
