@@ -1,4 +1,6 @@
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -7,6 +9,7 @@ import 'SelectableListEntry.dart';
 
 mixin ArrowNavigationList<T extends StatefulWidget> on State<T> {
   int focusedIndex = 0;
+  final selectionChangeStream = StreamController<void>.broadcast();
 
   int get itemCount;
 
@@ -18,6 +21,7 @@ mixin ArrowNavigationList<T extends StatefulWidget> on State<T> {
     else if (focusedIndex >= resultsLength)
       focusedIndex = 0;
     setState(() { });
+    selectionChangeStream.add(null);
   }
 
   void selectFocused();

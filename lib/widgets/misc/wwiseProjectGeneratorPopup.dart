@@ -1,5 +1,4 @@
 
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:desktop_drop/desktop_drop.dart';
@@ -74,7 +73,7 @@ class __WwiseProjectGeneratorPopupState extends State<_WwiseProjectGeneratorPopu
   void initState() {
     super.initState();
     var prefs = PreferencesData();
-    var lastSettings = jsonDecode(prefs.lastWwiseProjectSettingsJson?.value ?? "{}") as Map;
+    var lastSettings = prefs.lastWwiseProjectSettings?.value ?? {};
     optAudioHierarchy = BoolProp(lastSettings["optAudioHierarchy"] as bool? ?? true, fileId: null);
     optWems = BoolProp(lastSettings["optWems"] as bool? ?? true, fileId: null);
     optStreaming = BoolProp(lastSettings["optStreaming"] as bool? ?? true, fileId: null);
@@ -469,7 +468,7 @@ class __WwiseProjectGeneratorPopupState extends State<_WwiseProjectGeneratorPopu
       randomWemId: randomWemId.value,
     );
     var prefs = PreferencesData();
-    prefs.lastWwiseProjectSettingsJson!.value = jsonEncode({
+    prefs.lastWwiseProjectSettings!.value = {
       "optAudioHierarchy": optAudioHierarchy.value,
       "optWems": optWems.value,
       "optStreaming": optStreaming.value,
@@ -482,7 +481,7 @@ class __WwiseProjectGeneratorPopupState extends State<_WwiseProjectGeneratorPopu
       "optActions": optActions.value,
       "randomObjId": randomObjId.value,
       "randomWemId": randomWemId.value,
-    });
+    };
     hasStarted = true;
     setState(() {});
     generator = await WwiseProjectGenerator.generateFromBnks(

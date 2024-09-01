@@ -1,4 +1,6 @@
 
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -33,6 +35,8 @@ class SavableProp<T> extends ValueProp<T> {
     var val = prefs.get(key);
     if (T == ThemeType)
       return val != null ? ThemeType.values[val as int] as T : null;
+    if (T == List || T == Map)
+      return val != null ? jsonDecode(val as String) as T : null;
     return val as T?;
   } 
   
@@ -50,6 +54,8 @@ class SavableProp<T> extends ValueProp<T> {
       prefs.setStringList(key, value as List<String>);
     else if (T == ThemeType)
       prefs.setInt(key, ThemeType.values.indexOf(value as ThemeType));
+    else if (T == List || T == Map)
+      prefs.setString(key, jsonEncode(value));
     else
       throw Exception("Unsupported type: $T");
   }
@@ -87,7 +93,9 @@ class PreferencesData extends OpenFileData {
   SavableProp<String>? lastCpkExtractDir;
   SavableProp<String>? lastSearchDir;
   SavableProp<String>? lastWwiseProjectDir;
-  SavableProp<String>? lastWwiseProjectSettingsJson;
+  SavableProp<Map>? lastWwiseProjectSettings;
+  SavableProp<List<String>>? lastHierarchyFiles;
+  // SavableProp<List<String>>? lastOpenedFiles;
 
   PreferencesData._() 
     : prefsFuture = SharedPreferences.getInstance(),
@@ -137,7 +145,9 @@ class PreferencesData extends OpenFileData {
     lastCpkExtractDir = SavableProp<String>("lastCpkExtractDir", _prefs!, "");
     lastSearchDir = SavableProp<String>("lastSearchDir", _prefs!, "");
     lastWwiseProjectDir = SavableProp<String>("lastWwiseProjectDir", _prefs!, "");
-    lastWwiseProjectSettingsJson = SavableProp<String>("lastWwiseProjectSettingsJson", _prefs!, "{}");
+    lastWwiseProjectSettings = SavableProp("lastWwiseProjectSettings", _prefs!, {});
+    lastHierarchyFiles = SavableProp("lastHierarchyFiles", _prefs!, []);
+    // lastOpenedFiles = SavableProp("lastOpenedFiles", _prefs!, []);
 
     await super.load();
     _loadingState = LoadingState.loaded;

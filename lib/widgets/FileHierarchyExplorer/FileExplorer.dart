@@ -1,4 +1,6 @@
 
+import 'dart:io';
+
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -6,9 +8,11 @@ import 'package:flutter/material.dart';
 import '../../stateManagement/events/statusInfo.dart';
 import '../../stateManagement/hierarchy/FileHierarchy.dart';
 import '../../stateManagement/hierarchy/HierarchyEntryTypes.dart';
+import '../../stateManagement/preferencesData.dart';
 import '../../utils/utils.dart';
 import '../../widgets/theme/customTheme.dart';
 import '../misc/ChangeNotifierWidget.dart';
+import '../misc/selectionPopup.dart';
 import '../propEditors/UnderlinePropTextField.dart';
 import '../propEditors/propEditorFactory.dart';
 import '../propEditors/propTextField.dart';
@@ -65,7 +69,7 @@ class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const Divider(height: 1),
-          makeTopRow(),
+          makeTopRow(context),
           const Divider(height: 1),
           Expanded(
             child: Stack(
@@ -76,7 +80,7 @@ class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
                     child: Text("No files open"),
                   ),
                 if (isDroppingFile)
-                  makeItemHoveredIndicator()
+                  makeItemHoveredIndicator(context),
               ],
             ),
           ),
@@ -85,13 +89,13 @@ class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
     );
   }
 
-  Widget makeTopRow() {
+  Widget makeTopRow(BuildContext context) {
     return Row(
       children: [
         if (!expandSearch)
           const Expanded(
             child: Padding(
-              padding: EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+              padding: EdgeInsets.symmetric(vertical: 6.0, horizontal: 8.0),
               child: Text("FILE EXPLORER", 
                 style: TextStyle(
                   fontSize: 14,
@@ -110,63 +114,75 @@ class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
           ),
           const SizedBox(width: 8),
         ],
-        IconButton(
-          icon: const Icon(Icons.search),
-          padding: const EdgeInsets.all(5),
-          constraints: const BoxConstraints(),
-          iconSize: 16,
-          splashRadius: 20,
-          onPressed: () => setState(() {
-            expandSearch = !expandSearch;
-            if (!expandSearch)
-              openHierarchyManager.search.value = "";
-          }),
+        Tooltip(
+          message: "Search",
+          waitDuration: const Duration(milliseconds: 500),
+          child: IconButton(
+            icon: const Icon(Icons.search),
+            padding: const EdgeInsets.all(5),
+            constraints: const BoxConstraints(),
+            iconSize: 16,
+            splashRadius: 20,
+            onPressed: () => setState(() {
+              expandSearch = !expandSearch;
+              if (!expandSearch)
+                openHierarchyManager.search.value = "";
+            }),
+          ),
         ),
-        Row(
-          children: [
-            Tooltip(
-              message: "Open file",
-              waitDuration: const Duration(milliseconds: 500),
-              child: IconButton(
-                padding: const EdgeInsets.all(5),
-                constraints: const BoxConstraints(),
-                iconSize: 20,
-                splashRadius: 20,
-                icon: const Icon(Icons.folder_open, size: 15,),
-                onPressed: openFilePicker,
-              ),
-            ),
-            Tooltip(
-              message: "Expand all",
-              waitDuration: const Duration(milliseconds: 500),
-              child: IconButton(
-                padding: const EdgeInsets.all(5),
-                constraints: const BoxConstraints(),
-                iconSize: 20,
-                splashRadius: 20,
-                icon: const Icon(Icons.unfold_more, size: 17),
-                onPressed: openHierarchyManager.expandAll,
-              ),
-            ),
-            Tooltip(
-              message: "Collapse all",
-              waitDuration: const Duration(milliseconds: 500),
-              child: IconButton(
-                padding: const EdgeInsets.all(5),
-                constraints: const BoxConstraints(),
-                iconSize: 20,
-                splashRadius: 20,
-                icon: const Icon(Icons.unfold_less, size: 17),
-                onPressed: openHierarchyManager.collapseAll,
-              ),
-            ),
-          ],
+        Tooltip(
+          message: "Open file",
+          waitDuration: const Duration(milliseconds: 500),
+          child: IconButton(
+            padding: const EdgeInsets.all(5),
+            constraints: const BoxConstraints(),
+            iconSize: 20,
+            splashRadius: 20,
+            icon: const Icon(Icons.folder_open, size: 15,),
+            onPressed: openFilePicker,
+          ),
+        ),
+        Tooltip(
+          message: "Open recent file",
+          waitDuration: const Duration(milliseconds: 500),
+          child: IconButton(
+            icon: const Icon(Icons.history),
+            padding: const EdgeInsets.all(5),
+            constraints: const BoxConstraints(),
+            iconSize: 16,
+            splashRadius: 20,
+            onPressed: () => showMostRecentFiles(context),
+          ),
+        ),
+        Tooltip(
+          message: "Expand all",
+          waitDuration: const Duration(milliseconds: 500),
+          child: IconButton(
+            padding: const EdgeInsets.all(5),
+            constraints: const BoxConstraints(),
+            iconSize: 20,
+            splashRadius: 20,
+            icon: const Icon(Icons.unfold_more, size: 17),
+            onPressed: openHierarchyManager.expandAll,
+          ),
+        ),
+        Tooltip(
+          message: "Collapse all",
+          waitDuration: const Duration(milliseconds: 500),
+          child: IconButton(
+            padding: const EdgeInsets.all(5),
+            constraints: const BoxConstraints(),
+            iconSize: 20,
+            splashRadius: 20,
+            icon: const Icon(Icons.unfold_less, size: 17),
+            onPressed: openHierarchyManager.collapseAll,
+          ),
         ),
       ],
     );
   }
 
-  Widget makeItemHoveredIndicator() {
+  Widget makeItemHoveredIndicator(BuildContext context) {
     return Positioned(
       top: 0,
       left: 0,
@@ -186,5 +202,26 @@ class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
         ),
       ),
     );
+  }
+
+  void showMostRecentFiles(BuildContext context) async {
+    var prefs = PreferencesData();
+    var recentFiles = prefs.lastHierarchyFiles?.value ?? [];
+    recentFiles = recentFiles
+      .where((f) {
+        try {
+          return File(f).existsSync();
+        } catch (e) {
+          return false;
+        }
+      })
+      .toList();
+    var selectedPath = await showSelectionPopup(context, [
+      for (var file in recentFiles)
+        SelectionPopupConfig(name: trimFilePath(file, 40), key: Key(file), getValue: () => file)
+    ]);
+    if (selectedPath == null)
+      return;
+    await openHierarchyManager.openFile(selectedPath);
   }
 }
