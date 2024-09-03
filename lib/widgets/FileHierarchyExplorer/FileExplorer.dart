@@ -1,7 +1,6 @@
 
 import 'dart:io';
 
-import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
@@ -12,6 +11,7 @@ import '../../stateManagement/preferencesData.dart';
 import '../../utils/utils.dart';
 import '../../widgets/theme/customTheme.dart';
 import '../misc/ChangeNotifierWidget.dart';
+import '../misc/dropTargetBuilder.dart';
 import '../misc/selectionPopup.dart';
 import '../propEditors/UnderlinePropTextField.dart';
 import '../propEditors/propEditorFactory.dart';
@@ -26,14 +26,13 @@ class FileExplorer extends ChangeNotifierWidget {
 }
 
 class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
-  bool isDroppingFile = false;
   bool expandSearch = false;
 
-  void openFile(DropDoneDetails details) async {
+  void openFile(List<String> files) async {
     List<Future<HierarchyEntry?>> futures = [];
 
-    for (var file in details.files) {
-      futures.add(openHierarchyManager.openFile(file.path));
+    for (var file in files) {
+      futures.add(openHierarchyManager.openFile(file));
     }
 
     var openedFiles = await Future.wait(futures);
@@ -57,15 +56,9 @@ class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
 
   @override
   Widget build(BuildContext context) {
-    return DropTarget(
-      enable: ModalRoute.of(context)!.isCurrent,
-      onDragEntered: (details) => setState(() => isDroppingFile = true),
-      onDragExited: (details) => setState(() => isDroppingFile = false),
-      onDragDone: (details) {
-        isDroppingFile = false;
-        openFile(details);
-      },
-      child: Column(
+    return DropTargetBuilder(
+      onDrop: (files) => openFile(files),
+      builder: (context, isDropping) => Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const Divider(height: 1),
@@ -79,7 +72,7 @@ class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
                   const Center(
                     child: Text("No files open"),
                   ),
-                if (isDroppingFile)
+                if (isDropping)
                   makeItemHoveredIndicator(context),
               ],
             ),

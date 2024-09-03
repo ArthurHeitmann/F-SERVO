@@ -236,7 +236,13 @@ Future<void> waitForNextFrame() {
   return completer.future;
 }
 
+({String msg, int time})? lastToast;
 void showToast(String msg, [Duration duration = const Duration(seconds: 4)]) {
+  var now = DateTime.now().millisecondsSinceEpoch;
+  if (lastToast?.msg == msg && now - lastToast!.time < duration.inMilliseconds) {
+    lastToast = (msg: msg, time: now);
+    return;
+  }
   print("showToast: $msg");
   messageLog.add(msg);
   FToast toast = FToast();
@@ -817,4 +823,11 @@ String trimFilePath(String path, int maxLength) {
     parts.removeLast();
   }
   return "...$sep${usedParts.join(sep)}";
+}
+
+void debugOnly(void Function() func) {
+  assert(() {
+    func();
+    return true;
+  }());
 }

@@ -1,8 +1,6 @@
 import 'dart:io';
 import 'dart:math';
 
-import 'package:cross_file/cross_file.dart';
-import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as path;
@@ -16,6 +14,8 @@ import '../../stateManagement/openFiles/openFilesManager.dart';
 import '../../utils/utils.dart';
 import '../../widgets/theme/customTheme.dart';
 import '../misc/ChangeNotifierWidget.dart';
+import '../misc/dropTargetBuilder.dart';
+import '../misc/indexedStackIsVisible.dart';
 import 'FileTabEntry.dart';
 import 'FileType.dart';
 
@@ -33,7 +33,6 @@ class FileTabView extends ChangeNotifierWidget {
 class _FileTabViewState extends ChangeNotifierState<FileTabView> {
   ScrollController tabBarScrollController = ScrollController();
   String? prevActiveUuid;
-  bool isDroppingFile = false;
 
   @override
   void onNotified() {
@@ -69,23 +68,24 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
       tabBarScrollController.animateTo(tabEnd - viewWidth, duration: const Duration(milliseconds: 250), curve: Curves.ease);
   }
 
-  void openFiles(List<XFile> files) async {
+  void openFiles(List<String> files) async {
     if (files.isEmpty)
       return;
     OpenFileData? firstFile;
     int openedFiles = 0;
     const fileExplorerExtensions = { ".pak", ...datExtensions, ".yax", ".bin", ".wai", ".wsp", ...bxmExtensions, ".bnk", ".cpk" };
     for (var file in files) {
-      bool isSaveSlotData = file.name.startsWith("SlotData_") && file.name.endsWith(".dat");
-      if (fileExplorerExtensions.contains(path.extension(file.name)) && !isSaveSlotData || await Directory(file.path).exists()) {
-        var entry = await openHierarchyManager.openFile(file.path);
+      var fileName = path.basename(file);
+      bool isSaveSlotData = fileName.startsWith("SlotData_") && fileName.endsWith(".dat");
+      if (fileExplorerExtensions.contains(path.extension(fileName)) && !isSaveSlotData || await Directory(file).exists()) {
+        var entry = await openHierarchyManager.openFile(file);
         if (entry?.isOpenable == true)
           entry!.onOpen();
         if (entry != null)
           openedFiles++;
         continue;
       }
-      var newFileData = areasManager.openFile(file.path, toArea: widget.viewArea);
+      var newFileData = areasManager.openFile(file, toArea: widget.viewArea);
       openedFiles++;
       firstFile ??= newFileData;
     }
@@ -99,21 +99,15 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
 
   @override
   Widget build(BuildContext context) {
-    return DropTarget(
-      enable: ModalRoute.of(context)!.isCurrent,
-      onDragEntered: (details) => setState(() => isDroppingFile = true),
-      onDragExited: (details) => setState(() => isDroppingFile = false),
-      onDragDone: (details) {
-        isDroppingFile = false;
-        openFiles(details.files);
-      },
-      child: setupShortcuts(
+    return DropTargetBuilder(
+      onDrop: openFiles,
+      builder: (context, isDropping) => setupShortcuts(
         child: Stack(
           children: [
             Positioned.fill(
               child: widget.viewArea.currentFile.value != null
                 ? makeFilesStack(context)
-                : makeEmptyTab(context),
+                : makeEmptyTab(context, isDropping),
             ),
             makeTabBar(),
           ],
@@ -131,21 +125,26 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
   }
 
   Widget makeFilesStack(BuildContext context) {
+    var currentFileIndex = widget.viewArea.files.indexOf(widget.viewArea.currentFile.value!);
     return IndexedStack(
-      index: widget.viewArea.files.indexOf(widget.viewArea.currentFile.value!),
-      children: widget.viewArea.files.map((file) =>
-        ConstrainedBox(
-          key: Key(file.uuid),
-          constraints: const BoxConstraints.expand(),
-          child: FocusTraversalGroup(
-            child: makeFileEditor(file),
-          ),
-        )
-      ).toList(),
+      index: currentFileIndex,
+      children: [
+        for (var (i, file) in widget.viewArea.files.indexed)
+          IndexedStackIsVisible(
+            isVisible: i == currentFileIndex,
+            child: ConstrainedBox(
+              key: Key(file.uuid),
+              constraints: const BoxConstraints.expand(),
+              child: FocusTraversalGroup(
+                child: makeFileEditor(file),
+              ),
+            ),
+          )
+      ],
     );
   }
 
-  Widget makeEmptyTab(BuildContext context) {
+  Widget makeEmptyTab(BuildContext context, bool isDropping) {
     return Center(
       child: ConstrainedBox(
         constraints: BoxConstraints.loose(const Size(150, 150)),
@@ -155,7 +154,7 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
             duration: const Duration(milliseconds: 250),
             turns: Random().nextInt(100) == 69 ? 1 : 0,
             child: AnimatedScale(
-              scale: isDroppingFile ? 1.25 : 1.0,
+              scale: isDropping ? 1.25 : 1.0,
               duration: const Duration(milliseconds: 250),
               curve: const _BezierCurve(0, 1.5, 1.2, 1),
               child: Image(

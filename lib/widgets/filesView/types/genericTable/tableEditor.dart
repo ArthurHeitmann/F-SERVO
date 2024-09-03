@@ -381,6 +381,7 @@ class _TableEditorState extends ChangeNotifierState<TableEditor> {
                   controller: controller,
                   physics: physics,
                   itemCount: rows.length,
+                  cacheExtent: 4000,
                   itemBuilder: (context, i) => _TableRow(i % 2 == 1, rows[i].index, rows[i].rowConfig, widget.config),
                 );
               }

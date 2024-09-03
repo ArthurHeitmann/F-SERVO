@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../stateManagement/preferencesData.dart';
+import '../utils/utils.dart';
 import 'FileHierarchyExplorer/FileExplorer.dart';
 import 'FileHierarchyExplorer/fileMetaEditor.dart';
 import 'filesView/OpenFilesAreas.dart';
@@ -29,7 +30,7 @@ class _EditorLayoutState extends ChangeNotifierState<EditorLayout> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Sidebar(
-          initialWidth: MediaQuery.of(context).size.width * 0.22,
+          initialWidth: clamp(MediaQuery.of(context).size.width * 0.3, 380, 440),
           entries: [
             SidebarEntryConfig(
               name: "Files",

@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 
 import '../../stateManagement/openFiles/openFilesManager.dart';
+import '../../utils/utils.dart';
 import '../FileHierarchyExplorer/fileMetaEditor.dart';
 import '../filesView/FileDetailsEditor.dart';
 import '../filesView/FileType.dart';
@@ -40,7 +41,7 @@ class _RightSidebarState extends ChangeNotifierState<RightSidebar> {
         assert(remainingPercentage >= 0);
         defaultRatios.add(remainingPercentage);
         return Sidebar(
-          initialWidth: MediaQuery.of(context).size.width * 0.25,
+          initialWidth: clamp(MediaQuery.of(context).size.width * 0.25, 200, 300),
           switcherPosition: SidebarSwitcherPosition.right,
           entries: [
             SidebarEntryConfig(
