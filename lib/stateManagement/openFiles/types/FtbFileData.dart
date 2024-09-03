@@ -256,7 +256,7 @@ class FtbData extends ChangeNotifier {
         imgOperations,
     );
     var atlasInfo = await runFontAtlasGenerator(cliArgs);
-    await pngToDds(ddsPath, texPngPath);
+    await texToDds(texPngPath, ddsPath);
 
     messageLog.add("Generated font atlas $batchI with ${atlasInfo.symbols.length} symbols");
 
@@ -457,7 +457,7 @@ class FtbData extends ChangeNotifier {
       await File(ddsSavePath).writeAsBytes(texBytes);
       // convert dds to png
       var pngSavePath = join(extractDir, "$i.png");
-      await ddsToPng(ddsSavePath, pngSavePath);
+      await texToPng(ddsSavePath, pngPath: pngSavePath);
       textures[i].extractedPngPath = pngSavePath;
     }
   }

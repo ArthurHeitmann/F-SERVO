@@ -301,15 +301,15 @@ class _ExtractFilesToolState extends State<ExtractFilesTool> {
                 ],
               ),
             const SizedBox(height: 10),
-            ConstrainedBox(
-              constraints: const BoxConstraints.tightFor(height: 50),
+            Container(
+              constraints: const BoxConstraints.tightFor(width: double.infinity),
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
               child: service == null || isStopped
-                ? TextButton(
+                ? ElevatedButton(
                   onPressed: hasFilesSelected || selectedDirectory != null ? extractFiles : null,
                   child: const Text(
                     "Extract Files",
                     textAlign: TextAlign.center,
-                    textScaler: TextScaler.linear(1.2),
                   ),
                 )
                 : TextButton(
@@ -317,7 +317,6 @@ class _ExtractFilesToolState extends State<ExtractFilesTool> {
                   child: const Text(
                     "Cancel",
                     textAlign: TextAlign.center,
-                    textScaler: TextScaler.linear(1.2),
                   ),
                 ),
             ),

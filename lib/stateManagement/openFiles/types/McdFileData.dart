@@ -1152,7 +1152,7 @@ class McdData extends _McdFilePart {
 
     // save texture
     var texDdsPath = "${texPngPath.substring(0, texPngPath.length - 3)}dds";
-    await pngToDds(texDdsPath, texPngPath);
+    await texToDds(texPngPath, texDdsPath);
     await File(texDdsPath).rename(textureWtpPath.value);
     var texFileSize = await File(textureWtpPath.value).length();
 

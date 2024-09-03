@@ -6,10 +6,19 @@ import '../../stateManagement/events/statusInfo.dart';
 import '../../utils/assetDirFinder.dart';
 import '../../utils/utils.dart';
 
-Future<void> pngToDds(String ddsPath, String pngPath) async {
+Future<void> texToDds(String srcPath, String dstPath, { String compression = "dxt5", int mipmaps = 0 }) async {
   var result = await Process.run(
     magickBinPath!,
-    [pngPath, "-define", "dds:mipmaps=0", ddsPath]
+    [
+      srcPath,
+      if (dstPath.endsWith(".dds")) ...[
+        "-define",
+        "dds:compression=$compression",
+        "-define",
+        "dds:mipmaps=$mipmaps",
+      ],
+      dstPath
+      ]
   );
   if (result.exitCode != 0) {
     messageLog.add("stdout: ${result.stdout}");
@@ -19,22 +28,30 @@ Future<void> pngToDds(String ddsPath, String pngPath) async {
   }
 }
 
-Future<Uint8List?> ddsToPng(String ddsPath, [String? pngPath]) async {
+Future<Uint8List?> texToPng(String ddsPath, {String? pngPath, int? maxHeight, bool verbose = true}) async {
   if (!await hasMagickBins()) {
-    showToast("Can't load texture because ImageMagick is not found.");
+    if (verbose)
+      showToast("Can't load texture because ImageMagick is not found.");
     if (pngPath == null)
       return null;
     throw Exception("Can't load texture because ImageMagick is not found.");
   }
   var result = await Process.run(
     magickBinPath!,
-    ["DDS:$ddsPath", pngPath == null ? "PNG:-" : "PNG:$pngPath"],
+    [
+      ddsPath,
+      if (maxHeight != null) ...[
+        "-resize", "x$maxHeight",
+      ],
+      pngPath == null ? "PNG:-" : "PNG:$pngPath",
+    ],
     stdoutEncoding: pngPath == null ? null : systemEncoding,
+    stderrEncoding: systemEncoding,
   );
   if (result.exitCode != 0) {
-    showToast("Can't load texture because ImageMagick failed to convert DDS to PNG.");
-    if (pngPath == null)
-      return null;
+    if (verbose)
+      showToast("Can't load texture because ImageMagick failed to convert DDS to PNG.");
+    print("stdout: ${result.stderr}");
     throw Exception("Can't load texture because ImageMagick failed to convert DDS to PNG.");
   }
   if (pngPath == null)

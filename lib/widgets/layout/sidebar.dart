@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../../main.dart';
 import '../../utils/utils.dart';
+import '../misc/indexedStackIsVisible.dart';
 import '../theme/customTheme.dart';
 
 class SidebarEntryConfig {
@@ -125,7 +126,13 @@ class _SidebarState extends State<Sidebar> with RouteAware {
                   link: _layerLink,
                   child: IndexedStack(
                     index: _selectedIndex,
-                    children: widget.entries.map((e) => e.child).toList(),
+                    children: [
+                      for (var (i, entry) in widget.entries.indexed)
+                        IndexedStackIsVisible(
+                          isVisible: i == _selectedIndex,
+                          child: entry.child,
+                        )
+                    ]
                   ),
                 ),
               ),

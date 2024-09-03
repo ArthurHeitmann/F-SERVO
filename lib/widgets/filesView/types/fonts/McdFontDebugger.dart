@@ -53,7 +53,7 @@ class _McdFontDebuggerState extends ChangeNotifierState<McdFontDebugger> {
         setState(() {});
     }
     else if (widget.texturePath.endsWith(".dds") || widget.texturePath.endsWith(".wtp")) {
-      var imageBytes = await ddsToPng(widget.texturePath);
+      var imageBytes = await texToPng(widget.texturePath);
       if (imageBytes == null)
         return;
       image = Image.memory(imageBytes, fit: BoxFit.contain);
