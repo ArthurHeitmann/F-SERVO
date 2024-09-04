@@ -5,7 +5,7 @@ import '../utils/ByteDataWrapper.dart';
 class WtaFileHeader {
   static const size = 32;
   String id;
-  int unknown;
+  int version;
   int numTex;
   int offsetTextureOffsets;
   int offsetTextureSizes;
@@ -13,9 +13,9 @@ class WtaFileHeader {
   int offsetTextureIdx;
   int offsetEnd;
 
-  WtaFileHeader.empty() :
+  WtaFileHeader.empty({int? version}) :
     id = "WTB\x00",
-    unknown = 1,
+    version = version ?? 1,
     numTex = 0,
     offsetTextureOffsets = 0,
     offsetTextureSizes = 0,
@@ -25,7 +25,7 @@ class WtaFileHeader {
 
   WtaFileHeader.read(ByteDataWrapper bytes) :
     id = bytes.readString(4),
-    unknown = bytes.readInt32(),
+    version = bytes.readInt32(),
     numTex = bytes.readInt32(),
     offsetTextureOffsets = bytes.readUint32(),
     offsetTextureSizes = bytes.readUint32(),
@@ -35,7 +35,7 @@ class WtaFileHeader {
   
   void write(ByteDataWrapper bytes) {
     bytes.writeString(id);
-    bytes.writeInt32(unknown);
+    bytes.writeInt32(version);
     bytes.writeInt32(numTex);
     bytes.writeUint32(offsetTextureOffsets);
     bytes.writeUint32(offsetTextureSizes);
@@ -47,8 +47,10 @@ class WtaFileHeader {
   int getFileEnd() {
     if (offsetEnd != 0)
       return offsetEnd;
-    else
+    else if (offsetTextureIdx != 0)
       return offsetTextureIdx + numTex * 4;
+    else
+      return offsetTextureFlags + numTex * 4;
   }
 }
 
@@ -110,18 +112,18 @@ class WtaFile {
     await bytes.save(path);
   }
 
-  void updateHeader() {
+  void updateHeader({bool isWtb = false}) {
     header.numTex = textureOffsets.length;
     header.offsetTextureOffsets = 0x20;
     header.offsetTextureSizes = alignTo(header.offsetTextureOffsets + textureOffsets.length * 4, 32);
     header.offsetTextureFlags = alignTo(header.offsetTextureSizes + textureSizes.length * 4, 32);
-    if (textureIdx != null) {
+    if (textureIdx != null)
       header.offsetTextureIdx = alignTo(header.offsetTextureFlags + textureFlags.length * 4, 32);
-      header.offsetEnd = 0;
-    }
-    else {
+    else
       header.offsetTextureIdx = 0;
+    if (textureIdx == null && !isWtb)
       header.offsetEnd = alignTo(header.getFileEnd(), 32);
-    }
+    else
+      header.offsetEnd = 0;
   }
 }

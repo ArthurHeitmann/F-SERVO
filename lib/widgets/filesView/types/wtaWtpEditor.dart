@@ -5,11 +5,15 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 
+import '../../../fileTypeUtils/textures/ddsConverter.dart';
 import '../../../stateManagement/Property.dart';
+import '../../../stateManagement/events/statusInfo.dart';
 import '../../../stateManagement/listNotifier.dart';
 import '../../../stateManagement/openFiles/types/WtaWtpData.dart';
 import '../../../utils/utils.dart';
-import '../../theme/customTheme.dart';
+import '../../misc/ChangeNotifierWidget.dart';
+import '../../misc/expandOnHover.dart';
+import '../../misc/imagePreviewBuilder.dart';
 import 'genericTable/tableEditor.dart';
 
 class WtaWtpEditor extends StatefulWidget {
@@ -30,18 +34,18 @@ class _TexturesTableConfig with CustomTableConfig {
     : textures = texData.textures {
     this.name = name;
     columnNames = [
-      "ID", "Path", "", "",
+      "ID", "PNG", "Path", "", "",
       if (texData.hasAnySimpleModeFlags)
         "Is Albedo?",
       if (!texData.useFlagsSimpleMode)
         "Flags",
     ];
     columnFlex = [
-      2, 9, 1, 1,
+      3, 2, 14, 1, 1,
       if (texData.hasAnySimpleModeFlags)
-        2,
+        3,
       if (!texData.useFlagsSimpleMode)
-        2,
+        3,
     ];
     rowCount = NumberProp(textures.length, true, fileId: null);
     textures.addListener(() => rowCount.value = textures.length);
@@ -55,6 +59,7 @@ class _TexturesTableConfig with CustomTableConfig {
         textures[index].id != null
           ? PropCellConfig(prop: textures[index].id!)
           : CustomWidgetCellConfig(const SizedBox.shrink()),
+        _TexturePreviewCell(textures[index].path),
         PropCellConfig(prop: textures[index].path),
         CustomWidgetCellConfig(IconButton(
           icon: const Icon(Icons.folder, size: 20),
@@ -180,18 +185,89 @@ class _WtaWtpEditorState extends State<WtaWtpEditor> {
     return Stack(
       children: [
         TableEditor(config: _texturesTableConfig!),
-        Positioned(
-          bottom: 8,
-          left: 8,
-          width: 40,
-          height: 40,
-          child: FloatingActionButton(
-          onPressed: _texturesTableConfig!.patchImportFolder,
-          foregroundColor: getTheme(context).textColor,
-          child: const Icon(Icons.create_new_folder),
-        ),
-        )
+        // Positioned(
+        //   bottom: 8,
+        //   left: 8,
+        //   width: 40,
+        //   height: 40,
+        //   child: FloatingActionButton(
+        //     onPressed: _texturesTableConfig!.patchImportFolder,
+        //     foregroundColor: getTheme(context).textColor,
+        //     child: const Icon(Icons.create_new_folder),
+        //   ),
+        // )
       ],
+    );
+  }
+}
+
+class _TexturePreviewCell extends CellConfig {
+  final StringProp path;
+
+  _TexturePreviewCell(this.path);
+  
+  @override
+  Widget makeWidget() {
+    return _TexturePreview(path: path);
+  }
+  
+  @override
+  String toExportString() {
+    return "";
+  }
+
+}
+
+class _TexturePreview extends ChangeNotifierWidget {
+  final StringProp path;
+
+  _TexturePreview({required this.path}) : super(notifier: path);
+
+  @override
+  State<_TexturePreview> createState() => __TexturePreviewState();
+}
+
+class __TexturePreviewState extends ChangeNotifierState<_TexturePreview> {
+  @override
+  Widget build(BuildContext context) {
+    return ImagePreviewBuilder(
+      maxHeight: 256,
+      path: widget.path.value,
+      builder: (context, data, state) {
+        if (state == ImagePreviewState.loading)
+          return const SizedBox.shrink();
+        if (state == ImagePreviewState.error)
+          return const Icon(Icons.error_outline);
+        if (state == ImagePreviewState.notFound)
+          return const Icon(Icons.help_outline);
+        return ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 100, maxHeight: 30),
+          child: ExpandOnHover(
+            size: 30,
+            child: MouseRegion(
+              cursor: SystemMouseCursors.click,
+              child: GestureDetector(
+                onTap: () async {
+                  var savePath = await FilePicker.platform.saveFile(
+                    dialogTitle: "Save PNG",
+                    type: FileType.custom,
+                    allowedExtensions: ["png"],
+                    fileName: "${basenameWithoutExtension(widget.path.value)}.png",
+                  );
+                  if (savePath == null)
+                    return;
+                  await texToPng(widget.path.value, pngPath: savePath);
+                  messageLog.add("Saved PNG ${basename(savePath)}");
+                },
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(5),
+                  child: Image.memory(data!),
+                ),
+              ),
+            ),
+          )
+        );
+      },
     );
   }
 }

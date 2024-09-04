@@ -460,14 +460,14 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
     var wtpName = "${basenameWithoutExtension(wtaPath)}.wtp";
     var datDir = dirname(wtaPath);
     var dttDir = await findDttDirOfDat(datDir);
-    String wtpPath;
+    String? wtpPath;
     if (dttDir != null)
       wtpPath = join(dttDir, wtpName);
     else {
       wtpPath = join(datDir, wtpName);
       if (!await File(wtpPath).exists()) {
         messageLog.add("Can't find WTP file of ${basename(wtaPath)}");
-        throw Exception("Can't find corresponding WTP file");
+        wtpPath = null;
       }
     }
 

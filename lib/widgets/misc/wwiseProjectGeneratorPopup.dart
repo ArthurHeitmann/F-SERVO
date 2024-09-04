@@ -1,7 +1,6 @@
 
 import 'dart:io';
 
-import 'package:desktop_drop/desktop_drop.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +17,7 @@ import '../propEditors/propTextField.dart';
 import '../theme/customTheme.dart';
 import 'ChangeNotifierWidget.dart';
 import 'SmoothScrollBuilder.dart';
+import 'dropTargetBuilder.dart';
 
 void showWwiseProjectGeneratorPopup(String bnkPath) {
   showDialog(
@@ -67,7 +67,6 @@ class __WwiseProjectGeneratorPopupState extends State<_WwiseProjectGeneratorPopu
   final status = WwiseProjectGeneratorStatus();
   final logScrollController = ScrollController();
   bool isScrollQueued = false;
-  bool isDroppingFile = false;
 
   @override
   void initState() {
@@ -189,23 +188,19 @@ class __WwiseProjectGeneratorPopupState extends State<_WwiseProjectGeneratorPopu
       const Text("Source BNKs:"),
       ConstrainedBox(
         constraints: const BoxConstraints(minHeight: 50, maxHeight: 200),
-        child: DropTarget(
-          onDragEntered: (_) => setState(() => isDroppingFile = true),
-          onDragExited: (_) => setState(() => isDroppingFile = false),
-          onDragDone: (details) {
-            isDroppingFile = false;
-            var newBnks = details.files
-              .map((f) => f.path)
+        child: DropTargetBuilder(
+          onDrop: (files) {
+            var newBnks = files
               .where((f) => f.endsWith(".bnk"))
               .where((f) => !bnkPaths.contains(f))
               .toList();
             bnkPaths.addAll(newBnks);
             setState(() {});
           },
-          child: Stack(
+          builder: (context, isDropping) => Stack(
             children: [
               _makeBnkList(context),
-              if (isDroppingFile)
+              if (isDropping)
                 Positioned.fill(
                   child: Align(
                     alignment: Alignment.center,

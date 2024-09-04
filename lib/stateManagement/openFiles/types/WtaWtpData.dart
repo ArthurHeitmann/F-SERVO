@@ -28,8 +28,10 @@ class WtaWtpData extends OpenFileData {
   final bool isWtb;
 
   WtaWtpData(super.name, super.path, { super.secondaryName, WtaWtpOptionalInfo? optionalInfo, this.isWtb = false }) :
-        wtpPath = optionalInfo?.wtpPath,
-        super(type: FileType.wta, icon: Icons.image);
+    wtpPath = optionalInfo?.wtpPath,
+    super(type: FileType.wta, icon: Icons.image) {
+    canBeReloaded = false;
+  }
 
   @override
   Future<void> load() async {
@@ -166,11 +168,12 @@ class WtaWtpTextures with HasUuid, Undoable implements Disposable {
   final String wtaPath;
   final String? wtpPath;
   final bool isWtb;
+  final int wtaVersion;
   final ValueListNotifier<WtaTextureEntry> textures;
   final bool hasAnySimpleModeFlags;
   final bool useFlagsSimpleMode;
 
-  WtaWtpTextures(this.file, this.wtaPath, this.wtpPath, this.isWtb, this.textures, this.useFlagsSimpleMode, this.hasAnySimpleModeFlags) {
+  WtaWtpTextures(this.file, this.wtaPath, this.wtpPath, this.isWtb, this.wtaVersion, this.textures, this.useFlagsSimpleMode, this.hasAnySimpleModeFlags) {
     textures.addListener(_onPropChange);
   }
 
@@ -211,11 +214,17 @@ class WtaWtpTextures with HasUuid, Undoable implements Disposable {
 
     messageLog.add("Done extracting textures");
 
-    return WtaWtpTextures(file, wtaPath, wtpPath, isWtb, textures, useFlagsSimpleMode, hashAnySimpleModeFlags);
+    return WtaWtpTextures(file, wtaPath, wtpPath, isWtb, wta.header.version, textures, useFlagsSimpleMode, hashAnySimpleModeFlags);
   }
 
   Future<void> save() async {
-    var wta = await WtaFile.readFromFile(wtaPath);
+    var wta = WtaFile(
+      WtaFileHeader.empty(version: wtaVersion),
+      List.filled(textures.length, -1),
+      await Future.wait(textures.map((e) => File(e.path.value).length())),
+      List.generate(textures.length, (index) => textures[index].getFlag()),
+      wtaVersion > 0 ? [] : null
+    );
 
     if (wta.textureIdx != null) {
       if (!textures.every((e) => e.id != null)) {
@@ -224,20 +233,8 @@ class WtaWtpTextures with HasUuid, Undoable implements Disposable {
       }
       wta.textureIdx = List.generate(textures.length, (index) => textures[index].id!.value);
     }
-    else
-      wta.textureIdx = null;
-    wta.textureOffsets = List.filled(textures.length, -1);
-    wta.textureFlags = List.generate(
-      textures.length,
-          (index) => textures[index].getFlag(),
-    );
 
-    // update sizes
-    wta.textureSizes = await Future.wait(textures.map((e) async {
-      return await File(e.path.value).length();
-    }));
-
-    wta.updateHeader();
+    wta.updateHeader(isWtb: isWtb);
 
     // update offsets (4096 byte alignment)
     int offset = isWtb ? alignTo(wta.header.getFileEnd(), 32) : 0;
@@ -287,6 +284,7 @@ class WtaWtpTextures with HasUuid, Undoable implements Disposable {
       wtaPath,
       wtpPath,
       isWtb,
+      wtaVersion,
       textures.takeSnapshot() as ValueListNotifier<WtaTextureEntry>,
       useFlagsSimpleMode,
       hasAnySimpleModeFlags,
