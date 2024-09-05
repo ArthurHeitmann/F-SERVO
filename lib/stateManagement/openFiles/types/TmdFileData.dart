@@ -7,6 +7,7 @@ import '../../../fileTypeUtils/tmd/tmdReader.dart';
 import '../../../fileTypeUtils/tmd/tmdWriter.dart';
 import '../../../widgets/filesView/FileType.dart';
 import '../../../widgets/filesView/types/genericTable/tableEditor.dart';
+import '../../../widgets/propEditors/propTextField.dart';
 import '../../Property.dart';
 import '../../changesExporter.dart';
 import '../../hasUuid.dart';
@@ -165,7 +166,7 @@ class TmdData extends ListNotifier<TmdEntryData> with CustomTableConfig, Undoabl
       key: Key(entry.uuid),
       cells: [
         PropCellConfig(prop: entry.id),
-        PropCellConfig(prop: entry.text, allowMultiline: true),
+        PropCellConfig(prop: entry.text, options: const PropTFOptions(isMultiline: true)),
       ],
     );
   }

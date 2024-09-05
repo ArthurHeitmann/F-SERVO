@@ -131,9 +131,9 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
       children: [
         for (var (i, file) in widget.viewArea.files.indexed)
           IndexedStackIsVisible(
+            key: Key(file.uuid),
             isVisible: i == currentFileIndex,
             child: ConstrainedBox(
-              key: Key(file.uuid),
               constraints: const BoxConstraints.expand(),
               child: FocusTraversalGroup(
                 child: makeFileEditor(file),

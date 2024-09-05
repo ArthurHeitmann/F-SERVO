@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 
 import '../../fileTypeUtils/textures/ddsConverter.dart';
+import '../../utils/utils.dart';
 
 enum ImagePreviewState {
   loading,
@@ -57,7 +58,9 @@ class _ImagePreviewBuilderState extends State<ImagePreviewBuilder> {
     exists = true;
     var sw = Stopwatch()..start();
     image = texToPng(widget.path, maxHeight: widget.maxHeight, verbose: false)
-      ..then((_) => print("Loaded image in ${sw.elapsedMilliseconds}ms"));
+      ..then((_) {
+        debugOnly(() => print("Loaded image in ${sw.elapsedMilliseconds}ms"));
+      });
     setState(() {});
   }
 

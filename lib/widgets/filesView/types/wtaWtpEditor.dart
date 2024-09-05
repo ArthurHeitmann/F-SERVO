@@ -9,6 +9,7 @@ import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/listNotifier.dart';
 import '../../../stateManagement/openFiles/types/WtaWtpData.dart';
 import '../../../utils/utils.dart';
+import '../../propEditors/propTextField.dart';
 import '../../theme/customTheme.dart';
 import 'genericTable/tableEditor.dart';
 
@@ -53,7 +54,7 @@ class _TexturesTableConfig with CustomTableConfig {
       key: Key(textures[index].uuid),
       cells: [
         PropCellConfig(prop: textures[index].id),
-        PropCellConfig(prop: textures[index].path),
+        PropCellConfig(prop: textures[index].path, options: const PropTFOptions(isFilePath: true)),
         CustomWidgetCellConfig(IconButton(
           icon: const Icon(Icons.folder, size: 20),
           onPressed: () => _selectTexture(index),

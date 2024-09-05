@@ -1,5 +1,6 @@
 
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 
@@ -7,6 +8,8 @@ import '../../stateManagement/Property.dart';
 import '../../utils/utils.dart';
 import '../misc/ChangeNotifierWidget.dart';
 import '../misc/TextFieldFocusNode.dart';
+import '../misc/dropTargetBuilder.dart';
+import '../theme/customTheme.dart';
 import 'DoubleClickablePropTextField.dart';
 import 'UnderlinePropTextField.dart';
 import 'primaryPropTextField.dart';
@@ -18,6 +21,8 @@ class PropTFOptions {
   final BoxConstraints constraints;
   final bool isMultiline;
   final bool useIntrinsicWidth;
+  final bool isFolderPath;
+  final bool isFilePath;
   final String? hintText;
   final FutureOr<Iterable<AutocompleteConfig>> Function()? autocompleteOptions;
 
@@ -26,6 +31,8 @@ class PropTFOptions {
     this.constraints = const BoxConstraints(minWidth: 50),
     this.isMultiline = false,
     this.useIntrinsicWidth = true,
+    this.isFolderPath = false,
+    this.isFilePath = false,
     this.hintText,
     this.autocompleteOptions,
   });
@@ -35,6 +42,8 @@ class PropTFOptions {
     BoxConstraints? constraints,
     bool? isMultiline,
     bool? useIntrinsicWidth,
+    bool? isFolderPath,
+    bool? isFilePath,
     String? hintText,
     FutureOr<Iterable<AutocompleteConfig>> Function()? autocompleteOptions,
   }) {
@@ -43,6 +52,8 @@ class PropTFOptions {
       constraints: constraints ?? this.constraints,
       isMultiline: isMultiline ?? this.isMultiline,
       useIntrinsicWidth: useIntrinsicWidth ?? this.useIntrinsicWidth,
+      isFolderPath: isFolderPath ?? this.isFolderPath,
+      isFilePath: isFilePath ?? this.isFilePath,
       hintText: hintText ?? this.hintText,
       autocompleteOptions: autocompleteOptions ?? this.autocompleteOptions,
     );
@@ -178,7 +189,57 @@ abstract class PropTextFieldState<P extends Prop> extends ChangeNotifierState<Pr
     onValid(text);
   }
 
+  Widget applyWrappers({ required Widget child }) {
+    return pathDropTargetWrapper(
+      child: intrinsicWidthWrapper(
+        child: child,
+      ),
+    );
+  }
+  
   Widget intrinsicWidthWrapper({ required Widget child }) => widget.options.useIntrinsicWidth
     ? IntrinsicWidth(child: child)
     : child;
+  
+  Widget pathDropTargetWrapper({ required Widget child }) => widget.options.isFolderPath || widget.options.isFilePath
+    ? DropTargetBuilder(
+        onDrop: (files) async {
+          var file = files.first;
+          if (!widget.options.isFolderPath && await Directory(file).exists()) {
+            showToast("Expected a file, not a folder");
+            return;
+          }
+          if (!widget.options.isFilePath && await File(file).exists()) {
+            showToast("Expected a folder, not a file");
+            return;
+          }
+            
+          controller.text = file;
+          onValid(file);
+        },
+        builder: (context, isDropping) => Stack(
+          children: [
+            child,
+            if (isDropping)
+              Positioned.fill(
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      boxShadow: [
+                        BoxShadow(
+                          color: getTheme(context).editorBackgroundColor!.withOpacity(0.75),
+                          blurRadius: 10,
+                          spreadRadius: 5,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      )
+    : child;
+
 }

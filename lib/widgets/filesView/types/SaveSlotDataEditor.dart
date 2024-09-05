@@ -200,7 +200,7 @@ class _InventoryTableConfig with CustomTableConfig {
     key: Key(items[i].uuid),
     cells: [
       TextCellConfig(i.toString()),
-      PropCellConfig(prop: items[i].id, autocompleteOptions: _getItemIdAutocomplete),
+      PropCellConfig(prop: items[i].id, options: const PropTFOptions(autocompleteOptions: _getItemIdAutocomplete)),
       PropCellConfig(prop: items[i].count),
       PropCellConfig(prop: items[i].isActive),
     ]
@@ -279,7 +279,7 @@ class _WeaponTableConfig with CustomTableConfig {
     key: Key(weapons[i].uuid),
     cells: [
       TextCellConfig(weapons[i].index.toString().padLeft(2, " ") + (i < _weaponsByIndex.length ? " (${_weaponsByIndex[i].item2})" : "")),
-      PropCellConfig(prop: weapons[i].id, autocompleteOptions: _getWeaponIdAutocomplete),
+      PropCellConfig(prop: weapons[i].id, options: const PropTFOptions(autocompleteOptions: _getWeaponIdAutocomplete)),
       PropCellConfig(prop: weapons[i].level),
       PropCellConfig(prop: weapons[i].isNew),
       PropCellConfig(prop: weapons[i].hasNewStory),
@@ -394,7 +394,7 @@ class _StringListTableConfig with CustomTableConfig {
       cells: [
         PropCellConfig(
           prop: strings[index].text,
-          autocompleteOptions: autocompleteOptions,
+          options: PropTFOptions(autocompleteOptions: autocompleteOptions),
         ),
         CustomWidgetCellConfig(
           IconButton(
