@@ -33,7 +33,7 @@ class _UnderlinePropTextFieldState extends PropTextFieldState {
           decoration: BoxDecoration(
             border: Border(bottom: BorderSide(color: getTheme(context).propBorderColor!, width: 2)),
           ),
-          child: intrinsicWidthWrapper(
+          child: applyWrappers(
             child: ConstrainedBox(
               constraints: widget.options.constraints,
               child: Row(

@@ -33,7 +33,7 @@ class _PrimaryPropTextFieldState extends PropTextFieldState {
         child: Material(
           color: getTheme(context).formElementBgColor,
           borderRadius: BorderRadius.circular(8.0),
-          child: intrinsicWidthWrapper(
+          child: applyWrappers(
             child: ConstrainedBox(
               constraints: widget.options.constraints,
               child: Row(

@@ -1,6 +1,4 @@
 
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 
 import '../../../../stateManagement/Property.dart';
@@ -11,7 +9,6 @@ import '../../../misc/nestedContextMenu.dart';
 import '../../../propEditors/UnderlinePropTextField.dart';
 import '../../../propEditors/propEditorFactory.dart';
 import '../../../propEditors/propTextField.dart';
-import '../../../propEditors/textFieldAutocomplete.dart';
 import '../../../propEditors/transparentPropTextField.dart';
 import '../../../theme/customTheme.dart';
 import 'tableExporter.dart';
@@ -23,19 +20,16 @@ abstract class CellConfig {
 
 class PropCellConfig extends CellConfig {
   final Prop prop;
-  final bool allowMultiline;
-  final FutureOr<Iterable<AutocompleteConfig>> Function()? autocompleteOptions;
+  final PropTFOptions options;
 
-  PropCellConfig({ required this.prop, this.allowMultiline = false, this.autocompleteOptions });
+  PropCellConfig({ required this.prop, this.options = const PropTFOptions() });
 
   @override
   Widget makeWidget() => makePropEditor<TransparentPropTextField>(
     prop,
-    PropTFOptions(
+    options.copyWith(
       constraints: const BoxConstraints(minWidth: double.infinity, minHeight: 30),
-      isMultiline: allowMultiline,
       useIntrinsicWidth: false,
-      autocompleteOptions: autocompleteOptions,
     ),
   );
 

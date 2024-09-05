@@ -156,7 +156,7 @@ class __WwiseProjectGeneratorPopupState extends State<_WwiseProjectGeneratorPopu
         children: [
           const Text("Project name:"),
           const SizedBox(width: 10),
-          UnderlinePropTextField(prop: projectName, options: const PropTFOptions(useIntrinsicWidth: true)),
+          UnderlinePropTextField(prop: projectName, options: const PropTFOptions(useIntrinsicWidth: true, isFolderPath: true)),
         ],
       ),
       const SizedBox(height: 5),

@@ -315,7 +315,7 @@ class _SearchPanelState extends State<SearchPanel> {
             const SizedBox()
           ],
         ),
-        makePropEditor(path, const PropTFOptions(hintText: "Path", useIntrinsicWidth: false)),
+        makePropEditor(path, const PropTFOptions(hintText: "Path", useIntrinsicWidth: false, isFolderPath: true)),
         makePropEditor(extensions, const PropTFOptions(hintText: "Extensions (.xml, .rb, ...)", useIntrinsicWidth: false)),
       ].map((e) => Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
@@ -346,7 +346,7 @@ class _SearchPanelState extends State<SearchPanel> {
               ],
             ),
             if (!useIndexedData.value) ...[
-              makePropEditor(path, const PropTFOptions(hintText: "Path", useIntrinsicWidth: false)),
+              makePropEditor(path, const PropTFOptions(hintText: "Path", useIntrinsicWidth: false, isFolderPath: true)),
             ]
           ].map((e) => Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
@@ -360,7 +360,7 @@ class _SearchPanelState extends State<SearchPanel> {
   Widget _makeEstSearchOptions() {
     return Column(
       children: [
-        makePropEditor(path, const PropTFOptions(hintText: "Path", useIntrinsicWidth: false)),
+        makePropEditor(path, const PropTFOptions(hintText: "Path", useIntrinsicWidth: false, isFolderPath: true)),
         ...estOptionsNamed.map((opt) => RowSeparated(
           crossAxisAlignment: CrossAxisAlignment.center,
           separatorWidth: 5,

@@ -30,7 +30,7 @@ class _TransparentPropTextFieldState extends PropTextFieldState {
       notifier: widget.prop,
       builder: (context) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 3),
-        child: intrinsicWidthWrapper(
+        child: applyWrappers(
           child: ConstrainedBox(
             constraints: widget.options.constraints,
             child: Row(

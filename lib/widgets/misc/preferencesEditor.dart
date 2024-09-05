@@ -91,7 +91,7 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
               prop: exportPathProp,
               onValid: (value) => exportPathProp.value = value,
               validatorOnChange: (value) => value.isEmpty || Directory(value).existsSync() ? null : "Directory does not exist",
-              options: const PropTFOptions(constraints: BoxConstraints(minHeight: 30)),
+              options: const PropTFOptions(constraints: BoxConstraints(minHeight: 30), isFolderPath: true),
             ),
           ),
           makeFilePickerButton(
@@ -170,7 +170,7 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
                 prop: path,
                 onValid: (value) => widget.prefs.indexingPaths!.setPath(path, value),
                 validatorOnChange: (value) => Directory(value).existsSync() ? null : "Directory does not exist",
-                options: const PropTFOptions(constraints: BoxConstraints(minHeight: 30)),
+                options: const PropTFOptions(constraints: BoxConstraints(minHeight: 30), isFolderPath: true),
               ),
             ),
             makeFilePickerButton(
@@ -297,7 +297,7 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
               prop: widget.prefs.wemExtractDir!,
               onValid: (value) => widget.prefs.wemExtractDir!.value = value,
               validatorOnChange: (value) => value.isEmpty || Directory(value).existsSync() ? null : "Directory does not exist",
-              options: const PropTFOptions(constraints: BoxConstraints(minHeight: 30)),
+              options: const PropTFOptions(constraints: BoxConstraints(minHeight: 30), isFolderPath: true),
             ),
           ),
           makeFilePickerButton(
@@ -322,7 +322,7 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
               prop: widget.prefs.wwise2012CliPath!,
               onValid: (value) => widget.prefs.wwise2012CliPath!.value = value.isNotEmpty ? findWwiseCliExe(value)! : "",
               validatorOnChange: (value) => value.isEmpty || findWwiseCliExe(value) != null ? null : "Directory does not exist",
-              options: const PropTFOptions(constraints: BoxConstraints(minHeight: 30)),
+              options: const PropTFOptions(constraints: BoxConstraints(minHeight: 30), isFolderPath: true, isFilePath: true),
             ),
           ),
           makeFilePickerButton(

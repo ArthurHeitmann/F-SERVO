@@ -14,6 +14,7 @@ import '../../../utils/utils.dart';
 import '../../misc/ChangeNotifierWidget.dart';
 import '../../misc/expandOnHover.dart';
 import '../../misc/imagePreviewBuilder.dart';
+import '../../propEditors/propTextField.dart';
 import 'genericTable/tableEditor.dart';
 
 class WtaWtpEditor extends StatefulWidget {
@@ -60,7 +61,7 @@ class _TexturesTableConfig with CustomTableConfig {
           ? PropCellConfig(prop: textures[index].id!)
           : CustomWidgetCellConfig(const SizedBox.shrink()),
         _TexturePreviewCell(textures[index].path),
-        PropCellConfig(prop: textures[index].path),
+        PropCellConfig(prop: textures[index].path, options: const PropTFOptions(isFilePath: true)),
         CustomWidgetCellConfig(IconButton(
           icon: const Icon(Icons.folder, size: 20),
           onPressed: () => _selectTexture(index),
