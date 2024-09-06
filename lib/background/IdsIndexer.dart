@@ -381,7 +381,7 @@ class IdsIndexer {
       return;
     var fileName = basename(datPath);
     var datFolder = dirname(datPath);
-    var datExtractDir = join(datFolder, "nier2blender_extracted", fileName);
+    var datExtractDir = join(datFolder, datSubExtractDir, fileName);
 
     if (await Directory(datExtractDir).exists())
       await _indexDatExtractDir(datPath, datExtractDir);

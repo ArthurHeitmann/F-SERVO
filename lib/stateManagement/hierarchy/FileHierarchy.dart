@@ -195,7 +195,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
     // get DAT infos
     var fileName = basename(datPath);
     var datFolder = dirname(datPath);
-    var datExtractDir = join(datFolder, "nier2blender_extracted", fileName);
+    var datExtractDir = join(datFolder, datSubExtractDir, fileName);
     List<String>? datFilePaths;
     if (!await Directory(datExtractDir).exists()) {
       await extractDatFiles(datPath, shouldExtractPakFiles: true);
@@ -456,22 +456,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
     if (existing != null)
       return existing;
     
-    // find corresponding wtp file
-    var wtpName = "${basenameWithoutExtension(wtaPath)}.wtp";
-    var datDir = dirname(wtaPath);
-    var dttDir = await findDttDirOfDat(datDir);
-    String? wtpPath;
-    if (dttDir != null)
-      wtpPath = join(dttDir, wtpName);
-    else {
-      wtpPath = join(datDir, wtpName);
-      if (!await File(wtpPath).exists()) {
-        messageLog.add("Can't find WTP file of ${basename(wtaPath)}");
-        wtpPath = null;
-      }
-    }
-
-    var wtaEntry = WtaHierarchyEntry(StringProp(basename(wtaPath), fileId: null), wtaPath, wtpPath);
+    var wtaEntry = WtaHierarchyEntry(StringProp(basename(wtaPath), fileId: null), wtaPath);
     if (parent != null)
       parent.add(wtaEntry);
     else

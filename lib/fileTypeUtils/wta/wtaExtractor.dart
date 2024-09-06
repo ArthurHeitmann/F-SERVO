@@ -3,11 +3,12 @@ import 'dart:io';
 
 import 'package:path/path.dart';
 
+import '../../utils/utils.dart';
 import 'wtaReader.dart';
 
 Future<List<String>> extractWta(String wtaPath, String? wtpPath, bool isWtb) async {
   List<String> texturePaths = [];
-  var extractDir = join(dirname(wtaPath), "nier2blender_extracted", basename(wtaPath));
+  var extractDir = join(dirname(wtaPath), datSubExtractDir, basename(wtaPath));
   await Directory(extractDir).create(recursive: true);
   var wta = await WtaFile.readFromFile(wtaPath);
   var wtpFile = await File(isWtb ? wtaPath : wtpPath!).open();

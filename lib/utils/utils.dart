@@ -647,6 +647,7 @@ void revealFileInExplorer(String path) {
 
 const datExtensions = { ".dat", ".dtt", ".evn", ".eff", ".eft" };
 const bxmExtensions = { ".bxm", ".gad", ".sar", ".seq" };
+const datSubExtractDir = "nier2blender_extracted";
 
 bool strEndsWithDat(String str) {
   for (var ext in datExtensions) {
@@ -761,18 +762,47 @@ void openInTextEditor(String path) async {
   }
 }
 
+const _datToDttExt = {
+  ".dat": ".dtt",
+  ".eff": ".eft",
+};
+final _datExtensions = _datToDttExt.keys.toList();
 Future<String?> findDttDirOfDat(String extractedDatDir) async {
   var datName = basenameWithoutExtension(extractedDatDir);
   var parentDir = dirname(extractedDatDir);
-  var dttDir = join(parentDir, "$datName.dtt");
+  var dttExt = _datToDttExt[extension(extractedDatDir)] ?? ".dtt";
+  var dttName = "$datName$dttExt";
+  var dttDir = join(parentDir, dttName);
   if (!await Directory(dttDir).exists()) {
     // try finding DTT file and extract it
-    var dttPath = join(dirname(parentDir), "$datName.dtt");
-    if (!await File(dttPath).exists())
-      return null;
-    await extractDatFiles(dttPath);
-    if (!await Directory(dttDir).exists())
-      return null;
+    var dttPath = join(dirname(parentDir), dttName);
+    if (!await File(dttPath).exists()) {
+      // check for dat nesting
+      var nestedParentDatDir = dirname(parentDir);
+      var nestedExt = extension(nestedParentDatDir);
+      if (!_datExtensions.contains(nestedExt))
+        return null;
+      var nestedDttDir = await findDttDirOfDat(nestedParentDatDir);
+      if (nestedDttDir == null)
+        return null;
+      // find dtt in new parent dtt
+      dttDir = join(nestedDttDir, datSubExtractDir, dttName);
+      if (!await(Directory(dttDir).exists())) {
+        dttPath = join(nestedDttDir, dttName);
+        if (!await File(dttPath).exists())
+          return null;
+        await extractDatFiles(dttPath);
+        if (!await Directory(dttDir).exists())
+          return null;
+      }
+    }
+    else {
+      if (!await File(dttPath).exists())
+        return null;
+      await extractDatFiles(dttPath);
+      if (!await Directory(dttDir).exists())
+        return null;
+    }
   }
   return dttDir;
 }
