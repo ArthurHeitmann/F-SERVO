@@ -179,6 +179,9 @@ class WtaWtpTextures with HasUuid, Undoable implements Disposable {
 
   static Future<WtaWtpTextures> fromWtaWtp(OpenFileId file, String wtaPath, String? wtpPath, String extractDir, bool isWtb) async {
     var wta = await WtaFile.readFromFile(wtaPath);
+    var wtaVersion = wta.header.version;
+    if (![0, 1].contains(wtaVersion))
+      showToast("Unexpected WTA version: $wtaVersion (supported: 0, 1)");
     var wtpFile = await File(isWtb ? wtaPath : wtpPath!).open();
     var textures = ValueListNotifier<WtaTextureEntry>([], fileId: file);
     try {
@@ -214,7 +217,7 @@ class WtaWtpTextures with HasUuid, Undoable implements Disposable {
 
     messageLog.add("Done extracting textures");
 
-    return WtaWtpTextures(file, wtaPath, wtpPath, isWtb, wta.header.version, textures, useFlagsSimpleMode, hashAnySimpleModeFlags);
+    return WtaWtpTextures(file, wtaPath, wtpPath, isWtb, wtaVersion, textures, useFlagsSimpleMode, hashAnySimpleModeFlags);
   }
 
   Future<void> save() async {

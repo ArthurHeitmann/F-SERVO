@@ -3,6 +3,7 @@
 
 import 'dart:typed_data';
 
+import '../../utils/utils.dart';
 import '../utils/ByteDataWrapper.dart';
 import 'wemIdsToNames.dart';
 
@@ -29,6 +30,7 @@ abstract class BnkChunkBase extends ChunkBase {
   }
 }
 
+const _supportedVersion = 72;
 class BnkFile extends ChunkWithSize {
   List<BnkChunkBase> chunks = [];
 
@@ -36,7 +38,14 @@ class BnkFile extends ChunkWithSize {
 
   BnkFile.read(ByteDataWrapper bytes) {
     while (bytes.position < bytes.length) {
-      chunks.add(_makeNextChunk(bytes));
+      var chunk = _makeNextChunk(bytes);
+      if (chunk is BnkHeader) {
+        if (chunk.version != _supportedVersion) {
+          showToast("Warning: BNK version ${chunk.version} is not supported. Expected $_supportedVersion");
+          throw Exception("Unsupported BNK version ${chunk.version}");
+        }
+      }
+      chunks.add(chunk);
     }
   }
 
@@ -103,7 +112,7 @@ class BnkHeader extends BnkChunkBase {
   BnkHeader(super.chunkId, super.chunkSize, this.version, this.bnkId, this.languageId, this.isFeedbackInBnk, this.padding, [this.unknown]);
 
   BnkHeader.read(ByteDataWrapper bytes) : super.read(bytes) {
-    if (chunkSize > 30) {
+    if (chunkSize > 32) {
       bytes.endian = Endian.big;
       bytes.position -= 4;
       chunkSize = bytes.readUint32();
