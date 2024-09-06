@@ -2,6 +2,7 @@
 import '../../../fileTypeUtils/audio/bnkIO.dart';
 import '../../../fileTypeUtils/audio/wemIdsToNames.dart';
 import '../../utils.dart';
+import '../wwiseProjectGenerator.dart';
 import '../wwiseProperty.dart';
 import '../wwiseUtils.dart';
 import 'hierarchyBaseElements.dart';
@@ -15,6 +16,8 @@ class WwiseMusicSwitch extends WwiseHierarchyElement<BnkMusicSwitch> {
       tagName: "MusicSwitchContainer",
       shortId: chunk.uid,
       properties: [
+        if (chunk.eGroupType == 1)
+          WwiseProperty("GroupType", "int16", value: "1"),
         if (chunk.bIsContinuousValidation != 1)
           WwiseProperty("ContinuePlay", "bool", value: "False"),
       ]
@@ -43,6 +46,8 @@ class WwiseMusicSwitch extends WwiseHierarchyElement<BnkMusicSwitch> {
     } else {  // state
       group = project.stateGroups[chunk.ulGroupID];
     }
+    if (group == null && chunk.ulGroupID != 0)
+      project.log(WwiseLogSeverity.warning, "MusicSwitch ${chunk.uid} has invalid group ID ${wwiseIdToStr(chunk.ulGroupID)}");
     var groupChild = group?.children.where((c) => c.id == chunk.ulDefaultSwitch).firstOrNull;
     additionalChildren.add(makeXmlElement(name: "GroupingInfo", children: [
       makeXmlElement(name: "GroupRef", attributes: {"Name": group?.name ?? "", "ID": group?.uuid ?? wwiseNullId}),

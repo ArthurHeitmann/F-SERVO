@@ -10,6 +10,8 @@ Future<void> saveSwitchesIntoWu(WwiseProjectGenerator project) async {
   Map<int, Set<String>> groupIdToBnk = {};
   for (var musicSwitchC in project.hircChunksByType<BnkMusicSwitch>()) {
     var musicSwitch = musicSwitchC.value;
+    if (musicSwitch.eGroupType != 0)
+      continue;
     addWwiseGroupUsage(usedSwitchGroupIds, musicSwitch.ulGroupID, musicSwitch.ulDefaultSwitch);
     groupIdToBnk.putIfAbsent(musicSwitch.ulGroupID, () => {}).addAll(musicSwitchC.names);
     for (var switchAssoc in musicSwitch.pAssocs) {
@@ -18,6 +20,8 @@ Future<void> saveSwitchesIntoWu(WwiseProjectGenerator project) async {
   }
   for (var musicSwitchC in project.hircChunksByType<BnkSoundSwitch>()) {
     var musicSwitch = musicSwitchC.value;
+    if (musicSwitch.eGroupType != 0)
+      continue;
     addWwiseGroupUsage(usedSwitchGroupIds, musicSwitch.ulGroupID, musicSwitch.ulDefaultSwitch);
     groupIdToBnk.putIfAbsent(musicSwitch.ulGroupID, () => {}).addAll(musicSwitchC.names);
     for (var switchAssoc in musicSwitch.switches) {

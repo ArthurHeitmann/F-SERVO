@@ -100,24 +100,30 @@ String makeElementName(WwiseProjectGenerator project, {required int id, required
   String? parentPrefix;
   if (parentId != 0 && project.options.namePrefix) {
     var parent = project.hircChunkById<BnkHircChunkBase>(parentId);
-    int? stateId;
+    List<int> stateIds = [];
     if (parent is BnkSoundSwitch) {
       for (var switchPackage in parent.switches) {
         if (switchPackage.nodeIDs.any((nodeId) => nodeId == id)) {
-          stateId = switchPackage.ulSwitchID;
-          break;
+          stateIds.add(switchPackage.ulSwitchID);
         }
       }
     } else if (parent is BnkMusicSwitch) {
-      stateId = parent.pAssocs
+      stateIds.addAll(parent.pAssocs
         .where((e) => e.nodeID == id)
-        .firstOrNull
-        ?.switchID;
+        .map((e) => e.switchID)
+      );
     }
-    if (stateId != null) {
-      var stateName = wemIdsToNames[stateId];
-      if (stateName != null)
-        parentPrefix = "[$stateName] ";
+    if (stateIds.isNotEmpty) {
+      var stateNames = stateIds
+        .map((id) => wemIdsToNames[id])
+        .whereType<String>()
+        .toList();
+      if (stateNames.isNotEmpty) {
+        parentPrefix = "[${stateNames.take(2).join(",")}";
+        if (stateNames.length > 2)
+          parentPrefix += ",_";
+        parentPrefix += "] ";
+      }
     }
   }
 

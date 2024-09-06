@@ -5,6 +5,7 @@ import '../../../fileTypeUtils/audio/bnkIO.dart';
 import '../../../fileTypeUtils/audio/wemIdsToNames.dart';
 import '../../utils.dart';
 import '../wwiseElement.dart';
+import '../wwiseProjectGenerator.dart';
 import '../wwiseProperty.dart';
 import '../wwiseUtils.dart';
 import 'hierarchyBaseElements.dart';
@@ -43,6 +44,8 @@ class WwiseSwitchContainer extends WwiseHierarchyElement<BnkSoundSwitch> {
     } else {  // state
       group = project.stateGroups[chunk.ulGroupID];
     }
+    if (group == null && chunk.ulGroupID != 0)
+      project.log(WwiseLogSeverity.warning, "MusicSwitch ${chunk.uid} has invalid group ID ${wwiseIdToStr(chunk.ulGroupID)}");
     var groupChild = group?.children.where((c) => c.id == chunk.ulDefaultSwitch).firstOrNull;
     additionalChildren.add(makeXmlElement(name: "GroupingInfo", children: [
       makeXmlElement(name: "GroupRef", attributes: {"Name": group?.name ?? "", "ID": group?.uuid ?? wwiseNullId}),
@@ -72,21 +75,21 @@ class WwiseSwitchContainer extends WwiseHierarchyElement<BnkSoundSwitch> {
       if (chunk.switches.isNotEmpty)
         makeXmlElement(name: "GroupingList", children: chunk.switches
           .map((sw) {
-            if (sw.nodeIDs.isEmpty)
-              return null;
             var groupChild = group?.children.where((c) => c.id == sw.ulSwitchID).firstOrNull;
+            var itemList = sw.nodeIDs
+              .map((id) {
+                var child = project.lookupElement(idFnv: id);
+                if (child == null || child is! WwiseElement)
+                  return null;
+                return makeXmlElement(name: "ItemRef", attributes: {"Name": child.name, "ID": child.id});
+              })
+              .whereType<XmlElement>()
+              .toList();
+            if (itemList.isEmpty)
+              return null;
             return makeXmlElement(name: "Grouping", children: [
               makeXmlElement(name: "SwitchRef", attributes: {"Name": groupChild?.name ?? "", "ID": groupChild?.uuid ?? wwiseNullId}),
-              makeXmlElement(name: "ItemList", children: sw.nodeIDs
-                .map((id) {
-                  var child = project.lookupElement(idFnv: id);
-                  if (child == null || child is! WwiseElement)
-                    return null;
-                  return makeXmlElement(name: "ItemRef", attributes: {"Name": child.name, "ID": child.id});
-                })
-                .whereType<XmlElement>()
-                .toList()
-              ),
+              makeXmlElement(name: "ItemList", children: itemList),
             ]);
           })
           .whereType<XmlElement>()

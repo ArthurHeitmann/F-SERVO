@@ -58,6 +58,15 @@ class _AudioFileInfo {
   final bool isVoice;
 
   _AudioFileInfo(this.id, this.prefetchId, this.streamType, this.isVoice);
+
+  _AudioFileInfo merge(_AudioFileInfo? other) {
+    return _AudioFileInfo(
+      id,
+      prefetchId ?? other?.prefetchId,
+      max(streamType, other?.streamType ?? 0),
+      isVoice || (other?.isVoice ?? false)
+    );
+  }
 }
 
 Future<void> loadBnks(
@@ -111,13 +120,13 @@ Future<void> loadBnks(
         if (existing != null) {
           existing.names.add(bnkName);
           if (existing.value.size != chunk.size)
-            project.log(WwiseLogSeverity.warning, "Found chunk ${chunk.uid} (${chunk.size} B) (${basename(bnkPath)}) more than once. Using largest chunk");
+            project.log(WwiseLogSeverity.warning, "Found chunk ${chunk.uid} (${chunk.size} B in ${basename(bnkPath)} vs ${existing.value.size} B in ${basename(existing.path)}) more than once. Using largest chunk");
           if (existing.language != language)
             project.log(WwiseLogSeverity.warning, "Found chunk ${chunk.uid} (${basename(bnkPath)}) with different languages ${existing.language} and $language");
           if (chunk.size <= existing.value.size)
             continue;
         }
-        var hircContext = existing ?? BnkContext(bnkPath, {bnkName}, language, chunk);
+        var hircContext = BnkContext(bnkPath, {bnkName}, language, chunk);
         outHircChunksById[chunk.uid] = hircContext;
 
         // collect all used audio files
@@ -143,12 +152,13 @@ Future<void> loadBnks(
         for (var src in sources) {
           if (src.fileId == 0)
             continue;
+          var existing = usedAudioFiles[src.fileId];
           if (src.streamType == 0) {
-            usedAudioFiles[src.sourceId] = BnkContext(bnkPath, {}, language, _AudioFileInfo(src.sourceId, null, src.streamType, src.isVoice));
+            usedAudioFiles[src.sourceId] = BnkContext(bnkPath, {}, language, _AudioFileInfo(src.sourceId, null, src.streamType, src.isVoice).merge(existing?.value));
           } else if (src.streamType == 1) {
-            usedAudioFiles[src.fileId] = BnkContext(bnkPath, {}, language, _AudioFileInfo(src.fileId, null, src.streamType, src.isVoice));
+            usedAudioFiles[src.fileId] = BnkContext(bnkPath, {}, language, _AudioFileInfo(src.fileId, null, src.streamType, src.isVoice).merge(existing?.value));
           } else if (src.streamType == 2) {
-            usedAudioFiles[src.fileId] = BnkContext(bnkPath, {}, language, _AudioFileInfo(src.fileId, src.sourceId, src.streamType, src.isVoice));
+            usedAudioFiles[src.fileId] = BnkContext(bnkPath, {}, language, _AudioFileInfo(src.fileId, src.sourceId, src.streamType, src.isVoice).merge(existing?.value));
           } else {
             project.log(WwiseLogSeverity.warning, "Unknown stream type ${src.streamType}");
           }

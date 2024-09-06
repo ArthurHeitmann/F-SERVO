@@ -2,6 +2,7 @@
 import 'package:xml/xml.dart';
 
 import '../../../fileTypeUtils/audio/bnkIO.dart';
+import '../../../fileTypeUtils/audio/wwiseCueIdToNames.dart';
 import '../../utils.dart';
 import '../wwiseElement.dart';
 import '../wwiseProjectGenerator.dart';
@@ -29,6 +30,7 @@ XmlElement makeWwiseTransitionList(WwiseProjectGenerator project, String wuId, L
       }
       String? srcCustomCueName = transition.srcRule.uMarkerID != 0 ? (project.lookupElement(idFnv: transition.srcRule.uMarkerID))?.name : null;
       String? destCustomCueName = transition.dstRule.uMarkerID != 0 ? (project.lookupElement(idFnv: transition.dstRule.uMarkerID))?.name : null;
+      destCustomCueName ??= wwiseCueIdToNames[transition.dstRule.uMarkerID];
       return makeXmlElement(name: "Transition", children: [
         makeXmlElement(name: "Source", children: [
           if (transition.srcID == -1)

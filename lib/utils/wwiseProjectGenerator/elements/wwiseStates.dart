@@ -18,6 +18,26 @@ Future<void> saveStatesIntoWu(WwiseProjectGenerator project) async {
       }
     }
   }
+  for (var musicSwitchC in project.hircChunksByType<BnkMusicSwitch>()) {
+    var musicSwitch = musicSwitchC.value;
+    if (musicSwitch.eGroupType != 1)
+      continue;
+    addWwiseGroupUsage(usedStateGroupIds, musicSwitch.ulGroupID, musicSwitch.ulDefaultSwitch);
+    groupIdToBnk.putIfAbsent(musicSwitch.ulGroupID, () => {}).addAll(musicSwitchC.names);
+    for (var switchAssoc in musicSwitch.pAssocs) {
+      addWwiseGroupUsage(usedStateGroupIds, musicSwitch.ulGroupID, switchAssoc.switchID);
+    }
+  }
+  for (var musicSwitchC in project.hircChunksByType<BnkSoundSwitch>()) {
+    var musicSwitch = musicSwitchC.value;
+    if (musicSwitch.eGroupType != 1)
+      continue;
+    addWwiseGroupUsage(usedStateGroupIds, musicSwitch.ulGroupID, musicSwitch.ulDefaultSwitch);
+    groupIdToBnk.putIfAbsent(musicSwitch.ulGroupID, () => {}).addAll(musicSwitchC.names);
+    for (var switchAssoc in musicSwitch.switches) {
+      addWwiseGroupUsage(usedStateGroupIds, musicSwitch.ulGroupID, switchAssoc.ulSwitchID);
+    }
+  }
   for (var action in project.hircChunksByType<BnkAction>()) {
     var actionParams = action.value.specificParams;
     if (actionParams is BnkStateActionParams) {
