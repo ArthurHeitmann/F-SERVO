@@ -1,6 +1,7 @@
 
 // ignore_for_file: constant_identifier_names
 
+import '../../utils/utils.dart';
 import '../utils/ByteDataWrapper.dart';
 import 'wemIdsToNames.dart';
 
@@ -27,6 +28,7 @@ abstract class BnkChunkBase extends ChunkBase {
   }
 }
 
+const _supportedBnkVersion = 113;
 class BnkFile extends ChunkWithSize {
   List<BnkChunkBase> chunks = [];
 
@@ -34,7 +36,12 @@ class BnkFile extends ChunkWithSize {
 
   BnkFile.read(ByteDataWrapper bytes) {
     while (bytes.position < bytes.length) {
-      chunks.add(_makeNextChunk(bytes));
+      var chunk = _makeNextChunk(bytes);
+      if (chunk is BnkHeader && chunk.version != _supportedBnkVersion) {
+        showToast("Unsupported BNK version ${chunk.version} (expected $_supportedBnkVersion)");
+        throw Exception("Unsupported BNK version ${chunk.version} (expected $_supportedBnkVersion)");
+      }
+      chunks.add(chunk);
     }
   }
 

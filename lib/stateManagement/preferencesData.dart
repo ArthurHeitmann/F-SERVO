@@ -89,8 +89,8 @@ class PreferencesData extends OpenFileData {
   SavableProp<String>? wwiseCliPath;
   SavableProp<String>? lastCpkExtractDir;
   SavableProp<String>? lastSearchDir;
-  SavableProp<List<String>>? lastHierarchyFiles;
-  // SavableProp<List<String>>? lastOpenedFiles;
+  SavableProp<List>? lastHierarchyFiles;
+  // SavableProp<List>? lastOpenedFiles;
 
   PreferencesData._() 
     : prefsFuture = SharedPreferences.getInstance(),

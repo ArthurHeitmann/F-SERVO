@@ -18,6 +18,7 @@ dependencies:
   cross_file: ^0.3.3+1
   csv: ^6.0.0
   desktop_drop: ^0.4.4
+  dotted_border: ^2.1.0
   euc: ^1.0.6+8
   file_picker: ^6.1.1
   flutter:
