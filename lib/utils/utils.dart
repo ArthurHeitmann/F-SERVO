@@ -823,3 +823,12 @@ void debugOnly(void Function() func) {
     return true;
   }());
 }
+
+const sideBarOnlyExtensions = [...datExtensions, ".pak", ".wai", ".bnk", ".wsp"];
+
+Future<bool> canOpenAsFile(String path) async {
+  var ext = extension(path);
+  if (sideBarOnlyExtensions.contains(ext))
+    return false;
+  return await File(path).exists();
+}

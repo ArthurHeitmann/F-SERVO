@@ -1,5 +1,6 @@
 
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -11,10 +12,12 @@ import 'background/IdLookup.dart';
 import 'background/wemFilesIndexer.dart';
 import 'keyboardEvents/globalShortcutsWrapper.dart';
 import 'stateManagement/beforeExitCleanup.dart';
+import 'stateManagement/hierarchy/FileHierarchy.dart';
 import 'stateManagement/openFiles/openFilesManager.dart';
 import 'stateManagement/openFiles/types/xml/sync/syncServer.dart';
 import 'stateManagement/preferencesData.dart';
 import 'utils/assetDirFinder.dart';
+import 'utils/fileOpenCommand.dart';
 import 'utils/loggingWrapper.dart';
 import 'utils/utils.dart';
 import 'widgets/EditorLayout.dart';
@@ -31,6 +34,13 @@ void main(List<String> args) {
 }
 
 void init(List<String> args) async {
+  if (args.isNotEmpty) {
+    var paths = args.where((arg) => FileSystemEntity.typeSync(arg) != FileSystemEntityType.notFound).toList();
+    if (await trySendFileArgs(paths)) {
+      exit(0);
+    }
+  }
+
   WidgetsFlutterBinding.ensureInitialized();
 
   runApp(const SplashScreen());
@@ -88,9 +98,12 @@ void init(List<String> args) async {
 
   runApp(const MyApp());
 
-  unawaited(waitForNextFrame().then((_) {
-    for (var arg in args)
-      areasManager.openFile(arg);
+  unawaited(waitForNextFrame().then((_) async {
+    for (var arg in args) {
+      await openHierarchyManager.openFile(arg);
+      if (await canOpenAsFile(arg))
+        areasManager.openFile(arg);
+    }
   }));
 }
 
