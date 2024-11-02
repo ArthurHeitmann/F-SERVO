@@ -271,30 +271,31 @@ class _EstEntryWidgetState extends ChangeNotifierState<_EstEntryWidget> {
         child: Row(
           children: [
             const SizedBox(width: 15),
-            ConstrainedBox(
-              constraints: const BoxConstraints(minWidth: 325),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text("${widget.entry.entry.header.id} / ${estTypeFullNames[widget.entry.entry.header.id]}"),
-                  const SizedBox(width: 10),
-                  if (widget.entry is EstMoveEntryWrapper)
-                    RgbPropEditor(
-                      prop: (widget.entry as EstMoveEntryWrapper).rgb,
-                      showTextFields: false,
-                    ),
-                  if (widget.entry is EstTexEntryWrapper) ...[
-                    EstTexturePreview(
-                      textureFileId: (widget.entry as EstTexEntryWrapper).textureFileId,
-                      textureFileTextureIndex: (widget.entry as EstTexEntryWrapper).textureFileIndex,
-                    ),
+            Flexible(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints.tightFor(width: 325),
+                child: Row(
+                  children: [
+                    Flexible(child: Text("${widget.entry.entry.header.id} / ${estTypeFullNames[widget.entry.entry.header.id]}", overflow: TextOverflow.ellipsis)),
                     const SizedBox(width: 10),
-                    EstModelPreview(
-                      modelId: (widget.entry as EstTexEntryWrapper).meshId,
-                    ),
-                  ]
-                ],
-              )
+                    if (widget.entry is EstMoveEntryWrapper)
+                      RgbPropEditor(
+                        prop: (widget.entry as EstMoveEntryWrapper).rgb,
+                        showTextFields: false,
+                      ),
+                    if (widget.entry is EstTexEntryWrapper) ...[
+                      EstTexturePreview(
+                        textureFileId: (widget.entry as EstTexEntryWrapper).textureFileId,
+                        textureFileTextureIndex: (widget.entry as EstTexEntryWrapper).textureFileIndex,
+                      ),
+                      const SizedBox(width: 10),
+                      EstModelPreview(
+                        modelId: (widget.entry as EstTexEntryWrapper).meshId,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
             ),
             const SizedBox(width: 10),
             _EntryIconButton(
@@ -308,6 +309,7 @@ class _EstEntryWidgetState extends ChangeNotifierState<_EstEntryWidget> {
               icon: Icons.delete,
               iconSize: 15,
             ),
+            const SizedBox(width: 15),
           ],
         ),
       ),

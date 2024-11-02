@@ -21,7 +21,7 @@ class RgbPropEditor extends StatefulWidget {
 
 class _RgbPropEditorState extends State<RgbPropEditor> {
   OverlayEntry? overlayEntry;
-  Rect? overlayRect;
+  final List<Rect> overlayRectangles = [];
   bool hasClickedOutside = false;
 
   @override
@@ -99,41 +99,65 @@ class _RgbPropEditorState extends State<RgbPropEditor> {
       ? selfPos.dx
       : windowSize.width - width - 25;
     var selfRect = Rect.fromLTWH(selfPos.dx, selfPos.dy, selfSize.width, selfSize.height);
-    overlayRect = Rect.fromLTWH(left, top, width, height).expandToInclude(selfRect);
+    overlayRectangles.clear();
+    // main rectangle
+    overlayRectangles.add(Rect.fromLTWH(left, top, width, height));
+    overlayRectangles.add(selfRect);
+    // drop down 
+    overlayRectangles.add(Rect.fromLTWH(
+      selfRect.left + (widget.showTextFields ? 18 : 4),
+      (widget.showTextFields ? selfRect.bottom : top + height) - 8,
+      60,
+      85
+    ));
     overlayEntry = OverlayEntry(
-      builder: (context) => Listener(
-        onPointerDown: (event) {
-          if (!overlayRect!.contains(event.position)) {
-            hasClickedOutside = true;
-          }
-        },
-        onPointerUp: (event) {
-          if (hasClickedOutside && !overlayRect!.contains(event.position)) {
-            overlayEntry?.remove();
-            overlayEntry = null;
-            setState(() {});
-          }
-          hasClickedOutside = false;
-        },
-        behavior: HitTestBehavior.translucent,
-        child: Stack(
-          children: [
-            Positioned(
-              top: top,
-              left: left,
-              width: width,
-              height: height,
-              child: Material(
-                color: getTheme(context).sidebarBackgroundColor,
-                elevation: 8,
-                child: ColorPicker(
-                  rgb: widget.prop,
-                  showTextFields: !widget.showTextFields,
-                ),
+      builder: (context) => Stack(
+        children: [
+          Positioned.fill(
+            child: Listener(
+              onPointerDown: (event) {
+                if (overlayRectangles.every((rect) => !rect.contains(event.position))) {
+                  hasClickedOutside = true;
+                }
+              },
+              onPointerUp: (event) {
+                if (hasClickedOutside && overlayRectangles.every((rect) => !rect.contains(event.position))) {
+                  overlayEntry?.remove();
+                  overlayEntry = null;
+                  setState(() {});
+                }
+              },
+              behavior: HitTestBehavior.translucent,
+            ),
+          ),
+          Positioned(
+            top: top,
+            left: left,
+            width: width,
+            height: height,
+            child: Material(
+              color: getTheme(context).sidebarBackgroundColor,
+              elevation: 8,
+              child: ColorPicker(
+                rgb: widget.prop,
+                showTextFields: !widget.showTextFields,
               ),
             ),
-          ],
-        ),
+          ),
+          // debug visualize rectangles
+          // for (var (i, rect) in overlayRectangles.indexed)
+          //   Positioned(
+          //     top: rect.top,
+          //     left: rect.left,
+          //     width: rect.width,
+          //     height: rect.height,
+          //     child: Container(
+          //       decoration: BoxDecoration(
+          //         border: Border.all(color: Colors.red),
+          //       ),
+          //     ),
+          //   ),
+        ],
       )
     );
     Overlay.of(context).insert(overlayEntry!);
