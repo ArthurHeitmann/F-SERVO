@@ -96,7 +96,7 @@ class PreferencesData extends OpenFileData {
   SavableProp<String>? lastWwiseProjectDir;
   SavableProp<Map>? lastWwiseProjectSettings;
   SavableProp<List>? lastHierarchyFiles;
-  // SavableProp<List<String>>? lastOpenedFiles;
+  SavableProp<int>? lastColorPickerMode;
 
   PreferencesData._() 
     : prefsFuture = SharedPreferences.getInstance(),
@@ -149,7 +149,7 @@ class PreferencesData extends OpenFileData {
     lastWwiseProjectDir = SavableProp<String>("lastWwiseProjectDir", _prefs!, "");
     lastWwiseProjectSettings = SavableProp("lastWwiseProjectSettings", _prefs!, {});
     lastHierarchyFiles = SavableProp("lastHierarchyFiles", _prefs!, []);
-    // lastOpenedFiles = SavableProp("lastOpenedFiles", _prefs!, []);
+    lastColorPickerMode = SavableProp("lastColorPickerMode", _prefs!, 0);
 
     await super.load();
     _loadingState = LoadingState.loaded;
