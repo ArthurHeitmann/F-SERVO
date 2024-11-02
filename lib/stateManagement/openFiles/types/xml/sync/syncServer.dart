@@ -110,7 +110,11 @@ bool _startupCompleted() {
 }
 
 void startSyncServer() async {
-  final server = await HttpServer.bind("localhost", wsPort);
-  server.transform(WebSocketTransformer()).listen(_handleWebSocket);
-  serverStartTime = DateTime.now();
+  try {
+    final server = await HttpServer.bind("localhost", wsPort);
+    server.transform(WebSocketTransformer()).listen(_handleWebSocket);
+    serverStartTime = DateTime.now();
+  } catch (e) {
+    print("Failed to start local server. Maybe already running");
+  }
 }

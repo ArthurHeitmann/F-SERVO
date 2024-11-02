@@ -90,7 +90,7 @@ class PreferencesData extends OpenFileData {
   SavableProp<String>? lastCpkExtractDir;
   SavableProp<String>? lastSearchDir;
   SavableProp<List>? lastHierarchyFiles;
-  // SavableProp<List>? lastOpenedFiles;
+  SavableProp<int>? lastColorPickerMode;
 
   PreferencesData._() 
     : prefsFuture = SharedPreferences.getInstance(),
@@ -137,7 +137,7 @@ class PreferencesData extends OpenFileData {
     lastCpkExtractDir = SavableProp<String>("lastCpkExtractDir", _prefs!, "");
     lastSearchDir = SavableProp<String>("lastSearchDir", _prefs!, "");
     lastHierarchyFiles = SavableProp("lastHierarchyFiles", _prefs!, []);
-    // lastOpenedFiles = SavableProp("lastOpenedFiles", _prefs!, []);
+    lastColorPickerMode = SavableProp("lastColorPickerMode", _prefs!, 0);
 
     await super.load();
     _loadingState = LoadingState.loaded;
