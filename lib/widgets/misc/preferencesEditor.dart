@@ -41,7 +41,7 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
             const Text("Preferences", style: TextStyle(fontWeight: FontWeight.w300, fontSize: 25),),
             const SizedBox(height: 20,),
             ...makeDataExportEditor(context),
-            ...makeIndexingEditor(),
+            // ...makeIndexingEditor(),
             ...makeThemeEditor(),
             ...makeMusicEditor(),
           ],

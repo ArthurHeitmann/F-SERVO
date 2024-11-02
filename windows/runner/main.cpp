@@ -28,7 +28,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   FlutterWindow window(project);
   Win32Window::Point origin(100, 100);
   Win32Window::Size size(1280, 720);
-  if (!window.CreateAndShow(L"F-SERVO", origin, size)) {
+  if (!window.CreateAndShow(L"F-SERVO (for mgr:r)", origin, size)) {
     return EXIT_FAILURE;
   }
   window.SetQuitOnClose(true);

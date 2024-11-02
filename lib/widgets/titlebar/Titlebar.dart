@@ -8,6 +8,7 @@ import '../../utils/utils.dart';
 import '../../widgets/theme/customTheme.dart';
 import '../misc/ChangeNotifierWidget.dart';
 import 'TitlebarButton.dart';
+import 'logo.dart';
 
 
 class TitleBar extends ChangeNotifierWidget {
@@ -106,34 +107,37 @@ class TitleBarState extends ChangeNotifierState<TitleBar> with WindowListener {
                     onPressed: () => areasManager.openPreferences(),
                   ),
                 ),
-                Tooltip(
-                  message: "Auto translate Jap to Eng",
-                  waitDuration: const Duration(milliseconds: 500),
-                  child: ChangeNotifierBuilder(
-                    notifier: shouldAutoTranslate,
-                    builder: (context) => Opacity(
-                      opacity: shouldAutoTranslate.value ? 1.0 : 0.25,
-                      child: IconButton(
-                        padding: const EdgeInsets.all(5),
-                        constraints: const BoxConstraints(),
-                        iconSize: 20,
-                        splashRadius: 20,
-                        icon: const Icon(Icons.translate, size: 15,),
-                        isSelected: shouldAutoTranslate.value,
-                        onPressed: () => shouldAutoTranslate.value ^= true,
-                      ),
-                    ),
-                  ),
-                ),
+                // Tooltip(
+                //   message: "Auto translate Jap to Eng",
+                //   waitDuration: const Duration(milliseconds: 500),
+                //   child: ChangeNotifierBuilder(
+                //     notifier: shouldAutoTranslate,
+                //     builder: (context) => Opacity(
+                //       opacity: shouldAutoTranslate.value ? 1.0 : 0.25,
+                //       child: IconButton(
+                //         padding: const EdgeInsets.all(5),
+                //         constraints: const BoxConstraints(),
+                //         iconSize: 20,
+                //         splashRadius: 20,
+                //         icon: const Icon(Icons.translate, size: 15,),
+                //         isSelected: shouldAutoTranslate.value,
+                //         onPressed: () => shouldAutoTranslate.value ^= true,
+                //       ),
+                //     ),
+                //   ),
+                // ),
                 Expanded(
                   child: GestureDetector(
                     onPanUpdate: isDesktop ? (details) => windowManager.startDragging() : null,
                     onDoubleTap: isDesktop ? toggleMaximize : null,
                     behavior: HitTestBehavior.translucent,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 15),
-                      alignment: Alignment.center,
-                      child: Text(windowTitle.value, style: TextStyle(color: getTheme(context).titleBarTextColor), overflow: TextOverflow.ellipsis),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        GameLogo(size: const Size(21, 21)),
+                        const SizedBox(width: 6),
+                        Text(windowTitle.value, style: TextStyle(color: getTheme(context).titleBarTextColor), overflow: TextOverflow.ellipsis),
+                      ],
                     )
                   ),
                 ),
