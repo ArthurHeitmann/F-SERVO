@@ -3,14 +3,19 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
+import 'package:xml/xml.dart';
 
 import '../../../fileTypeUtils/bxm/bxmReader.dart';
 import '../../../fileTypeUtils/bxm/bxmWriter.dart';
+import '../../../utils/utils.dart';
+import '../../../utils/xmlLineParser.dart';
 import '../openFileTypes.dart';
 import 'TextFileData.dart';
 
 class BxmFileData extends TextFileData {
   String? _xmlPath;
+  @override
+  String get vsCodePath => _xmlPath ?? path;
 
   BxmFileData(super.name, super.path, { super.secondaryName, IconData? icon, super.iconColor, super.initText })
       : super(icon: icon ?? Icons.text_fields);
@@ -36,7 +41,20 @@ class BxmFileData extends TextFileData {
   Future<void> save() async {
     var xmlPath = await getXmlPath();
     await File(xmlPath).writeAsString(text.value);
-    await convertXmlToBxmFile(xmlPath, path);
+    try {
+      await convertXmlToBxmFile(xmlPath, path);
+    } on XmlParserException catch (e) {
+      // try get useful error message
+      try {
+        parseXmlWL(text.value);
+      } on XmlWlParseException catch (e) {
+        showToast("Error in XML: ${e.toString()}");
+        return;
+      // ignore: empty_catches
+      } catch (e) {
+      }
+      showToast("Error in XML: ${e.toString()}");
+    }
     setHasUnsavedChanges(false);
   }
 

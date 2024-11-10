@@ -1,9 +1,10 @@
 
 let wordWrap = true;
 
+let lang;
 window.addEventListener("load", () => {
 	const params = new URLSearchParams(window.location.search);
-	const lang = params.get("lang") || null;
+	lang = params.get("lang") || null;
 	const theme = params.get("theme") || "vs-dark";
 
 	require.config({ paths: { vs: "./node_modules/monaco-editor/min/vs" }});
@@ -15,7 +16,7 @@ window.addEventListener("load", () => {
 			smoothScrolling: true,
 			wordWrap: wordWrap ? "on" : "off",
 		});
-		textEditor.getModel().onDidChangeContent(onModelContentChange);
+		textEditor.getModel().onDidChangeContent(throttle(onModelContentChange, 200));
 		window.textEditor = textEditor;
 		postMessage({ type: "ready" });
 	});
@@ -28,6 +29,23 @@ function onModelContentChange() {
 		type: "change",
 		value: value,
 	});
+	if (lang === "xml") {
+		const validation = XMLValidator.validate(value);
+		if (validation !== true && validation?.err) {
+			const marker = {
+				startLineNumber: validation.err.line,
+				startColumn: validation.err.col,
+				endLineNumber: validation.err.line,
+				endColumn: validation.err.col,
+				message: validation.err.msg,
+				severity: monaco.MarkerSeverity.Error,
+			}
+			monaco.editor.setModelMarkers(model, "xml", [marker]);
+		}
+		else {
+			monaco.editor.setModelMarkers(model, "xml", []);
+		}
+	}
 }
 
 function jumpToLine(lineNumber) {
@@ -90,3 +108,37 @@ window.addEventListener("keydown", (e) => {
 		});
 	}
 });
+
+function throttle(func, wait, options = { leading: true, trailing: true}) {
+	let context, args, result;
+	let timeout = null;
+	let previous = 0;
+	if (!options) options = {};
+	const later = function() {
+		previous = options.leading === false ? 0 : Date.now();
+		timeout = null;
+		result = func.apply(context, args);
+		if (!timeout) {
+			context = args = null;
+		}
+	};
+	return function() {
+		const now = Date.now();
+		if (!previous && options.leading === false) previous = now;
+		const remaining = wait - (now - previous);
+		context = this;
+		args = arguments;
+		if (remaining <= 0 || remaining > wait) {
+			if (timeout) {
+				clearTimeout(timeout);
+				timeout = null;
+			}
+			previous = now;
+			result = func.apply(context, args);
+			if (!timeout) context = args = null;
+		} else if (!timeout && options.trailing !== false) {
+			timeout = setTimeout(later, remaining);
+		}
+		return result;
+	};
+}

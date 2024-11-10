@@ -46,6 +46,7 @@ abstract class OpenFileData with HasUuid, Undoable, Disposable, HasUndoHistory {
   final ValueNotifier<String> name;
   final ValueNotifier<String?> secondaryName;
   final String path;
+  String get vsCodePath => path;
   final ValueNotifier<bool> _hasUnsavedChanges = ValueNotifier(false);
   ValueListenable<bool> get hasUnsavedChanges => _hasUnsavedChanges;
   final ValueNotifier<LoadingState> loadingState = ValueNotifier(LoadingState.notLoaded);
