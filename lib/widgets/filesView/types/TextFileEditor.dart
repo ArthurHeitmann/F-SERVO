@@ -149,7 +149,7 @@ class _TextFileEditorState extends State<TextFileEditor> {
                     opacity: isHovering ? 1 : 0.5,
                     child: IconButton(
                       icon: Image.asset("assets/images/vscode.png", width: 32, height: 32),
-                      onPressed: () => openInVsCode(widget.fileContent.path),
+                      onPressed: () => openInVsCode(widget.fileContent.vsCodePath),
                     ),
                   ),
                 ),
