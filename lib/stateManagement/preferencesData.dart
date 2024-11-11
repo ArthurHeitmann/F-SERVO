@@ -1,7 +1,10 @@
 
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:path/path.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../background/IdLookup.dart';
@@ -150,7 +153,7 @@ class PreferencesData extends OpenFileData {
     lastWwiseProjectSettings = SavableProp("lastWwiseProjectSettings", _prefs!, {});
     lastHierarchyFiles = SavableProp("lastHierarchyFiles", _prefs!, []);
     lastColorPickerMode = SavableProp("lastColorPickerMode", _prefs!, 0);
-
+    unawaited(_tryAutoInitPaths());
     await super.load();
     _loadingState = LoadingState.loaded;
   }
@@ -179,6 +182,22 @@ class PreferencesData extends OpenFileData {
   @override
   Undoable takeSnapshot() {
     return this;
+  }
+
+  Future<void> _tryAutoInitPaths() async {
+    var wwisePath = wwise2012CliPath!.value;
+    if (wwisePath.isNotEmpty)
+      return;
+    const searchPath = r"C:\Program Files (x86)\Audiokinetic";
+    var cliPaths = (await Directory(searchPath).list(recursive: true).toList())
+      .whereType<File>()
+      .map((file) => file.path)
+      .where((file) => file.contains("Wwise v2012"))
+      .where((file) => file.contains("x64"))
+      .where((file) => basename(file) == "WwiseCLI.exe")
+      .firstOrNull;
+    if (cliPaths != null)
+      wwise2012CliPath!.value = cliPaths;
   }
 }
 

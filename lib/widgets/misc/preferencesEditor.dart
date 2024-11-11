@@ -345,7 +345,7 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
           const SizedBox(width: 20,),
           const Text("Download for example from "),
           TextButton(
-            onPressed: () => launchUrl(Uri.parse("https://mega.nz/file/5SQ3SKCK#pDTdNl7rP2SrFe_6w2JY2E6JqfP_bPosGl4fYHE2R9U")),
+            onPressed: () => launchUrl(Uri.parse("https://www.saintsrowmods.com/forum/pages/wwise-sriv/#:~:text=I%20agree%2C%20download%20Wwise")),
             child: Text("here", style: TextStyle(decoration: TextDecoration.underline),),
           ),
         ],
