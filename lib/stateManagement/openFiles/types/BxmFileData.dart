@@ -43,7 +43,7 @@ class BxmFileData extends TextFileData {
     await File(xmlPath).writeAsString(text.value);
     try {
       await convertXmlToBxmFile(xmlPath, path);
-    } on XmlParserException catch (e) {
+    } on XmlException catch (e) {
       // try get useful error message
       try {
         parseXmlWL(text.value);
