@@ -63,8 +63,13 @@ Future<void> repackDat(String datDir, String exportPath) async {
   // fileOffsets
   List<int> fileOffsets = [];
   var currentOffset = hashMapOffset + hashMapSize;
+  var prevExtension4096Aligned = false;
+  const specialExtensions = ["ctx", "dat", "dtt", "eff", "eft", "scr", "wmb", "wtb", "wtp"];
   for (int i = 0; i < fileList.length; i++) {
-    currentOffset = (currentOffset / 4096).ceil() * 4096;
+    var isExt4096Aligned = specialExtensions.contains(fileExtensions[i]);
+    var alignment = prevExtension4096Aligned || isExt4096Aligned ? 4096 : 16;
+    prevExtension4096Aligned = isExt4096Aligned;
+    currentOffset = (currentOffset / alignment).ceil() * alignment;
     fileOffsets.add(currentOffset);
     currentOffset += fileSizes[i];
   }
@@ -73,8 +78,7 @@ Future<void> repackDat(String datDir, String exportPath) async {
   // Header
   await Directory(path.dirname(exportPath)).create(recursive: true);
   var datSize = fileOffsets.last + fileSizes.last + 1;
-  if (datSize % 16 != 0)
-    datSize = (datSize / 16).ceil() * 16;
+  datSize = (datSize / 4096).ceil() * 4096;
   var datBytes = ByteDataWrapper.allocate(datSize);
   datBytes.writeString0P(fileID);
   datBytes.writeUint32(fileNumber);
