@@ -12,6 +12,7 @@ import '../../utils/utils.dart';
 import '../../widgets/filesView/FileType.dart';
 import '../hasUuid.dart';
 import '../miscValues.dart';
+import '../preferencesData.dart';
 import '../undoable.dart';
 import 'types/BnkFilePlaylistData.dart';
 import 'types/BxmFileData.dart';
@@ -97,6 +98,8 @@ abstract class OpenFileData with HasUuid, Undoable, Disposable, HasUndoHistory {
       return WtaWtpData(name, path, secondaryName: secondaryName, isWtb: path.endsWith(".wtb"));
     else if (path.endsWith(".est") || path.endsWith(".sst"))
       return EstFileData(name, path, secondaryName: secondaryName);
+    else if (path == "preferences")
+      return PreferencesData();
     else
       return TextFileData(name, path, secondaryName: secondaryName);
   }

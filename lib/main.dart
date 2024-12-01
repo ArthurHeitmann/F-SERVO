@@ -1,5 +1,6 @@
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -20,6 +21,7 @@ import 'utils/assetDirFinder.dart';
 import 'utils/fileOpenCommand.dart';
 import 'utils/loggingWrapper.dart';
 import 'utils/utils.dart';
+import 'version/updateRestartData.dart';
 import 'widgets/EditorLayout.dart';
 import 'widgets/misc/ChangeNotifierWidget.dart';
 import 'widgets/misc/mousePosition.dart';
@@ -99,7 +101,22 @@ void init(List<String> args) async {
   runApp(const MyApp());
 
   unawaited(waitForNextFrame().then((_) async {
+    if (args.length >= 2) {
+      if (args[0] == "--update-data") {
+        var b64Json = args[1];
+        var updateDataJson = jsonDecode(utf8.decode(base64Decode(b64Json)));
+        var updateData = UpdateRestartData.fromJson(updateDataJson);
+        for (var file in updateData.openedHierarchyFiles) {
+          await openHierarchyManager.openFile(file);
+        }
+        for (var file in updateData.openedFiles) {
+          areasManager.openFile(file);
+        }
+      }
+    }
     for (var arg in args) {
+      if (!await File(arg).exists() && !await Directory(arg).exists())
+        continue;
       await openHierarchyManager.openFile(arg);
       if (await canOpenAsFile(arg))
         areasManager.openFile(arg);

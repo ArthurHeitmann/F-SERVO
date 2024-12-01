@@ -638,7 +638,8 @@ void revealFileInExplorer(String path) {
 }
 
 const datExtensions = { ".dat", ".dtt", ".evn", ".eff", ".eft" };
-const bxmExtensions = { ".bxm", ".gad", ".sar", ".seq" };
+const bxmExtensions = { ".bxm", ".gad", ".sar", ".seq", ".vca", ".sab" };
+const datSubExtractDir = "nier2blender_extracted";
 
 bool strEndsWithDat(String str) {
   for (var ext in datExtensions) {
