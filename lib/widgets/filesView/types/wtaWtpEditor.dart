@@ -36,15 +36,15 @@ class _TexturesTableConfig with CustomTableConfig {
     columnNames = [
       "ID", "Path", "", "",
       if (texData.hasAnySimpleModeFlags)
-        "Is Albedo?",
-      if (!texData.useFlagsSimpleMode)
+        "Is Albedo?"
+      else
         "Flags",
     ];
     columnFlex = [
       2, 9, 1, 1,
       if (texData.hasAnySimpleModeFlags)
-        2,
-      if (!texData.useFlagsSimpleMode)
+        2
+      else
         2,
     ];
     rowCount = NumberProp(textures.length, true, fileId: null);
@@ -66,9 +66,9 @@ class _TexturesTableConfig with CustomTableConfig {
           icon: const Icon(Icons.delete, size: 20),
           onPressed: () => onRowRemove(index),
         )),
-        if (texData.hasAnySimpleModeFlags)
-          PropCellConfig(prop: textures[index].isAlbedo!),
-        if (!texData.useFlagsSimpleMode)
+        if (texData.hasAnySimpleModeFlags && textures[index].isAlbedo != null)
+          PropCellConfig(prop: textures[index].isAlbedo!)
+        else
           PropCellConfig(prop: textures[index].flag!),
       ]
     );
