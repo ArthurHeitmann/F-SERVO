@@ -41,7 +41,9 @@ jobs:
         run: flutter pub get
 
       - name: Build Release
-        run: flutter build windows --release
+        run: |
+          flutter build windows --release
+          dart compile exe lib\version\updaterCli.dart -o build\windows\x64\runner\Release\data\flutter_assets\assets\bins\updater.exe
       
       - name: Copy dlls
         run: |

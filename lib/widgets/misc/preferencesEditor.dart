@@ -16,6 +16,7 @@ import 'ChangeNotifierWidget.dart';
 import 'RowSeparated.dart';
 import 'SmoothScrollBuilder.dart';
 import 'smallButton.dart';
+import 'updater.dart';
 
 class PreferencesEditor extends ChangeNotifierWidget {
   final PreferencesData prefs;
@@ -44,6 +45,7 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
             // ...makeIndexingEditor(),
             ...makeThemeEditor(),
             ...makeMusicEditor(),
+            ...makeUpdater(),
           ],
         ),
       ),
@@ -356,6 +358,15 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
           BoolPropSwitch(prop: widget.prefs.pauseAudioOnFileChange!),
         ],
       ),
+    ];
+  }
+
+  List<Widget> makeUpdater() {
+    return [
+      const SizedBox(height: 40,),
+      const Text("Updates:", style: sectionHeaderStyle,),
+      const SizedBox(height: 10,),
+      const VersionUpdaterUi(),
     ];
   }
 }
