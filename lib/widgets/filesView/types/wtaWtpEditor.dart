@@ -8,6 +8,7 @@ import 'package:path/path.dart';
 import '../../../fileTypeUtils/textures/ddsConverter.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/events/statusInfo.dart';
+import '../../../stateManagement/hierarchy/FileHierarchy.dart';
 import '../../../stateManagement/listNotifier.dart';
 import '../../../stateManagement/openFiles/types/WtaWtpData.dart';
 import '../../../utils/utils.dart';
@@ -34,6 +35,7 @@ class _TexturesTableConfig with CustomTableConfig {
   _TexturesTableConfig(this.file, String name, this.texData)
     : textures = texData.textures {
     this.name = name;
+    subTitleWidget = _WtpDatPaths(wtpDatsPath: texData.wtpDatsPath);
     columnNames = [
       "ID", "PNG", "Path", "", "",
       if (texData.hasAnySimpleModeFlags)
@@ -269,6 +271,51 @@ class __TexturePreviewState extends ChangeNotifierState<_TexturePreview> {
           )
         );
       },
+    );
+  }
+}
+
+class _WtpDatPaths extends ChangeNotifierWidget {
+  final ValueNotifier<List<String>?> wtpDatsPath;
+  
+  _WtpDatPaths({required this.wtpDatsPath}) : super(notifier: wtpDatsPath);
+
+  @override
+  State<_WtpDatPaths> createState() => __WtpDatPathsState();
+}
+
+class __WtpDatPathsState extends ChangeNotifierState<_WtpDatPaths> {
+  void _openDat(String path) async {
+    var file = await openHierarchyManager.openFile(path);
+    if (file == null)
+      return;
+    openHierarchyManager.setSelectedEntry(file);
+    showToast("Opened ${basename(path)} to sidebar");
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    var paths = widget.wtpDatsPath.value;
+    if (paths == null)
+      return const SizedBox.shrink();
+    return Row(
+      children: [
+        const Text("WTP inside DTT: "),
+        for (var path in paths)
+          if (path != paths.last) ...[
+            Flexible(
+              child: TextButton(
+                onPressed: () => _openDat(path),
+                child: Text(basename(path), overflow: TextOverflow.ellipsis),
+              ),
+            ),
+            Text(" > ", style: TextStyle(fontWeight: FontWeight.w900),),
+          ]
+          else
+            Flexible(
+              child: Text(basename(path), overflow: TextOverflow.ellipsis),
+            ),
+      ],
     );
   }
 }
