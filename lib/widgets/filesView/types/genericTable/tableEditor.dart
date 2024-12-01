@@ -82,6 +82,7 @@ class _RowConfigIndexed {
 
 mixin CustomTableConfig {
   late final String name;
+  Widget? subTitleWidget;
   late final List<String> columnNames;
   late final List<int> columnFlex;
   late final NumberProp rowCount;
@@ -198,12 +199,22 @@ class _TableEditorState extends ChangeNotifierState<TableEditor> {
           Row(
             children: [
               Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    widget.config.name,
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
+                child: Row(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        widget.config.name,
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                    ),
+                    if (widget.config.subTitleWidget != null) ...[
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: widget.config.subTitleWidget!
+                      ),
+                    ]
+                  ],
                 ),
               ),
               _makeExportDropdown(),

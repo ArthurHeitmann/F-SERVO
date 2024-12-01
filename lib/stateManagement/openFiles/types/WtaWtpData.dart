@@ -164,6 +164,7 @@ class WtaWtpTextures with HasUuid, Undoable implements Disposable {
   final OpenFileId file;
   final String wtaPath;
   final String? wtpPath;
+  final ValueNotifier<List<String>?> wtpDatsPath = ValueNotifier(null);
   final bool isWtb;
   final ValueListNotifier<WtaTextureEntry> textures;
   final bool hasAnySimpleModeFlags;
@@ -171,6 +172,19 @@ class WtaWtpTextures with HasUuid, Undoable implements Disposable {
 
   WtaWtpTextures(this.file, this.wtaPath, this.wtpPath, this.isWtb, this.textures, this.useFlagsSimpleMode, this.hasAnySimpleModeFlags) {
     textures.addListener(_onPropChange);
+    
+    if (wtpPath != null) {
+      List<String> reversePaths = [];
+      reversePaths.add(wtpPath!);
+      var remainingPath = dirname(wtpPath!);
+      while (datExtensions.any((ext) => basename(remainingPath).endsWith(ext))) {
+        reversePaths.add(remainingPath);
+        remainingPath = dirname(remainingPath);
+        if (basename(remainingPath) == datSubExtractDir)
+          remainingPath = dirname(remainingPath);
+      }
+      wtpDatsPath.value = reversePaths.reversed.toList();
+    }
   }
 
   static Future<WtaWtpTextures> fromWtaWtp(OpenFileId file, String wtaPath, String? wtpPath, String extractDir, bool isWtb) async {
@@ -271,6 +285,7 @@ class WtaWtpTextures with HasUuid, Undoable implements Disposable {
   @override
   void dispose() {
     textures.dispose();
+    wtpDatsPath.dispose();
   }
 
   @override
