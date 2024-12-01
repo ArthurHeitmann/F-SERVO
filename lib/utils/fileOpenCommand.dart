@@ -27,8 +27,8 @@ Future<bool> trySendFileArgs(List<String> args) async {
   var completer = Completer<bool>();
   WebSocket? webSocket;
   var timeout = Timer(const Duration(milliseconds: 500), () {
-    completer.complete(false);
     webSocket?.close();
+    completer.complete(false);
   });
   unawaited(WebSocket.connect("ws://localhost:$wsPort")
     .then((ws) {
@@ -37,13 +37,14 @@ Future<bool> trySendFileArgs(List<String> args) async {
         return;
       }
       webSocket = ws;
-      ws.add(jsonEncode(CustomWsMessage("openFiles", {"files": args})));
-      ws.listen((data) {
+      ws.listen((data) async {
         var msg = SyncMessage.fromJson(jsonDecode(data));
         if (msg.method == "connected") {
-          completer.complete(true);
-          ws.close();
           timeout.cancel();
+          ws.add(jsonEncode(CustomWsMessage("openFiles", {"files": args})));
+          await Future.delayed(const Duration(milliseconds: 100));
+          await ws.close();
+          completer.complete(true);
         }
       });
     })
