@@ -81,6 +81,7 @@ void _handleWebSocket(WebSocket client) {
 }
 
 void _onClientData(data) {
+  print("Received data: $data");
   var jsonData = jsonDecode(data);
   var method = jsonData["method"];
   if (method == "openFiles") {
