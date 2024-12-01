@@ -119,10 +119,13 @@ class _FileMetaEditorState extends ChangeNotifierState<FileMetaEditor> {
     if (actions.isEmpty)
       return [];
     return [
-      Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: actions.map((e) => Flexible(
-          child: TextButton.icon(
+      Align(
+        alignment: Alignment.center,
+        child: Wrap(
+          alignment: WrapAlignment.center,
+          spacing: 4,
+          runSpacing: 4,
+          children: actions.map((e) => TextButton.icon(
             onPressed: e.action,
             icon: Icon(e.icon, size: 20),
             label: Text(e.name, overflow: TextOverflow.ellipsis),
@@ -135,8 +138,8 @@ class _FileMetaEditorState extends ChangeNotifierState<FileMetaEditor> {
                 ),
               ),
             )
-          ),
-        )).toList(),
+          )).toList(),
+        ),
       ),
       const SizedBox(height: 16),
     ];
