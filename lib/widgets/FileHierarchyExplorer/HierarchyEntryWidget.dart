@@ -5,6 +5,7 @@ import '../../stateManagement/hierarchy/FileHierarchy.dart';
 import '../../stateManagement/hierarchy/HierarchyEntryTypes.dart';
 import '../../stateManagement/hierarchy/types/BnkHierarchyEntry.dart';
 import '../../stateManagement/hierarchy/types/BxmHierarchyEntry.dart';
+import '../../stateManagement/hierarchy/types/CtxHierarchyEntry.dart';
 import '../../stateManagement/hierarchy/types/DatHierarchyEntry.dart';
 import '../../stateManagement/hierarchy/types/EstHierarchyEntry.dart';
 import '../../stateManagement/hierarchy/types/McdHierarchyEntry.dart';
@@ -40,7 +41,7 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
     var iconColor = getTheme(context).colorOfFiletype(widget.entry);
     if (widget.entry is DatHierarchyEntry || widget.entry is WaiFolderHierarchyEntry)
       return Icon(Icons.folder, color: iconColor, size: 15);
-    else if (widget.entry is PakHierarchyEntry || widget.entry is WspHierarchyEntry)
+    else if (widget.entry is PakHierarchyEntry || widget.entry is WspHierarchyEntry || widget.entry is CtxHierarchyEntry)
       return Icon(Icons.source, color: iconColor, size: 15);
     else if (widget.entry is HapGroupHierarchyEntry)
       return Icon(Icons.workspaces, color: iconColor, size: 15);

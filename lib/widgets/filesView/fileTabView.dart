@@ -73,7 +73,7 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
       return;
     OpenFileData? firstFile;
     int openedFiles = 0;
-    const fileExplorerExtensions = { ".pak", ...datExtensions, ".yax", ".bin", ".wai", ".wsp", ...bxmExtensions, ".bnk", ".cpk" };
+    const fileExplorerExtensions = { ".pak", ...datExtensions, ".yax", ".bin", ".wai", ".wsp", ...bxmExtensions, ".bnk", ".cpk", ".ctx" };
     for (var file in files) {
       var fileName = path.basename(file);
       bool isSaveSlotData = fileName.startsWith("SlotData_") && fileName.endsWith(".dat");
