@@ -83,7 +83,8 @@ Future<void> processChangedFiles() async {
 
   // repack DAT
   if (prefs.exportDats?.value == true && (prefs.dataExportPath?.value ?? "") != "") {
-    await Future.wait(dats.map((dat) => exportDat(dat, checkForNesting: true)));
+    var datPaths = dats.where(strEndsWithDat);
+    await Future.wait(datPaths.map((dat) => exportDat(dat, checkForNesting: true)));
   }
 
   // save WAI
