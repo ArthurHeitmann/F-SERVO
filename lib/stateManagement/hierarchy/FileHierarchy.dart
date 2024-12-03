@@ -187,7 +187,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
     return entry;
   }
 
-  Future<HierarchyEntry> openDat(String datPath, { HierarchyEntry? parent }) async {
+  Future<HierarchyEntry> openDat(String datPath, { HierarchyEntry? parent, bool allowMissingInfoFile = false }) async {
     var existing = findRecWhere((entry) => entry is DatHierarchyEntry && entry.path == datPath);
     if (existing != null)
       return existing;
@@ -196,13 +196,13 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
     var fileName = basename(datPath);
     var datFolder = dirname(datPath);
     var datExtractDir = join(datFolder, datSubExtractDir, fileName);
-    List<String>? datFilePaths;
+    DatFiles? datFilePaths;
     if (!await Directory(datExtractDir).exists()) {
       await extractDatFiles(datPath, shouldExtractPakFiles: true);
     }
     else {
       try {
-        datFilePaths = await getDatFileList(datExtractDir);
+        datFilePaths = await getDatFileList(datExtractDir, allowMissingInfoFile: allowMissingInfoFile);
       } catch (e, s) {
         print("$e\n$s");
       }
@@ -212,9 +212,12 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
       if (!shouldExtractDatFiles)
         shouldExtractDatFiles = datFilePaths == null;
       if (!shouldExtractDatFiles)
-        shouldExtractDatFiles = datFilePaths!.isNotEmpty && await Future.any(datFilePaths.map((name) async => !await File(name).exists()));
+        shouldExtractDatFiles = datFilePaths!.files.isNotEmpty && await Future.any(datFilePaths.files.map((name) async => !await File(name).exists()));
       if (shouldExtractDatFiles) {
         await extractDatFiles(datPath, shouldExtractPakFiles: true);
+      }
+      else if (datFilePaths?.originalFileOrder == null) {
+        await updateDatInfoFileOriginalOrder(datPath, datExtractDir);
       }
     }
 
@@ -226,7 +229,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
       add(datEntry);
     }
 
-    await datEntry.loadChildren(datFilePaths);
+    await datEntry.loadChildren(datFilePaths?.files);
 
     return datEntry;
   }
@@ -234,7 +237,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
   Future<HierarchyEntry> openExtractedDat(String datDirPath, { HierarchyEntry? parent }) {
     var srcDatDir = dirname(dirname(datDirPath));
     var srcDatPath = join(srcDatDir, basename(datDirPath));
-    return openDat(srcDatPath, parent: parent);
+    return openDat(srcDatPath, parent: parent, allowMissingInfoFile: true);
   }
   
   HapGroupHierarchyEntry? findPakParentGroup(String fileName) {

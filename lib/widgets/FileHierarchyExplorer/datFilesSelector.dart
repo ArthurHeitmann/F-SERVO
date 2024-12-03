@@ -143,7 +143,7 @@ class _DatSelectorWidgetState extends State<_DatSelectorWidget> {
         .whereType<File>()
         .map((file) => file.path)
         .where((path) => extension(path).length <= 4)
-        .map((path) => (path, BoolProp(datFiles.contains(path), fileId: null)))
+        .map((path) => (path, BoolProp(datFiles.files.contains(path), fileId: null)))
         .toList();
     setState(() {});
   }
