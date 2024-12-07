@@ -6,7 +6,9 @@ import '../../stateManagement/openFiles/openFilesManager.dart';
 import '../../stateManagement/undoable.dart';
 import '../../utils/utils.dart';
 import '../../widgets/theme/customTheme.dart';
+import '../help/helpLayout.dart';
 import '../misc/ChangeNotifierWidget.dart';
+import '../misc/overlayWindow.dart';
 import 'TitlebarButton.dart';
 import 'logo.dart';
 
@@ -95,6 +97,22 @@ class TitleBarState extends ChangeNotifierState<TitleBar> with WindowListener {
                     splashRadius: 14,
                     icon: const Icon(Icons.save, size: 15),
                     onPressed: () => areasManager.saveAll(),
+                  ),
+                ),
+                Tooltip(
+                  message: "Help",
+                  waitDuration: const Duration(milliseconds: 500),
+                  child: IconButton(
+                    padding: EdgeInsets.zero,
+                    splashRadius: 14,
+                    icon: const Icon(Icons.help_outline, size: 15),
+                    onPressed: () => OverlayWindow.show(
+                      context: context,
+                      initSizePercent: const Size(0.7, 0.7),
+                      initSizePercentLimit: const Size(1200, 800),
+                      title: "Help",
+                      child: HelpLayout(),
+                    ),
                   ),
                 ),
                 Tooltip(
