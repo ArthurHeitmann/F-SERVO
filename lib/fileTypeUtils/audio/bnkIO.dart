@@ -37,12 +37,20 @@ class BnkFile extends ChunkWithSize {
   BnkFile(this.chunks);
 
   BnkFile.read(ByteDataWrapper bytes) {
+    int unknownChunkCount = 0;
     while (bytes.position < bytes.length) {
       var chunk = _makeNextChunk(bytes);
       if (chunk is BnkHeader) {
         if (chunk.version != _supportedVersion) {
           showToast("Warning: BNK version ${chunk.version} is not supported. Expected $_supportedVersion");
           throw Exception("Unsupported BNK version ${chunk.version}");
+        }
+      }
+      else if (chunk is BnkUnknownChunk) {
+        unknownChunkCount++;
+        if (unknownChunkCount > 10) {
+          showToast("Warning: More than 10 unknown chunks found. Stopping parsing.");
+          throw Exception("Too many unknown chunks");
         }
       }
       chunks.add(chunk);
