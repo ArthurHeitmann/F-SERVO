@@ -1,19 +1,31 @@
 
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:image/image.dart';
 import 'package:path/path.dart';
 
 import '../fileTypeUtils/mcd/mcdIO.dart';
+import '../fileTypeUtils/textures/ddsConverter.dart';
 import '../fileTypeUtils/utils/ByteDataWrapper.dart';
+import '../fileTypeUtils/wta/wtaReader.dart';
+import '../utils/assetDirFinder.dart';
 
-const rootDir = r"D:\delete\mods\na\blender\extracted";
-const magickPath = r"D:\Cloud\Documents\Programming\dart\nier_scripts_editor\assets\bins\magick.exe";
-const extractPath = r"D:\Cloud\Documents\Programming\dart\nier_scripts_editor\extractedFonts";
+const rootDir = r"D:\delete\cpk_extracted";
+const magickPath = r"D:\Cloud\Documents\Programming\dart\F-SERVO\assets\bins\magick.exe";
+const extractPath = r"D:\Cloud\Documents\Programming\dart\F-SERVO\extractedFonts";
 
-const langs = { "de", "es", "fr", "it", "us" };
-final langMatcher = RegExp(r"(de|es|fr|it|us)\.dat");
+// const langs = { "de", "es", "fr", "it", "us" };
+// final langMatcher = RegExp(r"(de|es|fr|it|us)\.dat");
+const langPrio = [
+  "us",
+  "de",
+  "fr",
+  "it",
+  "pt",
+  "jp",
+];
 
 // { fontId: processedLetterCodes[] }
 Map<int, Set<int>> fontMap = {};
@@ -84,24 +96,23 @@ Future<void> processFile(String mcd) async {
 
   // get texture info
   tTexInfo.start();
-  var textureFile = "${mcd.substring(0, mcd.length - 4)}.wtp";
+  var textureFile = "${mcd.substring(0, mcd.length - 4)}.wtb";
   textureFile = textureFile.replaceFirst(".dat", ".dtt");
   if (!await File(textureFile).exists()) {
     print("Texture file not found: $textureFile");
     return;
   }
-  var texBytes = await ByteDataWrapper.fromFile(textureFile);
+  var wtbBytes = await ByteDataWrapper.fromFile(textureFile);
+  var wtb = WtaFile.read(wtbBytes);
+  wtbBytes.position = wtb.textureOffsets[0];
+  var texBytes = wtbBytes.makeSubView(wtb.textureSizes[0]);
   texBytes.position = 0xC;
   var texHeight = texBytes.readUint32();
   var texWidth = texBytes.readUint32();
   // dds to png
-  var pngPath = "$textureFile.png";
-  if (!await File(pngPath).exists()) {
-    var result = await Process.run(magickPath, [ textureFile, pngPath ]);
-    if (result.exitCode != 0)
-      print("Error ($mcd): ${result.stderr}");
-  }
-  var pngFile = decodePng(await File(pngPath).readAsBytes())!;
+  // var pngPath = "$textureFile.png";
+  var pngBytes = await texToPngInMemory(Uint8List.view(wtbBytes.buffer, wtb.textureOffsets[0]));
+  var pngFile = decodePng(pngBytes!)!;
   tTexInfo.stop();
 
   // get mcd data
@@ -129,7 +140,7 @@ Future<void> processFile(String mcd) async {
     tDupeCheck.start();
     int fontId = symbols[i].fontId;
     var charCode = symbols[i].charCode;
-    var glyph = glyphs[i];
+    var glyph = glyphs[symbols[i].glyphId];
 
     var datName = basename(dirname(mcd));
     var mcdName = join(datName, basename(mcd));
@@ -139,8 +150,8 @@ Future<void> processFile(String mcd) async {
       charsMeta[fontId] = {
         "width": font.width,
         "height": font.height,
-        "below": font.below,
-        "horizontal": font.horizontal,
+        "below": font.horizontalSpacing,
+        "horizontal": font.verticalSpacing,
         "usedBy": [],
         "symbols": []
       };
@@ -170,15 +181,15 @@ Future<void> processFile(String mcd) async {
       "char": String.fromCharCode(charCode),
       "width": glyph.width,
       "height": glyph.height,
-      "above": glyph.above,
-      "below": glyph.below,
-      "horizontal": glyph.horizontal,
+      "above": glyph.null0,
+      "below": glyph.horizontalSpacing,
+      "horizontal": glyph.null1,
     });
     tCropPrep.stop();
 
     // crop and save
     tCrop.start();
-    var crop = copyCrop(pngFile, cropU1, cropV1, glyph.width.toInt(), glyph.height.toInt());
+    var crop = copyCrop(pngFile, x: cropU1, y: cropV1, width: glyph.width.toInt(), height: glyph.height.toInt());
     await File(outFileName).writeAsBytes(encodePng(crop));
     tCrop.stop();
   }
@@ -188,17 +199,54 @@ Future<void> processFile(String mcd) async {
 }
 
 void main(List<String> args) async {
+  print("Starting");
+  await findAssetsDir();
   var mcdFiles = await Directory(rootDir)
     .list(recursive: true)
     .where((e) => e.path.endsWith(".mcd"))
     .map((e) => e.path)
     .toList();
+  var allMcdsAnnotated = mcdFiles.map((e) {
+    var pathParts = e.split(RegExp(r"[/\\]"));
+    var cpkName = pathParts.where((part) => part.contains(".cpk_extracted")).first;
+    var datName = pathParts.where((part) => part.endsWith(".dat")).last;
+    var lang = datName.split("_").skip(1).firstOrNull?.split(".").first ?? "jp.dat";
+    var langId = langPrio.indexOf(lang);
+    if (langId == -1)
+      langId = langPrio.length;
+    return (langId, cpkName, datName, e);
+  }).toList();
+  allMcdsAnnotated.sort((a, b) {
+    var cmp = a.$1.compareTo(b.$1);
+    if (cmp != 0)
+      return cmp;
+    cmp = a.$2.compareTo(b.$2);
+    if (cmp != 0)
+      return cmp;
+    cmp = a.$3.compareTo(b.$3);
+    if (cmp != 0)
+      return cmp;
+    return a.$4.compareTo(b.$4);
+  });
   
-  List<Future<void>> futures = [];
-  for (var mcd in mcdFiles) {
-    futures.add(processFile(mcd));
+  List<List<String>> mcdBatches = [];
+  const batchSize = 12;
+  for (int i = 0; i < allMcdsAnnotated.length; i += batchSize) {
+    mcdBatches.add(allMcdsAnnotated.skip(i).take(batchSize).map((e) => e.$4).toList());
   }
-  await Future.wait(futures);
+  for (var batch in mcdBatches) {
+    List<Future<void>> futures = [];
+    for (var mcd in batch) {
+      futures.add(processFile(mcd));
+    }
+    await Future.wait(futures);
+  }
+
+  // List<Future<void>> futures = [];
+  // for (var mcd in allMcdsAnnotated) {
+    // futures.add(processFile(mcd.$4));
+  // }
+  // await Future.wait(futures);
 
   for(var fontId in charsMeta.keys) {
     var meta = charsMeta[fontId]!;

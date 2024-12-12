@@ -67,12 +67,12 @@ class _FtbEditorState extends ChangeNotifierState<FtbEditor> {
                   child: IndexedStack(
                     index: activeTexture,
                     children: [
-                      for (var i = 0; i < widget.file.ftbData!.textures.length; i++)
-                        McdFontDebugger(
-                          key: UniqueKey(),
-                          texturePath: widget.file.ftbData!.textures[i].extractedPngPath!,
-                          fonts: [widget.file.ftbData!.asMcdFont(i)],
-                        )
+                      // for (var i = 0; i < widget.file.ftbData!.textures.length; i++)
+                      //   McdFontDebugger(
+                      //     key: UniqueKey(),
+                      //     texturePath: widget.file.ftbData!.textures[i].extractedPngPath!,
+                      //     fonts: [widget.file.ftbData!.asMcdFont(i)],
+                      //   )
                     ],
                   ),
                 ),

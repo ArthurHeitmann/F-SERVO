@@ -1,13 +1,14 @@
 
 import 'dart:io';
 import 'dart:math';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
+import '../../../../fileTypeUtils/textures/ddsConverter.dart';
+import '../../../../fileTypeUtils/utils/ByteDataWrapper.dart';
+import '../../../../fileTypeUtils/wta/wtaReader.dart';
 import '../../../../stateManagement/openFiles/types/McdFileData.dart';
-import '../../../../utils/assetDirFinder.dart';
 import '../../../../utils/utils.dart';
 import '../../../misc/ChangeNotifierWidget.dart';
 
@@ -54,25 +55,28 @@ class _McdFontDebuggerState extends ChangeNotifierState<McdFontDebugger> {
         setState(() {});
     }
     else if (widget.texturePath.endsWith(".dds") || widget.texturePath.endsWith(".wtp")) {
-      if (!await hasMagickBins()) {
-        showToast("Can't load texture because ImageMagick is not found.");
+      var imageBytes = await texToPng(widget.texturePath);
+      if (imageBytes == null)
         return;
-      }
-      var result = await Process.run(
-        magickBinPath!,
-        ["DDS:${widget.texturePath}", "PNG:-"],
-        stdoutEncoding: null,
-      );
-      if (result.exitCode != 0) {
-        showToast("Can't load texture because ImageMagick failed to convert DDS to PNG.");
-        return;
-      }
-      var imageBytes = Uint8List.fromList(result.stdout as List<int>);
       image = Image.memory(imageBytes, fit: BoxFit.contain);
       uiImage = await decodeImageFromList(imageBytes);
       imageSize = SizeInt(uiImage!.width, uiImage!.height);
       if (mounted)
         setState(() {});
+    }
+    else if (widget.texturePath.endsWith(".wtb")) {
+      var wtbBytes = await ByteDataWrapper.fromFile(widget.texturePath);
+      var wtb = WtaFile.read(wtbBytes);
+      wtbBytes.position = wtb.textureOffsets[0];
+      var textureBytes = wtbBytes.asUint8List(wtb.textureSizes[0]);
+      image = Image.memory(textureBytes, fit: BoxFit.contain);
+      uiImage = await decodeImageFromList(textureBytes);
+      imageSize = SizeInt(uiImage!.width, uiImage!.height);
+      if (mounted)
+        setState(() {});
+    }
+    else {
+      showToast("Unsupported texture format ${widget.texturePath}");
     }
   }
 
@@ -120,13 +124,19 @@ class _McdFontDebuggerState extends ChangeNotifierState<McdFontDebugger> {
                     for (var font in widget.fonts)
                       for (var sym in font.supportedSymbols.values)
                         Positioned(
-                          left: sym.x / imageSize!.width * areaWidth,
-                          top: sym.y / imageSize!.height * areaHeight,
-                          width: sym.width / imageSize!.width * areaWidth,
-                          height: sym.height / imageSize!.height * areaHeight,
+                          left: sym.uv1.dx * areaWidth,
+                          top: sym.uv1.dy * areaHeight,
+                          width: (sym.uv2.dx - sym.uv1.dx) * areaWidth,
+                          height: (sym.uv2.dy - sym.uv1.dy) * areaHeight,
                           child: Tooltip(
                             waitDuration: const Duration(milliseconds: 250),
-                            message: "char: ${sym.char} (${sym.code})\nfontID: ${sym.fontId}\nfontHeight: ${font.fontHeight}\nfontBelow: ${font.fontBelow}",
+                            message: 
+                              "char: ${sym.char} (${sym.code})\n"
+                              "fontID: ${sym.fontId}\n"
+                              "fontHeight: ${font.fontHeight}\n"
+                              "tex size: ${sym.getWidth()}x${sym.getHeight()}\n"
+                              "rendered size: ${sym.renderedSize.width.round()}x${sym.renderedSize.height.round()}"
+                              ,
                           ),
                         ),
                 ]
@@ -165,15 +175,12 @@ class _SimpleFontViewPainter extends CustomPainter {
 
     for (var font in fonts) {
       for (var sym in font.supportedSymbols.values) {
-        var x = sym.x / imageSize.width * areaSize.width;
-        var y = sym.y / imageSize.height * areaSize.height;
-        var width = sym.width / imageSize.width * areaSize.width;
-        var height = sym.height / imageSize.height * areaSize.height;
+        var x = sym.uv1.dx * areaSize.width;
+        var y = sym.uv1.dy * areaSize.height;
+        var width = (sym.uv2.dx - sym.uv1.dx) * areaSize.width;
+        var height = (sym.uv2.dy - sym.uv1.dy) * areaSize.height;
         var rect = Rect.fromLTWH(x, y, width, height);
         canvas.drawRect(rect, paint);
-
-        y += height + font.fontBelow / imageSize.height * areaSize.height;
-        canvas.drawLine(Offset(x, y), Offset(x + width, y), paint);
       }
     }
   }

@@ -1,5 +1,4 @@
 
-import '../../utils/utils.dart';
 import '../utils/ByteDataWrapper.dart';
 
 class McdFileHeader {
@@ -81,12 +80,12 @@ class McdFileGlyph {
   final double v2;
   final double width;
   final double height;
-  final double above;
-  final double below;
-  final double horizontal;
+  final double null0;
+  final double horizontalSpacing;
+  final double null1;
 
   McdFileGlyph(this.textureId, this.u1, this.v1, this.u2, this.v2, this.width,
-      this.height, this.above, this.below, this.horizontal);
+      this.height, this.null0, this.horizontalSpacing, this.null1);
   
   McdFileGlyph.read(ByteDataWrapper bytes) :
     textureId = bytes.readUint32(),
@@ -96,9 +95,9 @@ class McdFileGlyph {
     v2 = bytes.readFloat32(),
     width = bytes.readFloat32(),
     height = bytes.readFloat32(),
-    above = bytes.readFloat32(),
-    below = bytes.readFloat32(),
-    horizontal = bytes.readFloat32();
+    null0 = bytes.readFloat32(),
+    horizontalSpacing = bytes.readFloat32(),
+    null1 = bytes.readFloat32();
   
   void write(ByteDataWrapper bytes) {
     bytes.writeUint32(textureId);
@@ -108,9 +107,9 @@ class McdFileGlyph {
     bytes.writeFloat32(v2);
     bytes.writeFloat32(width);
     bytes.writeFloat32(height);
-    bytes.writeFloat32(above);
-    bytes.writeFloat32(below);
-    bytes.writeFloat32(horizontal);
+    bytes.writeFloat32(null0);
+    bytes.writeFloat32(horizontalSpacing);
+    bytes.writeFloat32(null1);
   }
 }
 
@@ -118,26 +117,62 @@ class McdFileFont {
   final int id;
   final double width;
   final double height;
-  final double below;
-  final double horizontal;
+  final double horizontalSpacing;
+  final double verticalSpacing;
 
-  McdFileFont(this.id, this.width, this.height, this.below, this.horizontal);
+  McdFileFont(this.id, this.width, this.height, this.horizontalSpacing, this.verticalSpacing);
   
   McdFileFont.read(ByteDataWrapper bytes) :
     id = bytes.readUint32(),
     width = bytes.readFloat32(),
     height = bytes.readFloat32(),
-    below = bytes.readFloat32(),
-    horizontal = bytes.readFloat32();
+    horizontalSpacing = bytes.readFloat32(),
+    verticalSpacing = bytes.readFloat32();
   
   void write(ByteDataWrapper bytes) {
     bytes.writeUint32(id);
     bytes.writeFloat32(width);
     bytes.writeFloat32(height);
-    bytes.writeFloat32(below);
-    bytes.writeFloat32(horizontal);
+    bytes.writeFloat32(horizontalSpacing);
+    bytes.writeFloat32(verticalSpacing);
   }
 }
+
+const _messCommonCharsLookup = [
+  "%", ".", ":", "_", "/", "0", "1", "2", "3", "4", "5", "6", "7", "8",
+  "9", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
+  "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "À",
+  "Á", "Â", "Ã", "Ä", "Å", "Æ", "Ç", "È", "É", "Ê", "Ë", "Ì", "Í", "Î",
+  "Ï", "Ð", "Ñ", "Ò", "Ó", "Ô", "Õ", "Ö", "Ø", "Ù", "Ú", "Û", "Ü", "Ÿ",
+  "Ý", "ß", "-", "#", "%", "+", ",", "-", ".", "0", "1", "2", "3", "4",
+  "5", "6", "7", "8", "9", ":", "/", "%", ".", ":", "_", "/", "0", "1",
+  "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F",
+  "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T",
+  "U", "V", "W", "X", "Y", "Z", "À", "Á", "Â", "Ã", "Ä", "Å", "Æ", "Ç",
+  "È", "É", "Ê", "Ë", "Ì", "Í", "Î", "Ï", "Ð", "Ñ", "Ò", "Ó", "Ô", "Õ",
+  "Ö", "Ø", "Ù", "Ú", "Û", "Ü", "Ÿ", "Ý", "+", "-", "#", ".", ",", "%",
+];
+const _messCommonStartIndex = 0x4000;
+const _messCommonEndIndex = 0x40A8;
+const _messCommonFontRanges = {
+  0: (0, 73),
+  6: (73, 91),
+  8: (91, 168),
+};
+const _buttonsLookup = [
+  "C-A","C-B","C-B","C-A","C-Y","C-X","C-RB","C-RT","C-LB","C-LT","C-DPad","C-DPad-UD",
+  "C-DPad-LR","C-DPad-Up","C-DPad-Down","C-DPad-Left","C-DPad-Right","C-RStick","C-RStick-Press",
+  "C-LStick","C-LStick-Press","C-Start","C-Back","C-Arrow-Up","C-Arrow-Down","C-Arrow-Left",
+  "C-Arrow-Right",null,null,null,null,null,"K-Enter","K-Esc","K-Up","K-Down","K-Left","K-Right",
+  null,null,"K-Z","K-X","K-E","K-Ctrl","K-C","K-Shift",null,null,null,"K-V","K-Num4","K-Num3",null,
+  null,null,"K-Move","Reload",null,null,null,null,null,null,null,null,null,null,null,null,null,null,
+  null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,
+  null,null,null,null,null,null,null,null,null,null,"B-Blade-Mode","B-Ninja-Run","B-Use-Subweapon",
+  "B-Change-Focus","B-Move","B-Rotate-Camera","B-Light-Attack","B-Heavy-Attack","B-Jump","B-Interact",
+  "B-Defensive-Offense","B-","B-Execution",
+];
+const _buttonsCode = 0x8003;
+
 
 class McdFileLetterBase {
   late final int code;
@@ -146,43 +181,68 @@ class McdFileLetterBase {
 }
 class McdFileLetter extends McdFileLetterBase {
   late final int kerning;
+  late final bool hasKerning;
+  bool get isControlChar => code == 0x8000 || code == 0x8008 || code == 0x8009 || code == 0x800A;
 
-  final List<McdFileSymbol> _symbols;
-
-  McdFileLetter(int code, this.kerning, this._symbols) {
+  McdFileLetter(int code, this.kerning)
+    : hasKerning = code != 0x8009 && code != 0x800A {
     super.code = code;
   }
   
-  McdFileLetter.read(ByteDataWrapper bytes, this._symbols) {
+  McdFileLetter.read(ByteDataWrapper bytes) {
     code = bytes.readUint16();
-    kerning = bytes.readInt16();
+    hasKerning = code != 0x8009 && code != 0x800A;
+    if (hasKerning)
+      kerning = bytes.readInt16();
+    else
+      kerning = 0;
   }
 
-  @override
-  String toString() {
+  static McdFileLetter? tryMakeMessCommonLetter(String char, int fontId) {
+    var range = _messCommonFontRanges[fontId];
+    if (range == null)
+      return null;
+    var (start, end) = range;
+    for (int i = start; i < end; i++) {
+      if (_messCommonCharsLookup[i] == char)
+        return McdFileLetter(_messCommonStartIndex + i, 0);
+    }
+    return null;
+  }
+
+  McdFileSymbol? getSymbol(List<McdFileSymbol> symbols) {
+    if (code < symbols.length)
+      return symbols[code];
+    return null;
+  }
+
+  String encodeChar(McdFileSymbol? symbol) {
     if(code < 0x8000) {
-      if (_symbols[code].charCode == 0x80)
-        return "…";
-      return _symbols[code].char;
+      if (code >= _messCommonStartIndex && code < _messCommonEndIndex)
+        return _messCommonCharsLookup[code - _messCommonStartIndex];
+      if (symbol != null) {
+        return symbol.char;
+      }
     } else if (code == 0x8001)
       return " ";
-    else if (code == 0x8020) {
-      if (kerning == 9)
-        return "≡";  // controller menu button
-      if (kerning == 121)
-        return "<Alt>";
+    else if (code == _buttonsCode && kerning < _buttonsLookup.length) {
+      var button = _buttonsLookup[kerning];
+      if (button != null)
+        return "[b/$button]";
     }
-
-    print("<Special_0x${(code).toRadixString(16)}_$kerning>");
-    return "<Special_0x${(code).toRadixString(16)}_$kerning>";
+    if (hasKerning)
+      return "[c/0x${(code).toRadixString(16)}:$kerning]";
+    else
+      return "[c/0x${(code).toRadixString(16)}]";
   }
 
   @override
-  int get byteSize => 4;
+  int get byteSize => hasKerning ? 4 : 2;
 
   void write(ByteDataWrapper bytes) {
     bytes.writeUint16(code);
-    bytes.writeInt16(kerning);
+    if (hasKerning)
+      bytes.writeInt16(kerning);
   }
 }
 class McdFileLetterTerminator extends McdFileLetterBase {
@@ -191,49 +251,214 @@ class McdFileLetterTerminator extends McdFileLetterBase {
   }
 }
 
+final _specialWrapperPattern = RegExp(r"^\[(c/0x[0-9a-f]+(:\d+)?|b/.+|s/.+/f:\d+)\]");
+final _specialCharPattern = RegExp(r"^\[c/0x([0-9a-f]+)(?::(\d+))?\]");
+final _specialButtonPattern = RegExp(r"^\[b/(.+?)\]");
+final _specialFontPattern = RegExp(r"^\[s/(.+?)/f:(\d+)\]");
+abstract class ParsedMcdCharBase {
+  final String representation;
+  void setFontId(int fontId);
+
+  ParsedMcdCharBase(this.representation);
+
+  @override
+  bool operator ==(Object other);
+
+  @override
+  int get hashCode;
+  
+  static List<ParsedMcdCharBase> parseLine(String line, int lineFontId) {
+    List<ParsedMcdCharBase> parsedChars = [];
+    List<ParsedMcdCharBase>? pendingChars;
+    int? pendingFontId;
+    void pushChar(ParsedMcdCharBase char) {
+      if (pendingChars != null)
+        pendingChars.add(char);
+      else
+        parsedChars.add(char);
+    }
+    int i = 0;
+    while (i < line.length) {
+      var c = line[i];
+      switch (c) {
+        case " ":
+          pushChar(ParsedMcdSpecialChar.space(lineFontId));
+          break;
+        case "[" when
+          i + 4 < line.length &&
+          _specialWrapperPattern.hasMatch(line.substring(i)):
+          var representation = _specialWrapperPattern.firstMatch(line.substring(i))!.group(0)!;
+          var next = line[i + 1];
+          if (next == "c") {
+            var match = _specialCharPattern.firstMatch(line.substring(i))!;
+            var code1 = int.parse(match.group(1)!, radix: 16);
+            var code2Match = match.group(2);
+            var code2 = int.parse(code2Match ?? "0");
+            pushChar(ParsedMcdSpecialChar(representation, code1, code2, code2Match != null));
+            i += match.group(0)!.length - 1;
+          }
+          else if (next == "b") {
+            var match = _specialButtonPattern.firstMatch(line.substring(i))!;
+            var button = match.group(1)!;
+            var buttonIndex = _buttonsLookup.indexOf(button);
+            if (buttonIndex == -1)
+              throw Exception("Unknown button: $button");
+            pushChar(ParsedMcdSpecialChar(representation, _buttonsCode, buttonIndex, true));
+            i += match.group(0)!.length - 1;
+          }
+          else if (next == "s") {
+            var match = _specialFontPattern.firstMatch(line.substring(i))!;
+            pendingFontId = int.parse(match.group(2)!);
+            if (pendingChars != null)
+              print("Warning in line \"$line\": pendingChars is not null at $i");
+            pendingChars ??= [];
+            i += "[s/".length - 1;
+          }
+          else {
+            throw Exception("Unknown special char: $next");
+          }
+          break;
+        case "/" when
+          pendingChars != null && pendingFontId != null &&
+          i + 3 < line.length &&
+          line[i + 1] == "f" && line[i + 2] == ":":
+          for (var char in pendingChars) {
+            char.setFontId(pendingFontId);
+            parsedChars.add(char);
+          }
+          i = line.indexOf("]", i);
+          pendingChars = null;
+          pendingFontId = null;
+          break;
+        default:
+          pushChar(ParsedMcdChar(line[i], lineFontId));
+          break;
+      }
+      i++;
+    }
+    assert(pendingChars == null);
+    assert(pendingFontId == null);
+
+    return parsedChars;
+  }
+}
+class ParsedMcdChar extends ParsedMcdCharBase {
+  final String char;
+  int fontId;
+
+  ParsedMcdChar(this.char, this.fontId) : super(char);
+  
+  @override
+  void setFontId(int fontId) {
+    this.fontId = fontId;
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (other is ParsedMcdChar)
+      return char == other.char && fontId == other.fontId;
+    return false;
+  }
+
+  @override
+  int get hashCode => Object.hash(char, fontId);
+
+  @override
+  String toString() => "ParsedMcdChar($char, $fontId)";
+}
+class ParsedMcdSpecialChar extends ParsedMcdCharBase {
+  final int code1;
+  int code2;
+  final bool hasKerning;
+
+  ParsedMcdSpecialChar(super.representation, this.code1, this.code2, this.hasKerning);
+
+  ParsedMcdSpecialChar.space(int fontId) : code1 = 0x8001, code2 = fontId, hasKerning = true, super(" ");
+  
+  @override
+  void setFontId(int fontId) {
+    if (code1 == 0x8001)
+      code2 = fontId;
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (other is ParsedMcdSpecialChar)
+      return code1 == other.code1 && code2 == other.code2;
+    return false;
+  }
+
+  @override
+  int get hashCode => Object.hash(code1, code2);
+
+  @override
+  String toString() {
+    if (code1 == 0x8001)
+      return "ParsedMcdSpecialChar.space($code2)";
+    return "ParsedMcdSpecialChar($code1, $code2)";
+  }
+}
+
 class McdFileLine {
   int lettersOffset;
   final int padding;
-  final int lettersCount;
-  final int length2;
-  final double below;
-  final double horizontal;
+  final int nonControlCharacterCount;
+  final int totalLetterCount;
+  final int lineHeight;
+  final int zero;
   final List<McdFileLetter> letters;
   late final int terminator;
 
-  McdFileLine(this.lettersOffset, this.padding, this.lettersCount, this.length2,
-      this.below, this.horizontal, this.letters, this.terminator);
+  McdFileLine(this.lettersOffset, this.padding, this.nonControlCharacterCount, this.totalLetterCount,
+      this.lineHeight, this.zero, this.letters, this.terminator);
   
-  McdFileLine.read(ByteDataWrapper bytes, List<McdFileSymbol> symbols) :
+  McdFileLine.read(ByteDataWrapper bytes) :
     lettersOffset = bytes.readUint32(),
     padding = bytes.readUint32(),
-    lettersCount = bytes.readUint32(),
-    length2 = bytes.readUint32(),
-    below = bytes.readFloat32(),
-    horizontal = bytes.readFloat32(),
+    nonControlCharacterCount = bytes.readUint32(),
+    totalLetterCount = bytes.readUint32(),
+    lineHeight = bytes.readInt32(),
+    zero = bytes.readInt32(),
     letters = [] {
     int pos = bytes.position;
     bytes.position = lettersOffset;
-    var actualLettersCount = (lettersCount - 1) ~/ 2;
-    for (int i = 0; i < actualLettersCount; i++) {
-      letters.add(McdFileLetter.read(bytes, symbols));
+    for (int i = 0; i < totalLetterCount - 1; i++) {
+      letters.add(McdFileLetter.read(bytes));
     }
     terminator = bytes.readUint16();
     bytes.position = pos;
   }
 
-  @override
-  String toString() {
-    return letters.join();
+  String encodeAsString(int fontId, List<McdFileSymbol> symbols) {
+    var buffer = StringBuffer();
+    var prevFontId = fontId;
+    for (var letter in letters) {
+      var symbol = letter.getSymbol(symbols);
+      var letterEncoded = letter.encodeChar(symbol);
+      if (symbol != null) {
+        var symbolFontId = symbol.fontId;
+        if (symbolFontId != prevFontId) {
+          if (prevFontId != fontId)
+            buffer.write("/f:$prevFontId]");
+          if (symbolFontId != fontId)
+            buffer.write("[s/");
+        }
+        prevFontId = symbolFontId;
+      }
+      buffer.write(letterEncoded);
+    }
+    if (prevFontId != fontId)
+      buffer.write("/f:$prevFontId]");
+    return buffer.toString();
   }
 
   void write(ByteDataWrapper bytes) {
     bytes.writeUint32(lettersOffset);
     bytes.writeUint32(padding);
-    bytes.writeUint32(lettersCount);
-    bytes.writeUint32(length2);
-    bytes.writeFloat32(below);
-    bytes.writeFloat32(horizontal);
+    bytes.writeUint32(nonControlCharacterCount);
+    bytes.writeUint32(totalLetterCount);
+    bytes.writeInt32(lineHeight);
+    bytes.writeInt32(zero);
 
     var pos = bytes.position;
     bytes.position = lettersOffset;
@@ -247,39 +472,42 @@ class McdFileLine {
 class McdFileParagraph {
   int linesOffset;
   final int linesCount;
-  final int vPos;
-  final int hPos;
+  final int paragraphIndex;
+  final int nonControlCharacterCount;
   final int fontId;
   final List<McdFileLine> lines;
 
-  McdFileParagraph(this.linesOffset, this.linesCount, this.vPos, this.hPos, this.fontId,
-      this.lines);
+  McdFileParagraph(this.linesOffset, this.linesCount, this.paragraphIndex, this.nonControlCharacterCount, this.fontId, this.lines);
   
-  McdFileParagraph.read(ByteDataWrapper bytes, List<McdFileSymbol> symbols) :
+  McdFileParagraph.read(ByteDataWrapper bytes) :
     linesOffset = bytes.readUint32(),
     linesCount = bytes.readUint32(),
-    vPos = bytes.readUint32(),
-    hPos = bytes.readUint32(),
+    paragraphIndex = bytes.readUint32(),
+    nonControlCharacterCount = bytes.readUint32(),
     fontId = bytes.readUint32(),
     lines = [] {
       int pos = bytes.position;
       bytes.position = linesOffset;
       for (int i = 0; i < linesCount; i++) {
-        lines.add(McdFileLine.read(bytes, symbols));
+        lines.add(McdFileLine.read(bytes));
       }
       bytes.position = pos;
     }
   
-  @override
-  String toString() {
-    return lines.join("\n");
+  String encodeAsString(List<McdFileSymbol> symbols) {
+    var buffer = StringBuffer();
+    for (var line in lines) {
+      buffer.write(line.encodeAsString(fontId, symbols));
+      buffer.write("\n");
+    }
+    return buffer.toString();
   }
 
   void write(ByteDataWrapper bytes) {
     bytes.writeUint32(linesOffset);
     bytes.writeUint32(linesCount);
-    bytes.writeUint32(vPos);
-    bytes.writeUint32(hPos);
+    bytes.writeUint32(paragraphIndex);
+    bytes.writeUint32(nonControlCharacterCount);
     bytes.writeUint32(fontId);
 
     var pos = bytes.position;
@@ -300,7 +528,7 @@ class McdFileMessage {
   McdFileMessage(this.paragraphsOffset, this.paragraphsCount, this.seqNumber,
       this.eventId, this.paragraphs);
   
-  McdFileMessage.read(ByteDataWrapper bytes, List<McdFileSymbol> symbols) :
+  McdFileMessage.read(ByteDataWrapper bytes) :
     paragraphsOffset = bytes.readUint32(),
     paragraphsCount = bytes.readUint32(),
     seqNumber = bytes.readUint32(),
@@ -309,14 +537,18 @@ class McdFileMessage {
     int pos = bytes.position;
     bytes.position = paragraphsOffset;
     for (int i = 0; i < paragraphsCount; i++) {
-      paragraphs.add(McdFileParagraph.read(bytes, symbols));
+      paragraphs.add(McdFileParagraph.read(bytes));
     }
     bytes.position = pos;
   }
 
-  @override
-  String toString() {
-    return paragraphs.join("\n\n");
+  String encodeAsString(List<McdFileSymbol> symbols) {
+    var buffer = StringBuffer();
+    for (var paragraph in paragraphs) {
+      buffer.write(paragraph.encodeAsString(symbols));
+      buffer.write("\n\n");
+    }
+    return buffer.toString();
   }
 
   void write(ByteDataWrapper bytes) {
@@ -336,26 +568,25 @@ class McdFileMessage {
 class McdFileEvent {
   final int id;
   final int msgId;
-  final String name;
+  // final String name;
   late final McdFileMessage message;
 
-  McdFileEvent(this.id, this.msgId, this.name, this.message);
+  McdFileEvent(this.id, this.msgId, this.message);
   
   McdFileEvent.read(ByteDataWrapper bytes, Map<int, McdFileMessage> messages) :
     id = bytes.readUint32(),
-    msgId = bytes.readUint32(),
-    name = bytes.readString(32).trimNull() {
+    msgId = bytes.readUint32()/*,
+    name = bytes.readString(32).trimNull()*/ {
     message = messages[msgId]!;
   }
 
-  @override
-  String toString() {
-    var msgLines = message.toString()
+  String encodeAsString(List<McdFileSymbol> symbols) {
+    var msgLines = message.encodeAsString(symbols)
       .split("\n")
       .map((line) => "  $line")
       .join("\n");
     return
-      "Event $name {\n"
+      "Event {\n"
       "$msgLines\n"
       "}";
   }
@@ -363,8 +594,8 @@ class McdFileEvent {
   void write(ByteDataWrapper bytes) {
     bytes.writeUint32(id);
     bytes.writeUint32(msgId);
-    var fullName = name.padRight(32, "\x00");
-    bytes.writeString(fullName);
+    // var fullName = name.padRight(32, "\x00");
+    // bytes.writeString(fullName);
   }
 }
 
@@ -404,7 +635,7 @@ class McdFile {
     // messages needed for events
     bytes.position = header.messagesOffset;
     for (int i = 0; i < header.messagesCount; i++) {
-      messages.add(McdFileMessage.read(bytes, symbols));
+      messages.add(McdFileMessage.read(bytes));
     }
 
     // events
@@ -426,7 +657,7 @@ class McdFile {
   }
 
   Future<void> writeToFile(String path) async {
-    var fileSize = header.eventsOffset + events.length * 0x28;
+    var fileSize = header.eventsOffset + events.length * 0x8;
     var bytes = ByteDataWrapper.allocate(fileSize);
 
     header.write(bytes);
@@ -453,8 +684,20 @@ class McdFile {
     await bytes.save(path);
   }
 
-  @override
-  String toString() {
-    return events.join("\n\n");
+  String encodeAsString(List<McdFileSymbol> symbols) {
+    var buffer = StringBuffer();
+    for (var event in events) {
+      buffer.write(event.encodeAsString(symbols));
+      buffer.write("\n");
+    }
+    return buffer.toString();
+  }
+
+  List<McdFileSymbol> makeSymbolsMap() {
+    List<McdFileSymbol?> symbolsMap = List.filled(symbols.length, null);
+    for (var symbol in symbols) {
+      symbolsMap[symbol.glyphId] = symbol;
+    }
+    return symbolsMap.map((e) => e!).toList();
   }
 }

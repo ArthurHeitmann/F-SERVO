@@ -15,6 +15,7 @@ const _pages = [
   ("CPK", "assets/help/cpk.md"),
   ("DAT", "assets/help/dat.md"),
   ("EST/Effects", "assets/help/est.md"),
+  ("MCD", "assets/help/mcd.md"),
   ("WTA/WTB/WTP", "assets/help/wta.md"),
 ];
 

@@ -78,7 +78,7 @@ Future<bool> hasMagickBins() async {
 
 bool _hasMcdFontsComplete = false;
 bool _hasMcdFonts = false;
-const fontIds = [ "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "19", "20", "35", "36", "37" ];
+const fontIds = [ "0", "2", "3", "4", "6", "7", "8", "9", "10", "11"];
 Future<bool> hasMcdFonts() async {
   if (_hasMcdFontsComplete)
     return _hasMcdFonts;

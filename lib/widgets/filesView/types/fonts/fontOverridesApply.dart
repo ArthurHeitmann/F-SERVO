@@ -33,6 +33,7 @@ class FontOverridesApplyButton extends StatelessWidget {
     return IconButton(
       onPressed: applyAllFontOverrides,
       tooltip: "Apply all font overrides & export all open mcd/ftb files",
+      splashRadius: 24,
       icon: const Icon(Icons.save)
     );
   }

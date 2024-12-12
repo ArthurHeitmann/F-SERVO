@@ -1,7 +1,11 @@
 
+import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:path/path.dart';
 import 'package:tuple/tuple.dart';
 
 import '../../../../stateManagement/Property.dart';
@@ -58,9 +62,9 @@ class _McdEditorState extends ChangeNotifierState<McdEditor> {
           const SizedBox(height: 35),
           Row(
             children: [
-              _makeTabButton(0, "MCD Events"),
-              _makeTabButton(1, "Font overrides"),
-              _makeTabButton(2, "Font debugger"),
+              _makeTabButton(context, 0, "MCD Entries"),
+              _makeTabButton(context, 1, "Font overrides"),
+              _makeTabButton(context, 2, "Font debugger"),
               const SizedBox(width: 12),
               Container(
                 width: 1,
@@ -70,6 +74,36 @@ class _McdEditorState extends ChangeNotifierState<McdEditor> {
                 ),
               ),
               const FontOverridesApplyButton(),
+              const SizedBox(width: 12),
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert),
+                splashRadius: 26,
+                tooltip: "",
+                onSelected: (String? newValue) {
+                  if (newValue == "E JSON")
+                    saveAsJson();
+                  else if (newValue == "I JSON")
+                    loadFromJson();
+                  else
+                    throw Exception("Unknown export type: $newValue");
+                },
+                itemBuilder: (context) => [
+                  const PopupMenuItem(
+                    value: "E JSON",
+                    child: ListTile(
+                      leading: Icon(Icons.upload),
+                      title: Text("Export as JSON"),
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: "I JSON",
+                    child: ListTile(
+                      leading: Icon(Icons.download),
+                      title: Text("Import from JSON"),
+                    ),
+                  ),
+                ],
+              )
             ]
           ),
           const Divider(height: 1,),
@@ -80,7 +114,7 @@ class _McdEditorState extends ChangeNotifierState<McdEditor> {
                 _McdEditorBody(file: widget.file, mcd: widget.file.mcdData!),
                 FontsManager(mcd: widget.file.mcdData!),
                 McdFontDebugger(
-                  texturePath: widget.file.mcdData!.textureWtpPath!.value,
+                  texturePath: widget.file.mcdData!.textureWtbPath.value,
                   fonts: widget.file.mcdData!.usedFonts.values.toList(),
                 ),
               ] : List.filled(3, loadingIndicator),
@@ -91,7 +125,7 @@ class _McdEditorState extends ChangeNotifierState<McdEditor> {
     );
   }
 
-  Widget _makeTabButton(int index, String text) {
+  Widget _makeTabButton(BuildContext context, int index, String text) {
     return Flexible(
       child: SizedBox(
         width: 175,
@@ -117,6 +151,32 @@ class _McdEditorState extends ChangeNotifierState<McdEditor> {
           ),
       ),
     );
+  }
+  
+  void saveAsJson() async {
+    var path = await FilePicker.platform.saveFile(
+      dialogTitle: "Save MCD as JSON",
+      type: FileType.custom,
+      allowedExtensions: ["json"],
+      fileName: "${basename(widget.file.path)}.json",
+    );
+    if (path == null)
+      return;
+    var json = widget.file.mcdData!.toJson();
+    var jsonStr = const JsonEncoder.withIndent("  ").convert(json);
+    await File(path).writeAsString(jsonStr);
+  }
+
+  void loadFromJson() async {
+    var result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ["json"],
+    );
+    if (result == null)
+      return;
+    var jsonStr = await File(result.files.single.path!).readAsString();
+    var json = jsonDecode(jsonStr);
+    widget.file.mcdData!.fromJson(json);
   }
 }
 
@@ -179,7 +239,7 @@ class _McdEditorBodyState extends ChangeNotifierState<_McdEditorBody> {
 
     var filteredEvents = allEvents.where((e) {
       var event = e.item2;
-      return searchMatcher.hasMatch(event.name.value) ||
+      return searchMatcher.hasMatch(event.id.toString()) ||
         event.paragraphs.any((p) => p.lines.any((l) => searchMatcher.hasMatch(l.text.value)));
     });
 
@@ -207,6 +267,14 @@ class _McdEditorBodyState extends ChangeNotifierState<_McdEditorBody> {
                     controller: controller,
                     physics: physics,
                     itemCount: eventPages[currentPage].length,
+                    itemExtentBuilder: (index, dimensions) {
+                      var paragraphs = eventPages[currentPage][index].item2.paragraphs;
+                      var linesCount = paragraphs.map((p) => p.lines.length).fold(0, (a, b) => a + b);
+                      return 
+                        91.0 +
+                        55.0 * paragraphs.length +
+                        42.0 * linesCount;
+                    },
                     itemBuilder: (context, i) {
                       return _McdEventEditor(
                         key: Key(eventPages[currentPage][i].item2.uuid),
@@ -334,7 +402,7 @@ class _McdEventEditor extends ChangeNotifierWidget {
   final int index;
 
   _McdEventEditor({ super.key, required this.file, required this.event, required this.events, required this.altColor, required this.index })
-    : super(notifiers: [event.paragraphs, event.name]);
+    : super(notifiers: [event.paragraphs, event.id]);
 
   @override
   State<_McdEventEditor> createState() => _McdEventEditorState();
@@ -357,7 +425,7 @@ class _McdEventEditorState extends ChangeNotifierState<_McdEventEditor> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Expanded(child: makePropEditor(
-                      widget.event.name, const PropTFOptions(
+                      widget.event.id, const PropTFOptions(
                         useIntrinsicWidth: false,
                         constraints: BoxConstraints.tightFor(height: 35),
                       )

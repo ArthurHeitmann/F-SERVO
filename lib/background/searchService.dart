@@ -295,7 +295,7 @@ class _SearchTextServiceWorker extends _SearchServiceWorker<SearchOptionsText> {
     }
     else if (file.path.endsWith(".mcd")) {
       var mcd = await McdFile.fromFile(file.path);
-      return mcd.toString();
+      return mcd.encodeAsString(mcd.makeSymbolsMap());
     }
     try {
       return await file.readAsString();
@@ -322,8 +322,9 @@ class _SearchTextServiceWorker extends _SearchServiceWorker<SearchOptionsText> {
     }
     else if (file.path.endsWith(".mcd")) {
       var mcd = await McdFile.fromFile(file.path);
+      var symbols = mcd.makeSymbolsMap();
       return mcd.events
-        .map((e) => e.toString().split("\n"))
+        .map((e) => e.encodeAsString(symbols).split("\n"))
         .expand((e) => e)
         .toList();
     }

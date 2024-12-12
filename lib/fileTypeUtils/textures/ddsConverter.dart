@@ -58,3 +58,33 @@ Future<Uint8List?> texToPng(String ddsPath, {String? pngPath, int? maxHeight, bo
     return Uint8List.fromList(result.stdout as List<int>);
   return null;
 }
+
+Future<Uint8List?> texToPngInMemory(Uint8List texBytes, {int? maxHeight, bool verbose = true}) async {
+  if (!await hasMagickBins()) {
+    if (verbose)
+      showToast("Can't load texture because ImageMagick is not found.");
+    return null;
+  }
+  var process = await Process.start(
+    magickBinPath!,
+    [
+      "DDS:-",
+      if (maxHeight != null) ...[
+        "-resize", "x$maxHeight",
+      ],
+      "PNG:-",
+    ],
+  );
+  process.stdin.add(texBytes);
+  await process.stdin.close();
+  var result = await process.stdout.expand((e) => e).toList();
+  if (await process.exitCode != 0) {
+    if (verbose)
+      showToast("Can't load texture because ImageMagick failed to convert DDS to PNG.");
+    print("stdout: ${result}");
+    throw Exception("Can't load texture because ImageMagick failed to convert DDS to PNG.");
+  }
+  return Uint8List.fromList(result);
+}
+
+
