@@ -18,7 +18,7 @@ jobs:
       
       - name: Download assets
         run: |
-          $url = "https://github.com/ArthurHeitmann/F-SERVO/releases/download/assetsV0.7.0%2Bmgrr/assets.7z"
+          $url = "https://github.com/ArthurHeitmann/F-SERVO/releases/download/assetsV0.8.0-mgrr/assets.7z"
           $output = "${{ runner.temp }}\assets.7z"
           Invoke-WebRequest -Uri $url -OutFile $output
       - name: Extract assets
