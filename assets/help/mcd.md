@@ -4,6 +4,8 @@ Localized text for ui elements and subtitles.
 
 file extensions: mcd
 
+Important: This requires a python installation and the python executable has to be in the PATH. First time initialization can take a couple of seconds.
+
 ## Fonts
 
 MCD files use fonts that each have a unique id, ranging from 0 to 11.

@@ -607,8 +607,11 @@ Future<String?> exportDat(String datFolder, { bool checkForNesting = false, bool
     }
   }
   if (datExportDir.isEmpty) {
+    if (datExportPath != null) {
+      datExportDir = dirname(datExportPath);
+    }
     // select export path
-    if (exportDir.isEmpty) {
+    else if (exportDir.isEmpty) {
       var dir = await FilePicker.platform.getDirectoryPath(
         dialogTitle: "Select DAT export folder",
       );
