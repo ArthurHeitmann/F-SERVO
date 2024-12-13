@@ -7,10 +7,12 @@ import '../../../utils/utils.dart';
 import '../../../widgets/FileHierarchyExplorer/datFilesSelector.dart';
 import '../../../widgets/misc/confirmDialog.dart';
 import '../../Property.dart';
+import '../../preferencesData.dart';
 import '../../undoable.dart';
 import '../FileHierarchy.dart';
 import '../HierarchyEntryTypes.dart';
 import 'PakHierarchyEntry.dart';
+import 'PassiveFileHierarchyEntry.dart';
 import 'RubyScriptHierarchyEntry.dart';
 import 'XmlScriptHierarchyEntry.dart';
 
@@ -46,9 +48,11 @@ class DatHierarchyEntry extends ExtractableHierarchyEntry {
     List<Future<void>> futures = [];
     datFilePaths ??= (await getDatFileList(extractedPath)).files;
     RubyScriptGroupHierarchyEntry? rubyScriptGroup;
+    var prefs = PreferencesData();
     const supportedFileEndings = { ".pak", "_scp.bin", ".tmd", ".smd", ".mcd", ".ftb", ".bnk", ".wta", ".wtb", ".est", ".sst", ".ctx", ...bxmExtensions, ...datExtensions };
     for (var file in datFilePaths) {
-      if (supportedFileEndings.every((ending) => !file.endsWith(ending)))
+      var isSupportedFile = supportedFileEndings.any((ending) => file.endsWith(ending));
+      if (!isSupportedFile && !prefs.showAllDatFiles!.value)
         continue;
       int existingChildI = existingChildren.indexWhere((entry) => (entry as FileHierarchyEntry).path == file);
       if (existingChildI != -1) {
@@ -63,8 +67,13 @@ class DatHierarchyEntry extends ExtractableHierarchyEntry {
         }
         futures.add(openHierarchyManager.openBinMrbScript(file, parent: rubyScriptGroup));
       }
-      else
+      else if (isSupportedFile) {
         futures.add(openHierarchyManager.openFile(file, parent: this));
+      }
+      else {
+        var entry = PassiveFileHierarchyEntry(StringProp(basename(file), fileId: null), file);
+        add(entry);
+      }
     }
 
     await Future.wait(futures);

@@ -139,6 +139,13 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
           BoolPropSwitch(prop: widget.prefs.datReplaceOnExtract!),
         ],
       ),
+      const SizedBox(height: 10,),
+      Row(
+        children: [
+          const Text("Show non editable DAT children:", overflow: TextOverflow.ellipsis,),
+          BoolPropSwitch(prop: widget.prefs.showAllDatFiles!),
+        ],
+      ),
       const SizedBox(height: 40,),
       const Text("Text editor:", style: sectionHeaderStyle,),
       const SizedBox(height: 10,),
