@@ -193,7 +193,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
     return entry;
   }
 
-  Future<HierarchyEntry> openDat(String datPath, { HierarchyEntry? parent, bool allowMissingInfoFile = false }) async {
+  Future<HierarchyEntry> openDat(String datPath, { HierarchyEntry? parent, String? datExtractDir, bool allowMissingInfoFile = false }) async {
     var existing = findRecWhere((entry) => entry is DatHierarchyEntry && entry.path == datPath);
     if (existing != null)
       return existing;
@@ -201,9 +201,10 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
     // get DAT infos
     var fileName = basename(datPath);
     var datFolder = dirname(datPath);
-    var datExtractDir = join(datFolder, datSubExtractDir, fileName);
+    datExtractDir ??= join(datFolder, datSubExtractDir, fileName);
     DatFiles? datFilePaths;
-    if (!await Directory(datExtractDir).exists()) {
+    var srcDatExists = await File(datPath).exists();
+    if (!await Directory(datExtractDir).exists() && srcDatExists) {
       await extractDatFiles(datPath, shouldExtractPakFiles: true);
     }
     else {
@@ -222,12 +223,12 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
       if (shouldExtractDatFiles) {
         await extractDatFiles(datPath, shouldExtractPakFiles: true);
       }
-      else if (datFilePaths?.originalFileOrder == null) {
+      else if (datFilePaths?.originalFileOrder == null && srcDatExists) {
         await updateDatInfoFileOriginalOrder(datPath, datExtractDir);
       }
     }
 
-    var datEntry = DatHierarchyEntry(StringProp(fileName, fileId: null), datPath, datExtractDir);
+    var datEntry = DatHierarchyEntry(StringProp(fileName, fileId: null), datPath, datExtractDir, srcDatExists: srcDatExists);
     if (parent != null) {
       datEntry.isCollapsed.value = true;
       parent.add(datEntry);
@@ -243,7 +244,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
   Future<HierarchyEntry> openExtractedDat(String datDirPath, { HierarchyEntry? parent }) {
     var srcDatDir = dirname(dirname(datDirPath));
     var srcDatPath = join(srcDatDir, basename(datDirPath));
-    return openDat(srcDatPath, parent: parent, allowMissingInfoFile: true);
+    return openDat(srcDatPath, parent: parent, datExtractDir: datDirPath, allowMissingInfoFile: true);
   }
   
   HapGroupHierarchyEntry? findPakParentGroup(String fileName) {

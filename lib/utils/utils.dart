@@ -567,7 +567,7 @@ Future<DatFiles> _getDatFileListFromMetadata(String metadataPath) async {
   return DatFiles(files, files);
 }
 
-Future<void> exportDat(String datFolder, { bool checkForNesting = false, bool overwriteOriginal = false }) async {
+Future<String?> exportDat(String datFolder, { bool checkForNesting = false, bool overwriteOriginal = false, String? datExportPath }) async {
   var exportDir = PreferencesData().dataExportPath?.value ?? "";
   if (exportDir.isNotEmpty && !await Directory(exportDir).exists()) {
     messageLog.add("Export path does not exist: $exportDir");
@@ -599,7 +599,7 @@ Future<void> exportDat(String datFolder, { bool checkForNesting = false, bool ov
         noText: exportDir.isEmpty ? "Select export path" : "To export path",
       );
       if (exportToParent == null)
-        return;
+        return null;
       if (!exportToParent)
         break;
       datExportDir = parentDir;
@@ -613,7 +613,7 @@ Future<void> exportDat(String datFolder, { bool checkForNesting = false, bool ov
         dialogTitle: "Select DAT export folder",
       );
       if (dir == null)
-        return;
+        return null;
       datExportDir = dir;
     }
     // export to export path from preferences
@@ -622,7 +622,7 @@ Future<void> exportDat(String datFolder, { bool checkForNesting = false, bool ov
       datExportDir = join(exportDir, datSubDir);
     }
   }
-  var datExportPath = join(datExportDir, datName);
+  datExportPath ??= join(datExportDir, datName);
   try {
     await repackDat(datFolder, datExportPath);
   } catch (e) {
@@ -632,6 +632,8 @@ Future<void> exportDat(String datFolder, { bool checkForNesting = false, bool ov
 
   if (recursive)
     await exportDat(datExportDir, checkForNesting: true);
+  
+  return datExportPath;
 }
 
 String pluralStr(int number, String label, [String numberSuffix = ""]) {

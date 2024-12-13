@@ -17,7 +17,10 @@ import 'RubyScriptHierarchyEntry.dart';
 import 'XmlScriptHierarchyEntry.dart';
 
 class DatHierarchyEntry extends ExtractableHierarchyEntry {
-  DatHierarchyEntry(StringProp name, String path, String extractedPath)
+  final bool srcDatExists;
+  String? lastExportPath;
+
+  DatHierarchyEntry(StringProp name, String path, String extractedPath, {this.srcDatExists = true})
       : super(name, path, extractedPath, true, false, priority: 1000);
 
   @override
@@ -115,7 +118,13 @@ class DatHierarchyEntry extends ExtractableHierarchyEntry {
   }
 
   Future<void> repackDatAction() async {
-    await exportDat(extractedPath, checkForNesting: true);
+    var datPath = await exportDat(extractedPath, checkForNesting: true);
+    if (datPath != null)
+      lastExportPath = datPath;
+  }
+
+  Future<void> repackDatToLastAction() async {
+    await exportDat(extractedPath, datExportPath: lastExportPath, checkForNesting: true);
   }
 
   Future<void> repackOverwriteDatAction() async {
@@ -125,17 +134,25 @@ class DatHierarchyEntry extends ExtractableHierarchyEntry {
   @override
   List<HierarchyEntryAction> getActions() {
     var scriptRelatedClasses = [RubyScriptGroupHierarchyEntry, RubyScriptHierarchyEntry, XmlScriptHierarchyEntry, PakHierarchyEntry];
+    var prefs = PreferencesData();
     return [
       HierarchyEntryAction(
         name: "Repack DAT",
         icon: Icons.file_upload,
         action: repackDatAction,
       ),
-      HierarchyEntryAction(
-        name: "Repack DAT (overwrite)",
-        icon: Icons.file_upload,
-        action: repackOverwriteDatAction,
-      ),
+      if (lastExportPath != null && (prefs.dataExportPath?.value ?? "").isEmpty)
+        HierarchyEntryAction(
+          name: "Repack DAT to last location",
+          icon: Icons.file_upload,
+          action: repackDatToLastAction,
+        ),
+      if (srcDatExists)
+        HierarchyEntryAction(
+          name: "Repack DAT (overwrite)",
+          icon: Icons.file_upload,
+          action: repackOverwriteDatAction,
+        ),
       HierarchyEntryAction(
         name: "Change packed files",
         icon: Icons.folder_open,

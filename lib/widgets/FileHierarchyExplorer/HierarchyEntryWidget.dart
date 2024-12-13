@@ -167,14 +167,14 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
 
   Widget setupContextMenu({ required Widget child }) {
     return ContextMenu(
-        config: widget.entry.getContextMenuActions()
-            .map((action) => ContextMenuConfig(
-              label: action.name,
-              icon: Icon(action.icon, size: 15 * action.iconScale,),
-              action: () => action.action(),
-            ))
-            .toList(),
-        child: child,
+      configBuilder: () => widget.entry.getContextMenuActions()
+        .map((action) => ContextMenuConfig(
+          label: action.name,
+          icon: Icon(action.icon, size: 15 * action.iconScale,),
+          action: () => action.action(),
+        ))
+        .toList(),
+      child: child,
     );
   }
 

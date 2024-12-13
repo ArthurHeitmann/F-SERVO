@@ -19,10 +19,11 @@ class ContextMenuConfig {
 }
 
 class ContextMenu extends StatefulWidget {
-  final List<ContextMenuConfig?> config;
+  final List<ContextMenuConfig?>? config;
+  final List<ContextMenuConfig?> Function()? configBuilder;
   final Widget child;
 
-  const ContextMenu({super.key, required this.config, required this.child});
+  const ContextMenu({super.key, this.config, this.configBuilder, required this.child});
 
   @override
   State<ContextMenu> createState() => _ContextMenuState();
@@ -59,7 +60,7 @@ class _ContextMenuState extends State<ContextMenu> {
         var x = min(pos.dx, size.width - 300);
         var y = min(pos.dy, size.height - 300);
         return _ContextMenu(
-          config: widget.config,
+          config: widget.config ?? widget.configBuilder?.call() ?? [],
           x: x,
           y: y,
           hide: hide,

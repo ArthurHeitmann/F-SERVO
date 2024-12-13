@@ -20,7 +20,8 @@ The file structure of the extracted files is the following:
 
 Note: The *nier2blender_extracted* folder name has been chosen for backwards compatibility with the Blender addons DAT extractor.
 
-F-SERVO will ONLY display files it can edit in the ui. If you want to see all files, you have to go to the extracted folder. You can right click on the file and select "Show in Explorer" to open the folder.
+F-SERVO will by default display files it can edit in the ui. If you want to see all files, you either have to go to the extracted folder. You can right click on the file and select "Show in Explorer" to open the folder.
+Alternatively in the settings enable "Show non editable DAT children".
 
 ## Editing files
 
@@ -42,6 +43,7 @@ be placed in `...\Metal Gear Rising Revengeance\GameData\pl\pl3000.dat`.
 ### Manually select file location
 
 If you haven't set the "Data export path" in settings, clicking "Repack DAT" will open a file dialog where you can select the folder to save the repacked DAT.
+For the next export, you can choose "Repack DAT to last location" to export to the same file again.
 
 ### Overwrite original
 
