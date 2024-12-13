@@ -151,11 +151,11 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
           bxmExtensions, () async => openBxmFile(filePath, parent: parent)
         ),
         Tuple2(
-          [".wta"],
+          [".wta", ".wta_extracted"],
           () async => openWtaFile(filePath, parent: parent)
         ),
         Tuple2(
-          [".wtb"],
+          [".wtb", ".wtb_extracted"],
           () async => openWtbFile(filePath, parent: parent)
         ),
         Tuple2(
@@ -466,7 +466,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
     if (existing != null)
       return existing;
     
-    var wtaEntry = WtaHierarchyEntry(StringProp(basename(wtaPath), fileId: null), wtaPath);
+    var wtaEntry = WtaHierarchyEntry(StringProp(basename(wtaPath).replaceAll("_extracted", ""), fileId: null), wtaPath);
     if (parent != null)
       parent.add(wtaEntry);
     else
@@ -476,11 +476,11 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
   }
 
   Future<HierarchyEntry> openWtbFile(String wtaPath, { HierarchyEntry? parent }) async {
-    var existing = findRecWhere((entry) => entry is WtaHierarchyEntry && entry.path == wtaPath);
+    var existing = findRecWhere((entry) => entry is WtbHierarchyEntry && entry.path == wtaPath);
     if (existing != null)
       return existing;
 
-    var wtaEntry = WtbHierarchyEntry(StringProp(basename(wtaPath), fileId: null), wtaPath);
+    var wtaEntry = WtbHierarchyEntry(StringProp(basename(wtaPath).replaceAll("_extracted", ""), fileId: null), wtaPath);
     if (parent != null)
       parent.add(wtaEntry);
     else

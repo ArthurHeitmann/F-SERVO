@@ -16,6 +16,7 @@ import '../../misc/ChangeNotifierWidget.dart';
 import '../../misc/expandOnHover.dart';
 import '../../misc/imagePreviewBuilder.dart';
 import '../../propEditors/propTextField.dart';
+import '../../theme/customTheme.dart';
 import 'genericTable/tableEditor.dart';
 
 class WtaWtpEditor extends StatefulWidget {
@@ -102,7 +103,7 @@ class _TexturesTableConfig with CustomTableConfig {
   void onRowAdd() {
     textures.add(WtaTextureEntry(
       texData.file,
-      HexProp(randomId(), fileId: file.uuid),
+      NumberProp(randomId(), true, fileId: file.uuid),
       StringProp("", fileId: file.uuid),
       isAlbedo: texData.useFlagsSimpleMode ? BoolProp(false, fileId: file.uuid) : null,
       flag: texData.useFlagsSimpleMode ? null : HexProp(textures.isNotEmpty ? textures.last.flag!.value : 0, fileId: file.uuid),
@@ -116,41 +117,13 @@ class _TexturesTableConfig with CustomTableConfig {
     file.onUndoableEvent();
   }
 
-  Future<void> patchImportFolder() async {
-    var folderSel = await FilePicker.platform.getDirectoryPath(
+  Future<void> patchFromFolder() async {
+    var paths = await FilePicker.platform.getDirectoryPath(
       dialogTitle: "Select folder with DDS files",
     );
-    if (folderSel == null)
+    if (paths == null)
       return;
-    var allDdsFiles = await Directory(folderSel).list()
-      .where((e) => e is File && e.path.endsWith(".dds"))
-      .map((e) => e.path)
-      .toList();
-    List<String> ddsFilesOrdered = List.generate(allDdsFiles.length, (index) => "");
-    for (var dds in allDdsFiles) {
-      var indexRes = RegExp(r"^\d+").firstMatch(basename(dds));
-      if (indexRes == null)
-        continue;
-      int index = int.parse(indexRes.group(0)!);
-      if (index >= ddsFilesOrdered.length) {
-        showToast("Index $index is out of range (${ddsFilesOrdered.length})");
-        return;
-      }
-      ddsFilesOrdered[index] = dds;
-    }
-    if (ddsFilesOrdered.any((e) => e.isEmpty)) {
-      showToast("Some DDS files are missing");
-      return;
-    }
-    textures.addAll(ddsFilesOrdered.map((file) => WtaTextureEntry(
-      texData.file,
-      HexProp(randomId(), fileId: this.file.uuid),
-      StringProp(file, fileId: this.file.uuid),
-      isAlbedo: texData.useFlagsSimpleMode ? BoolProp(false, fileId: this.file.uuid) : null,
-      flag: texData.useFlagsSimpleMode ? null : HexProp(textures.isNotEmpty ? textures.last.flag!.value : 0, fileId: this.file.uuid),
-    )));
-    file.onUndoableEvent();
-    showToast("Added ${ddsFilesOrdered.length} DDS files");
+    await file.textures!.patchFromFolder(paths);
   }
 }
 
@@ -188,17 +161,18 @@ class _WtaWtpEditorState extends State<WtaWtpEditor> {
     return Stack(
       children: [
         TableEditor(config: _texturesTableConfig!),
-        // Positioned(
-        //   bottom: 8,
-        //   left: 8,
-        //   width: 40,
-        //   height: 40,
-        //   child: FloatingActionButton(
-        //     onPressed: _texturesTableConfig!.patchImportFolder,
-        //     foregroundColor: getTheme(context).textColor,
-        //     child: const Icon(Icons.create_new_folder),
-        //   ),
-        // )
+        Positioned(
+          bottom: 16,
+          left: 16,
+          width: 40,
+          height: 40,
+          child: FloatingActionButton(
+            onPressed: _texturesTableConfig!.patchFromFolder,
+            foregroundColor: getTheme(context).textColor,
+            tooltip: "Replace or add all from folder",
+            child: const Icon(Icons.folder_special),
+          ),
+        )
       ],
     );
   }

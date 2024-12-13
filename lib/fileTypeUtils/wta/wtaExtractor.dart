@@ -15,7 +15,12 @@ Future<List<String>> extractWta(String wtaPath, String? wtpPath, bool isWtb) asy
   try {
     for (int i = 0; i < wta.textureOffsets.length; i++) {
       var texturePath = getWtaTexturePath(wta, i, extractDir);
+      var texturePathOld = getWtaTexturePathOld(wta, i, extractDir);
       texturePaths.add(texturePath);
+      if (await File(texturePathOld).exists())
+        await File(texturePathOld).rename(texturePath);
+      if (await File(texturePath).exists())
+        continue;
       await wtpFile.setPosition(wta.textureOffsets[i]);
       var textureBytes = await wtpFile.read(wta.textureSizes[i]);
       await File(texturePath).writeAsBytes(textureBytes);
@@ -26,9 +31,16 @@ Future<List<String>> extractWta(String wtaPath, String? wtpPath, bool isWtb) asy
   return texturePaths;
 }
 
+String getWtaTexturePathOld(WtaFile wta, int i, String extractDir) {
+  String idStr = "";
+  if (wta.textureIdx != null)
+    idStr = "_${wta.textureIdx![i].toRadixString(16)}";
+  return join(extractDir, "$i$idStr.dds");
+}
+
 String getWtaTexturePath(WtaFile wta, int i, String extractDir) {
   String idStr = "";
   if (wta.textureIdx != null)
-    idStr = "_${wta.textureIdx![i].toRadixString(16).padLeft(8, "0")}";
+    idStr = "_${wta.textureIdx![i].toString()}";
   return join(extractDir, "$i$idStr.dds");
 }

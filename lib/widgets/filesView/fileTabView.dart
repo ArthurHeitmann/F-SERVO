@@ -77,7 +77,10 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
     for (var file in files) {
       var fileName = path.basename(file);
       bool isSaveSlotData = fileName.startsWith("SlotData_") && fileName.endsWith(".dat");
-      if (fileExplorerExtensions.contains(path.extension(fileName)) && !isSaveSlotData || await Directory(file).exists()) {
+      var isFileExplorerFile = fileExplorerExtensions.contains(path.extension(fileName));
+      var isFolder = await Directory(file).exists();
+      var isExtractedWta = path.basename(file).endsWith(".wta_extracted") || path.basename(file).endsWith(".wtb_extracted");
+      if (isFileExplorerFile && !isSaveSlotData || isFolder && !isExtractedWta) {
         var entry = await openHierarchyManager.openFile(file);
         if (entry?.isOpenable == true)
           entry!.onOpen();

@@ -94,7 +94,7 @@ abstract class OpenFileData with HasUuid, Undoable, Disposable, HasUndoHistory {
       return BnkFilePlaylistData(name, path, secondaryName: secondaryName);
     else if (path.endsWith(".dat") && basename(path).startsWith("SlotData_"))
       return SaveSlotData(name, path, secondaryName: secondaryName);
-    else if (path.endsWith(".wta") || path.endsWith(".wtb"))
+    else if (path.endsWith(".wta") || path.endsWith(".wtb") || path.endsWith(".wta_extracted") || path.endsWith(".wtb_extracted"))
       return WtaWtpData(name, path, secondaryName: secondaryName, isWtb: path.endsWith(".wtb"));
     else if (path.endsWith(".est") || path.endsWith(".sst"))
       return EstFileData(name, path, secondaryName: secondaryName);

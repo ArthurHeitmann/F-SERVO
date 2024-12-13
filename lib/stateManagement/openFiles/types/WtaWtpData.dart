@@ -1,6 +1,7 @@
 
 import 'dart:io';
 
+import 'package:file_picker/file_picker.dart' as fp;
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 
@@ -39,33 +40,43 @@ class WtaWtpData extends OpenFileData {
       return;
     loadingState.value = LoadingState.loading;
 
-    // find wtp
-    var datDir = dirname(path);
-    var dttDir = isWtb ? null : await findDttDirOfDat(datDir);
-    if (wtpPath == null && !isWtb) {
-      var wtaName = basenameWithoutExtension(path);
-      var wtpName = "$wtaName.wtp";
-      // wtpPath = join(dttDir, wtpName);
-      if (dttDir != null)
-        wtpPath = join(dttDir, wtpName);
-      else {
-        wtpPath = join(datDir, wtpName);
-        if (!await File(wtpPath!).exists()) {
-          showToast("Can't find corresponding WTP file for $wtaName.wta in ${dttDir ?? datDir}");
-          throw Exception("Can't find corresponding WTP file for $wtaName");
+    if (await File(path).exists()) {
+      // find wtp
+      var datDir = dirname(path);
+      var dttDir = isWtb ? null : await findDttDirOfDat(datDir);
+      if (wtpPath == null && !isWtb) {
+        var wtaName = basenameWithoutExtension(path);
+        var wtpName = "$wtaName.wtp";
+        // wtpPath = join(dttDir, wtpName);
+        if (dttDir != null)
+          wtpPath = join(dttDir, wtpName);
+        else {
+          wtpPath = join(datDir, wtpName);
+          if (!await File(wtpPath!).exists()) {
+            showToast("Can't find corresponding WTP file for $wtaName.wta in ${dttDir ?? datDir}");
+            throw Exception("Can't find corresponding WTP file for $wtaName");
+          }
         }
       }
-    }
-    if (!isWtb && wtpPath == null) {
-      showToast("Can't find corresponding WTP file in ${dttDir ?? datDir}");
-      throw Exception("Can't find corresponding WTP file in ${dttDir ?? datDir}");
-    }
+      if (!isWtb && wtpPath == null) {
+        showToast("Can't find corresponding WTP file in ${dttDir ?? datDir}");
+        throw Exception("Can't find corresponding WTP file in ${dttDir ?? datDir}");
+      }
 
-    String extractDir = join(dttDir ?? datDir, "${basename(path)}_extracted");
-    await Directory(extractDir).create(recursive: true);
+      String extractDir = join(dttDir ?? datDir, "${basename(path)}_extracted");
+      await Directory(extractDir).create(recursive: true);
 
-    textures?.dispose();
-    textures = await WtaWtpTextures.fromWtaWtp(uuid, path, wtpPath, extractDir, isWtb);
+      textures?.dispose();
+      textures = await WtaWtpTextures.fromWtaWtp(uuid, path, wtpPath, extractDir, isWtb);
+    }
+    else if (await Directory(path).exists()) {
+      textures?.dispose();
+      textures = await WtaWtpTextures.fromExtractedFolder(uuid, path);
+    }
+    else {
+      showToast("File not found: $path");
+      return;
+    }
 
     await super.load();
   }
@@ -112,7 +123,7 @@ class WtaWtpData extends OpenFileData {
 
 class WtaTextureEntry with HasUuid, Undoable implements Disposable {
   final OpenFileId file;
-  final HexProp? id;
+  final NumberProp? id;
   final StringProp path;
   final BoolProp? isAlbedo;
   final HexProp? flag;
@@ -144,7 +155,7 @@ class WtaTextureEntry with HasUuid, Undoable implements Disposable {
   Undoable takeSnapshot() {
     var snap = WtaTextureEntry(
       file,
-      id?.takeSnapshot() as HexProp?,
+      id?.takeSnapshot() as NumberProp?,
       path.takeSnapshot() as StringProp,
       isAlbedo: isAlbedo?.takeSnapshot() as BoolProp?,
       flag: flag?.takeSnapshot() as HexProp?,
@@ -165,8 +176,8 @@ class WtaTextureEntry with HasUuid, Undoable implements Disposable {
 
 class WtaWtpTextures with HasUuid, Undoable implements Disposable {
   final OpenFileId file;
-  final String wtaPath;
-  final String? wtpPath;
+  String? wtaPath;
+  String? wtpPath;
   final ValueNotifier<List<String>?> wtpDatsPath = ValueNotifier(null);
   final bool isWtb;
   final int wtaVersion;
@@ -203,9 +214,14 @@ class WtaWtpTextures with HasUuid, Undoable implements Disposable {
         messageLog.add("Extracting texture ${i + 1}/${wta.textureOffsets.length}");
         // var texturePath = join(extractDir, "${i}_${wta.textureIdx[i].toRadixString(16).padLeft(8, "0")}.dds");
         var texturePath = getWtaTexturePath(wta, i, extractDir);
-        await wtpFile.setPosition(wta.textureOffsets[i]);
-        var textureBytes = await wtpFile.read(wta.textureSizes[i]);
-        await File(texturePath).writeAsBytes(textureBytes);
+        var texturePathOld = getWtaTexturePathOld(wta, i, extractDir);
+        if (await File(texturePathOld).exists())
+          await File(texturePathOld).rename(texturePath);
+        if (!await File(texturePath).exists()) {
+          await wtpFile.setPosition(wta.textureOffsets[i]);
+          var textureBytes = await wtpFile.read(wta.textureSizes[i]);
+          await File(texturePath).writeAsBytes(textureBytes);
+        }
         BoolProp? isAlbedo;
         HexProp? flag;
         if (wta.textureFlags[i] == WtaFile.albedoFlag || wta.textureFlags[i] == WtaFile.noAlbedoFlag)
@@ -215,7 +231,7 @@ class WtaWtpTextures with HasUuid, Undoable implements Disposable {
         textures.add(WtaTextureEntry(
           file,
           wta.textureIdx != null
-            ? HexProp(wta.textureIdx![i], fileId: file)
+            ? NumberProp(wta.textureIdx![i], true, fileId: file)
             : null,
           StringProp(texturePath, fileId: file),
           isAlbedo: isAlbedo,
@@ -234,7 +250,111 @@ class WtaWtpTextures with HasUuid, Undoable implements Disposable {
     return WtaWtpTextures(file, wtaPath, wtpPath, isWtb, wtaVersion, textures, useFlagsSimpleMode, hashAnySimpleModeFlags);
   }
 
+  static Future<({List<WtaTextureEntry> textures, bool hasId})> _findTexturesInFolder(String folder, bool isWtb, {bool? hasId}) async {
+    var fileNamePattern = RegExp(r"^(\d+_)?[0-9a-fA-F]+\.dds$");
+    var hexCheckPattern = RegExp(r"[a-fA-F]+\d*\.dds$");
+    var textureFiles = await Directory(folder).list()
+      .where((e) => e is File)
+      .map((e) => e.path)
+      .where((e) => fileNamePattern.hasMatch(basename(e)))
+      .toList();
+    var hasIndex = textureFiles.any((e) => basename(e).startsWith("0_") || basename(e) == "0.dds");
+    hasId ??= !hasIndex || textureFiles.any((e) => basename(e).contains("_"));
+    var usesHex = textureFiles.any((e) => hexCheckPattern.hasMatch(basename(e)));
+    var typePatterns = {
+      // hasIndex, hasId
+      (false, true): RegExp(r"^([0-9a-fA-F]+)\.dds$"),
+      (true, false): RegExp(r"^(\d+)\.dds$"),
+      (true, true): RegExp(r"^(\d+)_([0-9a-fA-F]+)\.dds$"),
+    };
+    var typePattern = typePatterns[(hasIndex, hasId)]!;
+    List<(int?, WtaTextureEntry)> textures = [];
+    for (var file in textureFiles) {
+      var match = typePattern.firstMatch(basename(file));
+      var index = hasIndex ? int.parse(match!.group(1)!) : null;
+      var id = hasId ? int.parse(match!.group(hasId ? 2  :1)!, radix: usesHex ? 16 : 10) : null;
+      textures.add((index, WtaTextureEntry(
+        file,
+        id != null ? NumberProp(id, true, fileId: file) : null,
+        StringProp(file, fileId: file),
+        flag: HexProp(0x20000020, fileId: file),
+      )));
+    }
+
+    textures.sort((a, b) {
+      if (a.$1 != null && b.$1 != null)
+        return a.$1!.compareTo(b.$1!);
+      return a.$2.file.compareTo(b.$2.file);
+    });
+
+    return (
+      textures: textures.map((e) => e.$2).toList(),
+      hasId: hasId,
+    );
+  }
+
+  static Future<WtaWtpTextures> fromExtractedFolder(OpenFileId file, String folder) async {
+    var filename = basename(folder).replaceAll("_extracted", "");
+    var isWtb = filename.endsWith(".wtb");
+    if (!isWtb && !filename.endsWith(".wta")) {
+      showToast("Unexpected folder name: $filename");
+      throw Exception("Unexpected folder name: $filename");
+    }
+    var (:textures, :hasId) = await _findTexturesInFolder(folder, isWtb);
+    var valueList = ValueListNotifier<WtaTextureEntry>(textures, fileId: file);
+    return WtaWtpTextures(
+      file,
+      null, null,
+      isWtb,
+      hasId ? 1 : 0,
+      valueList,
+      false,
+      false,
+    );
+  }
+
+  Future<void> patchFromFolder(String folder) async {
+    var (textures: folderTextures, hasId: _) = await _findTexturesInFolder(folder, isWtb, hasId: true);
+    int added = 0;
+    int updated = 0;
+    for (var folderTexture in folderTextures) {
+      var currentTexture = textures.where((e) => e.id!.value == folderTexture.id!.value).firstOrNull;
+      if (currentTexture != null) {
+        currentTexture.path.value = folderTexture.path.value;
+        folderTexture.dispose();
+        updated++;
+      }
+      else {
+        textures.add(folderTexture);
+        added++;
+      }
+    }
+    showToast("Added $added textures, updated $updated textures");
+  }
+
   Future<void> save() async {
+    if (wtaPath == null) {
+      var result = await fp.FilePicker.platform.saveFile(
+        allowedExtensions: [isWtb ? "wtb" : "wta"],
+        type: fp.FileType.custom,
+        dialogTitle: isWtb ? "Save WTB" : "Save WTA",
+      );
+      if (result == null)
+        return;
+      wtaPath = result;
+    }
+    if (wtpPath == null && !isWtb) {
+      var result = await fp.FilePicker.platform.saveFile(
+        allowedExtensions: ["wtp"],
+        type: fp.FileType.custom,
+        dialogTitle: "Save WTP",
+        fileName: "${basenameWithoutExtension(wtaPath!)}.wtp",
+      );
+      if (result == null)
+        return;
+      wtpPath = result;
+    }
+
     var wta = WtaFile(
       WtaFileHeader.empty(version: wtaVersion),
       List.filled(textures.length, -1),
@@ -248,7 +368,7 @@ class WtaWtpTextures with HasUuid, Undoable implements Disposable {
         showToast("Mismatch: WTA has texture indices, but some textures are missing indices!");
         throw Exception("Mismatch: WTA has texture indices, but some textures are missing indices!");
       }
-      wta.textureIdx = List.generate(textures.length, (index) => textures[index].id!.value);
+      wta.textureIdx = List.generate(textures.length, (index) => textures[index].id!.value.toInt());
     }
 
     wta.updateHeader(isWtb: isWtb);
@@ -262,12 +382,12 @@ class WtaWtpTextures with HasUuid, Undoable implements Disposable {
     }
 
     // write wta
-    await backupFile(wtaPath);
-    await wta.writeToFile(wtaPath);
+    await backupFile(wtaPath!);
+    await wta.writeToFile(wtaPath!);
     messageLog.add("Saved WTA");
 
     // write wtp
-    var textureFilePath = isWtb ? wtaPath : wtpPath!;
+    var textureFilePath = isWtb ? wtaPath! : wtpPath!;
     await backupFile(textureFilePath);
     var wtpFile = await File(textureFilePath).open(mode: isWtb ? FileMode.append : FileMode.write);
     try {

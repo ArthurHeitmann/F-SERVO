@@ -10,9 +10,9 @@ Textures are stored either in a single .wtb file or in separate .wta and .wtp fi
 
 ## Extracting
 
-Open a .wta or .wtb file by dragging & dropping it into the File Explorer or by clicking the folder icon and selecting the file.
+Open a .wta or .wtb file or their extracted folder by dragging & dropping it into the File Explorer or by clicking the folder icon and selecting the file.
 
-When opening a .wta or .wtb file, all textures are extracted to disk. When opening a WTA and the corresponding WTP is not found, the file will fail to load.
+When opening a .wta or .wtb file for the first time, all textures are extracted to disk. When reopening the file, the textures are loaded from the extracted folder, or individual textures are re-extracted if missing.
 
 ## Editing textures
 
@@ -28,6 +28,11 @@ Find the texture you want to edit, based on the id or preview image. Either chan
 ### Adding and removing textures
 
 Press the (+) button to add a new texture. To remove a texture, click the delete button.
+
+### Replace or add all textures from a folder
+
+Press the floating button in the bottom left corner and select a folder with textures inside. F-SERVO will find all dds files with an id.
+If a texture id is already in the WTA, its path will be replaced. Otherwise, a new texture will be added.
 
 ## Notes
 
