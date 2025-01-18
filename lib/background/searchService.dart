@@ -481,7 +481,7 @@ class _SearchEstServiceWorker extends _SearchServiceWorker<SearchOptionsEst> {
       var entry = record.whereType<EstTypeFwkEntry>().firstOrNull;
       if (entry == null)
         return false;
-      if (options.importedEstId != null && entry.imported_effect_id != options.importedEstId)
+      if (options.importedEstId != null && entry.spawn_radius_or_imported_effect_id != options.importedEstId)
         return false;
     }
     return true;

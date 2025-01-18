@@ -87,7 +87,7 @@ class WtaFile {
   late List<int> textureOffsets;
   late List<int> textureSizes;
   late List<int> textureFlags;
-  late List<int> textureIdx;
+  List<int>? textureIdx;
   late List<WtaFileTextureInfo> textureInfo;
 
   static const int albedoFlag = 0x26000020;
@@ -101,8 +101,10 @@ class WtaFile {
     textureSizes = bytes.readUint32List(header.numTex);
     bytes.position = header.offsetTextureFlags;
     textureFlags = bytes.readUint32List(header.numTex);
-    bytes.position = header.offsetTextureIdx;
-    textureIdx = bytes.readUint32List(header.numTex);
+    if (header.offsetTextureIdx != 0) {
+      bytes.position = header.offsetTextureIdx;
+      textureIdx = bytes.readUint32List(header.numTex);
+    }
     bytes.position = header.offsetTextureInfo;
     textureInfo = List.generate(
       header.numTex,
@@ -132,9 +134,11 @@ class WtaFile {
     for (var i = 0; i < textureFlags.length; i++)
       bytes.writeUint32(textureFlags[i]);
     
-    bytes.position = header.offsetTextureIdx;
-    for (var i = 0; i < textureIdx.length; i++)
-      bytes.writeUint32(textureIdx[i]);
+    if (header.offsetTextureIdx != 0) {
+      bytes.position = header.offsetTextureIdx;
+      for (var i = 0; i < textureIdx!.length; i++)
+        bytes.writeUint32(textureIdx![i]);
+    }
     
     bytes.position = header.offsetTextureInfo;
     for (var i = 0; i < textureInfo.length; i++)
@@ -148,7 +152,7 @@ class WtaFile {
     header.offsetTextureOffsets = 0x20;
     header.offsetTextureSizes = alignTo(header.offsetTextureOffsets + textureOffsets.length * 4, 32);
     header.offsetTextureFlags = alignTo(header.offsetTextureSizes + textureSizes.length * 4, 32);
-    header.offsetTextureIdx = alignTo(header.offsetTextureFlags + textureFlags.length * 4, 32);
-    header.offsetTextureInfo = alignTo(header.offsetTextureIdx + textureIdx.length * 4, 32);
+    header.offsetTextureIdx = textureIdx != null ? alignTo(header.offsetTextureFlags + textureFlags.length * 4, 32) : 0;
+    header.offsetTextureInfo = textureIdx != null ?  alignTo(header.offsetTextureIdx + textureIdx!.length * 4, 32) : alignTo(header.offsetTextureFlags + textureFlags.length * 4, 32);
   }
 }

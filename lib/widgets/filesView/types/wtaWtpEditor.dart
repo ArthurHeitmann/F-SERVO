@@ -56,7 +56,7 @@ class _TexturesTableConfig with CustomTableConfig {
     return RowConfig(
       key: Key(textures[index].uuid),
       cells: [
-        PropCellConfig(prop: textures[index].id),
+        textures[index].id != null ? PropCellConfig(prop: textures[index].id!) : null,
         PropCellConfig(prop: textures[index].path, options: const PropTFOptions(isFilePath: true)),
         CustomWidgetCellConfig(IconButton(
           icon: const Icon(Icons.folder, size: 20),
@@ -94,9 +94,10 @@ class _TexturesTableConfig with CustomTableConfig {
 
   @override
   void onRowAdd() {
+    var usesIds = textures.any((e) => e.id != null) || textures.isEmpty;
     textures.add(WtaTextureEntry(
       texData.file,
-      HexProp(randomId(), fileId: file.uuid),
+      usesIds ? HexProp(randomId(), fileId: file.uuid) : null,
       StringProp("", fileId: file.uuid),
       isAlbedo: texData.useFlagsSimpleMode ? BoolProp(false, fileId: file.uuid) : null,
       flag: texData.useFlagsSimpleMode ? null : HexProp(textures.isNotEmpty ? textures.last.flag!.value : 0, fileId: file.uuid),

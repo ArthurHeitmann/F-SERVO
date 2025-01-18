@@ -37,6 +37,8 @@ class _EstEntryDetailsEditorState extends State<EstEntryDetailsEditor> {
       return _getEmifWidgets(entry);
     else if (entry is EstTexEntryWrapper)
       return _getTexWidgets(entry);
+    else if (entry is EstFvwkEntryWrapper)
+      return _getFvwkWidgets(entry);
     else if (entry is EstFwkEntryWrapper)
       return _getFwkWidgets(entry);
     else
@@ -55,7 +57,7 @@ class _EstEntryDetailsEditorState extends State<EstEntryDetailsEditor> {
       _EntryPropEditor(label: "Offset", prop: entry.offset),
       _EntryPropEditor(label: "Spawn box size", prop: entry.spawnBoxSize),
       _EntryPropEditor(label: "Move speed", prop: entry.moveSpeed),
-      _EntryPropEditor(label: "Move small speed", prop: entry.moveSmallSpeed),
+      _EntryPropEditor(label: "Move speed range", prop: entry.moveSpeedRange),
       _EntryPropEditor(label: "Rotation (°)", prop: entry.angle),
       _EntryPropEditor(label: "Scale (main)", prop: entry.scaleY),
       _EntryPropEditor(label: "Scale (secondary)", prop: entry.scaleX),
@@ -73,7 +75,7 @@ class _EstEntryDetailsEditorState extends State<EstEntryDetailsEditor> {
 
   List<Widget> _getEmifWidgets(EstEmifEntryWrapper entry) {
     return [
-      _EntryPropEditor(label: "Count", prop: entry.count),
+      _EntryPropEditor(label: "Instance duplicate count", prop: entry.instanceDuplicateCount),
       _EntryPropEditor(label: "Play delay", prop: entry.playDelay),
       _EntryPropEditor(label: "Show at once", prop: entry.showAtOnce),
       _EntryPropEditor(label: "Size", prop: entry.size),
@@ -115,9 +117,27 @@ class _EstEntryDetailsEditorState extends State<EstEntryDetailsEditor> {
     ];
   }
 
+  List<Widget> _getFvwkWidgets(EstFvwkEntryWrapper entry) {
+    return [
+      _EntryPropEditor(label: "Init rotation range", prop: entry.initRotationRange),
+      _EntryPropEditor(label: "Base rotation speed", prop: entry.baseRotationSpeed),
+      _EntryPropEditor(label: "Rotation speed range", prop: entry.rotationSpeedRange),
+      _EntryPropEditor(label: "x wiggle range", prop: entry.xWiggleRange),
+      _EntryPropEditor(label: "x wiggle speed", prop: entry.xWiggleSpeed),
+      _EntryPropEditor(label: "y wiggle range", prop: entry.yWiggleRange),
+      _EntryPropEditor(label: "y wiggle speed", prop: entry.yWiggleSpeed),
+      _EntryPropEditor(label: "z wiggle range", prop: entry.zWiggleRange),
+      _EntryPropEditor(label: "z wiggle speed", prop: entry.zWiggleSpeed),
+      _EntryPropEditor(label: "Duplicate instance \noffset range", prop: entry.duplicateInstanceOffsetRange),
+    ];
+  }
+
   List<Widget> _getFwkWidgets(EstFwkEntryWrapper entry) {
     return [
-      _EntryPropEditor(label: "Imported effect EST index", prop: entry.importedEffectId),
+      _EntryPropEditor(label: "Particle count", prop: entry.particleCount),
+      _EntryPropEditor(label: "Center distance", prop: entry.centerDistance),
+      _EntryPropEditor(label: "Spawn radius or \nimported effect EST index (?)", prop: entry.spawnRadiusOrImportedEffectId),
+      _EntryPropEditor(label: "Edge fade range", prop: entry.edgeFadeRange),
     ];
   }
 }

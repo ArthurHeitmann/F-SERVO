@@ -206,6 +206,8 @@ class EstEntryWrapper<T extends EstTypeEntry> with HasUuid, Undoable implements 
       return EstEmifEntryWrapper(entry, fileId, isEnabledB) as EstEntryWrapper<T>;
     else if (entry is EstTypeTexEntry)
       return EstTexEntryWrapper(entry, fileId, isEnabledB) as EstEntryWrapper<T>;
+    else if (entry is EstTypeFvwkEntry)
+      return EstFvwkEntryWrapper(entry, fileId, isEnabledB) as EstEntryWrapper<T>;
     else if (entry is EstTypeFwkEntry)
       return EstFwkEntryWrapper(entry, fileId, isEnabledB) as EstEntryWrapper<T>;
     else
@@ -320,7 +322,7 @@ class EstMoveEntryWrapper extends SpecificEstEntryWrapper<EstTypeMoveEntry> {
   final VectorProp offset ;
   final VectorProp spawnBoxSize ;
   final VectorProp moveSpeed ;
-  final VectorProp moveSmallSpeed ;
+  final VectorProp moveSpeedRange ;
   final FloatProp angle ;
   final FloatProp scaleX ;
   final FloatProp scaleY ;
@@ -338,7 +340,7 @@ class EstMoveEntryWrapper extends SpecificEstEntryWrapper<EstTypeMoveEntry> {
     offset = VectorProp([0, 0, 0], fileId: fileId),
     spawnBoxSize = VectorProp([0, 0, 0], fileId: fileId),
     moveSpeed = VectorProp([0, 0, 0], fileId: fileId),
-    moveSmallSpeed = VectorProp([0, 0, 0], fileId: fileId),
+    moveSpeedRange = VectorProp([0, 0, 0], fileId: fileId),
     angle = FloatProp(0, fileId: fileId),
     scaleX = FloatProp(0, fileId: fileId),
     scaleY = FloatProp(0, fileId: fileId),
@@ -357,7 +359,7 @@ class EstMoveEntryWrapper extends SpecificEstEntryWrapper<EstTypeMoveEntry> {
       offset,
       spawnBoxSize,
       moveSpeed,
-      moveSmallSpeed,
+      moveSpeedRange,
       angle,
       scaleX,
       scaleY,
@@ -387,9 +389,9 @@ class EstMoveEntryWrapper extends SpecificEstEntryWrapper<EstTypeMoveEntry> {
     entry.move_speed_x = moveSpeed[0].value.toDouble();
     entry.move_speed_y = moveSpeed[1].value.toDouble();
     entry.move_speed_z = moveSpeed[2].value.toDouble();
-    entry.move_small_speed_x = moveSmallSpeed[0].value.toDouble();
-    entry.move_small_speed_y = moveSmallSpeed[1].value.toDouble();
-    entry.move_small_speed_z = moveSmallSpeed[2].value.toDouble();
+    entry.move_speed_range_x = moveSpeedRange[0].value.toDouble();
+    entry.move_speed_range_y = moveSpeedRange[1].value.toDouble();
+    entry.move_speed_range_z = moveSpeedRange[2].value.toDouble();
     entry.angle = angle.value;
     entry.scale1 = scaleX.value;
     entry.scale2 = scaleY.value;
@@ -417,9 +419,9 @@ class EstMoveEntryWrapper extends SpecificEstEntryWrapper<EstTypeMoveEntry> {
     moveSpeed[0].value = entry.move_speed_x;
     moveSpeed[1].value = entry.move_speed_y;
     moveSpeed[2].value = entry.move_speed_z;
-    moveSmallSpeed[0].value = entry.move_small_speed_x;
-    moveSmallSpeed[1].value = entry.move_small_speed_y;
-    moveSmallSpeed[2].value = entry.move_small_speed_z;
+    moveSpeedRange[0].value = entry.move_speed_range_x;
+    moveSpeedRange[1].value = entry.move_speed_range_y;
+    moveSpeedRange[2].value = entry.move_speed_range_z;
     angle.value = entry.angle;
     scaleX.value = entry.scale1;
     scaleY.value = entry.scale2;
@@ -438,20 +440,20 @@ class EstMoveEntryWrapper extends SpecificEstEntryWrapper<EstTypeMoveEntry> {
 }
 
 class EstEmifEntryWrapper extends SpecificEstEntryWrapper<EstTypeEmifEntry> {
-  final NumberProp count;
+  final NumberProp instanceDuplicateCount;
   final NumberProp playDelay;
   final NumberProp showAtOnce;
   final NumberProp size;
 
   EstEmifEntryWrapper(super.entry, super.fileId, [super.isEnabledB = true]) :
-    count = NumberProp(0, true, fileId: fileId),
+    instanceDuplicateCount = NumberProp(0, true, fileId: fileId),
     playDelay = NumberProp(0, true, fileId: fileId),
     showAtOnce = NumberProp(0, true, fileId: fileId),
     size = NumberProp(0, true, fileId: fileId)
   {
     _readFromEntry(entry);
     allProps = [
-      count,
+      instanceDuplicateCount,
       playDelay,
       showAtOnce,
       size,
@@ -463,7 +465,7 @@ class EstEmifEntryWrapper extends SpecificEstEntryWrapper<EstTypeEmifEntry> {
   }
 
   void _updateEntryValues() {
-    entry.count = count.value.toInt();
+    entry.instance_duplicate_count = instanceDuplicateCount.value.toInt();
     entry.play_delay = playDelay.value.toInt();
     entry.showAtOnce = showAtOnce.value.toInt();
     entry.size = size.value.toInt();
@@ -471,7 +473,7 @@ class EstEmifEntryWrapper extends SpecificEstEntryWrapper<EstTypeEmifEntry> {
 
   @override
   void _readFromEntry(EstTypeEmifEntry entry) {
-    count.value = entry.count;
+    instanceDuplicateCount.value = entry.instance_duplicate_count;
     playDelay.value = entry.play_delay;
     showAtOnce.value = entry.showAtOnce;
     size.value = entry.size;
@@ -484,6 +486,8 @@ class EstTexEntryWrapper extends SpecificEstEntryWrapper<EstTypeTexEntry> {
   final FloatProp size;
   final NumberProp textureFileIndex;
   final HexProp meshId;
+  final NumberProp leftRightDistribution;
+  final NumberProp upDownDistribution;
   final NumberProp videoFps;
   final NumberProp isSingleFrame;
 
@@ -493,6 +497,8 @@ class EstTexEntryWrapper extends SpecificEstEntryWrapper<EstTypeTexEntry> {
     size = FloatProp(0, fileId: fileId),
     textureFileIndex = NumberProp(0, true, fileId: fileId),
     meshId = HexProp(0, fileId: fileId),
+    leftRightDistribution = NumberProp(0, false, fileId: fileId),
+    upDownDistribution = NumberProp(0, false, fileId: fileId),
     videoFps = NumberProp(0, true, fileId: fileId),
     isSingleFrame = NumberProp(0, true, fileId: fileId)
   {
@@ -503,6 +509,8 @@ class EstTexEntryWrapper extends SpecificEstEntryWrapper<EstTypeTexEntry> {
       size,
       textureFileIndex,
       meshId,
+      leftRightDistribution,
+      upDownDistribution,
       videoFps,
       isSingleFrame,
     ];
@@ -518,6 +526,8 @@ class EstTexEntryWrapper extends SpecificEstEntryWrapper<EstTypeTexEntry> {
     entry.size = size.value;
     entry.texture_file_texture_index = textureFileIndex.value.toInt();
     entry.mesh_id = meshId.value.toInt();
+    entry.left_right_distribution = leftRightDistribution.value.toDouble();
+    entry.up_down_distribution = upDownDistribution.value.toDouble();
     entry.video_fps_maybe = videoFps.value.toInt();
     entry.is_single_frame = isSingleFrame.value.toInt();
   }
@@ -529,20 +539,49 @@ class EstTexEntryWrapper extends SpecificEstEntryWrapper<EstTypeTexEntry> {
     size.value = entry.size;
     textureFileIndex.value = entry.texture_file_texture_index;
     meshId.value = entry.mesh_id;
+    leftRightDistribution.value = entry.left_right_distribution;
+    upDownDistribution.value = entry.up_down_distribution;
     videoFps.value = entry.video_fps_maybe;
     isSingleFrame.value = entry.is_single_frame;
   }
 }
 
-class EstFwkEntryWrapper extends SpecificEstEntryWrapper<EstTypeFwkEntry> {
-  final NumberProp importedEffectId;
+class EstFvwkEntryWrapper extends SpecificEstEntryWrapper<EstTypeFvwkEntry> {
+  final NumberProp initRotationRange;
+  final NumberProp baseRotationSpeed;
+  final NumberProp rotationSpeedRange;
+  final NumberProp xWiggleRange;
+  final NumberProp xWiggleSpeed;
+  final NumberProp yWiggleRange;
+  final NumberProp yWiggleSpeed;
+  final NumberProp zWiggleRange;
+  final NumberProp zWiggleSpeed;
+  final VectorProp duplicateInstanceOffsetRange;
 
-  EstFwkEntryWrapper(super.entry, super.fileId, [super.isEnabledB = true]) :
-    importedEffectId = NumberProp(0, true, fileId: fileId)
+  EstFvwkEntryWrapper(super.entry, super.fileId, [super.isEnabledB = true]) :
+    initRotationRange = NumberProp(0.0, false, fileId: fileId),
+    baseRotationSpeed = NumberProp(0.0, false, fileId: fileId),
+    rotationSpeedRange = NumberProp(0.0, false, fileId: fileId),
+    xWiggleRange = NumberProp(0.0, false, fileId: fileId),
+    xWiggleSpeed = NumberProp(0.0, false, fileId: fileId),
+    yWiggleRange = NumberProp(0.0, false, fileId: fileId),
+    yWiggleSpeed = NumberProp(0.0, false, fileId: fileId),
+    zWiggleRange = NumberProp(0.0, false, fileId: fileId),
+    zWiggleSpeed = NumberProp(0.0, false, fileId: fileId),
+    duplicateInstanceOffsetRange = VectorProp([0.0, 0.0, 0.0], fileId: fileId)
   {
     _readFromEntry(entry);
     allProps = [
-      importedEffectId,
+      initRotationRange,
+      baseRotationSpeed,
+      rotationSpeedRange,
+      xWiggleRange,
+      xWiggleSpeed,
+      yWiggleRange,
+      yWiggleSpeed,
+      zWiggleRange,
+      zWiggleSpeed,
+      duplicateInstanceOffsetRange,
     ];
     for (var prop in allProps) {
       prop.addListener(onAnyChange.notifyListeners);
@@ -551,12 +590,74 @@ class EstFwkEntryWrapper extends SpecificEstEntryWrapper<EstTypeFwkEntry> {
   }
 
   void _updateEntryValues() {
-    entry.imported_effect_id = importedEffectId.value.toInt();
+    entry.init_rotation_range = initRotationRange.value.toDouble();
+    entry.base_rotation_speed = baseRotationSpeed.value.toDouble();
+    entry.base_rotation_speed_range = rotationSpeedRange.value.toDouble();
+    entry.x_wiggle_range = xWiggleRange.value.toDouble();
+    entry.x_wiggle_speed = xWiggleSpeed.value.toDouble();
+    entry.y_wiggle_range = yWiggleRange.value.toDouble();
+    entry.y_wiggle_speed = yWiggleSpeed.value.toDouble();
+    entry.z_wiggle_range = zWiggleRange.value.toDouble();
+    entry.z_wiggle_speed = zWiggleSpeed.value.toDouble();
+    entry.x_repeat_instance_offset_max_range = duplicateInstanceOffsetRange[0].value.toDouble();
+    entry.y_repeat_instance_offset_max_range = duplicateInstanceOffsetRange[1].value.toDouble();
+    entry.z_repeat_instance_offset_max_range = duplicateInstanceOffsetRange[2].value.toDouble();
+  }
+
+  @override
+  void _readFromEntry(EstTypeFvwkEntry entry) {
+    initRotationRange.value = entry.init_rotation_range;
+    baseRotationSpeed.value = entry.base_rotation_speed;
+    rotationSpeedRange.value = entry.base_rotation_speed_range;
+    xWiggleRange.value = entry.x_wiggle_range;
+    xWiggleSpeed.value = entry.x_wiggle_speed;
+    yWiggleRange.value = entry.y_wiggle_range;
+    yWiggleSpeed.value = entry.y_wiggle_speed;
+    zWiggleRange.value = entry.z_wiggle_range;
+    zWiggleSpeed.value = entry.z_wiggle_speed;
+    duplicateInstanceOffsetRange[0].value = entry.x_repeat_instance_offset_max_range;
+    duplicateInstanceOffsetRange[1].value = entry.y_repeat_instance_offset_max_range;
+    duplicateInstanceOffsetRange[2].value = entry.z_repeat_instance_offset_max_range;
+  }
+}
+class EstFwkEntryWrapper extends SpecificEstEntryWrapper<EstTypeFwkEntry> {
+  final NumberProp particleCount;
+  final NumberProp centerDistance;
+  final NumberProp spawnRadiusOrImportedEffectId;
+  final NumberProp edgeFadeRange;
+
+  EstFwkEntryWrapper(super.entry, super.fileId, [super.isEnabledB = true]) :
+    particleCount = NumberProp(0, true, fileId: fileId),
+    centerDistance = NumberProp(0, true, fileId: fileId),
+    spawnRadiusOrImportedEffectId = NumberProp(0, true, fileId: fileId),
+    edgeFadeRange = NumberProp(0, true, fileId: fileId)
+  {
+    _readFromEntry(entry);
+    allProps = [
+      particleCount,
+      centerDistance,
+      spawnRadiusOrImportedEffectId,
+      edgeFadeRange,
+    ];
+    for (var prop in allProps) {
+      prop.addListener(onAnyChange.notifyListeners);
+    }
+    onAnyChange.addListener(_updateEntryValues);
+  }
+
+  void _updateEntryValues() {
+    entry.particle_count = particleCount.value.toInt();
+    entry.center_distance = centerDistance.value.toInt();
+    entry.spawn_radius_or_imported_effect_id = spawnRadiusOrImportedEffectId.value.toInt();
+    entry.edge_fade_range = edgeFadeRange.value.toInt();
   }
 
   @override
   void _readFromEntry(EstTypeFwkEntry entry) {
-    importedEffectId.value = entry.imported_effect_id;
+    particleCount.value = entry.particle_count;
+    centerDistance.value = entry.center_distance;
+    spawnRadiusOrImportedEffectId.value = entry.spawn_radius_or_imported_effect_id;
+    edgeFadeRange.value = entry.edge_fade_range;
   }
 }
 

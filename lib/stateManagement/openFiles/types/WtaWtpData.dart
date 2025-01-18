@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 
+import '../../../fileTypeUtils/wta/wtaExtractor.dart';
 import '../../../fileTypeUtils/wta/wtaReader.dart';
 import '../../../utils/Disposable.dart';
 import '../../../utils/utils.dart';
@@ -109,13 +110,13 @@ class WtaWtpData extends OpenFileData {
 
 class WtaTextureEntry with HasUuid, Undoable implements Disposable {
   final OpenFileId file;
-  final HexProp id;
+  final HexProp? id;
   final StringProp path;
   final BoolProp? isAlbedo;
   final HexProp? flag;
 
   WtaTextureEntry(this.file, this.id, this.path, { this.isAlbedo, this.flag }) {
-    id.addListener(_onPropChange);
+    id?.addListener(_onPropChange);
     path.addListener(_onPropChange);
     isAlbedo?.addListener(_onPropChange);
     flag?.addListener(_onPropChange);
@@ -127,7 +128,7 @@ class WtaTextureEntry with HasUuid, Undoable implements Disposable {
 
   @override
   void dispose() {
-    id.dispose();
+    id?.dispose();
     path.dispose();
     isAlbedo?.dispose();
     flag?.dispose();
@@ -141,7 +142,7 @@ class WtaTextureEntry with HasUuid, Undoable implements Disposable {
   Undoable takeSnapshot() {
     var snap = WtaTextureEntry(
       file,
-      id.takeSnapshot() as HexProp,
+      id?.takeSnapshot() as HexProp?,
       path.takeSnapshot() as StringProp,
       isAlbedo: isAlbedo?.takeSnapshot() as BoolProp?,
       flag: flag?.takeSnapshot() as HexProp?,
@@ -153,7 +154,7 @@ class WtaTextureEntry with HasUuid, Undoable implements Disposable {
   @override
   void restoreWith(Undoable snapshot) {
     var snap = snapshot as WtaTextureEntry;
-    id.restoreWith(snap.id);
+    id?.restoreWith(snap.id!);
     path.restoreWith(snap.path);
     isAlbedo?.restoreWith(snap.isAlbedo!);
     flag?.restoreWith(snap.flag!);
@@ -194,7 +195,7 @@ class WtaWtpTextures with HasUuid, Undoable implements Disposable {
     try {
       for (int i = 0; i < wta.textureOffsets.length; i++) {
         messageLog.add("Extracting texture ${i + 1}/${wta.textureOffsets.length}");
-        var texturePath = join(extractDir, "${i}_${wta.textureIdx[i].toRadixString(16).padLeft(8, "0")}.dds");
+        var texturePath = join(extractDir, makeTextureFileName(i, wta.textureIdx?[i]));
         await wtpFile.setPosition(wta.textureOffsets[i]);
         var textureBytes = await wtpFile.read(wta.textureSizes[i]);
         await File(texturePath).writeAsBytes(textureBytes);
@@ -206,7 +207,7 @@ class WtaWtpTextures with HasUuid, Undoable implements Disposable {
           flag = HexProp(wta.textureFlags[i], fileId: file);
         textures.add(WtaTextureEntry(
           file,
-          HexProp(wta.textureIdx[i], fileId: file),
+          wta.textureIdx != null ? HexProp(wta.textureIdx![i], fileId: file) : null,
           StringProp(texturePath, fileId: file),
           isAlbedo: isAlbedo,
           flag: flag,
@@ -227,7 +228,8 @@ class WtaWtpTextures with HasUuid, Undoable implements Disposable {
   Future<void> save() async {
     var wta = await WtaFile.readFromFile(wtaPath);
 
-    wta.textureIdx = List.generate(textures.length, (index) => textures[index].id.value);
+    var usesIds = textures.any((e) => e.id != null);
+    wta.textureIdx = usesIds ? List.generate(textures.length, (index) => textures[index].id!.value) : null;
     wta.textureOffsets = List.filled(textures.length, -1);
     wta.textureFlags = List.generate(
       textures.length,
