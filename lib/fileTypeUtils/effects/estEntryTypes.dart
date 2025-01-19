@@ -1,5 +1,7 @@
 
 
+// ignore_for_file: non_constant_identifier_names
+
 import 'dart:typed_data';
 
 import '../utils/ByteDataWrapper.dart';
@@ -413,7 +415,7 @@ class EstTypeTexEntry extends EstTypeEntry {
   late int u_c;
   late double size;
   late double u_d2;
-  late double u_d3;
+  late double fade_out_strength;
   late double u_d4;
   late double u_d5;
   late int video_fps_maybe;
@@ -439,7 +441,7 @@ class EstTypeTexEntry extends EstTypeEntry {
     u_c = bytes.readInt16();
     size = bytes.readFloat32();
     u_d2 = bytes.readFloat32();
-    u_d3 = bytes.readFloat32();
+    fade_out_strength = bytes.readFloat32();
     u_d4 = bytes.readFloat32();
     u_d5 = bytes.readFloat32();
     video_fps_maybe = bytes.readInt16();
@@ -466,7 +468,7 @@ class EstTypeTexEntry extends EstTypeEntry {
     bytes.writeInt16(u_c);
     bytes.writeFloat32(size);
     bytes.writeFloat32(u_d2);
-    bytes.writeFloat32(u_d3);
+    bytes.writeFloat32(fade_out_strength);
     bytes.writeFloat32(u_d4);
     bytes.writeFloat32(u_d5);
     bytes.writeInt16(video_fps_maybe);
@@ -501,7 +503,7 @@ typedef struct {
 */
 /// EffectFreeWork
 class EstTypeFwkEntry extends EstTypeEntry {
-  late int u_a0;
+  late int mesh_group_index;
   late int u_a1;
   late int imported_effect_id;
   late List<int> u_b;
@@ -509,7 +511,7 @@ class EstTypeFwkEntry extends EstTypeEntry {
 
   EstTypeFwkEntry.read(ByteDataWrapper bytes, EstTypeHeader header) {
     this.header = header;
-    u_a0 = bytes.readInt16();
+    mesh_group_index = bytes.readInt16();
     u_a1 = bytes.readInt16();
     imported_effect_id = bytes.readInt16();
     u_b = bytes.asInt16List(3);
@@ -518,7 +520,7 @@ class EstTypeFwkEntry extends EstTypeEntry {
 
   @override
   void write(ByteDataWrapper bytes) {
-    bytes.writeInt16(u_a0);
+    bytes.writeInt16(mesh_group_index);
     bytes.writeInt16(u_a1);
     bytes.writeInt16(imported_effect_id);
     for (var b in u_b)

@@ -617,7 +617,7 @@ class EstTexEntryWrapper extends SpecificEstEntryWrapper<EstTypeTexEntry> {
   final NumberProp isSingleFrame;
   final NumberProp u_c;
   final FloatProp u_d2;
-  final FloatProp u_d3;
+  final FloatProp fadeOutStrength;
   final FloatProp u_d4;
   final FloatProp u_d5;
   final FloatProp u_g;
@@ -638,7 +638,7 @@ class EstTexEntryWrapper extends SpecificEstEntryWrapper<EstTypeTexEntry> {
     isSingleFrame = NumberProp(0, true, fileId: fileId),
     u_c = NumberProp(0, true, fileId: fileId),
     u_d2 = FloatProp(0, fileId: fileId),
-    u_d3 = FloatProp(0, fileId: fileId),
+    fadeOutStrength = FloatProp(0, fileId: fileId),
     u_d4 = FloatProp(0, fileId: fileId),
     u_d5 = FloatProp(0, fileId: fileId),
     u_g = FloatProp(0, fileId: fileId),
@@ -660,7 +660,7 @@ class EstTexEntryWrapper extends SpecificEstEntryWrapper<EstTypeTexEntry> {
       isSingleFrame,
       u_c,
       u_d2,
-      u_d3,
+      fadeOutStrength,
       u_d4,
       u_d5,
       u_g,
@@ -687,7 +687,7 @@ class EstTexEntryWrapper extends SpecificEstEntryWrapper<EstTypeTexEntry> {
     entry.is_single_frame = isSingleFrame.value.toInt();
     entry.u_c = u_c.value.toInt();
     entry.u_d2 = u_d2.value;
-    entry.u_d3 = u_d3.value;
+    entry.fade_out_strength = fadeOutStrength.value;
     entry.u_d4 = u_d4.value;
     entry.u_d5 = u_d5.value;
     entry.u_g = u_g.value;
@@ -712,7 +712,7 @@ class EstTexEntryWrapper extends SpecificEstEntryWrapper<EstTypeTexEntry> {
     isSingleFrame.value = entry.is_single_frame;
     u_c.value = entry.u_c;
     u_d2.value = entry.u_d2;
-    u_d3.value = entry.u_d3;
+    fadeOutStrength.value = entry.fade_out_strength;
     u_d4.value = entry.u_d4;
     u_d5.value = entry.u_d5;
     u_g.value = entry.u_g;
@@ -729,14 +729,14 @@ class EstTexEntryWrapper extends SpecificEstEntryWrapper<EstTypeTexEntry> {
 
 class EstFwkEntryWrapper extends SpecificEstEntryWrapper<EstTypeFwkEntry> {
   final NumberProp importedEffectId;
-  final NumberProp u_a0;
+  final NumberProp meshGroupIndex;
   final NumberProp u_a1;
   final List<NumberProp> u_b;
   final List<NumberProp> u_c;
 
   EstFwkEntryWrapper(super.entry, super.fileId, [super.isEnabledB = true]) :
     importedEffectId = NumberProp(0, true, fileId: fileId),
-    u_a0 = NumberProp(0, true, fileId: fileId),
+    meshGroupIndex = NumberProp(0, true, fileId: fileId),
     u_a1 = NumberProp(0, true, fileId: fileId),
     u_b = List.generate(3, (_) => NumberProp(0, true, fileId: fileId)),
     u_c = List.generate(5, (_) => NumberProp(0, true, fileId: fileId))
@@ -744,7 +744,7 @@ class EstFwkEntryWrapper extends SpecificEstEntryWrapper<EstTypeFwkEntry> {
     _readFromEntry(entry);
     allProps = [
       importedEffectId,
-      u_a0,
+      meshGroupIndex,
       u_a1,
       ...u_b,
       ...u_c,
@@ -757,7 +757,7 @@ class EstFwkEntryWrapper extends SpecificEstEntryWrapper<EstTypeFwkEntry> {
 
   void _updateEntryValues() {
     entry.imported_effect_id = importedEffectId.value.toInt();
-    entry.u_a0 = u_a0.value.toInt();
+    entry.mesh_group_index = meshGroupIndex.value.toInt();
     entry.u_a1 = u_a1.value.toInt();
     for (int i = 0; i < 3; i++)
       entry.u_b[i] = u_b[i].value.toInt();
@@ -768,7 +768,7 @@ class EstFwkEntryWrapper extends SpecificEstEntryWrapper<EstTypeFwkEntry> {
   @override
   void _readFromEntry(EstTypeFwkEntry entry) {
     importedEffectId.value = entry.imported_effect_id;
-    u_a0.value = entry.u_a0;
+    meshGroupIndex.value = entry.mesh_group_index;
     u_a1.value = entry.u_a1;
     for (int i = 0; i < 3; i++)
       u_b[i].value = entry.u_b[i];

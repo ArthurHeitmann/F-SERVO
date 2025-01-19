@@ -150,10 +150,10 @@ class _EstEntryDetailsEditorState extends State<EstEntryDetailsEditor> {
       ),
       _EntryPropEditor(label: "Is single frame", prop: entry.isSingleFrame),
       _EntryPropEditor(label: "Video FPS (?)", prop: entry.videoFps),
+      _EntryPropEditor(label: "Fade out strength", prop: entry.fadeOutStrength),
       if (widget.showUnknown) ...[
         _EntryPropEditor(label: "u_c (i16)", prop: entry.u_c),
         _EntryPropEditor(label: "u_d2 (f32)", prop: entry.u_d2),
-        _EntryPropEditor(label: "u_d3 (f32)", prop: entry.u_d3),
         _EntryPropEditor(label: "u_d4 (f32)", prop: entry.u_d4),
         _EntryPropEditor(label: "u_d5 (f32)", prop: entry.u_d5),
         _EntryPropEditor(label: "u_g (f32)", prop: entry.u_g),
@@ -218,8 +218,8 @@ class _EstEntryDetailsEditorState extends State<EstEntryDetailsEditor> {
   List<Widget> _getFwkWidgets(EstFwkEntryWrapper entry) {
     return [
       _EntryPropEditor(label: "Imported effect EST index", prop: entry.importedEffectId),
+      _EntryPropEditor(label: "Mesh group index", prop: entry.meshGroupIndex),
       if (widget.showUnknown) ...[
-        _EntryPropEditor(label: "u_a0 (i16)", prop: entry.u_a0),
         _EntryPropEditor(label: "u_a1 (i16)", prop: entry.u_a1),
         for (var i = 0; i < entry.u_b.length; i++)
           _EntryPropEditor(label: "u_b[$i] (i16)", prop: entry.u_b[i]),
