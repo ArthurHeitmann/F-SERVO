@@ -1,6 +1,4 @@
 
-import 'dart:io';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
@@ -221,7 +219,7 @@ class __TexturePreviewState extends ChangeNotifierState<_TexturePreview> {
           constraints: const BoxConstraints(maxWidth: 100, maxHeight: 30),
           child: ExpandOnHover(
             size: 30,
-            child: MouseRegion(
+            builder: (context, isExpanded) => MouseRegion(
               cursor: SystemMouseCursors.click,
               child: GestureDetector(
                 onTap: () async {
@@ -238,7 +236,7 @@ class __TexturePreviewState extends ChangeNotifierState<_TexturePreview> {
                 },
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(5),
-                  child: Image.memory(data!),
+                  child: Image.memory(data!, filterQuality: FilterQuality.medium),
                 ),
               ),
             ),

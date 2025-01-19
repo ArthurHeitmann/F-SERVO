@@ -8,13 +8,19 @@ import 'package:flutter/material.dart';
 import '../../utils/utils.dart';
 import 'mousePosition.dart';
 
+typedef ExpandedBuilder = Widget Function(BuildContext context, bool isExpanded);
+
 class ExpandOnHover extends StatefulWidget {
-  final Widget child;
+  final Widget? child;
+  final ExpandedBuilder? builder;
   final double size;
 
-  const ExpandOnHover({ super.key, required this.child, this.size = 45 });
+  const ExpandOnHover({ super.key, this.child, this.builder, this.size = 45 });
+  
   @override
   State<ExpandOnHover> createState() => _ExpandOnHoverState();
+
+  ExpandedBuilder get childBuilder => builder ?? (_, __) => child!;
 }
 
 class _ExpandOnHoverState extends State<ExpandOnHover> {
@@ -64,7 +70,7 @@ class _ExpandOnHoverState extends State<ExpandOnHover> {
         child: _ExpandedChild(
           smallSize: widget.size,
           dismissNotifier: dismissNotifier,
-          child: widget.child,
+          builder: widget.childBuilder,
           onDismiss: () {
             overlayEntry!.remove();
             overlayEntry = null;
@@ -96,7 +102,7 @@ class _ExpandOnHoverState extends State<ExpandOnHover> {
         child: Builder(
           builder: (context) {
             childContext = context;
-            return widget.child;
+            return widget.childBuilder(context, false);
           }
         ),
       ),
@@ -107,11 +113,11 @@ class _ExpandOnHoverState extends State<ExpandOnHover> {
 
 class _ExpandedChild extends StatefulWidget {
   final double smallSize;
-  final Widget child;
+  final ExpandedBuilder builder;
   final VoidCallback onDismiss;
   final ChangeNotifier dismissNotifier;
 
-  const _ExpandedChild({ required this.smallSize, required this.child, required this.onDismiss, required this.dismissNotifier });
+  const _ExpandedChild({ required this.smallSize, required this.builder, required this.onDismiss, required this.dismissNotifier });
 
   @override
   State<_ExpandedChild> createState() => _ExpandedChildState();
@@ -171,7 +177,7 @@ class _ExpandedChildState extends State<_ExpandedChild> {
         width: widget.smallSize,
         height: widget.smallSize,
         alignment: Alignment.center,
-        child: widget.child,
+        child: widget.builder(context, isExpanded),
       )
     );
   }
