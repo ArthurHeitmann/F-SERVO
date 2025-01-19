@@ -49,8 +49,6 @@ Future<void> repackDat(String datDir, String exportPath) async {
     if (fileName.length + 1 > nameLength)
       nameLength = fileName.length + 1;
   }
-  var namesSize = nameLength * fileNumber;
-  var namesPadding = 4 - (namesSize % 4);
 
   var hashMapSize = hashData.getTableSize();
 
@@ -59,7 +57,8 @@ Future<void> repackDat(String datDir, String exportPath) async {
   var fileOffsetsOffset = 32;
   var fileExtensionsOffset = fileOffsetsOffset + (fileNumber * 4);
   var fileNamesOffset = fileExtensionsOffset + fileExtensionsSize;
-  var fileSizesOffset = fileNamesOffset + 4 + (fileNumber * nameLength) + namesPadding;
+  var fileSizesOffset = fileNamesOffset + 4 + (fileNumber * nameLength);
+  fileSizesOffset = alignTo(fileSizesOffset, 4);
   var hashMapOffset = fileSizesOffset + (fileNumber * 4);
 
   // fileOffsets

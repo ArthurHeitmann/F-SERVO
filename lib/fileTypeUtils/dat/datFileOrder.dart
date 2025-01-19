@@ -1,5 +1,7 @@
 import 'package:path/path.dart';
 
+import '../../utils/utils.dart';
+
 bool Function(String) _ends(String end) {
   return (String name) => name.endsWith(end);
 }
@@ -229,15 +231,18 @@ List<String> _sortDatFilesBestGuess(List<_File> files) {
 }
 
 List<String> _sortDatFilesWithOriginalOrder(List<_File> files, List<String> originalOrder) {
-  List<_File> unknownFiles = [];
   List<_File> knownFiles = [];
-  for (var file in files) {
-    if (originalOrder.contains(file.name))
+  for (var originalFile in originalOrder) {
+    var file = files.where((f) => f.name == originalFile).firstOrNull;
+    if (file != null)
       knownFiles.add(file);
-    else
+  }
+  List<_File> unknownFiles = [];
+  for (var file in files) {
+    if (!originalOrder.contains(file.name))
       unknownFiles.add(file);
   }
-  knownFiles.sort((a, b) => originalOrder.indexOf(a.name).compareTo(originalOrder.indexOf(b.name)));
+
   var sortedFiles = knownFiles;
   for (var insertFile in unknownFiles) {
     bool inserted = false;
@@ -255,6 +260,8 @@ List<String> _sortDatFilesWithOriginalOrder(List<_File> files, List<String> orig
 }
 
 List<String> sortDatFiles(List<String> paths, List<String>? originalOrder) {
+  if (originalOrder != null)
+    paths = deduplicate(paths);
   var files = paths.map((path) => _File(path)).toList();
   if (originalOrder == null)
     return _sortDatFilesBestGuess(files);

@@ -49,7 +49,7 @@ class DatHierarchyEntry extends ExtractableHierarchyEntry {
       openHierarchyManager.parentOf(child).remove(child);
 
     List<Future<void>> futures = [];
-    datFilePaths ??= (await getDatFileList(extractedPath)).files;
+    datFilePaths ??= (await getDatFileList(extractedPath, removeDuplicates: true)).files;
     RubyScriptGroupHierarchyEntry? rubyScriptGroup;
     var prefs = PreferencesData();
     const supportedFileEndings = { ".pak", "_scp.bin", ".tmd", ".smd", ".mcd", ".ftb", ".bnk", ".wta", ".wtb", ".est", ".sst", ".ctx", ...bxmExtensions, ...datExtensions };

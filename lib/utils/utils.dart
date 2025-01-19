@@ -514,57 +514,61 @@ String getDatFolder(String datName) {
 }
 
 class DatFiles {
+  final int version;
   final List<String> files;
   final List<String>? originalFileOrder;
 
-  const DatFiles(this.files, [this.originalFileOrder]);
+  const DatFiles(this.version, this.files, [this.originalFileOrder]);
 }
-Future<DatFiles> getDatFileList(String datDir, {bool allowMissingInfoFile = true}) async {
+Future<DatFiles> getDatFileList(String datDir, {bool allowMissingInfoFile = true, bool removeDuplicates = false}) async {
   var datInfoPath = path.join(datDir, "dat_info.json");
   if (await File(datInfoPath).exists())
-    return _getDatFileListFromJson(datInfoPath);
+    return _getDatFileListFromJson(datInfoPath, removeDuplicates);
   var metadataPath = path.join(datDir, "file_order.metadata");
   if (await File(metadataPath).exists())
-    return _getDatFileListFromMetadata(metadataPath);
+    return _getDatFileListFromMetadata(metadataPath, removeDuplicates);
   if (allowMissingInfoFile) {
     var files = (await Directory(datDir).list().toList())
       .whereType<File>()
       .map((file) => file.path)
       .where((file) => extension(file).isNotEmpty && extension(file).length <= 4)
       .toList();
-    return DatFiles(files);
+    return DatFiles(1, files);
   }
   
   throw Exception("No dat_info.json or file_order.metadata found in $datDir");
 }
 
-Future<DatFiles> _getDatFileListFromJson(String datInfoPath) async {
+Future<DatFiles> _getDatFileListFromJson(String datInfoPath, bool removeDuplicates) async {
   var datInfoJson = jsonDecode(await File(datInfoPath).readAsString()) as Map;
   List<String> files = [];
   var dir = path.dirname(datInfoPath);
   for (var file in datInfoJson["files"] as List) {
     files.add(path.join(dir, file));
   }
-  files = deduplicate(files);
+  if (removeDuplicates)
+    files = deduplicate(files);
   List<String>? originalFileOrder;
   if (datInfoJson.containsKey("original_order")) {
     originalFileOrder = (datInfoJson["original_order"] as List).cast<String>();
   }
-  return DatFiles(files, originalFileOrder);
+  var version = datInfoJson["version"] is int ? datInfoJson["version"] as int : 1;
+  return DatFiles(version, files, originalFileOrder);
 }
 
-Future<DatFiles> _getDatFileListFromMetadata(String metadataPath) async {
+Future<DatFiles> _getDatFileListFromMetadata(String metadataPath, bool removeDuplicates) async {
   var metadataBytes = await ByteDataWrapper.fromFile(metadataPath);
   var numFiles = metadataBytes.readUint32();
   var nameLength = metadataBytes.readUint32();
   List<String> files = [];
   for (var i = 0; i < numFiles; i++)
     files.add(metadataBytes.readString(nameLength).trimNull());
-  files = deduplicate(files);
+  if (removeDuplicates)
+    files = deduplicate(files);
   var dir = path.dirname(metadataPath);
   files = files.map((file) => path.join(dir, file)).toList();
 
-  return DatFiles(files, files);
+  return DatFiles(1, files, files);
 }
 
 Future<String?> exportDat(String datFolder, { bool checkForNesting = false, bool overwriteOriginal = false, String? datExportPath }) async {

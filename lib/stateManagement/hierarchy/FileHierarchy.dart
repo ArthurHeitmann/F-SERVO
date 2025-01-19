@@ -209,7 +209,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
     }
     else {
       try {
-        datFilePaths = await getDatFileList(datExtractDir, allowMissingInfoFile: allowMissingInfoFile);
+        datFilePaths = await getDatFileList(datExtractDir, allowMissingInfoFile: allowMissingInfoFile, removeDuplicates: true);
       } catch (e, s) {
         print("$e\n$s");
       }
@@ -223,7 +223,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
       if (shouldExtractDatFiles) {
         await extractDatFiles(datPath, shouldExtractPakFiles: true);
       }
-      else if (datFilePaths?.originalFileOrder == null && srcDatExists) {
+      else if ((datFilePaths?.version ?? 1) < currentDatVersion && srcDatExists) {
         await updateDatInfoFileOriginalOrder(datPath, datExtractDir);
       }
     }
