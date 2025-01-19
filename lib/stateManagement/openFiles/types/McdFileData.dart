@@ -373,8 +373,6 @@ class McdLine extends _McdFilePart {
       var char = str[i];
       if (char == " ")
         letters.add(McdFileLetter(0x8001, fontId, const []));
-      else if (char == "…")
-        letters.add(McdFileLetter(0x80, 0, const []));
       else if (char == "≡")
         letters.add(McdFileLetter(0x8020, 9, const []));
       else if (char == "<" && i + 5 <= str.length && str.substring(i, i + 5) == "<Alt>") {
@@ -389,7 +387,7 @@ class McdLine extends _McdFilePart {
         letters.add(McdFileLetter(code, code2, const []));
         i += 11 + specialStr.length;
       } else {
-        var charCode = char.codeUnitAt(0);
+        var charCode = char == "…" ? 0x80 : char.codeUnitAt(0);
         final symbolIndex = symbols.indexWhere((s) => s.charCode == charCode && s.fontId == fontId);
         if (symbolIndex == -1)
           throw Exception("Unknown char: $char");

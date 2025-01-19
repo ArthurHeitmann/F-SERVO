@@ -114,7 +114,12 @@ class _McdFontDebuggerState extends ChangeNotifierState<McdFontDebugger> {
                           height: (sym.uv2.dy - sym.uv1.dy) * areaHeight,
                           child: Tooltip(
                             waitDuration: const Duration(milliseconds: 250),
-                            message: "char: ${sym.char} (${sym.code})\nfontID: ${sym.fontId}\nfontHeight: ${font.fontHeight}\ntex size: ${sym.getWidth()}x${sym.getHeight()}\nrendered size: ${sym.renderedSize.width.round()}x${sym.renderedSize.height.round()}",
+                            message:
+                            "char: ${sym.char} (${sym.code})\n"
+                            "fontID: ${sym.fontId}\n"
+                            "fontHeight: ${font.fontHeight}\n"
+                            "tex size: ${sym.getWidth()}x${sym.getHeight()}\n"
+                            "rendered size: ${sym.renderedSize.width.round()}x${sym.renderedSize.height.round()}",
                           ),
                         ),
                 ]
