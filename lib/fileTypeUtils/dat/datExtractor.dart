@@ -9,6 +9,8 @@ import '../../utils/utils.dart';
 import '../pak/pakExtractor.dart';
 import '../utils/ByteDataWrapper.dart';
 
+const currentDatVersion = 3;
+
 /*
 struct {
     char    id[4];
@@ -68,10 +70,9 @@ Future<List<String>> extractDatFiles(String datPath, { bool shouldExtractPakFile
     await extractedFile.writeAsBytes(bytes.readUint8List(fileSizes[i]));
   }
 
-  fileNames = deduplicate(fileNames);
   dynamic jsonMetadata = {
-    "version": 2,
-    "files": fileNames,
+    "version": currentDatVersion,
+    "files": deduplicate(fileNames),
     "original_order": fileNames,
     "basename": path.basename(datPath).split(".")[0],
     "ext": path.basename(datPath).split(".")[1],
@@ -148,11 +149,10 @@ Future<void> updateDatInfoFileOriginalOrder(String datPath, String extractDir) a
   bytes.position = header.fileNamesOffset;
   var nameLength = bytes.readUint32();
   var fileNames = List.generate(header.fileNumber, (index) => bytes.readString(nameLength).split("\u0000")[0]);
-  fileNames = deduplicate(fileNames);
   
   var datInfo = jsonDecode(await File(datInfoPath).readAsString()) as Map;
   datInfo["original_order"] = fileNames;
-  datInfo["version"] = 2;
+  datInfo["version"] = currentDatVersion;
   var datInfoJson = const JsonEncoder.withIndent("\t").convert(datInfo);
   await File(datInfoPath).writeAsString(datInfoJson);
 }

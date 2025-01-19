@@ -201,12 +201,13 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
     var datFolder = dirname(datPath);
     var datExtractDir = join(datFolder, datSubExtractDir, fileName);
     DatFiles? datFilePaths;
+     var srcDatExists = await File(datPath).exists();
     if (!await Directory(datExtractDir).exists()) {
       await extractDatFiles(datPath, shouldExtractPakFiles: true);
     }
     else {
       try {
-        datFilePaths = await getDatFileList(datExtractDir, allowMissingInfoFile: allowMissingInfoFile);
+        datFilePaths = await getDatFileList(datExtractDir, allowMissingInfoFile: allowMissingInfoFile, removeDuplicates: true);
       } catch (e, s) {
         print("$e\n$s");
       }
@@ -219,7 +220,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
       if (shouldExtractDatFiles) {
         await extractDatFiles(datPath, shouldExtractPakFiles: true);
       }
-      else if (datFilePaths?.originalFileOrder == null) {
+      else if ((datFilePaths?.version ?? 1) < currentDatVersion && srcDatExists) {
         await updateDatInfoFileOriginalOrder(datPath, datExtractDir);
       }
     }
