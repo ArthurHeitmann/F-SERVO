@@ -107,10 +107,14 @@ Future<void> xmlToBxm(XmlElement root, String savePath) async {
       nextIndex = nodeCombos.indexWhere((combo) => combo.item2 == firstChild);
     } else {
       var xmlNode = nodeInfoToXmlNode[nodeInfo]!;
-      var parent = parentMap[xmlNode]!;
-      var lastChild = parent.childElements.last;
-      var lastChildIndex = nodeCombos.indexWhere((combo) => combo.item2 == lastChild);
-      nextIndex = lastChildIndex + 1;
+      var parent = parentMap[xmlNode];
+      if (parent != null) {
+        var lastChild = parent.childElements.last;
+        var lastChildIndex = nodeCombos.indexWhere((combo) => combo.item2 == lastChild);
+        nextIndex = lastChildIndex + 1;
+      } else {
+        nextIndex = nodeInfos.length;
+      }
     }
     nodeInfo.firstChildIndex = nextIndex;
   }
