@@ -688,6 +688,15 @@ num avrM<T>(Iterable<T> values, num Function(T) mapper) {
   return avr(values.map(mapper));
 }
 
+List<T> deduplicate<T>(List<T> list) {
+  List<T> deduped = [];
+  for (var item in list) {
+    if (!deduped.contains(item))
+      deduped.add(item);
+  }
+  return deduped;
+}
+
 bool isSubtype<S, T>() => <S>[] is List<T>;
 
 bool isAreaProp(XmlProp prop) {

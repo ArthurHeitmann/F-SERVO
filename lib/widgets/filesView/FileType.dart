@@ -19,6 +19,7 @@ import 'types/SaveSlotDataEditor.dart';
 import 'types/TextFileEditor.dart';
 import 'types/bnkPlaylistEditor/BnkPlaylistEditor.dart';
 import 'types/effect/EstFileEditor.dart';
+import 'types/fonts/FontsManager.dart';
 import 'types/fonts/ftbEditor.dart';
 import 'types/fonts/mcdEditor.dart';
 import 'types/genericTable/TableFileEditor.dart';
@@ -41,6 +42,7 @@ enum FileType {
   saveSlotData,
   wta,
   est,
+  fontSettings,
   none,
 }
 
@@ -70,6 +72,11 @@ Widget makeFileEditor(OpenFileData content) {
       return WtaWtpEditor(file: content as WtaWtpData);
     case FileType.est:
       return EstFileEditor(file: content as EstFileData);
+    case FileType.fontSettings:
+      return Padding(
+        padding: const EdgeInsets.only(top: 40),
+        child: FontsManager(),
+      );
     case FileType.text:
       return TextFileEditor(key: Key(content.uuid), fileContent: content as TextFileData);
     default:

@@ -131,3 +131,13 @@ Stream<ExtractedInnerFile> extractDatFilesAsStream(String datPath) async* {
     return;
   }
 }
+
+Future<List<String>> peekDatFileNames(String datPath) async {
+  var bytes = await ByteDataWrapper.fromFile(datPath);
+  var header = _DatHeader(bytes);
+  bytes.position = header.fileNamesOffset;
+  var nameLength = bytes.readUint32();
+  return List<String>
+    .generate(header.fileNumber, (index) => 
+    bytes.readString(nameLength).split("\u0000")[0]);
+}

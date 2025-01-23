@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../misc/SmoothScrollBuilder.dart';
 import '../theme/customTheme.dart';
 import 'ExtractFileTool.dart';
+import 'batchLocalizationTool.dart';
 import 'ddsTools.dart';
 
 class ToolsOverview extends StatefulWidget {
@@ -16,6 +17,7 @@ class ToolsOverview extends StatefulWidget {
 class _ToolsOverviewState extends State<ToolsOverview> {
   final extractToolKey = const PageStorageKey("extractTool");
   final textureToolKey = const PageStorageKey("textureToolKey");
+  final batchLocKey = const PageStorageKey("batchLocKey");
 
   @override
   Widget build(BuildContext context) {
@@ -40,6 +42,16 @@ class _ToolsOverviewState extends State<ToolsOverview> {
             maintainState: true,
             children: const [
               DdsTool(),
+            ],
+          ),
+          ExpansionTile(
+            key: batchLocKey,
+            title: const Text("Batch Localization"),
+            initiallyExpanded: true,
+            textColor: getTheme(context).textColor,
+            maintainState: true,
+            children: const [
+              BatchLocalizationTool(),
             ],
           ),
         ],

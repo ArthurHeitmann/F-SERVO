@@ -17,6 +17,7 @@ import '../undoable.dart';
 import 'types/BnkFilePlaylistData.dart';
 import 'types/BxmFileData.dart';
 import 'types/EstFileData.dart';
+import 'types/FontSettingsDummy.dart';
 import 'types/FtbFileData.dart';
 import 'types/McdFileData.dart';
 import 'types/RubyFileData.dart';
@@ -100,6 +101,8 @@ abstract class OpenFileData with HasUuid, Undoable, Disposable, HasUndoHistory {
       return EstFileData(name, path, secondaryName: secondaryName);
     else if (path == "preferences")
       return PreferencesData();
+    else if (path == "fontSettings")
+      return FontSettingsDummy();
     else
       return TextFileData(name, path, secondaryName: secondaryName);
   }

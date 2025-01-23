@@ -1,4 +1,6 @@
 
+import 'dart:math';
+
 import '../utils/ByteDataWrapper.dart';
 
 class SmdEntry {
@@ -21,7 +23,8 @@ Future<List<SmdEntry>> readSmdFile(String path) async {
   for (int i = 0; i < count; i++) {
     String id = reader.readString(0x80, encoding: StringEncoding.utf16);
     int indexX10 = reader.readUint64();
-    String text = reader.readString(0x800, encoding: StringEncoding.utf16);
+    var textSize = min(0x800, reader.length - reader.position);
+    String text = reader.readString(textSize, encoding: StringEncoding.utf16);
     var zerosRemover = RegExp("\x00+\$");
     id = id.replaceAll(zerosRemover, "");
     text = text.replaceAll(zerosRemover, "");

@@ -276,11 +276,11 @@ class _SearchPanelState extends State<SearchPanel> {
         },
         style: ButtonStyle(
           backgroundColor: searchType == type
-            ? MaterialStateProperty.all(getTheme(context).textColor!.withOpacity(0.1))
-            : MaterialStateProperty.all(Colors.transparent),
+            ? WidgetStateProperty.all(getTheme(context).textColor!.withOpacity(0.1))
+            : WidgetStateProperty.all(Colors.transparent),
           foregroundColor: searchType == type
-            ? MaterialStateProperty.all(getTheme(context).textColor)
-            : MaterialStateProperty.all(getTheme(context).textColor!.withOpacity(0.5)),
+            ? WidgetStateProperty.all(getTheme(context).textColor)
+            : WidgetStateProperty.all(getTheme(context).textColor!.withOpacity(0.5)),
         ),
         child: Text(
           text,

@@ -8,12 +8,10 @@ import 'package:flutter/material.dart';
 
 import '../../../../stateManagement/Property.dart';
 import '../../../../stateManagement/openFiles/types/McdFileData.dart';
-import '../../../../utils/utils.dart';
 import '../../../misc/ChangeNotifierWidget.dart';
-import '../../../misc/ColumnSeparated.dart';
 import '../../../misc/SmoothScrollBuilder.dart';
 import '../../../misc/smallButton.dart';
-import '../../../propEditors/primaryPropTextField.dart';
+import '../../../propEditors/UnderlinePropTextField.dart';
 import '../../../propEditors/propEditorFactory.dart';
 import '../../../propEditors/propTextField.dart';
 import '../../../theme/customTheme.dart';
@@ -41,169 +39,30 @@ class __McdFontsManagerState extends ChangeNotifierState<FontsManager> {
       iEnd = iStart + 1;
     }
 
-    const columnNames = [
-      "",
-      "Font IDs",
-      "TTF/OTF Path",
-      "",
-      "fallback only",
-      "scale",
-      "xPadding",
-      "yPadding",
-      "xOffset",
-      "yOffset",
-      "thickness",
-      "shadow blur",
-      "",
-      ""
-    ];
     return SmoothSingleChildScrollView(
-      child: ColumnSeparated(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Table(
-            columnWidths: const {
-              0: FixedColumnWidth(16),
-              1: FixedColumnWidth(100 + 8),
-              2: FlexColumnWidth(1),
-              3: FixedColumnWidth(30 + 8),
-              4: FixedColumnWidth(120 + 8),
-              5: FixedColumnWidth(70 + 8),
-              6: FixedColumnWidth(70 + 8),
-              7: FixedColumnWidth(70 + 8),
-              8: FixedColumnWidth(70 + 8),
-              9: FixedColumnWidth(70 + 8),
-              10: FixedColumnWidth(70 + 8),
-              11: FixedColumnWidth(100 + 8),
-              12: FixedColumnWidth(30 + 8),
-              13: FixedColumnWidth(16),
-            },
-            defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-            children: [
-              TableRow(
-                  children: List.generate(columnNames.length, (i) =>
-                      Container(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        decoration: BoxDecoration(
-                          color: getTheme(context).tableBgColor,
-                          border: between(i, 1, columnNames.length - 4)
-                              ? Border(
-                            right: BorderSide(
-                              color: getTheme(context).dividerColor!,
-                              width: 1,
-                            ),
-                          )
-                              : null,
-                        ),
-                        child: Center(
-                          child: Text(columnNames[i], textScaleFactor: 1, overflow: TextOverflow.ellipsis),
-                        ),
-                      ))
-              ),
-              for (int i = iStart; i < iEnd; i++)
-                TableRow(
-                  key: ValueKey(McdData.fontOverrides[i].uuid),
-                  children: [
-                    const SizedBox(),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Flexible(
-                          child: ChangeNotifierBuilder(
-                              notifier: McdData.fontOverrides[i].fontIds,
-                              builder: (context) => Text(
-                                McdData.fontOverrides[i].fontIds.map((id) => "$id").join(", "),
-                                overflow: TextOverflow.ellipsis,
-                              )
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: () => showDialog(context: context, builder: (context) => _FontOverrideIdsSelector(McdData.fontOverrides[i]),),
-                          padding: EdgeInsets.zero,
-                          constraints: BoxConstraints.tight(const Size(30, 30)),
-                          splashRadius: 18,
-                          iconSize: 18,
-                          icon: const Icon(Icons.edit_outlined),
-                        ),
-                      ],
-                    ),
-                    PrimaryPropTextField(
-                      prop: McdData.fontOverrides[i].fontPath,
-                      options: const PropTFOptions(hintText: "Font Path", constraints: BoxConstraints.tightFor(height: 30)),
-                      validatorOnChange: (str) => str.isEmpty || File(str).existsSync() ? null : "File not found",
-                      onValid: (str) => McdData.fontOverrides[i].fontPath.value = str,
-                    ),
-                    SmallButton(
-                      onPressed: () async {
-                        var selectedFontFile = await FilePicker.platform.pickFiles(
-                          type: FileType.custom,
-                          allowedExtensions: ["ttf", "otf"],
-                          allowMultiple: false,
-                        );
-                        if (selectedFontFile == null)
-                          return;
-                        var fontPath = selectedFontFile.files.first.path!;
-                        McdData.fontOverrides[i].fontPath.value = fontPath;
-                      },
-                      constraints: BoxConstraints.tight(const Size(30, 30)),
-                      child: const Icon(Icons.folder, size: 17),
-                    ),
-                    makePropEditor(
-                      McdData.fontOverrides[i].isFallbackOnly,
-                      const PropTFOptions(hintText: "Fallback only", constraints: BoxConstraints.tightFor(height: 30)),
-                    ),
-                    makePropEditor(
-                      McdData.fontOverrides[i].heightScale,
-                      const PropTFOptions(hintText: "scale", constraints: BoxConstraints.tightFor(height: 30)),
-                    ),
-                    makePropEditor(
-                      McdData.fontOverrides[i].letXPadding,
-                      const PropTFOptions(hintText: "X Padding", constraints: BoxConstraints.tightFor(height: 30)),
-                    ),
-                    makePropEditor(
-                      McdData.fontOverrides[i].letYPadding,
-                      const PropTFOptions(hintText: "Y Padding", constraints: BoxConstraints.tightFor(height: 30)),
-                    ),
-                    makePropEditor(
-                      McdData.fontOverrides[i].xOffset,
-                      const PropTFOptions(hintText: "X Offset", constraints: BoxConstraints.tightFor(height: 30)),
-                    ),
-                    makePropEditor(
-                      McdData.fontOverrides[i].yOffset,
-                      const PropTFOptions(hintText: "Y Offset", constraints: BoxConstraints.tightFor(height: 30)),
-                    ),
-                    makePropEditor(
-                      McdData.fontOverrides[i].strokeWidth,
-                      const PropTFOptions(hintText: "thickness", constraints: BoxConstraints.tightFor(height: 30)),
-                    ),
-                    makePropEditor(
-                      McdData.fontOverrides[i].rgbBlurSize,
-                      const PropTFOptions(hintText: "shadow", constraints: BoxConstraints.tightFor(height: 30)),
-                    ),
-                    SmallButton(
-                      onPressed: () => McdData.fontOverrides.removeAt(i).dispose(),
-                      constraints: BoxConstraints.tight(const Size(30, 30)),
-                      child: const Icon(Icons.remove, size: 18),
-                    ),
-                    const SizedBox(),
-                  ].map((e) => Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                    child: e,
-                  )).toList(),
-                ),
-            ],
-          ),
+          for (int i = iStart; i < iEnd; i++)
+            _FontOverrideEditor(
+              fontOverride: McdData.fontOverrides[i],
+              singleFontId: widget.singleFontId,
+              altColor: i % 2 == 1,
+            ),
           if (McdData.fontOverrides.isEmpty)
             const Padding(
               padding: EdgeInsets.only(left: 20),
               child: Text("No font overrides"),
             ),
           ...[
-            if (widget.singleFontId == -1)
+            if (widget.singleFontId == -1) ...[
+              const SizedBox(height: 16),
               SmallButton(
                 onPressed: () => McdData.addFontOverride(),
                 constraints: BoxConstraints.tight(const Size(30, 30)),
                 child: const Icon(Icons.add),
               ),
+            ],
             Row(
               children: [
                 const Text("Letter Padding: "),
@@ -255,12 +114,144 @@ class __McdFontsManagerState extends ChangeNotifierState<FontsManager> {
   }
 }
 
+class _FontOverrideEditor extends StatelessWidget {
+  static const _numberFieldConfig = PropTFOptions(constraints: BoxConstraints.tightFor(width: 50));
+  final McdFontOverride fontOverride;
+  final int singleFontId;
+  final bool altColor;
+
+  _FontOverrideEditor({
+    required this.fontOverride,
+    required this.singleFontId,
+    required this.altColor,
+  }) : super(key: Key(fontOverride.uuid));
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: altColor ? getTheme(context).tableBgAltColor : getTheme(context).tableBgColor,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Text("Font IDs: "),
+                ChangeNotifierBuilder(
+                  notifier: fontOverride.fontIds,
+                  builder: (context) => Text(
+                    fontOverride.fontIds.map((id) => "$id").join(", "),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                IconButton(
+                  onPressed: () => showDialog(context: context, builder: (context) => _FontOverrideIdsSelector(fontOverride)),
+                  padding: EdgeInsets.zero,
+                  constraints: BoxConstraints.tight(const Size(30, 30)),
+                  splashRadius: 18,
+                  iconSize: 18,
+                  icon: const Icon(Icons.edit_outlined),
+                ),
+                const SizedBox(width: 16),
+                Text(" Only as fallback: "),
+                makePropEditor(
+                  fontOverride.isFallbackOnly,
+                ),
+                Spacer(),
+                SmallButton(
+                  onPressed: () => McdData.fontOverrides.remove(fontOverride),
+                  constraints: BoxConstraints.tight(const Size(30, 30)),
+                  child: const Icon(Icons.remove, size: 18),
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                Text("TTF/OTF Path "),
+                UnderlinePropTextField(
+                  prop: fontOverride.fontPath,
+                  options: const PropTFOptions(constraints: BoxConstraints(minWidth: 300)),
+                  validatorOnChange: (str) => str.isEmpty || File(str).existsSync() ? null : "File not found",
+                  onValid: (str) => fontOverride.fontPath.value = str,
+                ),
+                const SizedBox(width: 12),
+                IconButton(
+                  onPressed: () async {
+                    var selectedFontFile = await FilePicker.platform.pickFiles(
+                      type: FileType.custom,
+                      allowedExtensions: ["ttf", "otf"],
+                      allowMultiple: false,
+                    );
+                    if (selectedFontFile == null)
+                      return;
+                    var fontPath = selectedFontFile.files.first.path!;
+                    fontOverride.fontPath.value = fontPath;
+                  },
+                  constraints: BoxConstraints.tight(const Size(30, 30)),
+                  splashRadius: 18,
+                  padding: EdgeInsets.zero,
+                  icon: const Icon(Icons.folder, size: 17),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Text("Scale     "),
+                makePropEditor<UnderlinePropTextField>(fontOverride.heightScale, _numberFieldConfig),
+                const SizedBox(width: 20),
+                Text("Thickness "),
+                makePropEditor<UnderlinePropTextField>(fontOverride.strokeWidth, _numberFieldConfig),
+                const SizedBox(width: 20),
+                Text("Shadow Blur "),
+                makePropEditor<UnderlinePropTextField>(fontOverride.rgbBlurSize, _numberFieldConfig),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                _make2x2Table("X Padding ", fontOverride.letXPadding, "Y Padding ", fontOverride.letYPadding),
+                const SizedBox(width: 20),
+                _make2x2Table("X Offset  ", fontOverride.xOffset, "Y Offset  ", fontOverride.yOffset),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _make2x2Table(String label1, Prop prop1, String label2, Prop prop2) {
+    return Table(
+      columnWidths: const {
+        0: IntrinsicColumnWidth(),
+        1: IntrinsicColumnWidth(),
+      },
+      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+      children: [
+        TableRow(
+          children: [
+            Text(label1),
+            makePropEditor<UnderlinePropTextField>(prop1, _numberFieldConfig),
+          ]
+        ),
+        TableRow(
+          children: [
+            Text(label2),
+            makePropEditor<UnderlinePropTextField>(prop2, _numberFieldConfig),
+          ]
+        ),
+      ],
+    );
+  }
+}
+
 class _FontOverrideIdsSelector extends StatefulWidget {
   final McdFontOverride fontOverride;
 
   const _FontOverrideIdsSelector(this.fontOverride);
 
-  @override
   State<_FontOverrideIdsSelector> createState() => _FontOverrideIdsSelectorState();
 }
 

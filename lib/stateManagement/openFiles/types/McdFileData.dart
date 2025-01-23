@@ -84,7 +84,7 @@ class McdFileData extends OpenFileData {
 }
 
 abstract class _McdFilePart with HasUuid, Undoable implements Disposable {
-  OpenFileId file;
+  OpenFileId? file;
 
   _McdFilePart(this.file);
 
@@ -436,13 +436,15 @@ class McdParagraph extends _McdFilePart {
 
   void addLine() {
     lines.add(McdLine(file, StringProp("", fileId: file)));
-    areasManager.onFileIdUndoEvent(file);
+    if (file != null)
+      areasManager.onFileIdUndoEvent(file!);
   }
 
   void removeLine(int index) {
     lines.removeAt(index)
         .dispose();
-    areasManager.onFileIdUndoEvent(file);
+        if (file != null)
+      areasManager.onFileIdUndoEvent(file!);
   }
 
   @override
@@ -526,13 +528,15 @@ class McdEvent extends _McdFilePart {
       NumberProp(fontId, true, fileId: file),
       ValueListNotifier([], fileId: file)
     ));
-    areasManager.onFileIdUndoEvent(file);
+    if (file != null)
+      areasManager.onFileIdUndoEvent(file!);
   }
 
   void removeParagraph(int index) {
     paragraphs.removeAt(index)
         .dispose();
-    areasManager.onFileIdUndoEvent(file);
+    if (file != null)
+      areasManager.onFileIdUndoEvent(file!);
   }
 
   @override
@@ -593,13 +597,15 @@ class McdData extends _McdFilePart {
   static NumberProp fontAtlasResolutionScale = NumberProp(1.0, false, fileId: null);
   static ChangeNotifier fontChanges = ChangeNotifier();
 
+  final String mcdPath;
   final StringProp textureWtaPath;
   final StringProp textureWtpPath;
   final int firstMsgSeqNum;
   ValueListNotifier<McdEvent> events;
   Map<int, McdLocalFont> usedFonts;
+  Future<void> Function(String) exportDatFunc = exportDat;
 
-  McdData(super.file, this.textureWtaPath, this.textureWtpPath, this.usedFonts, this.firstMsgSeqNum, this.events) {
+  McdData(super.file, this.mcdPath, this.textureWtaPath, this.textureWtpPath, this.usedFonts, this.firstMsgSeqNum, this.events) {
     events.addListener(onDataChanged);
   }
 
@@ -628,7 +634,7 @@ class McdData extends _McdFilePart {
     return null;
   }
 
-  static Future<McdData> fromMcdFile(OpenFileId file, String mcdPath) async {
+  static Future<McdData> fromMcdFile(OpenFileId? file, String mcdPath) async {
     var datDir = dirname(mcdPath);
     var mcdName = basenameWithoutExtension(mcdPath);
     String? wtpPath = await searchForTexFile(datDir, mcdName, ".wtp");
@@ -665,6 +671,7 @@ class McdData extends _McdFilePart {
 
     return McdData(
         file,
+        mcdPath,
         StringProp(wtaPath, fileId: file),
         StringProp(wtpPath, fileId: file),
         {for (var f in usedFonts) f.fontId: f},
@@ -705,13 +712,15 @@ class McdData extends _McdFilePart {
         StringProp("NEW_EVENT_NAME${suffix.isNotEmpty ? "_$suffix" : ""}", fileId: file),
         ValueListNotifier([], fileId: file)
     ));
-    areasManager.onFileIdUndoEvent(file);
+    if (file != null)
+      areasManager.onFileIdUndoEvent(file!);
   }
 
   void removeEvent(int index) {
     events.removeAt(index)
         .dispose();
-    areasManager.onFileIdUndoEvent(file);
+    if (file != null)
+      areasManager.onFileIdUndoEvent(file!);
   }
 
   static void addFontOverride() {
@@ -907,11 +916,9 @@ class McdData extends _McdFilePart {
     exportEvents.sort((a, b) => a.id.compareTo(b.id));
 
     var mcdFile = McdFile.fromParts(header, exportMessages, exportSymbols, exportGlyphs, exportFonts, exportEvents);
-    var openFile = areasManager.fromId(file)!;
-    await mcdFile.writeToFile(openFile.path);
+    await mcdFile.writeToFile(mcdPath);
 
-    print("Saved MCD file");
-    messageLog.add("Saved MCD file ${basename(openFile.path)}");
+    messageLog.add("Saved MCD file ${basename(mcdPath)}");
   }
 
   Future<void> updateFontsTexture() async {
@@ -1162,7 +1169,7 @@ class McdData extends _McdFilePart {
 
     // export dtt
     var dttPath = dirname(textureWtpPath.value);
-    await exportDat(dttPath);
+    await exportDatFunc(dttPath);
 
     print("Generated font texture with ${symbols.length} symbols");
 
@@ -1223,6 +1230,7 @@ class McdData extends _McdFilePart {
   Undoable takeSnapshot() {
     var snapshot = McdData(
       file,
+      mcdPath,
       textureWtaPath.takeSnapshot() as StringProp,
       textureWtpPath.takeSnapshot() as StringProp,
       usedFonts.map((id, font) => MapEntry(id, font)),
