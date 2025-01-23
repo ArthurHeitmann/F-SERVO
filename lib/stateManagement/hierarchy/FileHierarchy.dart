@@ -103,8 +103,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
         }),
         Tuple2(
           [".xml"],
-          () async => openGenericFile<XmlScriptHierarchyEntry>(filePath, parent, 
-            (n, p) => XmlScriptHierarchyEntry(n, p))
+          () async => await openXmlFile(filePath, parent: parent)
         ),
         Tuple2(
           [".yax"],
@@ -308,6 +307,20 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
       await yaxFileToXmlFile(yaxFilePath);
     }
     return openGenericFile<XmlScriptHierarchyEntry>(xmlFilePath,parent, (n, p) => XmlScriptHierarchyEntry(n, p));
+  }
+
+  Future<HierarchyEntry> openXmlFile(String xmlFilePath, { HierarchyEntry? parent }) async {
+    if (bxmExtensions.any((ext) => withoutExtension(xmlFilePath).endsWith(ext)))
+      return openGenericFile<BxmHierarchyEntry>(withoutExtension(xmlFilePath), parent, (n, p) => BxmHierarchyEntry(n, p, xmlPath: xmlFilePath));
+    if (!RegExp(r"^\d+$").hasMatch(basenameWithoutExtension(xmlFilePath))) {
+      var pathNoExt = withoutExtension(xmlFilePath);
+      for (var ext in bxmExtensions) {
+        var bxmPath = pathNoExt + ext;
+        if (await File(bxmPath).exists())
+          return openGenericFile<BxmHierarchyEntry>(bxmPath, parent, (n, p) => BxmHierarchyEntry(n, p, xmlPath: xmlFilePath));
+      }
+    }
+    return openGenericFile<XmlScriptHierarchyEntry>(xmlFilePath, parent, (n, p) => XmlScriptHierarchyEntry(n, p));
   }
 
   HierarchyEntry openGenericFile<T extends FileHierarchyEntry>(String filePath, HierarchyEntry? parent, T Function(StringProp n, String p) make) {
