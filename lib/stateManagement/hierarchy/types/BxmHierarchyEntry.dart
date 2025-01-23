@@ -11,8 +11,8 @@ import '../HierarchyEntryTypes.dart';
 class BxmHierarchyEntry extends GenericFileHierarchyEntry {
   final String xmlPath;
 
-  BxmHierarchyEntry(StringProp name, String path)
-      : xmlPath = "$path.xml",
+  BxmHierarchyEntry(StringProp name, String path, {String? xmlPath})
+      : xmlPath = xmlPath ?? "$path.xml",
         super(name, path, false, true, priority: 10) {
     supportsVsCodeEditing = true;
   }
