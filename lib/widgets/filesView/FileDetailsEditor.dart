@@ -4,12 +4,14 @@ import 'package:flutter/material.dart';
 
 import '../../stateManagement/openFiles/openFilesManager.dart';
 import '../../stateManagement/openFiles/types/EstFileData.dart';
+import '../../stateManagement/openFiles/types/UidFileData.dart';
 import '../../stateManagement/openFiles/types/xml/xmlProps/xmlProp.dart';
 import '../misc/ChangeNotifierWidget.dart';
 import '../misc/Selectable.dart';
 import '../misc/SmoothScrollBuilder.dart';
 import 'types/effect/EstEntryDetailsEditor.dart';
 import 'types/effect/EstRecordDetailsEditor.dart';
+import 'types/uid/UidEntryDetailsEditor.dart';
 import 'types/xml/xmlActions/XmlPropDetails.dart';
 
 class FileDetailsEditor extends ChangeNotifierWidget {
@@ -91,6 +93,9 @@ class _FileDetailsEditorState extends ChangeNotifierState<FileDetailsEditor> {
         return EstRecordDetailsEditor(record: currentFile.selectedEntry.value!.record!);
       if (currentFile.selectedEntry.value?.entry != null)
         return EstEntryDetailsEditor(entry: currentFile.selectedEntry.value!.entry!, showUnknown: true);
+    }
+    if (currentFile is UidFileData) {
+      return UidEntryDetailsEditor(uid: currentFile, entry: currentFile.selectedEntry);
     }
     return Container();
   }

@@ -14,6 +14,7 @@ import '../../stateManagement/hierarchy/types/RubyScriptHierarchyEntry.dart';
 import '../../stateManagement/hierarchy/types/SaveSlotDataHierarchyEntry.dart';
 import '../../stateManagement/hierarchy/types/SmdHierarchyEntry.dart';
 import '../../stateManagement/hierarchy/types/TmdHierarchyEntry.dart';
+import '../../stateManagement/hierarchy/types/UidHierarchyData.dart';
 import '../../stateManagement/hierarchy/types/WaiHierarchyEntries.dart';
 import '../../stateManagement/hierarchy/types/WtaHierarchyEntry.dart';
 import '../../stateManagement/hierarchy/types/WtbHierarchyEntry.dart';
@@ -61,6 +62,8 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
       return Icon(Icons.queue_music, color: iconColor, size: 15);
     else if (widget.entry is SaveSlotDataHierarchyEntry)
       return Icon(Icons.save, color: iconColor, size: 15);
+    else if (widget.entry is UidHierarchyEntry)
+      return Icon(Icons.widgets, color: iconColor, size: 15);
     else if (widget.entry is BnkHircHierarchyEntry) {
       var entryType = (widget.entry as BnkHircHierarchyEntry).type;
       if (entryType == "WEM")

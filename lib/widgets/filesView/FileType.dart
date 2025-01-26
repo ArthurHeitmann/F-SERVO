@@ -9,6 +9,7 @@ import '../../stateManagement/openFiles/types/SaveSlotData.dart';
 import '../../stateManagement/openFiles/types/SmdFileData.dart';
 import '../../stateManagement/openFiles/types/TextFileData.dart';
 import '../../stateManagement/openFiles/types/TmdFileData.dart';
+import '../../stateManagement/openFiles/types/UidFileData.dart';
 import '../../stateManagement/openFiles/types/WemFileData.dart';
 import '../../stateManagement/openFiles/types/WspFileData.dart';
 import '../../stateManagement/openFiles/types/WtaWtpData.dart';
@@ -17,6 +18,7 @@ import '../../stateManagement/preferencesData.dart';
 import '../misc/preferencesEditor.dart';
 import 'types/SaveSlotDataEditor.dart';
 import 'types/TextFileEditor.dart';
+import 'types/uid/UidEditor.dart';
 import 'types/bnkPlaylistEditor/BnkPlaylistEditor.dart';
 import 'types/effect/EstFileEditor.dart';
 import 'types/fonts/ftbEditor.dart';
@@ -41,6 +43,7 @@ enum FileType {
   saveSlotData,
   wta,
   est,
+  uid,
   none,
 }
 
@@ -70,6 +73,8 @@ Widget makeFileEditor(OpenFileData content) {
       return WtaWtpEditor(file: content as WtaWtpData);
     case FileType.est:
       return EstFileEditor(file: content as EstFileData);
+    case FileType.uid:
+      return UidEditor(uid: content as UidFileData);
     case FileType.text:
       return TextFileEditor(key: Key(content.uuid), fileContent: content as TextFileData);
     default:

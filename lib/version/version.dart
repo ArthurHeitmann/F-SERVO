@@ -83,7 +83,7 @@ class FServoVersion {
   }
 }
 
-const version = FServoVersion(1, 4, 15, "mgrr");
+const version = FServoVersion(1, 4, 16, "mgrr");
 
 const branches = [_masterBranch, "mgrr"];
 

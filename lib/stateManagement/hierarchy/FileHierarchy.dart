@@ -49,6 +49,7 @@ import 'types/RubyScriptHierarchyEntry.dart';
 import 'types/SaveSlotDataHierarchyEntry.dart';
 import 'types/SmdHierarchyEntry.dart';
 import 'types/TmdHierarchyEntry.dart';
+import 'types/UidHierarchyData.dart';
 import 'types/WaiHierarchyEntries.dart';
 import 'types/WtaHierarchyEntry.dart';
 import 'types/WtbHierarchyEntry.dart';
@@ -168,6 +169,10 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
         Tuple2(
           [".ctx"],
           () async => openCtxFile(filePath, parent: parent)
+        ),
+        Tuple2(
+          [".uid"],
+          () async => openGenericFile<UidHierarchyEntry>(filePath, parent, (n, p) => UidHierarchyEntry(n, p))
         ),
       ];
 

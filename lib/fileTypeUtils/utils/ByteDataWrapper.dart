@@ -78,6 +78,16 @@ class ByteDataWrapper {
     _position = value + _parentOffset;
   }
 
+  bool equals(ByteDataWrapper other) {
+    if (length != other.length)
+      return false;
+    for (var i = 0; i < length; i++) {
+      if (_data.getUint8(_parentOffset + i) != other._data.getUint8(other._parentOffset + i))
+        return false;
+    }
+    return true;
+  }
+
   double readFloat32() {
     var value = _data.getFloat32(_position, endian);
     _position += 4;
