@@ -27,6 +27,7 @@ import 'types/TmdFileData.dart';
 import 'types/UidFileData.dart';
 import 'types/WaiFileData.dart';
 import 'types/WemFileData.dart';
+import 'types/WmbFileData.dart';
 import 'types/WtaWtpData.dart';
 import 'types/xml/XmlFileData.dart';
 
@@ -101,6 +102,8 @@ abstract class OpenFileData with HasUuid, Undoable, Disposable, HasUndoHistory {
       return EstFileData(name, path, secondaryName: secondaryName);
     else if (path.endsWith(".uid"))
       return UidFileData(name, path, secondaryName: secondaryName);
+    else if (path.endsWith(".wmb") || path.endsWith(".scr"))
+      return WmbFileData(name, path, secondaryName: secondaryName);
     else if (path == "preferences")
       return PreferencesData();
     else

@@ -51,6 +51,7 @@ import 'types/SmdHierarchyEntry.dart';
 import 'types/TmdHierarchyEntry.dart';
 import 'types/UidHierarchyData.dart';
 import 'types/WaiHierarchyEntries.dart';
+import 'types/WmbHierarchyData.dart';
 import 'types/WtaHierarchyEntry.dart';
 import 'types/WtbHierarchyEntry.dart';
 import 'types/XmlScriptHierarchyEntry.dart';
@@ -173,6 +174,10 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
         Tuple2(
           [".uid"],
           () async => openGenericFile<UidHierarchyEntry>(filePath, parent, (n, p) => UidHierarchyEntry(n, p))
+        ),
+        Tuple2(
+          [".wmb", ".scr"],
+          () async => openGenericFile<WmbHierarchyEntry>(filePath, parent, (n, p) => WmbHierarchyEntry(n, p))
         ),
       ];
 

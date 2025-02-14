@@ -479,12 +479,14 @@ const Map<String, String> _nameStartToFolder = {
   "txt": "txtmess",
 };
 const _topLevelFileNames = {
-  "autoshadereff.dat",
-  "autoshadereffInfo.bxm",
+  "core.dat",
+  "core.dtt",
+  "coreItdlc2.dat",
+  "coreItdlc3.dat",
   "shader.dat",
   "shader2.dat",
   "shadereff.dat",
-  "shadereffcs.dat",
+  "ShaderSign.dat",
 };
 String getDatFolder(String datName) {
   if (_topLevelFileNames.contains(datName))

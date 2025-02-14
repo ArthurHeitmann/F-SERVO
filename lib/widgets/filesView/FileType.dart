@@ -11,6 +11,7 @@ import '../../stateManagement/openFiles/types/TextFileData.dart';
 import '../../stateManagement/openFiles/types/TmdFileData.dart';
 import '../../stateManagement/openFiles/types/UidFileData.dart';
 import '../../stateManagement/openFiles/types/WemFileData.dart';
+import '../../stateManagement/openFiles/types/WmbFileData.dart';
 import '../../stateManagement/openFiles/types/WspFileData.dart';
 import '../../stateManagement/openFiles/types/WtaWtpData.dart';
 import '../../stateManagement/openFiles/types/xml/XmlFileData.dart';
@@ -26,6 +27,7 @@ import 'types/fonts/mcdEditor.dart';
 import 'types/genericTable/TableFileEditor.dart';
 import 'types/wem/wemFileEditor.dart';
 import 'types/wem/wspFileEditor.dart';
+import 'types/wmb/WmbRenderer.dart';
 import 'types/wtaWtpEditor.dart';
 import 'types/xml/XmlFileEditor.dart';
 
@@ -44,6 +46,7 @@ enum FileType {
   wta,
   est,
   uid,
+  wmb,
   none,
 }
 
@@ -77,6 +80,8 @@ Widget makeFileEditor(OpenFileData content) {
       return UidEditor(uid: content as UidFileData);
     case FileType.text:
       return TextFileEditor(key: Key(content.uuid), fileContent: content as TextFileData);
+    case FileType.wmb:
+      return WmbRenderer(key: Key(content.uuid), file: content as WmbFileData);
     default:
       return const Center(child: Text("No editor for this file type yet!"));
   }
