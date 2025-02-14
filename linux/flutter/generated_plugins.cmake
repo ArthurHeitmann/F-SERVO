@@ -7,6 +7,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   desktop_drop
   flutter_window_close
   screen_retriever_linux
+  texture_rgba_renderer
   url_launcher_linux
   window_manager
 )

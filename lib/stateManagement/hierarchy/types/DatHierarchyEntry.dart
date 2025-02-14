@@ -46,7 +46,7 @@ class DatHierarchyEntry extends ExtractableHierarchyEntry {
     List<Future<void>> futures = [];
     datFilePaths ??= (await getDatFileList(extractedPath)).files;
     RubyScriptGroupHierarchyEntry? rubyScriptGroup;
-    const supportedFileEndings = { ".pak", "_scp.bin", ".tmd", ".smd", ".mcd", ".ftb", ".bnk", ".bxm", ".wta", ".wtb", ".est", ".sst", ...datExtensions };
+    const supportedFileEndings = { ".pak", "_scp.bin", ".tmd", ".smd", ".mcd", ".ftb", ".bnk", ".wta", ".wtb", ".est", ".sst", ".wmb", ...bxmExtensions, ...datExtensions };
     for (var file in datFilePaths) {
       print(file);
       if (supportedFileEndings.every((ending) => !file.endsWith(ending)))

@@ -8,6 +8,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   flutter_window_close
   permission_handler_windows
   screen_retriever_windows
+  texture_rgba_renderer
   url_launcher_windows
   webview_windows
   window_manager
