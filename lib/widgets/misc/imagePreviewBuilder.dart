@@ -33,7 +33,7 @@ class ImagePreviewBuilder extends StatefulWidget {
 class _ImagePreviewBuilderState extends State<ImagePreviewBuilder> {
   String lastPath = "";
   late Future<Uint8List?> image;
-  bool exists = true;
+  bool exists = false;
 
   @override
   void initState() {
@@ -51,7 +51,7 @@ class _ImagePreviewBuilderState extends State<ImagePreviewBuilder> {
     lastPath = widget.path;
     image = Future.value(null);
     setState(() {});
-    if (!await File(widget.path).exists()) {
+    if (widget.path.isEmpty || !await File(widget.path).exists()) {
       exists = false;
       return;
     }
