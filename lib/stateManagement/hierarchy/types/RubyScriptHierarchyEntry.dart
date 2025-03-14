@@ -42,7 +42,7 @@ class RubyScriptGroupHierarchyEntry extends HierarchyEntry {
     } else {
       datInfo = {
         "version": 1,
-        "files": (await getDatFileList(datExtractedPath))
+        "files": (await getDatFileList(datExtractedPath)).files
             .map((path) => basename(path))
             .toList(),
         "basename": basenameWithoutExtension(datPath),
