@@ -5,8 +5,11 @@ import 'dart:io';
 import 'package:path/path.dart' as path;
 
 import '../../stateManagement/events/statusInfo.dart';
+import '../../utils/utils.dart';
 import '../pak/pakExtractor.dart';
 import '../utils/ByteDataWrapper.dart';
+
+const currentDatVersion = 3;
 
 /*
 struct {
@@ -67,17 +70,10 @@ Future<List<String>> extractDatFiles(String datPath, { bool shouldExtractPakFile
     await extractedFile.writeAsBytes(bytes.readUint8List(fileSizes[i]));
   }
 
-  fileNames.sort(((a, b) {
-    var aBaseExt = a.split(".").map((e) => e.toLowerCase()).toList();
-    var bBaseExt = b.split(".").map((e) => e.toLowerCase()).toList();
-    if (aBaseExt[0] == bBaseExt[0])
-      return aBaseExt[1].compareTo(bBaseExt[1]);
-    else
-      return aBaseExt[0].compareTo(bBaseExt[0]);
-  }));
   dynamic jsonMetadata = {
-    "version": 1,
-    "files": fileNames,
+    "version": currentDatVersion,
+    "files": deduplicate(fileNames),
+    "original_order": fileNames,
     "basename": path.basename(datPath).split(".")[0],
     "ext": path.basename(datPath).split(".")[1],
   };
@@ -140,4 +136,23 @@ Future<List<String>> peekDatFileNames(String datPath) async {
   return List<String>
     .generate(header.fileNumber, (index) => 
     bytes.readString(nameLength).split("\u0000")[0]);
+}
+
+
+Future<void> updateDatInfoFileOriginalOrder(String datPath, String extractDir) async {
+  var datInfoPath = path.join(extractDir, "dat_info.json");
+  if (!await File(datInfoPath).exists())
+    return;
+  
+  var bytes = await ByteDataWrapper.fromFile(datPath);
+  var header = _DatHeader(bytes);
+  bytes.position = header.fileNamesOffset;
+  var nameLength = bytes.readUint32();
+  var fileNames = List.generate(header.fileNumber, (index) => bytes.readString(nameLength).split("\u0000")[0]);
+  
+  var datInfo = jsonDecode(await File(datInfoPath).readAsString()) as Map;
+  datInfo["original_order"] = fileNames;
+  datInfo["version"] = currentDatVersion;
+  var datInfoJson = const JsonEncoder.withIndent("\t").convert(datInfo);
+  await File(datInfoPath).writeAsString(datInfoJson);
 }

@@ -7,6 +7,7 @@ import '../../../utils/utils.dart';
 import '../../../widgets/FileHierarchyExplorer/datFilesSelector.dart';
 import '../../../widgets/misc/confirmDialog.dart';
 import '../../Property.dart';
+import '../../preferencesData.dart';
 import '../../undoable.dart';
 import '../FileHierarchy.dart';
 import '../HierarchyEntryTypes.dart';
@@ -44,9 +45,10 @@ class DatHierarchyEntry extends ExtractableHierarchyEntry {
       openHierarchyManager.parentOf(child).remove(child);
 
     List<Future<void>> futures = [];
-    datFilePaths ??= await getDatFileList(extractedPath);
+    datFilePaths ??= (await getDatFileList(extractedPath, removeDuplicates: true)).files;
     RubyScriptGroupHierarchyEntry? rubyScriptGroup;
-    const supportedFileEndings = { ".pak", "_scp.bin", ".tmd", ".smd", ".mcd", ".ftb", ".bnk", ".bxm", ".wta", ".wtb", ".est", ".sst", ...datExtensions };
+     var prefs = PreferencesData();
+    const supportedFileEndings = { ".pak", "_scp.bin", ".tmd", ".smd", ".mcd", ".ftb", ".bnk", ".wta", ".wtb", ".est", ".sst", ".ctx", ".uid", ".wmb", ".scr", ...bxmExtensions, ...datExtensions };
     for (var file in datFilePaths) {
       print(file);
       if (supportedFileEndings.every((ending) => !file.endsWith(ending)))

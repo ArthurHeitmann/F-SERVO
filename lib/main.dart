@@ -11,6 +11,7 @@ import 'package:window_manager/window_manager.dart';
 
 import 'background/IdLookup.dart';
 import 'background/wemFilesIndexer.dart';
+import 'ffi/FfiHelper.dart';
 import 'keyboardEvents/globalShortcutsWrapper.dart';
 import 'stateManagement/beforeExitCleanup.dart';
 import 'stateManagement/hierarchy/FileHierarchy.dart';
@@ -68,7 +69,9 @@ void init(List<String> args) async {
   }
 
   startSyncServer();
-  unawaited(findAssetsDir());
+  unawaited(findAssetsDir().then((_) {
+    FfiHelper.i = FfiHelper(assetsDir!);
+  }));
   unawaited(idLookup.init());
   await PreferencesData().load();
   unawaited(wemFilesLookup.updateIndex());

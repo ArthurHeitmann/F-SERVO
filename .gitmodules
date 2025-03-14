@@ -4,3 +4,6 @@
 [submodule "assets/FontAtlasGenerator"]
 	path = assets/FontAtlasGenerator
 	url = https://github.com/ArthurHeitmann/FontAtlasGenerator.git
+[submodule "assets/rusty_platinum_utils"]
+	path = assets/rusty_platinum_utils
+	url = https://github.com/ArthurHeitmann/rusty_platinum_utils.git

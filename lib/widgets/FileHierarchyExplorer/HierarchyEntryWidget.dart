@@ -14,6 +14,7 @@ import '../../stateManagement/hierarchy/types/SaveSlotDataHierarchyEntry.dart';
 import '../../stateManagement/hierarchy/types/SmdHierarchyEntry.dart';
 import '../../stateManagement/hierarchy/types/TmdHierarchyEntry.dart';
 import '../../stateManagement/hierarchy/types/WaiHierarchyEntries.dart';
+import '../../stateManagement/hierarchy/types/WmbHierarchyData.dart';
 import '../../stateManagement/hierarchy/types/WtaHierarchyEntry.dart';
 import '../../stateManagement/hierarchy/types/WtbHierarchyEntry.dart';
 import '../../stateManagement/miscValues.dart';
@@ -60,6 +61,8 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
       return Icon(Icons.queue_music, color: iconColor, size: 15);
     else if (widget.entry is SaveSlotDataHierarchyEntry)
       return Icon(Icons.save, color: iconColor, size: 15);
+    else if (widget.entry is WmbHierarchyEntry)
+      return Icon(Icons.view_in_ar, color: iconColor, size: 15);
     else if (widget.entry is BnkHircHierarchyEntry) {
       var entryType = (widget.entry as BnkHircHierarchyEntry).type;
       if (entryType == "WEM")
@@ -134,7 +137,6 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
                 child: ChangeNotifierBuilder(
                   notifiers: [widget.entry.name, openHierarchyManager.search],
                   builder: (context) => RichText(
-                    textScaleFactor: 0.85,
                     overflow: TextOverflow.ellipsis,
                     text: TextSpan(
                       style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: getTextColor(context)),
@@ -145,7 +147,7 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
                             openHierarchyManager.search.value,
                             Theme.of(context).textTheme.bodyMedium!.copyWith(color: getTextColor(context)),
                           )
-                    ),
+                    ), textScaler: TextScaler.linear(0.85),
                   ),
                 )
               ),

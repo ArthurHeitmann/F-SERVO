@@ -8,14 +8,16 @@ import 'package:path/path.dart';
 import '../../stateManagement/events/statusInfo.dart';
 import '../../utils/utils.dart';
 import '../utils/ByteDataWrapper.dart';
+import 'datFileOrder.dart';
 import 'datHashGenerator.dart';
 
 Future<void> repackDat(String datDir, String exportPath) async {
   messageLog.add("Repacking ${path.basename(exportPath)}...");
   
   var fileList = await getDatFileList(datDir);
-  var fileNames = fileList.map((e) => path.basename(e)).toList();
-  var allFilesExists = (await Future.wait(fileList.map((e) => File(e).exists())));
+  var filePaths = sortDatFiles(fileList.files, fileList.originalFileOrder);
+  var fileNames = filePaths.map((e) => path.basename(e)).toList();
+  var allFilesExists = (await Future.wait(filePaths.map((e) => File(e).exists())));
   var missingFiles = <String>[];
   for (var i = 0; i < allFilesExists.length; i++) {
     if (!allFilesExists[i]) {
@@ -28,8 +30,8 @@ Future<void> repackDat(String datDir, String exportPath) async {
     showToast("DAT is missing ${pluralStr(missingFiles.length, "file")}. Check log for details");
     return;
   }
-  var fileSizes = (await Future.wait(fileList.map((e) => File(e).length()))).toList();
-  var fileNumber = fileList.length;
+  var fileSizes = (await Future.wait(filePaths.map((e) => File(e).length()))).toList();
+  var fileNumber = filePaths.length;
   var hashData = HashInfo(fileNames);
 
   var fileExtensionsSize = 0;
@@ -42,13 +44,11 @@ Future<void> repackDat(String datDir, String exportPath) async {
   }
 
   var nameLength = 0;
-  for (var f in fileList) {
+  for (var f in filePaths) {
     var fileName = path.basename(f);
     if (fileName.length + 1 > nameLength)
       nameLength = fileName.length + 1;
   }
-  var namesSize = nameLength * fileNumber;
-  var namesPadding = 4 - (namesSize % 4);
 
   var hashMapSize = hashData.getTableSize();
 
@@ -57,13 +57,14 @@ Future<void> repackDat(String datDir, String exportPath) async {
   var fileOffsetsOffset = 32;
   var fileExtensionsOffset = fileOffsetsOffset + (fileNumber * 4);
   var fileNamesOffset = fileExtensionsOffset + fileExtensionsSize;
-  var fileSizesOffset = fileNamesOffset + 4 + (fileNumber * nameLength) + namesPadding;
+  var fileSizesOffset = fileNamesOffset + 4 + (fileNumber * nameLength);
+  fileSizesOffset = alignTo(fileSizesOffset, 4);
   var hashMapOffset = fileSizesOffset + (fileNumber * 4);
 
   // fileOffsets
   List<int> fileOffsets = [];
   var currentOffset = hashMapOffset + hashMapSize;
-  for (int i = 0; i < fileList.length; i++) {
+  for (int i = 0; i < fileList.files.length; i++) {
     currentOffset = (currentOffset / 32).ceil() * 32;
     fileOffsets.add(currentOffset);
     currentOffset += fileSizes[i];
@@ -130,9 +131,9 @@ Future<void> repackDat(String datDir, String exportPath) async {
 
 
   // Files
-  for (var i = 0; i < fileList.length; i++) {
+  for (var i = 0; i < filePaths.length; i++) {
     datBytes.position = fileOffsets[i];
-    var fileData = await File(fileList[i]).readAsBytes();
+    var fileData = await File(filePaths[i]).readAsBytes();
     datBytes.writeBytes(fileData);
   }
 
