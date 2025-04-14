@@ -743,7 +743,7 @@ class BnkFilePlaylistData extends OpenFileData {
       };
       var newPlaylist = hircMap[playlistId] as BnkMusicPlaylist;
       rootChild!.applyTo(newPlaylist.playlistItems, hircMap, modsMetaData);
-      hircChunk.chunkSize = hircChunk.calculateSize() - 8;
+      hircChunk.updateChunkSize();
       bytes = ByteDataWrapper.allocate(bnk.calculateSize());
       bnk.write(bytes);
       await backupFile(bnkPath);

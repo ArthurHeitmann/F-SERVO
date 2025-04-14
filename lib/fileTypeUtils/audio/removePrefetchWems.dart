@@ -63,14 +63,9 @@ Future<Iterable<int>> removePrefetchWems(String bnkPath) async {
     didx.files.removeAt(index);
     data.wemFiles.removeAt(index);    
   }
-  int offset = 0;
-  for (var file in didx.files) {
-    file.offset = offset;
-    offset += file.size;
-    offset = (offset + 15) & ~15;
-  }
-  didx.chunkSize = didx.calculateSize() - 8;
-  data.chunkSize = data.calculateSize() - 8;
+  data.updateOffsets(didx);
+  didx.updateChunkSize();
+  data.updateChunkSize();
 
   var bytes = ByteDataWrapper.allocate(bnk.calculateSize());
   bnk.write(bytes);

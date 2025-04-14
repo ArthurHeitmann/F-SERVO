@@ -61,14 +61,9 @@ Future<void> _convertStreamedToInMemory(String bnkPath, int wemId) async {
     return;
   data.wemFiles.insert(wemIndex, wemData);
   didx.files.insert(wemIndex, BnkWemFileInfo(newId, 0, wemData.length));
-  int offset = 0;
-  for (var file in didx.files) {
-    file.offset = offset;
-    offset += file.size;
-    offset = (offset + 15) & ~15;
-  }
-  didx.chunkSize = didx.calculateSize() - 8;
-  data.chunkSize = data.calculateSize() - 8;
+  data.updateOffsets(didx);
+  didx.updateChunkSize();
+  data.updateChunkSize();
   
   _updateUsages(hirc.chunks, prefetchId, sourceId, newId, wemData.length);
 

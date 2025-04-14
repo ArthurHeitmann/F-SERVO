@@ -28,6 +28,10 @@ abstract class BnkChunkBase extends ChunkBase {
     bytes.writeString(chunkId);
     bytes.writeUint32(chunkSize);
   }
+
+  void updateChunkSize() {
+    chunkSize = calculateSize() - 8;
+  }
 }
 
 const _supportedVersion = 72;
@@ -222,6 +226,15 @@ class BnkDataChunk extends BnkChunkBase {
     }
   }
 
+  void updateOffsets(BnkDidxChunk didx) {
+    int offset = 0;
+    for (var file in didx.files) {
+      file.offset = offset;
+      offset += file.size;
+      offset = _alignOffset(offset);
+    }
+  }
+
   @override
   void write(ByteDataWrapper bytes) {
     super.write(bytes);
@@ -232,7 +245,7 @@ class BnkDataChunk extends BnkChunkBase {
       for (var i = 0; i < file.length; i++)
         bytes.writeUint8(file[i]);
       offset += file.length;
-      offset = (offset + 15) & ~15;
+      offset = _alignOffset(offset);
     }
   }
 
@@ -244,6 +257,10 @@ class BnkDataChunk extends BnkChunkBase {
       size += file.length;
     }
     return 8 + size;
+  }
+
+  int _alignOffset(int offset) {
+    return (offset + 15) & ~15;
   }
 }
 

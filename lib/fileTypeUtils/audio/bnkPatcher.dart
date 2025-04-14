@@ -29,17 +29,12 @@ Future<void> patchBnk(String bnkPath, int wemId, String wemPath) async {
     data.wemFiles[wemIndex] = wemBytes;
     didx.files[wemIndex].size = wemBytes.length;
     
-    // update offsets of all following files
-    int prevOffset = didx.files[wemIndex].offset + didx.files[wemIndex].size;
-    for (int i = wemIndex + 1; i < didx.files.length; i++) {
-      prevOffset = alignTo16Bytes(prevOffset);
-      didx.files[i].offset = prevOffset;
-      prevOffset += didx.files[i].size;
-    }
+    // update offsets
+    data.updateOffsets(didx);
 
     // update data chunk size
     int prevChunkSize = data.chunkSize;
-    data.chunkSize = prevOffset;
+    data.updateChunkSize();
     int sizeDiff = data.chunkSize - prevChunkSize;
 
     // write to file
@@ -49,8 +44,4 @@ Future<void> patchBnk(String bnkPath, int wemId, String wemPath) async {
   } finally {
     _patchLocks[bnkPath]!.release();
   }
-}
-
-int alignTo16Bytes(int pos) {
-  return (pos + 15) & ~15;
 }
