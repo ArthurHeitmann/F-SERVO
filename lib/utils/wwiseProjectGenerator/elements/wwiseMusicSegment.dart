@@ -42,13 +42,13 @@ class WwiseMusicSegment extends WwiseHierarchyElement<BnkMusicSegment> {
         project: project,
         tagName: "MusicCue",
         name: marker.pMarkerName ?? (
-          marker == chunk.wwiseMarkers.first ? "Entry Cue" :
-          marker == chunk.wwiseMarkers.last ? "Exit Cue" :
+          marker == chunk.wwiseMarkers.firstOrNull ? "Entry Cue" :
+          marker == chunk.wwiseMarkers.lastOrNull ? "Exit Cue" :
           ""
         ),
         shortIdHint: marker.id,
         properties: [
-          if (marker != chunk.wwiseMarkers.first)
+          if (marker != chunk.wwiseMarkers.firstOrNull)
             WwiseProperty("CueType", "int16", value: marker == chunk.wwiseMarkers.last ? "1" : "2"),
           WwiseProperty("TimeMs", "Real64", value: marker.fPosition.toString()),
         ]

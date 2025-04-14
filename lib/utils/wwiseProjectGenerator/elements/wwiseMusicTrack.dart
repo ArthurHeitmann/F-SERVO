@@ -61,7 +61,7 @@ class WwiseMusicTrack extends WwiseHierarchyElement<BnkMusicTrack> {
     return makeElementName(project,
       id: newShortId!,
       parentId: chunk.baseParams.directParentID,
-      name: guessed.name.value ?? wemIdsToNames[chunk.sources.first.sourceID] ?? wemIdsToNames[chunk.sources.first.fileID],
+      name: guessed.name.value ?? wemIdsToNames[chunk.sources.firstOrNull?.sourceID] ?? wemIdsToNames[chunk.sources.firstOrNull?.fileID],
       category: "Music Track",
     );
   }
