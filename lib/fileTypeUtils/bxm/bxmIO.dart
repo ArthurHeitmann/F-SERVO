@@ -17,15 +17,15 @@ class BxmHeader {
   BxmHeader.read(ByteDataWrapper bytes) :
     type = bytes.readString(4),
     flags = bytes.readInt32(),
-    nodeCount = bytes.readInt16(),
-    dataCount = bytes.readInt16(),
+    nodeCount = bytes.readUint16(),
+    dataCount = bytes.readUint16(),
     dataSize = bytes.readInt32();
   
   void write(ByteDataWrapper bytes) {
     bytes.writeString(type);
     bytes.writeInt32(flags);
-    bytes.writeInt16(nodeCount);
-    bytes.writeInt16(dataCount);
+    bytes.writeUint16(nodeCount);
+    bytes.writeUint16(dataCount);
     bytes.writeInt32(dataSize);
   }
 
@@ -42,13 +42,13 @@ class BxmNodeInfo {
 
   BxmNodeInfo.read(ByteDataWrapper bytes) :
     childCount = bytes.readInt16(),
-    firstChildIndex = bytes.readInt16(),
+    firstChildIndex = bytes.readUint16(),
     attributeCount = bytes.readInt16(),
     dataIndex = bytes.readInt16();
   
   void write(ByteDataWrapper bytes) {
     bytes.writeInt16(childCount);
-    bytes.writeInt16(firstChildIndex);
+    bytes.writeUint16(firstChildIndex);
     bytes.writeInt16(attributeCount);
     bytes.writeInt16(dataIndex);
   }
