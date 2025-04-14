@@ -1,5 +1,8 @@
 
+import 'package:xml/xml.dart';
+
 import '../../../fileTypeUtils/audio/bnkIO.dart';
+import '../../utils.dart';
 import '../wwiseElement.dart';
 import '../wwiseProperty.dart';
 import '../wwiseUtils.dart';
@@ -83,6 +86,19 @@ class RandomSequenceContainer extends WwiseHierarchyElement<BnkRandomSequence> {
       if (child is! WwiseElement)
         continue;
       child.properties.add(WwiseProperty("Weight", "Real64", values: [(plItem.weight / 1000).toString()]));
+    }
+
+    if (chunk.eMode == 1) {
+      additionalChildren.add(makeXmlElement(name: "Playlist", children: chunk.playlistItems
+        .map((plItem) {
+          var child = project.lookupElement(idFnv: plItem.ulPlayID);
+          if (child is! WwiseElement)
+            return null;
+          return makeXmlElement(name: "ItemRef", attributes: {"Name": child.name, "ID": child.id});
+        })
+        .whereType<XmlElement>()
+        .toList()
+      ));
     }
   }
 }
