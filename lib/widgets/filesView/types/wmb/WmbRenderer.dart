@@ -3,8 +3,13 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../stateManagement/Property.dart';
 import '../../../../stateManagement/openFiles/openFileTypes.dart';
 import '../../../../stateManagement/openFiles/types/WmbFileData.dart';
+import '../../../misc/ChangeNotifierWidget.dart';
+import '../../../propEditors/UnderlinePropTextField.dart';
+import '../../../propEditors/propEditorFactory.dart';
+import '../../../propEditors/propTextField.dart';
 import '../../../theme/customTheme.dart';
 import 'WmbTextureManager.dart';
 
@@ -19,6 +24,7 @@ class WmbRenderer extends StatefulWidget {
 
 class _WmbRendererState extends State<WmbRenderer> {
   WmbTextureManager textureManager = WmbTextureManager();
+  final searchString = StringProp("", fileId: null);
 
   @override
   void initState() {
@@ -98,12 +104,21 @@ class _WmbRendererState extends State<WmbRenderer> {
         constraints: BoxConstraints(maxHeight: constraints.maxHeight - 80),
         color: getTheme(context).editorBackgroundColor!.withOpacity(0.5),
         child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              for (var meshStates in textureManager.rootMeshState.children)
-                _makeMeshStateWidget(context, meshStates, 0),
-            ],
+          child: ChangeNotifierBuilder(
+            notifier: searchString,
+            builder: (context) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  makePropEditor<UnderlinePropTextField>(searchString, PropTFOptions(
+                    constraints: BoxConstraints.tightFor(width: 180, height: 20),
+                    hintText: "Search",
+                  )),
+                  for (var meshStates in textureManager.rootMeshState.children)
+                    _makeMeshStateWidget(context, meshStates, 0),
+                ],
+              );
+            }
           ),
         ),
       ),
@@ -119,29 +134,30 @@ class _WmbRendererState extends State<WmbRenderer> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(
-          height: 20,
-          child: Row(
-            children: [
-              SizedBox(width: indent * 10),
-              Checkbox(
-                value: meshState.isVisible,
-                tristate: meshState.children.isNotEmpty,
-                activeColor: Colors.transparent,
-                onChanged: onChanged,
-              ),
-              Expanded(
-                child: GestureDetector(
-                  onTap: () => onChanged(!(meshState.isVisible ?? false)),
-                  child: Text(
-                    meshState.name,
-                    overflow: TextOverflow.ellipsis,
+        if (searchString.value.isEmpty || meshState.name.toLowerCase().contains(searchString.value.toLowerCase()))
+          SizedBox(
+            height: 20,
+            child: Row(
+              children: [
+                SizedBox(width: indent * 10),
+                Checkbox(
+                  value: meshState.isVisible,
+                  tristate: meshState.children.isNotEmpty,
+                  activeColor: Colors.transparent,
+                  onChanged: onChanged,
+                ),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => onChanged(!(meshState.isVisible ?? false)),
+                    child: Text(
+                      meshState.name,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
         if (!meshState.children.every((c) => c.children.isEmpty))
           for (var child in meshState.children)
             _makeMeshStateWidget(context, child, indent + 1),
