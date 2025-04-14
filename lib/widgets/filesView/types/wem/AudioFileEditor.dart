@@ -41,7 +41,7 @@ class _AudioFileEditorState extends State<AudioFileEditor> {
       if (!mounted)
         return;
       _player!.setSourceDeviceFile(widget.file.resource!.wavPath);
-      _viewEnd.value = widget.file.resource!.totalSamples;
+      _viewEnd.value = widget.file.resource!.preview?.totalSamples ?? 0;
       setState(() {});
     });
     prefs = PreferencesData();
@@ -114,16 +114,17 @@ class _AudioFileEditorState extends State<AudioFileEditor> {
                                 : _player?.resume,
                             )
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.last_page),
-                            splashRadius: 25,
-                            onPressed: () => _player?.seek(Duration(milliseconds: widget.file.resource!.totalSamples ~/ widget.file.resource!.sampleRate - 200)),
-                          ),
+                          if (widget.file.resource?.preview != null)
+                            IconButton(
+                              icon: const Icon(Icons.last_page),
+                              splashRadius: 25,
+                              onPressed: () => _player?.seek(Duration(milliseconds: widget.file.resource!.preview!.totalSamples ~/ widget.file.resource!.preview!.sampleRate - 200)),
+                            ),
                           IconButton(
                             icon: const Icon(Icons.repeat),
                             splashRadius: 25,
                             color: _player?.releaseMode == ReleaseMode.loop ? Theme.of(context).colorScheme.secondary : null,
-                            onPressed: () => _player?.setReleaseMode(_player?.releaseMode == ReleaseMode.loop ? ReleaseMode.stop : ReleaseMode.loop)
+                            onPressed: () => _player?.setReleaseMode(_player.releaseMode == ReleaseMode.loop ? ReleaseMode.stop : ReleaseMode.loop)
                                                     .then((_) => setState(() {})),
                           ),
                           const SizedBox(width: 15),
@@ -133,7 +134,7 @@ class _AudioFileEditorState extends State<AudioFileEditor> {
                           const Text(" / "),
                           DurationStream(
                             time: _player?.onDurationChanged,
-                            fallback: widget.file.resource?.duration,
+                            fallback: widget.file.resource?.preview?.duration,
                           ),
                           const SizedBox(width: 15),
                         ],
@@ -174,13 +175,13 @@ class _AudioFileEditorState extends State<AudioFileEditor> {
   void _onCurrentFileChange() {
     if (_player == null)
       return;
-    if (_player!.state != PlayerState.playing)
+    if (_player.state != PlayerState.playing)
       return;
     if (prefs.pauseAudioOnFileChange?.value != true)
       return;
     if (areasManager.areas.any((area) => area.currentFile.value?.uuid == widget.fileId))
       return;
-    _player!.pause();
+    _player.pause();
   }
 }
 
@@ -220,6 +221,8 @@ class __TimelineEditorState extends State<_TimelineEditor> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.file.resource != null && widget.file.resource!.preview == null)
+      return SizedBox.shrink();
     return LayoutBuilder(
       builder: (context, constraints) {
         return SizedBox(
@@ -234,12 +237,12 @@ class __TimelineEditorState extends State<_TimelineEditor> {
                     onHorizontalDragUpdate: !widget.lockControls ? _onHorizontalDragUpdate : null,
                     child: CustomPaint(
                       painter: _WaveformPainter(
-                        samples: widget.file.resource?.previewSamples,
+                        samples: widget.file.resource?.preview?.previewSamples,
                         viewStart: viewStart.value,
                         viewEnd: viewEnd.value,
-                        totalSamples: widget.file.resource?.totalSamples ?? 44100,
+                        totalSamples: widget.file.resource?.preview?.totalSamples ?? 44100,
                         curSample: _currentPosition,
-                        samplesPerSec: widget.file.resource?.sampleRate ?? 44100,
+                        samplesPerSec: widget.file.resource?.preview?.sampleRate ?? 44100,
                         scaleFactor: MediaQuery.of(context).devicePixelRatio,
                         lineColor: getTheme(context).audioColor!,
                         lineInactiveColor: getTheme(context).audioDisabledColor!,
@@ -278,26 +281,31 @@ class __TimelineEditorState extends State<_TimelineEditor> {
   void _onPositionChange(event) {
     if (!mounted)
       return;
-    setState(() => _currentPosition = event.inMicroseconds * widget.file.resource!.sampleRate ~/ 1000000);
+    if (widget.file.resource?.preview != null)
+      setState(() => _currentPosition = event.inMicroseconds * widget.file.resource!.preview!.sampleRate ~/ 1000000);
   }
 
   void _onPointerSignal(PointerSignalEvent event) {
     if (event is! PointerScrollEvent)
+      return;
+    if (widget.file.resource?.preview == null)
       return;
     double delta = event.scrollDelta.dy;
     int viewArea = viewEnd.value - viewStart.value;
     // zoom in/out by 10% of the view area
     if (delta < 0) {
       viewStart.value = max((viewStart.value + viewArea * 0.1).round(), 0);
-      viewEnd.value = min((viewEnd.value - viewArea * 0.1).round(), widget.file.resource!.totalSamples);
+      viewEnd.value = min((viewEnd.value - viewArea * 0.1).round(), widget.file.resource!.preview!.totalSamples);
     } else {
       viewStart.value = max((viewStart.value - viewArea * 0.1).round(), 0);
-      viewEnd.value= min((viewEnd.value + viewArea * 0.1).round(), widget.file.resource!.totalSamples);
+      viewEnd.value= min((viewEnd.value + viewArea * 0.1).round(), widget.file.resource!.preview!.totalSamples);
     }
     setState(() {});
   }
 
   void _onHorizontalDragUpdate(DragUpdateDetails details) {
+    if (widget.file.resource?.preview == null)
+      return;
     var totalViewWidth = context.size!.width;
     int viewArea = viewEnd.value - viewStart.value;
     int delta = (details.delta.dx / totalViewWidth * viewArea).round();
@@ -305,7 +313,7 @@ class __TimelineEditorState extends State<_TimelineEditor> {
       int maxChange = viewStart.value;
       delta = min(delta, maxChange);
     } else {
-      int maxChange = widget.file.resource!.totalSamples - viewEnd.value;
+      int maxChange = widget.file.resource!.preview!.totalSamples - viewEnd.value;
       delta = max(delta, -maxChange);
     }
     viewStart.value -= delta;
@@ -314,14 +322,16 @@ class __TimelineEditorState extends State<_TimelineEditor> {
   }
 
   void _onTimelineTap() {
+    if (widget.file.resource?.preview == null)
+      return;
     var renderBox = context.findRenderObject() as RenderBox;
     var locTapPos = renderBox.globalToLocal(MousePosition.pos);
     var xPos = locTapPos.dx;
     double relX = xPos / context.size!.width;
     int viewArea = viewEnd.value - viewStart.value;
     int newPosition = (viewStart.value + relX * viewArea).round();
-    _currentPosition = clamp(newPosition, 0, widget.file.resource!.totalSamples);
-    widget.player!.seek(Duration(microseconds: _currentPosition * 1000000 ~/ widget.file.resource!.sampleRate));
+    _currentPosition = clamp(newPosition, 0, widget.file.resource!.preview!.totalSamples);
+    widget.player!.seek(Duration(microseconds: _currentPosition * 1000000 ~/ widget.file.resource!.preview!.sampleRate));
   }
 
   // void _onCuePointDrag(double xPos, CuePointMarker cuePoint) {

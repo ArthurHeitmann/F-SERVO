@@ -187,7 +187,7 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> with Audi
                           msPerPix: viewData.msPerPix.value,
                         ),
                         child: CustomPaint(
-                          foregroundPainter: clip.resource?.previewSamples != null ? _ClipWaveformPainter(
+                          foregroundPainter: clip.resource?.preview?.previewSamples != null ? _ClipWaveformPainter(
                             clip: clip,
                             viewData: viewData,
                             lineColor: getTheme(context).editorBackgroundColor!.withOpacity(0.333),
@@ -531,7 +531,6 @@ class _BnkTrackEditorState extends ChangeNotifierState<BnkTrackEditor> with Audi
       case ChildKeyboardActionType.duplicate:
         _duplicateClip(clip);
         break;
-      default:
     }
   }
 }
@@ -546,6 +545,9 @@ class _ClipWaveformPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    if (clip.resource != null && clip.resource!.preview == null)
+      return;
+
     var paint = Paint()
       ..color = lineColor
       ..strokeWidth = 1
@@ -563,15 +565,15 @@ class _ClipWaveformPainter extends CustomPainter {
     var clipEndVisRelToTrack = clipEndVis - clip.xOff.value;
     var clipStartVisRelToSelf = clipStartVisRelToTrack - clip.beginTrim.value;
     var clipEndVisRelToSelf = clipEndVisRelToTrack - clip.beginTrim.value;
-    var samplesIScale = 1 / clip.srcDuration.value * clip.resource!.previewSamples!.length;
+    var samplesIScale = 1 / clip.srcDuration.value * clip.resource!.preview!.previewSamples!.length;
     var startI = (clipStartVisRelToTrack * samplesIScale).round();
-    startI = clamp(startI, 0, clip.resource!.previewSamples!.length - 1);
+    startI = clamp(startI, 0, clip.resource!.preview!.previewSamples!.length - 1);
     var endI = (clipEndVisRelToTrack * samplesIScale).round();
-    endI = clamp(endI, 0, clip.resource!.previewSamples!.length - 1);
+    endI = clamp(endI, 0, clip.resource!.preview!.previewSamples!.length - 1);
     var startX = clipStartVisRelToSelf / viewData.msPerPix.value;
     var endX = clipEndVisRelToSelf / viewData.msPerPix.value;
 
-    var samples = clip.resource!.previewSamples!.sublist(startI, endI);
+    var samples = clip.resource!.preview!.previewSamples!.sublist(startI, endI);
     var height = size.height;
     var path = Path();
     var x = startX;

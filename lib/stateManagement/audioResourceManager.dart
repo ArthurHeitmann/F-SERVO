@@ -9,19 +9,26 @@ import 'package:tuple/tuple.dart';
 
 import '../fileTypeUtils/audio/riffParser.dart';
 import '../fileTypeUtils/audio/wemToWavConverter.dart';
+import 'events/statusInfo.dart';
+
+class AudioResourcePreview {
+  final int sampleRate;
+  final int totalSamples;
+  final Duration duration;
+  final List<double>? previewSamples;
+  final int previewSampleRate;
+
+  AudioResourcePreview(this.sampleRate, this.totalSamples, this.duration, this.previewSamples, this.previewSampleRate);
+}
 
 class AudioResource {
   String wavPath;
+  AudioResourcePreview? preview;
   final String? wemPath;
-  int sampleRate;
-  int totalSamples;
-  Duration duration;
-  List<double>? previewSamples;
-  int previewSampleRate;
   int _refCount = 0;
   final bool _deleteOnDispose;
 
-  AudioResource(this.wavPath, this.wemPath, this.sampleRate, this.totalSamples, this.duration, this.previewSamples, this.previewSampleRate, this._deleteOnDispose);
+  AudioResource(this.wavPath, this.wemPath, this.preview, this._deleteOnDispose);
 
   Future<void> dispose() => audioResourcesManager._disposeAudioResource(this);
 
@@ -61,17 +68,25 @@ class AudioResourcesManager {
       deleteOnDispose = true;
     }
 
-    var riff = await RiffFile.fromFile(wavPath);
-    Tuple2<List<double>, int>? previewData = await _getPreviewData(riff);
-    int totalSamples = riff.data.samples.length ~/ riff.format.channels;
+    AudioResourcePreview? preview;
+    try {
+      var riff = await RiffFile.fromFile(wavPath);
+      Tuple2<List<double>, int>? previewData = await _getPreviewData(riff);
+      int totalSamples = riff.data.samples.length ~/ riff.format.channels;
+      preview = AudioResourcePreview(
+        riff.format.samplesPerSec,
+        totalSamples,
+        Duration(microseconds: (totalSamples * 1000000 ~/ riff.format.samplesPerSec)),
+        previewData?.item1,
+        previewData?.item2 ?? 1
+      );
+    } catch (e, st) {
+      messageLog.add("Error loading audio file: $path\n$e\n$st");
+    }
     var resource = AudioResource(
       wavPath,
       path.endsWith(".wem") ? path : null,
-      riff.format.samplesPerSec,
-      totalSamples,
-      Duration(microseconds: (totalSamples * 1000000 ~/ riff.format.samplesPerSec)),
-      previewData?.item1,
-      previewData?.item2 ?? 1,
+      preview,
       deleteOnDispose
     );
     resource._refCount++;
@@ -92,14 +107,20 @@ class AudioResourcesManager {
   Future<void> reloadAudioResource(AudioResource resource) async {
     if (resource.wemPath != null)
       resource.wavPath = await wemToWavTmp(resource.wemPath!);
-    var riff = await RiffFile.fromFile(resource.wavPath);
-    Tuple2<List<double>, int>? previewData = await _getPreviewData(riff);
-    int totalSamples = riff.data.samples.length ~/ riff.format.channels;
-    resource.sampleRate = riff.format.samplesPerSec;
-    resource.totalSamples = totalSamples;
-    resource.duration = Duration(microseconds: (totalSamples * 1000000 ~/ riff.format.samplesPerSec));
-    resource.previewSamples = previewData?.item1;
-    resource.previewSampleRate = previewData?.item2 ?? 1;
+    try {
+      var riff = await RiffFile.fromFile(resource.wavPath);
+      Tuple2<List<double>, int>? previewData = await _getPreviewData(riff);
+      int totalSamples = riff.data.samples.length ~/ riff.format.channels;
+      resource.preview = AudioResourcePreview(
+        riff.format.samplesPerSec,
+        totalSamples,
+        Duration(microseconds: (totalSamples * 1000000 ~/ riff.format.samplesPerSec)),
+        previewData?.item1,
+        previewData?.item2 ?? 1,
+      );
+    } on Exception catch (e, st) {
+      messageLog.add("Error reloading audio file: ${resource.wavPath}\n$e\n$st");
+    }
   }
 
   Future<void> disposeAll() async {
