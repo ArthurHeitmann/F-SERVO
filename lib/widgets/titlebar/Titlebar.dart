@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:window_manager/window_manager.dart';
+// import 'package:window_manager/window_manager.dart';
 
 import '../../stateManagement/miscValues.dart';
 import '../../stateManagement/openFiles/openFilesManager.dart';
@@ -20,47 +20,47 @@ class TitleBar extends ChangeNotifierWidget {
   TitleBarState createState() => TitleBarState();
 }
 
-class TitleBarState extends ChangeNotifierState<TitleBar> with WindowListener {
+class TitleBarState extends ChangeNotifierState<TitleBar> /*with WindowListener*/ {
   bool isExpanded = false;
 
   @override
   void initState() {
     super.initState();
-    if (isDesktop)
-      windowManager.addListener(this);
+    // if (isDesktop)
+    //   windowManager.addListener(this);
     init();
   }
 
   void init() async {
-    isExpanded = isDesktop ? await windowManager.isMaximized() : true;
-    if (isDesktop) {
-      await windowManager.setTitle(windowTitle.value);
-      // windowTitle.value = await windowManager.getTitle();
-    }
+    // isExpanded = isDesktop ? await windowManager.isMaximized() : true;
+    // if (isDesktop) {
+    //   await windowManager.setTitle(windowTitle.value);
+    //   // windowTitle.value = await windowManager.getTitle();
+    // }
   }
 
-  @override
-  void onWindowMaximize() {
-    super.onWindowMaximize();
-    setState(() {
-      isExpanded = true;
-    });
-  }
+  // @override
+  // void onWindowMaximize() {
+  //   super.onWindowMaximize();
+  //   setState(() {
+  //     isExpanded = true;
+  //   });
+  // }
 
-  @override
-  void onWindowUnmaximize() {
-    super.onWindowUnmaximize();
-    setState(() {
-      isExpanded = false;
-    });
-  }
+  // @override
+  // void onWindowUnmaximize() {
+  //   super.onWindowUnmaximize();
+  //   setState(() {
+  //     isExpanded = false;
+  //   });
+  // }
 
   void toggleMaximize() async {
-    if (await windowManager.isMaximized()) {
-      windowManager.unmaximize();
-    } else {
-      windowManager.maximize();
-    }
+    // if (await windowManager.isMaximized()) {
+    //   windowManager.unmaximize();
+    // } else {
+    //   windowManager.maximize();
+    // }
   }
 
   @override
@@ -146,7 +146,7 @@ class TitleBarState extends ChangeNotifierState<TitleBar> with WindowListener {
                 // ),
                 Expanded(
                   child: GestureDetector(
-                    onPanUpdate: isDesktop ? (details) => windowManager.startDragging() : null,
+                    // onPanUpdate: isDesktop ? (details) => windowManager.startDragging() : null,
                     onDoubleTap: isDesktop ? toggleMaximize : null,
                     behavior: HitTestBehavior.translucent,
                     child: Row(
@@ -162,7 +162,7 @@ class TitleBarState extends ChangeNotifierState<TitleBar> with WindowListener {
                 if (isDesktop) ...[
                   TitleBarButton(
                     icon: Icons.minimize_rounded,
-                    onPressed: windowManager.minimize,
+                    onPressed: null /*windowManager.minimize*/,
                     primaryColor: getTheme(context).titleBarButtonPrimaryColor!,
                   ),
                   TitleBarButton(
@@ -172,7 +172,7 @@ class TitleBarState extends ChangeNotifierState<TitleBar> with WindowListener {
                   ),
                   TitleBarButton(
                     icon: Icons.close_rounded,
-                    onPressed: windowManager.close,
+                    onPressed: null /*windowManager.close*/,
                     primaryColor: getTheme(context).titleBarButtonCloseColor!,
                   ),
                 ]

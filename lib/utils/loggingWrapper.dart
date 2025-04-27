@@ -10,6 +10,10 @@ import 'utils.dart';
 final logFileName = join(dirname(Platform.resolvedExecutable), "log.txt");
 
 void loggingWrapper(void Function() run) {
+  if (isWeb) {
+    run();
+    return;
+  }
   // log all output to file
   runZonedGuarded(
     () {

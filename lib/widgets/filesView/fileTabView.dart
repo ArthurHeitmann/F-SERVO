@@ -4,7 +4,7 @@ import 'dart:math';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as path;
-import 'package:window_manager/window_manager.dart';
+// import 'package:window_manager/window_manager.dart';
 
 import '../../stateManagement/events/statusInfo.dart';
 import '../../stateManagement/hierarchy/FileHierarchy.dart';
@@ -94,7 +94,7 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
     }
     if (firstFile != null)
       widget.viewArea.setCurrentFile(firstFile);
-    windowManager.focus();
+    // windowManager.focus();
     setState(() {});
 
     messageLog.add("Opened ${pluralStr(openedFiles, "file")}");

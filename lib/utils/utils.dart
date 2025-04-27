@@ -5,6 +5,7 @@ import 'dart:math';
 
 import 'package:crclib/catalog.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
@@ -683,8 +684,9 @@ bool strEndsWithDat(String str) {
   return false;
 }
 
-bool get isDesktop => Platform.isWindows || Platform.isLinux || Platform.isMacOS;
-bool get isMobile => Platform.isAndroid || Platform.isIOS;
+bool get isWeb => kIsWeb;
+bool get isDesktop => !isWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
+bool get isMobile => !isWeb && (Platform.isAndroid || Platform.isIOS);
 
 class SizeInt {
   final int width;

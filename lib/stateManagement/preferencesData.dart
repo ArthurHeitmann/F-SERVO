@@ -8,6 +8,7 @@ import 'package:path/path.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../background/IdLookup.dart';
+import '../utils/utils.dart';
 import '../widgets/filesView/FileType.dart';
 import '../widgets/theme/darkTheme.dart';
 import '../widgets/theme/nierTheme.dart';
@@ -187,6 +188,8 @@ class PreferencesData extends OpenFileData {
   }
 
   Future<void> _tryAutoInitPaths() async {
+    if (!isDesktop)
+      return;
     var wwisePath = wwise2012CliPath!.value;
     if (wwisePath.isNotEmpty)
       return;

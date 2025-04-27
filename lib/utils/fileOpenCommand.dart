@@ -3,7 +3,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:window_manager/window_manager.dart';
+// import 'package:window_manager/window_manager.dart';
 
 import '../stateManagement/events/statusInfo.dart';
 import '../stateManagement/hierarchy/FileHierarchy.dart';
@@ -17,7 +17,7 @@ void onFileOpenCommand(List<String> paths) async {
     if (await canOpenAsFile(path))
       areasManager.openFile(path);
   }));
-  await windowManager.focus();
+  // await windowManager.focus();
   messageLog.add("");
 }
 
