@@ -3,6 +3,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../ffi/ffiImport.dart';
 import '../../../../stateManagement/Property.dart';
 import '../../../../stateManagement/openFiles/openFileTypes.dart';
 import '../../../../stateManagement/openFiles/types/WmbFileData.dart';
@@ -11,7 +12,7 @@ import '../../../propEditors/UnderlinePropTextField.dart';
 import '../../../propEditors/propEditorFactory.dart';
 import '../../../propEditors/propTextField.dart';
 import '../../../theme/customTheme.dart';
-import 'WmbTextureManager.dart';
+import 'WmbMeshState.dart';
 
 class WmbRenderer extends StatefulWidget {
   final WmbFileData file;
@@ -23,7 +24,7 @@ class WmbRenderer extends StatefulWidget {
 }
 
 class _WmbRendererState extends State<WmbRenderer> {
-  // WmbTextureManager textureManager = WmbTextureManager();
+  WmbTextureManager textureManager = WmbTextureManager();
   final searchString = StringProp("", fileId: null);
 
   @override
@@ -35,7 +36,7 @@ class _WmbRendererState extends State<WmbRenderer> {
 
   @override
   void dispose() {
-    // textureManager.dispose();
+    textureManager.dispose();
     super.dispose();
   }
 
@@ -45,123 +46,123 @@ class _WmbRendererState extends State<WmbRenderer> {
       builder: (context, constraints) {
         var screenSize = MediaQuery.of(context).size;
         var maxSize = constraints.biggest;
-        // if (textureManager.isReady) {
-        //   if (textureManager.isInitialized) {
-        //     textureManager.setSize(screenSize, maxSize);
-        //   }
-        // } else if (!textureManager.isInitializing && widget.file.loadingState.value == LoadingState.loaded) {
-        //   textureManager.init(widget.file.path, screenSize, maxSize)
-        //     .whenComplete(() => setState(() {}));
-        // }
-        // if (!textureManager.isReady) {
-        //   if (textureManager.hasError) {
+        if (textureManager.isReady) {
+          if (textureManager.isInitialized) {
+            textureManager.setSize(screenSize, maxSize);
+          }
+        } else if (!textureManager.isInitializing && widget.file.loadingState.value == LoadingState.loaded) {
+          textureManager.init(widget.file.path, screenSize, maxSize)
+            .whenComplete(() => setState(() {}));
+        }
+        if (!textureManager.isReady) {
+          if (textureManager.hasError) {
             return Center(
               child: Text("Failed to initialize renderer"),
             );
-        //   }
-        //   return Center(child: CircularProgressIndicator());
-        // }
-        // return Stack(
-        //   children: [
-        //     Listener(
-        //       onPointerSignal: (event) {
-        //         if (event is PointerScrollEvent) {
-        //           textureManager.addCameraDistance(event.scrollDelta.dy);
-        //           setState(() {});
-        //         }
-        //       },
-        //       onPointerDown: (event) {
-        //         if (event.buttons == kMiddleMouseButton) {
-        //           textureManager.autoSetTarget();
-        //         }
-        //       },
-        //       onPointerMove: (event) {
-        //         if (event.buttons == kPrimaryMouseButton || event.buttons == kMiddleMouseButton) {
-        //           textureManager.addCameraRotation(event.delta.dx, event.delta.dy);
-        //           setState(() {});
-        //         }
-        //         else if (event.buttons == kSecondaryMouseButton) {
-        //           textureManager.addCameraOffset(event.delta.dy, -event.delta.dx);
-        //           setState(() {});
-        //         }
-        //       },
-        //       child: Texture(textureId: textureManager.textureId),
-        //     ),
-        //     _makeOverlay(context, constraints),
-        //   ],
-        // );
+          }
+          return Center(child: CircularProgressIndicator());
+        }
+        return Stack(
+          children: [
+            Listener(
+              onPointerSignal: (event) {
+                if (event is PointerScrollEvent) {
+                  textureManager.addCameraDistance(event.scrollDelta.dy);
+                  setState(() {});
+                }
+              },
+              onPointerDown: (event) {
+                if (event.buttons == kMiddleMouseButton) {
+                  textureManager.autoSetTarget();
+                }
+              },
+              onPointerMove: (event) {
+                if (event.buttons == kPrimaryMouseButton || event.buttons == kMiddleMouseButton) {
+                  textureManager.addCameraRotation(event.delta.dx, event.delta.dy);
+                  setState(() {});
+                }
+                else if (event.buttons == kSecondaryMouseButton) {
+                  textureManager.addCameraOffset(event.delta.dy, -event.delta.dx);
+                  setState(() {});
+                }
+              },
+              child: Texture(textureId: textureManager.textureId),
+            ),
+            _makeOverlay(context, constraints),
+          ],
+        );
       },
     );
   }
 
-  // Widget _makeOverlay(BuildContext context, BoxConstraints constraints) {
-  //   return Positioned(
-  //     top: 40,
-  //     left: 20,
-  //     width: 200,
-  //     child: Container(
-  //       padding: EdgeInsets.all(8),
-  //       constraints: BoxConstraints(maxHeight: constraints.maxHeight - 80),
-  //       color: getTheme(context).editorBackgroundColor!.withOpacity(0.5),
-  //       child: SingleChildScrollView(
-  //         child: ChangeNotifierBuilder(
-  //           notifier: searchString,
-  //           builder: (context) {
-  //             return Column(
-  //               crossAxisAlignment: CrossAxisAlignment.start,
-  //               children: [
-  //                 makePropEditor<UnderlinePropTextField>(searchString, PropTFOptions(
-  //                   constraints: BoxConstraints.tightFor(width: 180, height: 20),
-  //                   hintText: "Search",
-  //                 )),
-  //                 for (var meshStates in textureManager.rootMeshState.children)
-  //                   _makeMeshStateWidget(context, meshStates, 0),
-  //               ],
-  //             );
-  //           }
-  //         ),
-  //       ),
-  //     ),
-  //   );
-  // }
+  Widget _makeOverlay(BuildContext context, BoxConstraints constraints) {
+    return Positioned(
+      top: 40,
+      left: 20,
+      width: 200,
+      child: Container(
+        padding: EdgeInsets.all(8),
+        constraints: BoxConstraints(maxHeight: constraints.maxHeight - 80),
+        color: getTheme(context).editorBackgroundColor!.withOpacity(0.5),
+        child: SingleChildScrollView(
+          child: ChangeNotifierBuilder(
+            notifier: searchString,
+            builder: (context) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  makePropEditor<UnderlinePropTextField>(searchString, PropTFOptions(
+                    constraints: BoxConstraints.tightFor(width: 180, height: 20),
+                    hintText: "Search",
+                  )),
+                  for (var meshStates in textureManager.rootMeshState.children)
+                    _makeMeshStateWidget(context, meshStates, 0),
+                ],
+              );
+            }
+          ),
+        ),
+      ),
+    );
+  }
 
-  // Widget _makeMeshStateWidget(BuildContext context, WmbMeshState meshState, int indent) {
-  //   void onChanged(value) {
-  //     value ??= false;
-  //     meshState.isVisible = value;
-  //     setState(() {});
-  //   }
-  //   return Column(
-  //     crossAxisAlignment: CrossAxisAlignment.start,
-  //     children: [
-  //       if (searchString.value.isEmpty || meshState.name.toLowerCase().contains(searchString.value.toLowerCase()))
-  //         SizedBox(
-  //           height: 20,
-  //           child: Row(
-  //             children: [
-  //               SizedBox(width: indent * 10),
-  //               Checkbox(
-  //                 value: meshState.isVisible,
-  //                 tristate: meshState.children.isNotEmpty,
-  //                 activeColor: Colors.transparent,
-  //                 onChanged: onChanged,
-  //               ),
-  //               Expanded(
-  //                 child: GestureDetector(
-  //                   onTap: () => onChanged(!(meshState.isVisible ?? false)),
-  //                   child: Text(
-  //                     meshState.name,
-  //                     overflow: TextOverflow.ellipsis,
-  //                   ),
-  //                 ),
-  //               ),
-  //             ],
-  //           ),
-  //         ),
-  //       if (!meshState.children.every((c) => c.children.isEmpty))
-  //         for (var child in meshState.children)
-  //           _makeMeshStateWidget(context, child, indent + 1),
-  //     ],
-  //   );
-  // }
+  Widget _makeMeshStateWidget(BuildContext context, WmbMeshState meshState, int indent) {
+    void onChanged(value) {
+      value ??= false;
+      meshState.isVisible = value;
+      setState(() {});
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (searchString.value.isEmpty || meshState.name.toLowerCase().contains(searchString.value.toLowerCase()))
+          SizedBox(
+            height: 20,
+            child: Row(
+              children: [
+                SizedBox(width: indent * 10),
+                Checkbox(
+                  value: meshState.isVisible,
+                  tristate: meshState.children.isNotEmpty,
+                  activeColor: Colors.transparent,
+                  onChanged: onChanged,
+                ),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => onChanged(!(meshState.isVisible ?? false)),
+                    child: Text(
+                      meshState.name,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        if (!meshState.children.every((c) => c.children.isEmpty))
+          for (var child in meshState.children)
+            _makeMeshStateWidget(context, child, indent + 1),
+      ],
+    );
+  }
 }

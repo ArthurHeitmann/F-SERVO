@@ -6,12 +6,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_window_close/flutter_window_close.dart';
-// import 'package:permission_handler/permission_handler.dart';
-// import 'package:window_manager/window_managerwindow_manager.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:window_manager/window_manager.dart';
 
 import 'background/IdLookup.dart';
 import 'background/wemFilesIndexer.dart';
-import 'ffi/FfiHelper.dart';
+import 'ffi/ffiImport.dart';
 import 'keyboardEvents/globalShortcutsWrapper.dart';
 import 'stateManagement/beforeExitCleanup.dart';
 import 'stateManagement/hierarchy/FileHierarchy.dart';
@@ -50,18 +50,18 @@ void init(List<String> args) async {
   await Future.delayed(const Duration(milliseconds: 50));
 
   if (isDesktop) {
-    // await windowManager.ensureInitialized();
-    // const WindowOptions windowOptions = WindowOptions(
-    //   minimumSize: Size(400, 200),
-    //   titleBarStyle: TitleBarStyle.hidden,
-    // );
-    // unawaited(windowManager.waitUntilReadyToShow(windowOptions, () async {
-    //   await windowManager.show();
-    //   var windowPos = await windowManager.getPosition();
-    //   if (windowPos.dy < 50)
-    //     await windowManager.setPosition(windowPos.translate(0, 50));
-    //   // await windowManager.focus();
-    // }));
+    await windowManager.ensureInitialized();
+    const WindowOptions windowOptions = WindowOptions(
+      minimumSize: Size(400, 200),
+      titleBarStyle: TitleBarStyle.hidden,
+    );
+    unawaited(windowManager.waitUntilReadyToShow(windowOptions, () async {
+      await windowManager.show();
+      var windowPos = await windowManager.getPosition();
+      if (windowPos.dy < 50)
+        await windowManager.setPosition(windowPos.translate(0, 50));
+      // await windowManager.focus();
+    }));
     
     unawaited(FlutterWindowClose.setWindowShouldCloseHandler(beforeExitConfirmation));
   }
@@ -145,7 +145,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  bool? hasPermission = isDesktop || isWeb ? true : null;
+  bool? hasPermission = !isMobile ? true : null;
 
   @override
   void initState() {
@@ -212,17 +212,17 @@ class MyAppBody extends StatelessWidget {
 Future<bool> ensureHasStoragePermission() async {
   if (!isMobile)
     return true;
-  // var storagePermission = await Permission.storage.status;
-  // var externalStoragePermission = await Permission.manageExternalStorage.status;
-  // if (!storagePermission.isGranted) {
-  //   storagePermission = await Permission.storage.request();
-  //   if (!storagePermission.isGranted)
-  //     return false;
-  // }
-  // while (!externalStoragePermission.isGranted) {
-  //   externalStoragePermission = await Permission.manageExternalStorage.request();
-  //   if (!externalStoragePermission.isGranted)
-  //     return false;
-  // }
+  var storagePermission = await Permission.storage.status;
+  var externalStoragePermission = await Permission.manageExternalStorage.status;
+  if (!storagePermission.isGranted) {
+    storagePermission = await Permission.storage.request();
+    if (!storagePermission.isGranted)
+      return false;
+  }
+  while (!externalStoragePermission.isGranted) {
+    externalStoragePermission = await Permission.manageExternalStorage.request();
+    if (!externalStoragePermission.isGranted)
+      return false;
+  }
   return true;
 }
