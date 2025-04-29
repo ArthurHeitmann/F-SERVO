@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:euc/jis.dart';
+import '../../fileSystem/FileSystem.dart';
 
 
 enum StringEncoding {
@@ -41,14 +42,14 @@ class ByteDataWrapper {
 
   static Future<ByteDataWrapper> fromFile(String path) async {
     const twoGB = 2 * 1024 * 1024 * 1024;
-    var fileSize = await File(path).length();
+    var fileSize = await FS.i.getSize(path);
     if (fileSize < twoGB) {
-      var buffer = await File(path).readAsBytes();
+      var buffer = await FS.i.read(path);
       return ByteDataWrapper(buffer.buffer);
     } else {
       print("File is over 2GB, loading in chunks");
       var buffer = Uint8List(fileSize).buffer;
-      var file = File(path).openRead();
+      var file = FS.i.openRead(path);
       int position = 0;
       int i = 0;
       await for (var bytes in file) {
@@ -64,7 +65,7 @@ class ByteDataWrapper {
   }
 
   Future<void> save(String path) async {
-    await File(path).writeAsBytes(buffer.asUint8List());
+    await FS.i.write(path, buffer.asUint8List());
   }
 
   int get position => _position;

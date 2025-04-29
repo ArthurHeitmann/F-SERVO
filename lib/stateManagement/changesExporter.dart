@@ -1,5 +1,4 @@
 
-import 'dart:io';
 
 import 'package:path/path.dart';
 
@@ -12,6 +11,7 @@ import 'openFiles/openFilesManager.dart';
 import 'openFiles/types/WaiFileData.dart';
 import 'openFiles/types/xml/XmlFileData.dart';
 import 'preferencesData.dart';
+import '../fileSystem/FileSystem.dart';
 
 List<XmlFileData> changedXmlFiles = [];
 Set<String> changedPakFiles = {};
@@ -61,9 +61,9 @@ Future<void> processChangedFiles() async {
       for (var fileInfo in pakFiles) {
         String yaxName = fileInfo["name"];
         var yaxPath = join(pakDir, yaxName);
-        if (!await File(yaxPath).exists()) {
+        if (!await FS.i.existsFile(yaxPath)) {
           var xmlPath = "${yaxPath.substring(0, yaxPath.length - 4)}.xml";
-          if (await File(xmlPath).exists()) {
+          if (await FS.i.existsFile(xmlPath)) {
             await xmlFileToYaxFile(xmlPath);
           }
         }

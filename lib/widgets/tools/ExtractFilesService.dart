@@ -1,5 +1,4 @@
 
-import 'dart:io';
 import 'dart:isolate';
 import 'dart:math';
 
@@ -16,6 +15,7 @@ import '../../fileTypeUtils/wta/wtaExtractor.dart';
 import '../../stateManagement/hasUuid.dart';
 import '../../utils/assetDirFinder.dart';
 import '../../utils/utils.dart';
+import '../../fileSystem/FileSystem.dart';
 
 class ExtractFilesParam {
   List<String>? selectedFiles;
@@ -96,14 +96,11 @@ class FileExtractorService with HasUuid {
       }
     }
     else if (param.selectedDirectory != null) {
-      var allFiles = (await Directory(param.selectedDirectory!)
-        .list(recursive: param.recursive)
-        .toList())
-        .whereType<File>();
+      var allFiles = await FS.i.listFiles(param.selectedDirectory!, recursive: param.recursive).toList();
       remainingFiles.value += allFiles.length;
       for (var file in allFiles) {
         var workerParam = param.copy();
-        workerParam.selectedFiles = [file.path];
+        workerParam.selectedFiles = [file];
         workerParam.selectedDirectory = null;
         workerParam.id = _nextId++;
         _filesQueue.add(workerParam);
@@ -279,12 +276,12 @@ class _FileExtractorWorker {
     var wtpName = "${basenameWithoutExtension(wtaPath)}.wtp";
     var datDir = dirname(wtaPath);
     var wtpPath = join(datDir, wtpName);
-    if (await File(wtpPath).exists())
+    if (await FS.i.existsFile(wtpPath))
       return wtpPath;
     var dttDir = await findDttDirOfDat(datDir);
     if (dttDir != null)
       wtpPath = join(dttDir, wtpName);
-    if (!await File(wtpPath).exists())
+    if (!await FS.i.existsFile(wtpPath))
       return null;
     return wtpPath;
   }

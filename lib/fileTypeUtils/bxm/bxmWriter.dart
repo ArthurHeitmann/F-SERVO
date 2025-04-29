@@ -1,5 +1,4 @@
 
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:tuple/tuple.dart';
@@ -7,6 +6,7 @@ import 'package:xml/xml.dart';
 
 import '../utils/ByteDataWrapper.dart';
 import 'bxmIO.dart';
+import '../../fileSystem/FileSystem.dart';
 
 String _getElementText(XmlElement element) {
   var textNodes = element.children.whereType<XmlText>();
@@ -151,7 +151,7 @@ Future<void> xmlToBxm(XmlElement root, String savePath) async {
 }
 
 Future<void> convertXmlToBxmFile(String xmlPath, String bxmPath) async {
-  var xmlStr = await File(xmlPath).readAsString();
+  var xmlStr = await FS.i.readAsString(xmlPath);
   var xml = XmlDocument.parse(xmlStr);
   await xmlToBxm(xml.rootElement, bxmPath);
 }

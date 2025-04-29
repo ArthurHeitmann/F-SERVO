@@ -1,7 +1,6 @@
 // ignore_for_file: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
 
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
@@ -30,6 +29,7 @@ import '../../listNotifier.dart';
 import '../../openFiles/openFilesManager.dart';
 import '../../undoable.dart';
 import '../openFileTypes.dart';
+import '../../../fileSystem/FileSystem.dart';
 
 class McdFileData extends OpenFileData {
   McdData? mcdData;
@@ -209,7 +209,7 @@ class McdGlobalFont extends McdFont {
   McdGlobalFont(this.atlasInfoPath, this.atlasTexturePath, super.fontId, super.fontWidth, super.fontHeight, super.horizontalSpacing, super.supportedSymbols);
 
   static Future<McdGlobalFont> fromInfoFile(String atlasInfoPath, String atlasTexturePath) async {
-    var infoJson = jsonDecode(await File(atlasInfoPath).readAsString());
+    var infoJson = jsonDecode(await FS.i.readAsString(atlasInfoPath));
     var fontId = infoJson["id"];
     var fontWidth = infoJson["fontWidth"].toDouble();
     var fontHeight = infoJson["fontHeight"].toDouble();
@@ -625,20 +625,20 @@ class McdData extends _McdFilePart {
     if (initDir.endsWith(".dat") && ext == ".wtb") {
       var dttDir = "${initDir.substring(0, initDir.length - 4)}.dtt";
       texPath = join(dttDir, mcdName + ext);
-      if (await File(texPath).exists())
+      if (await FS.i.existsFile(texPath))
         return texPath;
       var dttPath = join(dirname(dirname(dttDir)), basename(dttDir));
-      if (!await File(dttPath).exists()) {
+      if (!await FS.i.existsFile(dttPath)) {
         showToast("Couldn't find DTT file");
         return null;
       }
       await extractDatFiles(dttPath);
-      if (await File(texPath).exists())
+      if (await FS.i.existsFile(texPath))
         return texPath;
       return null;
     }
 
-    if (await File(texPath).exists())
+    if (await FS.i.existsFile(texPath))
       return texPath;
 
     return null;
@@ -977,7 +977,7 @@ class McdData extends _McdFilePart {
           fontId: fontOverride
     };
     var allValidPaths = await Future.wait(
-      fontOverrides.map((f) => File(f.fontPath.value).exists())
+      fontOverrides.map((f) => FS.i.existsFile(f.fontPath.value))
     );
     if (allValidPaths.any((valid) => !valid)) {
       showToast("One or more font paths are invalid");
@@ -1197,7 +1197,7 @@ class McdData extends _McdFilePart {
 
     // delete tmp
     if (localTexDdsTmp != null) {
-      await File(localTexDdsTmp).delete();
+      await FS.i.delete(localTexDdsTmp);
     }
 
     print("Generated font texture with ${symbols.length} symbols");

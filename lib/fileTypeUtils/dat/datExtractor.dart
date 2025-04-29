@@ -1,6 +1,5 @@
 
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:path/path.dart' as path;
 
@@ -8,6 +7,7 @@ import '../../stateManagement/events/statusInfo.dart';
 import '../../utils/utils.dart';
 import '../pak/pakExtractor.dart';
 import '../utils/ByteDataWrapper.dart';
+import '../../fileSystem/FileSystem.dart';
 
 const currentDatVersion = 3;
 
@@ -61,13 +61,13 @@ Future<List<String>> extractDatFiles(String datPath, { bool shouldExtractPakFile
   // extract dir is file path --> /nier2blender_extracted/[filename]/
   var datDir = path.dirname(datPath);
   var extractDir = path.join(datDir, datSubExtractDir, path.basename(datPath));
-  await Directory(extractDir).create(recursive: true);
+  await FS.i.createDirectory(extractDir);
   List<String> filePaths = [];
   for (int i = 0; i < header.fileNumber; i++) {
     bytes.position = fileOffsets[i];
-    var extractedFile = File(path.join(extractDir, fileNames[i]));
-    filePaths.add(extractedFile.path);
-    await extractedFile.writeAsBytes(bytes.readUint8List(fileSizes[i]));
+    var extractedFile = path.join(extractDir, fileNames[i]);
+    filePaths.add(extractedFile);
+    await FS.i.write(extractedFile, bytes.readUint8List(fileSizes[i]));
   }
 
   dynamic jsonMetadata = {
@@ -77,8 +77,10 @@ Future<List<String>> extractDatFiles(String datPath, { bool shouldExtractPakFile
     "basename": path.basename(datPath).split(".")[0],
     "ext": path.basename(datPath).split(".")[1],
   };
-  await File(path.join(extractDir, "dat_info.json"))
-    .writeAsString(const JsonEncoder.withIndent("\t").convert(jsonMetadata));
+  await FS.i.writeAsString(
+    path.join(extractDir, "dat_info.json"),
+    const JsonEncoder.withIndent("\t").convert(jsonMetadata)
+  );
 
   if (shouldExtractPakFiles) {
     var pakFiles = fileNames.where((file) => file.endsWith(".pak"));
@@ -130,7 +132,7 @@ Stream<ExtractedInnerFile> extractDatFilesAsStream(String datPath) async* {
 
 Future<void> updateDatInfoFileOriginalOrder(String datPath, String extractDir) async {
   var datInfoPath = path.join(extractDir, "dat_info.json");
-  if (!await File(datInfoPath).exists())
+  if (!await FS.i.existsFile(datInfoPath))
     return;
   
   var bytes = await ByteDataWrapper.fromFile(datPath);
@@ -139,9 +141,9 @@ Future<void> updateDatInfoFileOriginalOrder(String datPath, String extractDir) a
   var nameLength = bytes.readUint32();
   var fileNames = List.generate(header.fileNumber, (index) => bytes.readString(nameLength).split("\u0000")[0]);
   
-  var datInfo = jsonDecode(await File(datInfoPath).readAsString()) as Map;
+  var datInfo = jsonDecode(await FS.i.readAsString(datInfoPath)) as Map;
   datInfo["original_order"] = fileNames;
   datInfo["version"] = currentDatVersion;
   var datInfoJson = const JsonEncoder.withIndent("\t").convert(datInfo);
-  await File(datInfoPath).writeAsString(datInfoJson);
+  await FS.i.writeAsString(datInfoPath, datInfoJson);
 }

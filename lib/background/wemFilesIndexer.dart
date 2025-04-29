@@ -1,7 +1,7 @@
 
 import 'dart:async';
-import 'dart:io';
 
+import '../fileSystem/FileSystem.dart';
 import '../stateManagement/events/miscEvents.dart';
 import '../stateManagement/preferencesData.dart';
 
@@ -66,16 +66,15 @@ class WemFilesLookup {
 
   Future<Map<int, String>> _getDirLookup(String dir) async {
     var lookup = <int, String>{};
-    var fileList = await Directory(dir)
-        .list(recursive: true)
-        .where((e) => e is File && RegExp(r"\d+\.wem$").hasMatch(e.path))
-    // .where((e) => dirname(e.path).endsWith(".wsp"))
+    var fileList = await FS.i.listFiles(dir, recursive: true)
+        .where((e) => RegExp(r"\d+\.wem$").hasMatch(e))
+    // .where((e) => dirname(e).endsWith(".wsp"))
         .toList();
 
     for (var file in fileList) {
-      var idStr = RegExp(r"(\d+)\.wem$").firstMatch(file.path)!.group(1)!;
+      var idStr = RegExp(r"(\d+)\.wem$").firstMatch(file)!.group(1)!;
       var id = int.parse(idStr);
-      lookup[id] = file.path;
+      lookup[id] = file;
     }
     return lookup;
   }

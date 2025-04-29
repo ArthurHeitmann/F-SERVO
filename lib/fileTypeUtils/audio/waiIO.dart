@@ -1,5 +1,4 @@
 
-import 'dart:io';
 import 'dart:math';
 
 import 'package:path/path.dart';
@@ -8,6 +7,7 @@ import '../../stateManagement/events/statusInfo.dart';
 import '../../utils/utils.dart';
 import '../utils/ByteDataWrapper.dart';
 import 'wemIdsToNames.dart';
+import '../../fileSystem/FileSystem.dart';
 
 class WaiHeader {
   int fileType;
@@ -316,7 +316,7 @@ class WaiFile {
       if (index == null)
         throw Exception("Wem ID ${patch.wemID} not found in WAI file");
       WemStruct wemStruct = wemStructs[index];
-      wemStruct.wemEntrySize = await File(patch.wemPath).length();
+      wemStruct.wemEntrySize = await FS.i.getSize(patch.wemPath);
     }));
 
     // get all used wsps
@@ -359,12 +359,12 @@ class WaiFile {
       var wspPatchDir = dirname(patch.wemPath);
       var wspWemStructs = wspNameToWemStructs[wspId]!.toList();
       wspWemStructs.sort((a, b) => a.wemOffset.compareTo(b.wemOffset));
-      var wspFile = await File(wspPath).open(mode: FileMode.write);
+      var wspFile = await FS.i.open(wspPath, mode: FileMode.write);
       int i = 0;
       try {
         for (WemStruct wemStruct in wspWemStructs) {
           var wemPath = join(wspPatchDir, wemStruct.toFileName(i));
-          var wemBytes = await File(wemPath).readAsBytes();
+          var wemBytes = await FS.i.read(wemPath);
           await wspFile.setPosition(wemStruct.wemOffset);
           await wspFile.writeFrom(wemBytes);
           var alignBytes = List.filled(2048 - wemBytes.length % 2048, 0);
@@ -384,14 +384,14 @@ class WaiFile {
 
 Future<void> makeWsp(List<WemStruct> wemFiles, Map<int, String> idToWemFiles, String savePath) async {
   await backupFile(savePath);
-  var wsp = await File(savePath).open(mode: FileMode.write);
+  var wsp = await FS.i.open(savePath, mode: FileMode.write);
   try {
     var sortedWemFiles = wemFiles.toList();
     sortedWemFiles.sort((a, b) => a.wemOffset.compareTo(b.wemOffset));
     for (WemStruct wem in sortedWemFiles) {
       if (!idToWemFiles.containsKey(wem.wemID))
         throw Exception("Missing wem file for id ${wem.wemID}");
-      var wemBytes = await File(idToWemFiles[wem.wemID]!).readAsBytes();
+      var wemBytes = await FS.i.read(idToWemFiles[wem.wemID]!);
       await wsp.setPosition(wem.wemOffset);
       await wsp.writeFrom(wemBytes);
     }

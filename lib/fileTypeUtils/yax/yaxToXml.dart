@@ -1,9 +1,9 @@
 
-import 'dart:io';
 
 import 'package:path/path.dart' as path;
 import 'package:xml/xml.dart';
 
+import '../../fileSystem/FileSystem.dart';
 import '../../stateManagement/events/statusInfo.dart';
 import '../../utils/utils.dart';
 import '../utils/ByteDataWrapper.dart';
@@ -98,11 +98,13 @@ Future<void> yaxFileToXmlFile(String yaxFilePath) async {
   var bytes = await ByteDataWrapper.fromFile(yaxFilePath);
   var xml = yaxToXml(bytes);
   var xmlString = xml.toPrettyString();
+  // var xmlFile = File(xmlFilePath);
+  // await xmlFile.writeAsString('<?xml version="1.0" encoding="utf-8"?>\n');
+  // await xmlFile.writeAsString(xmlString, mode: FileMode.append);
+  // await xmlFile.writeAsString("\n", mode: FileMode.append);
+  xmlString = '<?xml version="1.0" encoding="utf-8"?>\n$xmlString\n';
   var xmlFilePath = "${path.withoutExtension(yaxFilePath)}.xml";
-  var xmlFile = File(xmlFilePath);
-  await xmlFile.writeAsString('<?xml version="1.0" encoding="utf-8"?>\n');
-  await xmlFile.writeAsString(xmlString, mode: FileMode.append);
-  await xmlFile.writeAsString("\n", mode: FileMode.append);
+  await FS.i.writeAsString(xmlFilePath, xmlString);
   
   messageLog.add("Converting ${path.basename(yaxFilePath)} done");
 }

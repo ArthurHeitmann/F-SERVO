@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
@@ -55,6 +54,7 @@ import 'types/WmbHierarchyData.dart';
 import 'types/WtaHierarchyEntry.dart';
 import 'types/WtbHierarchyEntry.dart';
 import 'types/XmlScriptHierarchyEntry.dart';
+import '../../fileSystem/FileSystem.dart';
 
 
 class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements Disposable {
@@ -88,19 +88,19 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
     try {
       List<Tuple2<Iterable<String>, Future<HierarchyEntry?> Function()>> hierarchyPresets = [
         Tuple2(datExtensions, () async {
-          if (await File(filePath).exists()) {
+          if (await FS.i.existsFile(filePath)) {
             if (basename(filePath).startsWith("SlotData"))  // special case for save data
               return openGenericFile<SaveSlotDataHierarchyEntry>(filePath, parent, (n, p) => SaveSlotDataHierarchyEntry(n, p));
             return await openDat(filePath, parent: parent);
-          } else if (await Directory(filePath).exists())
+          } else if (await FS.i.existsDirectory(filePath))
             return await openExtractedDat(filePath, parent: parent);
           else
             throw FileSystemException("File not found: $filePath");
         }),
         Tuple2([".pak"], () async {
-          if (await File(filePath).exists())
+          if (await FS.i.existsFile(filePath))
             return await openPak(filePath, parent: parent);
-          else if (await Directory(filePath).exists())
+          else if (await FS.i.existsDirectory(filePath))
             return await openExtractedPak(filePath, parent: parent);
           else
             throw FileSystemException("File not found: $filePath");
@@ -212,8 +212,8 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
     var datFolder = dirname(datPath);
     datExtractDir ??= join(datFolder, datSubExtractDir, fileName);
     DatFiles? datFilePaths;
-    var srcDatExists = await File(datPath).exists();
-    if (!await Directory(datExtractDir).exists() && srcDatExists) {
+    var srcDatExists = await FS.i.existsFile(datPath);
+    if (!await FS.i.existsDirectory(datExtractDir) && srcDatExists) {
       await extractDatFiles(datPath, shouldExtractPakFiles: true);
     }
     else {
@@ -228,7 +228,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
       if (!shouldExtractDatFiles)
         shouldExtractDatFiles = datFilePaths == null;
       if (!shouldExtractDatFiles)
-        shouldExtractDatFiles = datFilePaths!.files.isNotEmpty && await Future.any(datFilePaths.files.map((name) async => !await File(name).exists()));
+        shouldExtractDatFiles = datFilePaths!.files.isNotEmpty && await Future.any(datFilePaths.files.map((name) async => !await FS.i.existsFile(name)));
       if (shouldExtractDatFiles) {
         await extractDatFiles(datPath, shouldExtractPakFiles: true);
       }
@@ -272,7 +272,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
 
     var pakFolder = dirname(pakPath);
     var pakExtractDir = join(pakFolder, "pakExtracted", basename(pakPath));
-    if (!await Directory(pakExtractDir).exists()) {
+    if (!await FS.i.existsDirectory(pakExtractDir)) {
       await extractPakFiles(pakPath, yaxToXml: true);
     }
     var pakEntry = PakHierarchyEntry(StringProp(pakPath.split(Platform.pathSeparator).last, fileId: null), pakPath, pakExtractDir);
@@ -297,14 +297,14 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
         pakEntry.add(existingEntries[existingEntryI]);
         continue;
       }
-      if (!await File(xmlFilePath).exists()) {
+      if (!await FS.i.existsFile(xmlFilePath)) {
         showToast("Failed to open $xmlFilePath");
       }
 
       var xmlEntry = XmlScriptHierarchyEntry(StringProp(xmlFile, fileId: null), xmlFilePath);
-      if (await File(xmlFilePath).exists())
+      if (await FS.i.existsFile(xmlFilePath))
         await xmlEntry.readMeta();
-      else if (await File(join(pakExtractDir, yaxFile["name"])).exists()) {
+      else if (await FS.i.existsFile(join(pakExtractDir, yaxFile["name"]))) {
         await yaxFileToXmlFile(join(pakExtractDir, yaxFile["name"]));
         await xmlEntry.readMeta();
       }
@@ -324,7 +324,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
 
   Future<HierarchyEntry> openYaxXmlScript(String yaxFilePath, { HierarchyEntry? parent }) async {
     var xmlFilePath = "${yaxFilePath.substring(0, yaxFilePath.length - 4)}.xml";
-    if (!await File(xmlFilePath).exists()) {
+    if (!await FS.i.existsFile(xmlFilePath)) {
       await yaxFileToXmlFile(yaxFilePath);
     }
     return openGenericFile<XmlScriptHierarchyEntry>(xmlFilePath,parent, (n, p) => XmlScriptHierarchyEntry(n, p));
@@ -337,7 +337,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
       var pathNoExt = withoutExtension(xmlFilePath);
       for (var ext in bxmExtensions) {
         var bxmPath = pathNoExt + ext;
-        if (await File(bxmPath).exists())
+        if (await FS.i.existsFile(bxmPath))
           return openGenericFile<BxmHierarchyEntry>(bxmPath, parent, (n, p) => BxmHierarchyEntry(n, p, xmlPath: xmlFilePath));
       }
     }
@@ -364,7 +364,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
     if (existing != null)
       return existing;
 
-    if (!await File(rbPath).exists()) {
+    if (!await FS.i.existsFile(rbPath)) {
       await binFileToRuby(binFilePath);
     }
 
@@ -400,13 +400,13 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
 
     // create EXTRACTION_COMPLETED file, to mark as extract dir
     bool noExtract = true;
-    var extractedFile = File(join(waiExtractDir, "EXTRACTION_COMPLETED"));
-    if (!await extractedFile.exists())
+    var extractedFile = join(waiExtractDir, "EXTRACTION_COMPLETED");
+    if (!await FS.i.existsFile(extractedFile))
       noExtract = false;
     var wai = await waiData.loadWai();
     var structure = await extractWaiWsps(wai, waiPath, waiExtractDir, noExtract);
     if (!noExtract)
-      await extractedFile.writeAsString("Delete this file to re-extract files");
+      await FS.i.writeAsString(extractedFile, "Delete this file to re-extract files");
     waiEntry.structure = structure;
 
     // move folders to top of list
@@ -435,14 +435,14 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
     var bnk = BnkFile.read(await ByteDataWrapper.fromFile(bnkPath));
     var bnkExtractDirName = "${basename(bnkPath)}_extracted";
     var bnkExtractDir = join(dirname(bnkPath), bnkExtractDirName);
-    if (!await Directory(bnkExtractDir).exists())
-      await Directory(bnkExtractDir).create(recursive: true);
+    if (!await FS.i.existsDirectory(bnkExtractDir))
+      await FS.i.createDirectory(bnkExtractDir);
     bool noExtract = false;
-    var extractedFile = File(join(bnkExtractDir, "EXTRACTION_COMPLETED"));
-    if (await extractedFile.exists())
+    var extractedFile = join(bnkExtractDir, "EXTRACTION_COMPLETED");
+    if (await FS.i.existsFile(extractedFile))
       noExtract = true;
     var wemFiles = await extractBnkWems(bnk, bnkExtractDir, noExtract);
-    await extractedFile.writeAsString("Delete this file to re-extract files");
+    await FS.i.writeAsString(extractedFile, "Delete this file to re-extract files");
 
     var bnkEntry = BnkHierarchyEntry(StringProp(basename(bnkPath), fileId: null), bnkPath, bnkExtractDir, bnk);
 
@@ -478,7 +478,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
     else
       add(bxmEntry);
 
-    if (!await File(bxmEntry.xmlPath).exists())
+    if (!await FS.i.existsFile(bxmEntry.xmlPath))
       convertBxmFileToXml(bxmPath, bxmEntry.xmlPath);
     
     return bxmEntry;
@@ -522,11 +522,9 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
   Future<HierarchyEntry?> openCtxFile(String filePath, {HierarchyEntry? parent}) async {
     List<String> wtbFiles = [];
     var extractedDir = "${filePath}_extracted";
-    bool shouldExtract = !await Directory(extractedDir).exists();
+    bool shouldExtract = !await FS.i.existsDirectory(extractedDir);
     if (!shouldExtract) {
-      wtbFiles = (await Directory(extractedDir).list().toList())
-        .whereType<File>()
-        .map((file) => file.path)
+      wtbFiles = await FS.i.listFiles(extractedDir)
         .where((file) => file.endsWith(".wtb"))
         .toList();
       shouldExtract = wtbFiles.isEmpty;
@@ -610,7 +608,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
         .fold<int>(0, (prev, e) => max(prev, e)) + 1;
       var newFileName = "$newIndex.xml";
       filePath = join(parentPath, newFileName);
-      if (await File(filePath).exists())
+      if (await FS.i.existsFile(filePath))
         filePath = "${randomId()}.xml";
     }
 
@@ -627,13 +625,12 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
       ]),
       parentTags: []
     );
-    var file = File(filePath);
-    await file.create(recursive: true);
+    await FS.i.createFile(filePath);
     var doc = XmlDocument();
     doc.children.add(XmlDeclaration([XmlAttribute(XmlName("version"), "1.0"), XmlAttribute(XmlName("encoding"), "utf-8")]));
     doc.children.add(content.toXml());
     var xmlStr = doc.toPrettyString();
-    await file.writeAsString(xmlStr);
+    await FS.i.writeAsString(filePath, xmlStr);
     xmlFileToYaxFile(filePath);
     
     // add file to pakInfo.json
@@ -659,10 +656,10 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
     if (await confirmDialog(getGlobalContext(), title: "Are you sure?") != true)
       return;
     await unlinkScript(script, requireConfirmation: false);
-    await File(script.path).delete();
+    await FS.i.delete(script.path);
     var yaxPath = "${script.path.substring(0, script.path.length - 4)}.yax";
-    if (await File(yaxPath).exists())
-      await File(yaxPath).delete();
+    if (await FS.i.existsFile(yaxPath))
+      await FS.i.delete(yaxPath);
   }
 
   void expandAll() {

@@ -1,5 +1,4 @@
 
-import 'dart:io';
 import 'dart:typed_data';
 
 
@@ -7,10 +6,11 @@ import 'package:flutter/painting.dart';
 
 import '../../utils/utils.dart';
 import '../utils/ByteDataWrapper.dart';
+import '../../fileSystem/FileSystem.dart';
 
 var _ddsMagic = "DDS ";
 Future<SizeInt> getImageSize(String path) async {
-  var bytes = await File(path).readAsBytes();
+  var bytes = await FS.i.read(path);
   return getImageBytesSize(bytes);
 }
 

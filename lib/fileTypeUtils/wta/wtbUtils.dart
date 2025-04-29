@@ -1,9 +1,9 @@
 
-import 'dart:io';
 
 import '../../utils/utils.dart';
 import '../utils/ByteDataWrapper.dart';
 import 'wtaReader.dart';
+import '../../fileSystem/FileSystem.dart';
 
 class WtbUtils {
   static Future<int> getSingleId(String wtbPath) async {
@@ -21,7 +21,7 @@ class WtbUtils {
       throw Exception("Expected 1 texture, got ${wtb.header.numTex}");
     bytes.position = wtb.textureOffsets[0];
     var texBytes = bytes.asUint8List(wtb.textureSizes[0]);
-    await File(ddsPath).writeAsBytes(texBytes);
+    await FS.i.write(ddsPath, texBytes);
   }
 
   static Future<void> replaceSingle(String wtbPath, String ddsPath) async {
@@ -30,7 +30,7 @@ class WtbUtils {
     if (wtb.header.numTex != 1)
       throw Exception("Expected 1 texture, got ${wtb.header.numTex}");
     
-    var texBytes = await File(ddsPath).readAsBytes();
+    var texBytes = await FS.i.read(ddsPath);
     var bytesNew = ByteDataWrapper.allocate(wtb.textureOffsets[0] + texBytes.length);
     wtb.textureSizes[0] = texBytes.length;
     wtb.write(bytesNew);

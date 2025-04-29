@@ -1,6 +1,5 @@
 
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 
@@ -9,6 +8,7 @@ import '../../../../stateManagement/events/jumpToEvents.dart';
 import '../../../../stateManagement/openFiles/openFilesManager.dart';
 import '../../../../utils/utils.dart';
 import '../../../../utils/xmlLineParser.dart';
+import '../../../../fileSystem/FileSystem.dart';
 
 class _XmlJumpToLineEventIW extends InheritedWidget {
   final Stream<JumpToIdEvent> jumpToIdEvents;
@@ -62,7 +62,7 @@ class _XmlJumpToLineEventWrapperState extends State<XmlJumpToLineEventWrapper> {
     
   void onJumpToLineEvent(JumpToLineEvent event) async {
     var file = areasManager.fromId(widget.file)!;
-    var fileXml = await File(file.path).readAsString();
+    var fileXml = await FS.i.readAsString(file.path);
     var xml = parseXmlWL(fileXml);
     var element = xml.getByLine(event.line);
     if (element == null)

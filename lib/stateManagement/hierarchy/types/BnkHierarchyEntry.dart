@@ -1,7 +1,5 @@
 
-import 'dart:io';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 
@@ -18,6 +16,7 @@ import '../../openFiles/types/WemFileData.dart';
 import '../../undoable.dart';
 import '../HierarchyEntryTypes.dart';
 import 'WaiHierarchyEntries.dart';
+import '../../../fileSystem/FileSystem.dart';
 
 class BnkHierarchyEntry extends GenericFileHierarchyEntry {
   final String extractedPath;
@@ -542,14 +541,13 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
       txt += _generateCuesTxt(child, null, 0);
     }
     
-    var cuesTxtPath = await FilePicker.platform.saveFile(
+    var cuesTxtPath = await FS.i.saveFile(
+      text: txt,
       dialogTitle: "Save cues info file",
       fileName: "${basenameWithoutExtension(path)}_cues.txt",
     );
     if (cuesTxtPath == null)
       return;
-
-    await File(cuesTxtPath).writeAsString(txt);
     showToast("Saved cues info file");
   }
 

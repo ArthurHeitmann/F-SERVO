@@ -1,6 +1,6 @@
 
 import 'dart:async';
-import 'dart:io';
+import 'dart:io' show File;
 import 'dart:isolate';
 
 import 'package:flutter/cupertino.dart';
@@ -16,6 +16,7 @@ import '../fileTypeUtils/yax/hashToStringMap.dart';
 import '../utils/utils.dart';
 import 'IdLookup.dart';
 import 'IdsIndexer.dart';
+import '../fileSystem/FileSystem.dart';
 
 class SearchResult {
   String filePath;
@@ -168,7 +169,7 @@ abstract class _SearchServiceWorker<T extends SearchOptions> {
     var t1 = DateTime.now();
 
     try {
-      if (!await Directory(options.searchPath).exists() && !await File(options.searchPath).exists())
+      if (!await FS.i.existsDirectory(options.searchPath) && !await FS.i.existsFile(options.searchPath))
         return;
       await _search(options.searchPath);
     }
@@ -204,13 +205,12 @@ class _SearchTextServiceWorker extends _SearchServiceWorker<SearchOptionsText> {
     if (_isCanceled)
       return;
     test ??= _initTestFuncStr(options);
-    var file = File(filePath);
-    if (await file.exists()) {
+    if (await FS.i.existsFile(filePath)) {
       if (options.fileExtensions.isNotEmpty && !options.fileExtensions.contains(path.extension(filePath)))
         return;
       List<String> lines;
       if (!options.isMultiline) {
-        lines = await _getFileLines(file, options);
+        lines = await _getFileLines(filePath, options);
         for (int i = 0; i < lines.length; i++) {
           var line = lines[i];
           if (!test(line))
@@ -219,7 +219,7 @@ class _SearchTextServiceWorker extends _SearchServiceWorker<SearchOptionsText> {
         }
       }
       else {
-        String content = await _getFileContent(file, options);
+        String content = await _getFileContent(filePath, options);
         if (!test(content))
           return;
         var matchPattern = RegExp(
@@ -260,7 +260,7 @@ class _SearchTextServiceWorker extends _SearchServiceWorker<SearchOptionsText> {
       }
     }
     else {
-      var dirList = await Directory(filePath).list().toList();
+      var dirList = await FS.i.list(filePath).toList();
       if (options.fileExtensions.isNotEmpty) {
         dirList = dirList
           .where((fse) => fse is! File || options.fileExtensions.contains(path.extension(fse.path)))
@@ -284,44 +284,44 @@ class _SearchTextServiceWorker extends _SearchServiceWorker<SearchOptionsText> {
     }
   }
 
-  Future<String> _getFileContent(File file, SearchOptionsText options) async {
-    if (file.path.endsWith(".tmd")) {
-      var entries = await readTmdFile(file.path);
+  Future<String> _getFileContent(String file, SearchOptionsText options) async {
+    if (file.endsWith(".tmd")) {
+      var entries = await readTmdFile(file);
       return entries.map((e) => e.toString()).join("\n");
     }
-    else if (file.path.endsWith(".tmd")) {
-      var entries = await readTmdFile(file.path);
+    else if (file.endsWith(".tmd")) {
+      var entries = await readTmdFile(file);
       return entries.map((e) => e.toString()).join("\n");
     }
-    else if (file.path.endsWith(".mcd")) {
-      var mcd = await McdFile.fromFile(file.path);
+    else if (file.endsWith(".mcd")) {
+      var mcd = await McdFile.fromFile(file);
       return mcd.encodeAsString(mcd.makeSymbolsMap());
     }
     try {
-      return await file.readAsString();
+      return await FS.i.readAsString(file);
     }
     catch (e) {
       return "";
     }
   }
 
-  Future<List<String>> _getFileLines(File file, SearchOptionsText options) async {
-    if (file.path.endsWith(".tmd")) {
-      var entries = await readTmdFile(file.path);
+  Future<List<String>> _getFileLines(String file, SearchOptionsText options) async {
+    if (file.endsWith(".tmd")) {
+      var entries = await readTmdFile(file);
       return entries
         .map((e) => e.toString().split("\n"))
         .expand((e) => e)
         .toList();
     }
-    else if (file.path.endsWith(".tmd")) {
-      var entries = await readTmdFile(file.path);
+    else if (file.endsWith(".tmd")) {
+      var entries = await readTmdFile(file);
       return entries
         .map((e) => e.toString().split("\n"))
         .expand((e) => e)
         .toList();
     }
-    else if (file.path.endsWith(".mcd")) {
-      var mcd = await McdFile.fromFile(file.path);
+    else if (file.endsWith(".mcd")) {
+      var mcd = await McdFile.fromFile(file);
       var symbols = mcd.makeSymbolsMap();
       return mcd.events
         .map((e) => e.encodeAsString(symbols).split("\n"))
@@ -329,7 +329,7 @@ class _SearchTextServiceWorker extends _SearchServiceWorker<SearchOptionsText> {
         .toList();
     }
     try {
-      return await file.readAsLines();
+      return await FS.i.readAsLines(file);
     }
     catch (e) {
       return [];
@@ -344,15 +344,14 @@ class _SearchIdServiceWorker extends _SearchServiceWorker<SearchOptionsId> {
   Future<void> _search(String filePath) async {
     if (_isCanceled)
       return;
-    var file = File(filePath);
-    if (await file.exists()) {
+    if (await FS.i.existsFile(filePath)) {
       if (options.fileExtensions.isNotEmpty && !options.fileExtensions.contains(path.extension(filePath)))
         return;
       if (path.extension(filePath) == ".yax")
         return;
       String xmlText;
       try {
-        xmlText = await file.readAsString();
+        xmlText = await FS.i.readAsString(filePath);
       } catch (e) {
         return;
       }
@@ -363,12 +362,12 @@ class _SearchIdServiceWorker extends _SearchServiceWorker<SearchOptionsId> {
       _searchIdInXml(filePath, xmlRoot);
     }
     else {
-      var dirList = await Directory(filePath).list().toList();
+      var dirList = await FS.i.list(filePath).toList();
       if (options.fileExtensions.isNotEmpty) {
         dirList = dirList
           .where((fse) => fse is! File || options.fileExtensions.contains(path.extension(fse.path)))
           .toList();
-      }
+        }
       await futuresWaitBatched(dirList.map((dir) => _search(dir.path)), 20);
     }
   }
@@ -446,14 +445,12 @@ class _SearchEstServiceWorker extends _SearchServiceWorker<SearchOptionsEst> {
   Future<void> _search(String searchPath) async {
     if (_isCanceled)
       return;
-    await for (var file in Directory(searchPath).list(recursive: true)) {
+    await for (var file in FS.i.listFiles(searchPath, recursive: true)) {
       if (_isCanceled)
         return;
-      if (file is! File)
+      if (!options.fileExtensions.any((ext) => file.endsWith(ext)))
         continue;
-      if (!options.fileExtensions.any((ext) => file.path.endsWith(ext)))
-        continue;
-      var est = EstFile.read(await ByteDataWrapper.fromFile(file.path));
+      var est = EstFile.read(await ByteDataWrapper.fromFile(file));
       List<int> matchingRecords = [];
       for (int i = 0; i < est.records.length; i++) {
         var record = est.records[i];
@@ -462,7 +459,7 @@ class _SearchEstServiceWorker extends _SearchServiceWorker<SearchOptionsEst> {
         matchingRecords.add(i);
       }
       if (matchingRecords.isNotEmpty)
-        _sendResult(SearchResultEst(file.path, matchingRecords));
+        _sendResult(SearchResultEst(file, matchingRecords));
     }
   }
 

@@ -1,5 +1,4 @@
 
-import 'dart:io';
 
 import 'package:path/path.dart';
 import 'package:xml/xml.dart';
@@ -10,6 +9,7 @@ import '../wwiseElement.dart';
 import '../wwiseElementBase.dart';
 import '../wwiseProjectGenerator.dart';
 import '../wwiseUtils.dart';
+import '../../../fileSystem/FileSystem.dart';
 
 class WwiseWorkUnit extends WwiseElementBase {
   final String path;
@@ -33,7 +33,7 @@ class WwiseWorkUnit extends WwiseElementBase {
     _folder = basename(dirname(path));
 
   static Future<WwiseWorkUnit> emptyFromXml(WwiseProjectGenerator project, String xmlPath) async {
-    var doc = XmlDocument.parse(await File(xmlPath).readAsString());
+    var doc = XmlDocument.parse(await FS.i.readAsString(xmlPath));
     var root = doc.rootElement;
     var id = root.getAttribute("ID")!;
     var child = root.childElements.first;

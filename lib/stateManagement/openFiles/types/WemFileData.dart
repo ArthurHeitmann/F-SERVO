@@ -1,6 +1,5 @@
 // ignore_for_file: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
 
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
@@ -20,6 +19,7 @@ import '../../undoable.dart';
 import '../openFileTypes.dart';
 import '../openFilesManager.dart';
 import 'WaiFileData.dart';
+import '../../../fileSystem/FileSystem.dart';
 
 mixin AudioFileData on HasUuid implements Disposable {
   AudioResource? resource;
@@ -156,7 +156,7 @@ class WemFileData extends OpenFileData with AudioFileData {
       if (overrideFile is WavFileData)
         await wavToWem(overrideFile.path, path, usesSeekTable);
       else if (overrideFile is WemFileData)
-        await File(overrideFile.path).copy(path);
+        await FS.i.copyFile(overrideFile.path, path);
       else
         throw Exception("Invalid override file type");
       overrideData.value!.dispose();

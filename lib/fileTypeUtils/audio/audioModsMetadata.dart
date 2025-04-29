@@ -1,10 +1,10 @@
 
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:mutex/mutex.dart';
 
 import '../../utils/version.dart';
+import '../../fileSystem/FileSystem.dart';
 
 
 class AudioModChunkInfo {
@@ -56,9 +56,9 @@ class AudioModsMetadata {
     };
   
   static Future<AudioModsMetadata> fromFile(String path) async {
-    if (!await File(path).exists())
+    if (!await FS.i.existsFile(path))
       return AudioModsMetadata(currentVersion, null, {}, {}, {});
-    var json = jsonDecode(await File(path).readAsString());
+    var json = jsonDecode(await FS.i.readAsString(path));
     return AudioModsMetadata.fromJSON(json);
   }
   
@@ -81,7 +81,7 @@ class AudioModsMetadata {
 
   Future<void> toFile(String path) async {
     var encoder = const JsonEncoder.withIndent("\t");
-    await File(path).writeAsString(encoder.convert(toJSON()));
+    await FS.i.writeAsString(path, encoder.convert(toJSON()));
   }
 
   static Future<void> lock() async => await _mutex.acquire();

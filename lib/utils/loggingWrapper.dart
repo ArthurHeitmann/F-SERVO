@@ -1,10 +1,10 @@
 
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 
+import '../fileSystem/FileSystem.dart';
 import 'utils.dart';
 
 final logFileName = join(dirname(Platform.resolvedExecutable), "log.txt");
@@ -61,8 +61,7 @@ void _logErrorToFile(FlutterErrorDetails err) {
 Future<void> _saveLogBuffer() async {
   var logBuffer = _logBuffer;
   _logBuffer = [];
-  var file = File(logFileName);
-  var logFile = await file.open(mode: FileMode.append);
+  var logFile = await FS.i.open(logFileName, mode: FileMode.append);
   await logFile.writeString("${logBuffer.join("\n")}\n");
   await logFile.close();
 }

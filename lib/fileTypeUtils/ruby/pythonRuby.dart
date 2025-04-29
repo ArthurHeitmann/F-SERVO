@@ -7,6 +7,7 @@ import 'package:path/path.dart';
 import '../../stateManagement/events/statusInfo.dart';
 import '../../utils/assetDirFinder.dart';
 import '../../utils/utils.dart';
+import '../../fileSystem/FileSystem.dart';
 
 Future<bool> _processFile(String filePath, String? assetsDir, bool isIsolate) async {
   void Function(String) errorPrint = isIsolate ? print : showToast;
@@ -48,7 +49,7 @@ Future<bool> rubyFileToBin(String filePath) async {
   // TODO is .bin and not .mrb
   var mrbPath = "$filePath.mrb";
   var binPath = withoutExtension(filePath);
-  await File(mrbPath).copy(binPath);
-  await File(mrbPath).delete();
+  await FS.i.copyFile(mrbPath, binPath);
+  await FS.i.delete(mrbPath);
   return true;
 }

@@ -1,11 +1,11 @@
 
-import 'dart:io';
 
 import 'package:path/path.dart';
 
 import '../../stateManagement/events/miscEvents.dart';
 import '../../stateManagement/events/statusInfo.dart';
 import 'waiIO.dart';
+import '../../fileSystem/FileSystem.dart';
 
 abstract class WaiChild {
   final String name;
@@ -39,7 +39,7 @@ Future<List<WaiChild>> extractWaiWsps(WaiFile wai, String waiPath, String extrac
   bool hasExtractedFiles = false;
   await Future.wait(wai.wspDirectories.map((dir) async {
     String wspsDir = dir.name.isNotEmpty ? join(extractPath, dir.name) : extractPath;
-    await Directory(wspsDir).create(recursive: true);
+    await FS.i.createDirectory(wspsDir);
     List<WaiChild> wspFilesInDir = structure;
     if (dir.name.isNotEmpty) {
       wspFilesInDir = [];
@@ -74,15 +74,14 @@ Future<List<WaiChild>> extractWaiWsps(WaiFile wai, String waiPath, String extrac
         ]);
         return;
       }
-      await Directory(wspExtractDir).create(recursive: true);
-      var wspFile = await File(wspPath).open();
+      await FS.i.createDirectory(wspExtractDir);
+      var wspFile = await FS.i.open(wspPath);
       try {
         for (int i = 0; i < wemStructs.length; i++) {
           var wemStruct = wemStructs[i];
           var wemPath = join(wspExtractDir, wemStruct.toFileName(i));
-          var wemFile = File(wemPath);
           await wspFile.setPosition(wemStruct.wemOffset);
-          await wemFile.writeAsBytes(await wspFile.read(wemStruct.wemEntrySize));
+          await FS.i.write(wemPath, await wspFile.read(wemStruct.wemEntrySize));
           wemFilesInWsp.add(WaiChildWem(wemStruct.toFileName(i), wemPath, wemStruct.wemID));
         }
         messageLog.add("Extracted $wspName");

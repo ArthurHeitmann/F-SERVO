@@ -1,5 +1,4 @@
 
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
@@ -19,6 +18,7 @@ import '../FileHierarchy.dart';
 import '../HierarchyEntryTypes.dart';
 import 'DatHierarchyEntry.dart';
 import 'XmlScriptHierarchyEntry.dart';
+import '../../../fileSystem/FileSystem.dart';
 
 final pakGroupIdMatcher = RegExp(r"^\w+_([a-f0-9]+)_grp\.pak$", caseSensitive: false);
 
@@ -29,10 +29,9 @@ class PakHierarchyEntry extends ExtractableHierarchyEntry {
       : super(name, path, extractedPath, true, false, priority: 500);
 
   Future<void> readGroups(String groupsXmlPath, HierarchyEntry? parent) async {
-    var groupsFile = File(groupsXmlPath);
-    if (!await groupsFile.exists()) {
+    if (!await FS.i.existsFile(groupsXmlPath)) {
       var yaxPath = groupsXmlPath.replaceAll(".xml", ".yax");
-      if (await File(yaxPath).exists())
+      if (await FS.i.existsFile(yaxPath))
         await yaxFileToXmlFile(yaxPath);
       else
         return;

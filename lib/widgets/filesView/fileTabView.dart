@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/gestures.dart';
@@ -18,6 +17,7 @@ import '../misc/dropTargetBuilder.dart';
 import '../misc/indexedStackIsVisible.dart';
 import 'FileTabEntry.dart';
 import 'FileType.dart';
+import '../../fileSystem/FileSystem.dart';
 
 
 class FileTabView extends ChangeNotifierWidget {
@@ -78,7 +78,7 @@ class _FileTabViewState extends ChangeNotifierState<FileTabView> {
       var fileName = path.basename(file);
       bool isSaveSlotData = fileName.startsWith("SlotData_") && fileName.endsWith(".dat");
       var isFileExplorerFile = fileExplorerExtensions.contains(path.extension(fileName));
-      var isFolder = await Directory(file).exists();
+      var isFolder = await FS.i.existsDirectory(file);
       var isExtractedWta = path.basename(file).endsWith(".wta_extracted") || path.basename(file).endsWith(".wtb_extracted");
       if (isFileExplorerFile && !isSaveSlotData || isFolder && !isExtractedWta) {
         var entry = await openHierarchyManager.openFile(file);

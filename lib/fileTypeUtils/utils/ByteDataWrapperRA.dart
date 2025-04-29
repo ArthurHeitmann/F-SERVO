@@ -1,6 +1,6 @@
-import 'dart:io';
 import 'dart:typed_data';
 
+import '../../fileSystem/FileSystem.dart';
 import 'ByteDataWrapper.dart';
 
 
@@ -56,7 +56,7 @@ class ByteDataWrapperRA {
 
 
   static Future<ByteDataWrapperRA> fromFile(String path) async {
-    var file = await File(path).open();
+    var file = await FS.i.open(path);
     var length = await file.length();
     return ByteDataWrapperRA(file, length);
   }

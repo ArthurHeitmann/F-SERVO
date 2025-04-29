@@ -1,6 +1,5 @@
 
 import 'dart:convert';
-import 'dart:io';
 import 'dart:math';
 import 'dart:ui';
 
@@ -14,6 +13,7 @@ import '../../utils/utils.dart';
 import '../misc/ChangeNotifierWidget.dart';
 import '../misc/SmoothScrollBuilder.dart';
 import '../theme/customTheme.dart';
+import '../../fileSystem/FileSystem.dart';
 
 
 void showDatSelectorPopup(DatHierarchyEntry datEntry) {
@@ -138,10 +138,7 @@ class _DatSelectorWidgetState extends State<_DatSelectorWidget> {
 
   Future<void> getFiles() async {
     var datFiles = await getDatFileList(widget.datEntry.extractedPath);
-    var folderItems = await Directory(widget.datEntry.extractedPath).list().toList();
-    files = folderItems
-        .whereType<File>()
-        .map((file) => file.path)
+    files = await FS.i.listFiles(widget.datEntry.extractedPath)
         .where((path) => extension(path).length <= 4)
         .map((path) => (path, BoolProp(datFiles.files.contains(path), fileId: null)))
         .toList();
@@ -151,8 +148,8 @@ class _DatSelectorWidgetState extends State<_DatSelectorWidget> {
   Future<void> save({ required bool export }) async {
     var datInfoPath = join(widget.datEntry.extractedPath, "dat_info.json");
     Map datInfo;
-    if (await File(datInfoPath).exists()) {
-      datInfo = jsonDecode(await File(datInfoPath).readAsString());
+    if (await FS.i.existsFile(datInfoPath)) {
+      datInfo = jsonDecode(await FS.i.readAsString(datInfoPath));
     } else {
       datInfo = {
         "version": 1,
@@ -170,7 +167,7 @@ class _DatSelectorWidgetState extends State<_DatSelectorWidget> {
       .map((file) => basename(file))
       .toList();
     datInfo["files"] = datFileNames;
-    await File(datInfoPath).writeAsString(const JsonEncoder.withIndent("\t").convert(datInfo));
+    await FS.i.writeAsString(datInfoPath, const JsonEncoder.withIndent("\t").convert(datInfo));
     if (export)
       await widget.datEntry.repackDatAction();
     await widget.datEntry.loadChildren(datFilePaths);

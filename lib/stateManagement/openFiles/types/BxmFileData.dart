@@ -1,5 +1,4 @@
 
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
@@ -11,6 +10,7 @@ import '../../../utils/utils.dart';
 import '../../../utils/xmlLineParser.dart';
 import '../openFileTypes.dart';
 import 'TextFileData.dart';
+import '../../../fileSystem/FileSystem.dart';
 
 class BxmFileData extends TextFileData {
   String? _xmlPath;
@@ -27,7 +27,7 @@ class BxmFileData extends TextFileData {
     loadingState.value = LoadingState.loading;
     try {
       var xmlPath = await getXmlPath();
-      text.value = await File(xmlPath).readAsString();
+      text.value = await FS.i.readAsString(xmlPath);
     } catch (e, s) {
       text.value = "[Error loading file]";
       print("$e\n$s");
@@ -40,7 +40,7 @@ class BxmFileData extends TextFileData {
   @override
   Future<void> save() async {
     var xmlPath = await getXmlPath();
-    await File(xmlPath).writeAsString(text.value);
+    await FS.i.writeAsString(xmlPath, text.value);
     try {
       await convertXmlToBxmFile(xmlPath, path);
     } on XmlException catch (e) {
@@ -62,10 +62,10 @@ class BxmFileData extends TextFileData {
     if (_xmlPath != null)
       return _xmlPath!;
     var xmlPath1 = "$path.xml";
-    if (await File(xmlPath1).exists())
+    if (await FS.i.existsFile(xmlPath1))
       return _xmlPath = xmlPath1;
     var xmlPath2 = "${withoutExtension(path)}.xml";
-    if (await File(xmlPath2).exists())
+    if (await FS.i.existsFile(xmlPath2))
       return _xmlPath = xmlPath2;
     await convertBxmFileToXml(path, xmlPath1);
     return _xmlPath = xmlPath1;

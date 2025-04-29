@@ -1,6 +1,5 @@
 
 import 'dart:async';
-import 'dart:io';
 
 import 'package:archive/archive_io.dart';
 import 'package:flutter/foundation.dart';
@@ -31,6 +30,7 @@ import 'wwiseElement.dart';
 import 'wwiseElementBase.dart';
 import 'wwiseIdGenerator.dart';
 import 'wwiseProperty.dart';
+import '../../fileSystem/FileSystem.dart';
 
 
 class WwiseProjectGeneratorOptions {
@@ -116,20 +116,20 @@ class WwiseProjectGenerator {
       status.logs.add(WwiseLog(WwiseLogSeverity.info,  "Starting to generate Wwise project..."));
       var projectPath = join(savePath, projectName);
       // clean
-      if (await Directory(projectPath).exists()) {
+      if (await FS.i.existsDirectory(projectPath)) {
         try {
-          await Directory(projectPath).delete(recursive: true);
+          await FS.i.deleteDirectory(projectPath, recursive: true);
         } catch (e) {
           messageLog.add("$e");
           status.logs.add(WwiseLog(WwiseLogSeverity.error,  "Failed to delete existing project directory"));
           return null;
         }
       }
-      if (await File(projectPath).exists()) {
+      if (await FS.i.existsFile(projectPath)) {
           status.logs.add(WwiseLog(WwiseLogSeverity.error,  "$projectPath is a file"));
         return null;
       }
-      await Directory(projectPath).create(recursive: true);
+      await FS.i.createDirectory(projectPath);
       // extract
       var projectZip = await rootBundle.load("assets/new_wwise_project.zip");
       var archive = ZipDecoder().decodeBytes(projectZip.buffer.asUint8List());
@@ -137,10 +137,10 @@ class WwiseProjectGenerator {
       // rename
       var wprojPath = join(projectPath, "test_project.wproj");
       var wprojPathNew = join(projectPath, "$projectName.wproj");
-      await File(wprojPath).rename(wprojPathNew);
-      var wprojData = await File(wprojPathNew).readAsString();
+      await FS.i.renameFile(wprojPath, wprojPathNew);
+      var wprojData = await FS.i.readAsString(wprojPathNew);
       wprojData = wprojData.replaceAll("test_project", projectName);
-      await File(wprojPathNew).writeAsString(wprojData);
+      await FS.i.writeAsString(wprojPathNew, wprojData);
       // generate
       var generator = WwiseProjectGenerator(projectName, projectPath, bnkPaths, options, status);
       unawaited(generator.run()
@@ -182,7 +182,7 @@ class WwiseProjectGenerator {
     ]);
     
     var wprojPath = join(projectPath, "$projectName.wproj");
-    var wprojDoc = XmlDocument.parse(await File(wprojPath).readAsString());
+    var wprojDoc = XmlDocument.parse(await FS.i.readAsString(wprojPath));
     var defaultConversionElement = wprojDoc.rootElement.findAllElements("DefaultConversion").first;
     defaultConversion = WwiseElement.fromXml("", this, defaultConversionElement);
     assert (defaultConversion.name == "Vorbis Quality High");
@@ -272,7 +272,7 @@ class WwiseProjectGenerator {
 
   Future<void> _enableSeekTable() async {
     var wuPath = join(projectPath, "Conversion Settings", "Factory Conversion Settings.wwu");
-    var wuDoc = XmlDocument.parse(await File(wuPath).readAsString());
+    var wuDoc = XmlDocument.parse(await FS.i.readAsString(wuPath));
     var conversion = wuDoc.rootElement
       .findAllElements("Conversion")
       .where((e) => e.getAttribute("Name") == "Vorbis Quality High")
@@ -286,7 +286,7 @@ class WwiseProjectGenerator {
     conversionPlugin.children.add(WwisePropertyList([
       WwiseProperty("SeekTableGranularity", "int32", value: "0")
     ]).toXml());
-    await File(wuPath).writeAsString(wuDoc.toPrettyString());
+    await FS.i.writeAsString(wuPath, wuDoc.toPrettyString());
   }
 }
 

@@ -1,5 +1,4 @@
 
-import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -14,6 +13,7 @@ import '../utils.dart';
 import 'wwiseIdGenerator.dart';
 import 'wwiseProjectGenerator.dart';
 import 'wwiseUtils.dart';
+import '../../fileSystem/FileSystem.dart';
 
 class WwiseAudioFile {
   final int id;
@@ -183,10 +183,10 @@ Future<void> _loadWems(Map<int, BnkContext<_AudioFileInfo>> usedAudioFiles, Wwis
       langPath = join(project.projectPath, "Originals", "SFX");
     else
       langPath = join(project.projectPath, "Originals", "Voices", language);
-    await Directory(langPath).create(recursive: true);
+    await FS.i.createDirectory(langPath);
     langPaths[language] = langPath;
   }
-  var tempDir = await Directory.systemTemp.createTemp("wem_conversion");
+  var tempDir = await FS.i.createTempDirectory("wem_conversion");
   var parallel = max(2, Platform.numberOfProcessors ~/ 2);
   var bnkCache = _BnkCache(parallel + 1);
   var processed = 0;
@@ -230,14 +230,14 @@ Future<void> _loadWems(Map<int, BnkContext<_AudioFileInfo>> usedAudioFiles, Wwis
         }
       }
       if (wemPath == null) {
-        wemPath = join(tempDir.path, "${audioContext.value.id}.wem");
-        await File(wemPath).writeAsBytes(wemBytes!);
+        wemPath = join(tempDir, "${audioContext.value.id}.wem");
+        await FS.i.write(wemPath, wemBytes!);
       }
   
       // save to project as WAV
       var langFolder = langPaths[audioContext.language]!;
       var wavPath = join(langFolder, "${wwiseIdToStr(audioContext.value.id)}.wav");
-      if (!await File(wavPath).exists())
+      if (!await FS.i.existsFile(wavPath))
         await wemToWav(wemPath, wavPath);
       
       var audioFile = WwiseAudioFile(audioContext.value.id, audioContext.value.prefetchId, wwiseIdToStr(audioContext.value.id), wavPath, audioContext.language, audioContext.value.isVoice);
@@ -246,7 +246,7 @@ Future<void> _loadWems(Map<int, BnkContext<_AudioFileInfo>> usedAudioFiles, Wwis
         outSoundFiles[audioContext.value.prefetchId!] = audioFile;
     }), parallel);
   } finally {
-    await tempDir.delete(recursive: true);
+    await FS.i.deleteDirectory(tempDir, recursive: true);
   }
 }
 

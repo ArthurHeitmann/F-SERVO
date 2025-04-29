@@ -1,9 +1,8 @@
 
-import 'dart:io';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
+import '../../fileSystem/FileSystem.dart';
 import '../../stateManagement/events/statusInfo.dart';
 import '../../stateManagement/hierarchy/FileHierarchy.dart';
 import '../../stateManagement/hierarchy/HierarchyEntryTypes.dart';
@@ -42,12 +41,12 @@ class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
   }
 
   Future<void> openFilePicker() async {
-    var files = await FilePicker.platform.pickFiles(allowMultiple: true);
-    if (files == null)
+    var files = await FS.i.selectFiles(allowMultiple: true);
+    if (files.isEmpty)
       return;
 
     var openedFiles = await Future.wait(
-      files.files.map((f) => openHierarchyManager.openFile(f.path!))
+      files.map((f) => openHierarchyManager.openFile(f))
     );
     var filesCount = openedFiles.where((f) => f != null).length;
 
@@ -203,7 +202,7 @@ class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
     recentFiles = recentFiles
       .where((f) {
         try {
-          return File(f).existsSync();
+          return FS.i.existsFileSync(f);
         } catch (e) {
           return false;
         }

@@ -1,9 +1,7 @@
 
 import 'dart:convert';
-import 'dart:io';
 import 'dart:math';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 import 'package:tuple/tuple.dart';
@@ -25,6 +23,7 @@ import '../../../theme/customTheme.dart';
 import 'FontsManager.dart';
 import 'McdFontDebugger.dart';
 import 'fontOverridesApply.dart';
+import '../../../../fileSystem/FileSystem.dart';
 
 const _itemsPerPage = 400;
 
@@ -154,27 +153,23 @@ class _McdEditorState extends ChangeNotifierState<McdEditor> {
   }
   
   void saveAsJson() async {
-    var path = await FilePicker.platform.saveFile(
+    var json = widget.file.mcdData!.toJson();
+    var jsonStr = const JsonEncoder.withIndent("  ").convert(json);
+    await FS.i.saveFile(
+      text: jsonStr,
       dialogTitle: "Save MCD as JSON",
-      type: FileType.custom,
       allowedExtensions: ["json"],
       fileName: "${basename(widget.file.path)}.json",
     );
-    if (path == null)
-      return;
-    var json = widget.file.mcdData!.toJson();
-    var jsonStr = const JsonEncoder.withIndent("  ").convert(json);
-    await File(path).writeAsString(jsonStr);
   }
 
   void loadFromJson() async {
-    var result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
+    var result = await FS.i.selectFiles(
       allowedExtensions: ["json"],
     );
-    if (result == null)
+    if (result.isEmpty)
       return;
-    var jsonStr = await File(result.files.single.path!).readAsString();
+    var jsonStr = await FS.i.readAsString(result.single);
     var json = jsonDecode(jsonStr);
     widget.file.mcdData!.fromJson(json);
   }

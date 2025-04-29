@@ -1,5 +1,4 @@
 
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
@@ -12,6 +11,7 @@ import '../../changesExporter.dart';
 import '../../undoable.dart';
 import '../openFileTypes.dart';
 import 'McdFileData.dart';
+import '../../../fileSystem/FileSystem.dart';
 
 class FtbFileData extends OpenFileData {
   FtbData? ftbData;
@@ -106,13 +106,13 @@ class FtbData extends ChangeNotifier {
     var name = basenameWithoutExtension(path);
     var datDir = dirname(path);
     var wtaPath = join(datDir, "$name.wta");
-    if (!await File(wtaPath).exists()) {
+    if (!await FS.i.existsFile(wtaPath)) {
       showToast("WTA file not found");
       throw Exception("WTA file not found");
     }
     var dttDir = "${datDir.substring(0, datDir.length - 4)}.dtt";
     var wtpPath = join(dttDir, "$name.wtp");
-    if (!await File(wtpPath).exists()) {
+    if (!await FS.i.existsFile(wtpPath)) {
       showToast("WTP file not found");
       throw Exception("WTP file not found");
     }
@@ -234,7 +234,7 @@ class FtbData extends ChangeNotifier {
   //     showToast("No font override for font $fontId");
   //     throw Exception("No font override for font $fontId");
   //   }
-  //   if (!await File(fontOverride.fontPath.value).exists()) {
+  //   if (!await FS.i.existsFile(fontOverride.fontPath.value)) {
   //     showToast("Font path is invalid");
   //     throw Exception("Font path is invalid");
   //   }
@@ -264,7 +264,7 @@ class FtbData extends ChangeNotifier {
   //       textureBatchesCount,
   //           (i) => generateTextureBatch(i, charsBatches[i], font, ddsPaths[i])
   //   ));
-  //   var wtpSizes = await Future.wait(ddsPaths.map((e) => File(e).length()));
+  //   var wtpSizes = await Future.wait(ddsPaths.map((e) => FS.i.getSize(e)));
 
   //   // update .wta
   //   var textureOffsets = [0];
@@ -283,10 +283,10 @@ class FtbData extends ChangeNotifier {
   //   // update .wtp
   //   var wtpBytes = ByteData(textureOffsets.last + wtpSizes.last);
   //   for (int i = 0; i < ddsPaths.length; i++) {
-  //     var ddsBytes = await File(ddsPaths[i]).readAsBytes();
+  //     var ddsBytes = await FS.i.read(ddsPaths[i]);
   //     wtpBytes.buffer.asUint8List().setAll(textureOffsets[i], ddsBytes);
   //   }
-  //   await File(wtpPath).writeAsBytes(wtpBytes.buffer.asUint8List());
+  //   await FS.i.write(wtpPath, wtpBytes.buffer.asUint8List());
   //   // export dtt
   //   var dttPath = dirname(wtpPath);
   //   await exportDat(dttPath);
@@ -355,16 +355,16 @@ class FtbData extends ChangeNotifier {
   //     throw Exception("No ImageMagick binaries found");
   //   }
 
-  //   var wtpBytes = await File(wtpPath).readAsBytes();
+  //   var wtpBytes = await FS.i.read(wtpPath);
   //   var extractDir = join(dirname(wtpPath), "textures");
-  //   await Directory(extractDir).create(recursive: true);
+  //   await FS.i.createDirectory(extractDir);
   //   for (var i = 0; i < textures.length; i++) {
   //     // extract dds
   //     var texStart = wtaFile.textureOffsets[i];
   //     var texEnd = texStart + wtaFile.textureSizes[i];
   //     var texBytes = wtpBytes.sublist(texStart, texEnd);
   //     var ddsSavePath = join(extractDir, "$i.dds");
-  //     await File(ddsSavePath).writeAsBytes(texBytes);
+  //     await FS.i.write(ddsSavePath, texBytes);
   //     // convert dds to png
   //     var pngSavePath = join(extractDir, "$i.png");
   //     var result = await Process.run(magickBinPath!, [ddsSavePath, pngSavePath]);

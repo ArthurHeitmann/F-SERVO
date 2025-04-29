@@ -4,7 +4,6 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:crclib/catalog.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -31,6 +30,7 @@ import '../widgets/misc/confirmCancelDialog.dart';
 import '../widgets/misc/contextMenuBuilder.dart';
 import '../widgets/theme/customTheme.dart';
 import 'assetDirFinder.dart';
+import '../fileSystem/FileSystem.dart';
 
 const uuidGen = Uuid();
 
@@ -210,12 +210,12 @@ bool isMetaPressed() {
 
 Future<List<String>> getDatFiles(String extractedDir) async {
   var pakInfo = path.join(extractedDir, "dat_info.json");
-  if (await File(pakInfo).exists()) {
-    var datInfoJson = jsonDecode(await File(pakInfo).readAsString()) as Map;
+  if (await FS.i.existsFile(pakInfo)) {
+    var datInfoJson = jsonDecode(await FS.i.readAsString(pakInfo)) as Map;
     return datInfoJson["files"].cast<String>();
   }
   var fileOrderMetadata = path.join(extractedDir, "file_order.metadata");
-  if (await File(fileOrderMetadata).exists()) {
+  if (await FS.i.existsFile(fileOrderMetadata)) {
     var filesBytes = await ByteDataWrapper.fromFile(fileOrderMetadata);
     var numFiles = filesBytes.readUint32();
     var nameLength = filesBytes.readUint32();
@@ -225,9 +225,8 @@ Future<List<String>> getDatFiles(String extractedDir) async {
     return datFiles;
   }
 
-  return await (Directory(extractedDir).list())
-    .where((file) => file is File && path.extension(file.path).length <= 3)
-    .map((file) => file.path)
+  return await (FS.i.listFiles(extractedDir))
+    .where((file) => path.extension(file).length <= 3)
     .toList();
 }
 
@@ -402,17 +401,17 @@ Key makeReferenceKey(Key key) {
 
 Future<List<dynamic>> getPakInfoData(String dir) async {
   var pakInfoPath = join(dir, "pakInfo.json");
-  if (!await File(pakInfoPath).exists())
+  if (!await FS.i.existsFile(pakInfoPath))
     return [];
-  Map pakInfoJson = jsonDecode(await File(pakInfoPath).readAsString());
+  Map pakInfoJson = jsonDecode(await FS.i.readAsString(pakInfoPath));
   return pakInfoJson["files"];
 }
 
 Future<dynamic> getPakInfoFileData(String path) async {
   var pakInfoPath = join(dirname(path), "pakInfo.json");
-  if (!await File(pakInfoPath).exists())
+  if (!await FS.i.existsFile(pakInfoPath))
     return null;
-  Map pakInfoJson = jsonDecode(await File(pakInfoPath).readAsString());
+  Map pakInfoJson = jsonDecode(await FS.i.readAsString(pakInfoPath));
   var yaxName = "${basenameWithoutExtension(path)}.yax";
   var fileInfoIndex = (pakInfoJson["files"] as List)
     .indexWhere((file) => file["name"] == yaxName);
@@ -423,43 +422,43 @@ Future<dynamic> getPakInfoFileData(String path) async {
 
 Future<void> updatePakInfoFileData(String path, void Function(dynamic data) updater) async {
   var pakInfoPath = join(dirname(path), "pakInfo.json");
-  if (!await File(pakInfoPath).exists())
+  if (!await FS.i.existsFile(pakInfoPath))
     return;
-  Map pakInfoJson = jsonDecode(await File(pakInfoPath).readAsString());
+  Map pakInfoJson = jsonDecode(await FS.i.readAsString(pakInfoPath));
   var yaxName = "${basenameWithoutExtension(path)}.yax";
   var fileInfoIndex = (pakInfoJson["files"] as List)
     .indexWhere((file) => file["name"] == yaxName);
   if (fileInfoIndex == -1)
     return;
   updater(pakInfoJson["files"][fileInfoIndex]);
-  await File(pakInfoPath).writeAsString(const JsonEncoder.withIndent("\t").convert(pakInfoJson));
+  await FS.i.writeAsString(pakInfoPath, const JsonEncoder.withIndent("\t").convert(pakInfoJson));
 }
 
 Future<void> addPakInfoFileData(String path, int type) async {
   var pakInfoPath = join(dirname(path), "pakInfo.json");
-  if (!await File(pakInfoPath).exists())
+  if (!await FS.i.existsFile(pakInfoPath))
     return;
-  Map pakInfoJson = jsonDecode(await File(pakInfoPath).readAsString());
+  Map pakInfoJson = jsonDecode(await FS.i.readAsString(pakInfoPath));
   var yaxName = "${basenameWithoutExtension(path)}.yax";
   (pakInfoJson["files"] as List).add({
     "name": yaxName,
     "type": type,
   });
-  await File(pakInfoPath).writeAsString(const JsonEncoder.withIndent("\t").convert(pakInfoJson));
+  await FS.i.writeAsString(pakInfoPath, const JsonEncoder.withIndent("\t").convert(pakInfoJson));
 }
 
 Future<void> removePakInfoFileData(String path) async {
   var pakInfoPath = join(dirname(path), "pakInfo.json");
-  if (!await File(pakInfoPath).exists())
+  if (!await FS.i.existsFile(pakInfoPath))
     return;
-  Map pakInfoJson = jsonDecode(await File(pakInfoPath).readAsString());
+  Map pakInfoJson = jsonDecode(await FS.i.readAsString(pakInfoPath));
   var yaxName = "${basenameWithoutExtension(path)}.yax";
   var fileInfoIndex = (pakInfoJson["files"] as List)
     .indexWhere((file) => file["name"] == yaxName);
   if (fileInfoIndex == -1)
     return;
   (pakInfoJson["files"] as List).removeAt(fileInfoIndex);
-  await File(pakInfoPath).writeAsString(const JsonEncoder.withIndent("\t").convert(pakInfoJson));
+  await FS.i.writeAsString(pakInfoPath, const JsonEncoder.withIndent("\t").convert(pakInfoJson));
 }
 
 bool isStringAscii(String s) {
@@ -525,15 +524,13 @@ class DatFiles {
 }
 Future<DatFiles> getDatFileList(String datDir, {bool allowMissingInfoFile = true, bool removeDuplicates = false}) async {
   var datInfoPath = path.join(datDir, "dat_info.json");
-  if (await File(datInfoPath).exists())
+  if (await FS.i.existsFile(datInfoPath))
     return _getDatFileListFromJson(datInfoPath, removeDuplicates);
   var metadataPath = path.join(datDir, "file_order.metadata");
-  if (await File(metadataPath).exists())
+  if (await FS.i.existsFile(metadataPath))
     return _getDatFileListFromMetadata(metadataPath, removeDuplicates);
   if (allowMissingInfoFile) {
-    var files = (await Directory(datDir).list().toList())
-      .whereType<File>()
-      .map((file) => file.path)
+    var files = await FS.i.listFiles(datDir)
       .where((file) => extension(file).isNotEmpty && extension(file).length <= 4)
       .toList();
     return DatFiles(1, files);
@@ -543,7 +540,7 @@ Future<DatFiles> getDatFileList(String datDir, {bool allowMissingInfoFile = true
 }
 
 Future<DatFiles> _getDatFileListFromJson(String datInfoPath, bool removeDuplicates) async {
-  var datInfoJson = jsonDecode(await File(datInfoPath).readAsString()) as Map;
+  var datInfoJson = jsonDecode(await FS.i.readAsString(datInfoPath)) as Map;
   List<String> files = [];
   var dir = path.dirname(datInfoPath);
   for (var file in datInfoJson["files"] as List) {
@@ -576,7 +573,7 @@ Future<DatFiles> _getDatFileListFromMetadata(String metadataPath, bool removeDup
 
 Future<String?> exportDat(String datFolder, { bool checkForNesting = false, bool overwriteOriginal = false, String? datExportPath }) async {
   var exportDir = PreferencesData().dataExportPath?.value ?? "";
-  if (exportDir.isNotEmpty && !await Directory(exportDir).exists()) {
+  if (exportDir.isNotEmpty && !await FS.i.existsDirectory(exportDir)) {
     messageLog.add("Export path does not exist: $exportDir");
     exportDir = "";
   }
@@ -590,7 +587,7 @@ Future<String?> exportDat(String datFolder, { bool checkForNesting = false, bool
   if (checkForNesting && datExportDir.isEmpty) {
     var parentDirs = [dirname(datFolder), dirname(dirname(datFolder))];
     for (var parentDir in parentDirs) {
-      if (!await Directory(parentDir).exists())
+      if (!await FS.i.existsDirectory(parentDir))
         break;
       var dirName = basename(parentDir);
       if (!dirName.contains("."))
@@ -619,7 +616,7 @@ Future<String?> exportDat(String datFolder, { bool checkForNesting = false, bool
     }
     // select export path
     else if (exportDir.isEmpty) {
-      var dir = await FilePicker.platform.getDirectoryPath(
+      var dir = await FS.i.selectDirectory(
         dialogTitle: "Select DAT export folder",
       );
       if (dir == null)
@@ -753,8 +750,8 @@ List<T> spaceListWith<T>(List<T> list, T Function() generator, [bool outer = fal
 
 Future<void> backupFile(String file) async {
   var backupName = "$file.backup";
-  if (!await File(backupName).exists() && await File(file).exists())
-    await File(file).copy(backupName);
+  if (!await FS.i.existsFile(backupName) && await FS.i.existsFile(file))
+    await FS.i.copyFile(file, backupName);
 }
 
 String formatDuration(Duration duration, [bool showMs = false]) {
@@ -810,10 +807,10 @@ Future<String?> findDttDirOfDat(String extractedDatDir) async {
   var dttExt = _datToDttExt[extension(extractedDatDir)] ?? ".dtt";
   var dttName = "$datName$dttExt";
   var dttDir = join(parentDir, dttName);
-  if (!await Directory(dttDir).exists()) {
+  if (!await FS.i.existsDirectory(dttDir)) {
     // try finding DTT file and extract it
     var dttPath = join(dirname(parentDir), dttName);
-    if (!await File(dttPath).exists()) {
+    if (!await FS.i.existsFile(dttPath)) {
       // check for dat nesting
       var nestedParentDatDir = dirname(parentDir);
       var nestedExt = extension(nestedParentDatDir);
@@ -824,20 +821,20 @@ Future<String?> findDttDirOfDat(String extractedDatDir) async {
         return null;
       // find dtt in new parent dtt
       dttDir = join(nestedDttDir, datSubExtractDir, dttName);
-      if (!await(Directory(dttDir).exists())) {
+      if (!await(FS.i.existsDirectory(dttDir))) {
         dttPath = join(nestedDttDir, dttName);
-        if (!await File(dttPath).exists())
+        if (!await FS.i.existsFile(dttPath))
           return null;
         await extractDatFiles(dttPath);
-        if (!await Directory(dttDir).exists())
+        if (!await FS.i.existsDirectory(dttDir))
           return null;
       }
     }
     else {
-      if (!await File(dttPath).exists())
+      if (!await FS.i.existsFile(dttPath))
         return null;
       await extractDatFiles(dttPath);
-      if (!await Directory(dttDir).exists())
+      if (!await FS.i.existsDirectory(dttDir))
         return null;
     }
   }
@@ -905,5 +902,5 @@ Future<bool> canOpenAsFile(String path) async {
   var ext = extension(path);
   if (sideBarOnlyExtensions.contains(ext))
     return false;
-  return await File(path).exists();
+  return await FS.i.existsFile(path);
 }

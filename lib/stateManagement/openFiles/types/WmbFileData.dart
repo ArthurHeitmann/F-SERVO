@@ -1,5 +1,4 @@
 
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
@@ -9,6 +8,7 @@ import '../../../utils/utils.dart';
 import '../../../widgets/filesView/FileType.dart';
 import '../../undoable.dart';
 import '../openFileTypes.dart';
+import '../../../fileSystem/FileSystem.dart';
 
 class WmbFileData extends OpenFileData {
   WmbFileData(super.name, super.path, { super.secondaryName })
@@ -23,10 +23,10 @@ class WmbFileData extends OpenFileData {
     var parent = dirname(path);
     var datDir = "${withoutExtension(parent)}.dat";
     var dttDir = "${withoutExtension(parent)}.dtt";
-    if (!await Directory(datDir).exists()) {
+    if (!await FS.i.existsDirectory(datDir)) {
       await _tryExtract(datDir);
     }
-    if (!await Directory(dttDir).exists()) {
+    if (!await FS.i.existsDirectory(dttDir)) {
       await _tryExtract(dttDir);
     }
 
@@ -39,8 +39,8 @@ class WmbFileData extends OpenFileData {
     var baseName = basename(datDir);
     var datOrigDir = dirname(dirname(datDir));
     var origDat = join(datOrigDir, baseName);
-    if (await File(origDat).exists()) {
-      if (await File(origDat).length() > 0) {
+    if (await FS.i.existsFile(origDat)) {
+      if (await FS.i.getSize(origDat) > 0) {
         try {
           await extractDatFiles(origDat);
         } on Exception catch (e) {

@@ -1,11 +1,11 @@
 
-import 'dart:io';
 
 import 'package:path/path.dart';
 
 import '../utils/ByteDataWrapper.dart';
 import 'bnkIO.dart';
 import 'wemIdsToNames.dart';
+import '../../fileSystem/FileSystem.dart';
 
 Future<List<({int id, String path, bool isPrefetched})>> extractBnkWems(BnkFile bnk, String extractPath, [bool noExtract = false]) async {
   if (!bnk.chunks.any((chunk) => chunk.chunkId == "DIDX")) {
@@ -37,7 +37,7 @@ Future<List<({int id, String path, bool isPrefetched})>> extractBnkWems(BnkFile 
     }
   }
 
-  await Directory(extractPath).create(recursive: true);
+  await FS.i.createDirectory(extractPath);
 
   List<({int id, String path, bool isPrefetched})> wems = [];
   for (int i = 0; i < didx.length; i++) {

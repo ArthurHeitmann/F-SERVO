@@ -1,5 +1,4 @@
 
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 
@@ -7,6 +6,7 @@ import '../../../widgets/filesView/FileType.dart';
 import '../../Property.dart';
 import '../../undoable.dart';
 import '../openFileTypes.dart';
+import '../../../fileSystem/FileSystem.dart';
 
 class TextFileData extends OpenFileData {
   late final StringProp text;
@@ -23,7 +23,7 @@ class TextFileData extends OpenFileData {
       return;
     loadingState.value = LoadingState.loading;
     try {
-      text.value = await File(path).readAsString();
+      text.value = await FS.i.readAsString(path);
     } catch (e, s) {
       text.value = "[Error loading file]";
       print("$e\n$s");
@@ -33,7 +33,7 @@ class TextFileData extends OpenFileData {
 
   @override
   Future<void> save() async {
-    await File(path).writeAsString(text.value);
+    await FS.i.writeAsString(path, text.value);
     setHasUnsavedChanges(false);
   }
 

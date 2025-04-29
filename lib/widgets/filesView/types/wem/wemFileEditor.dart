@@ -1,10 +1,9 @@
 
-import 'dart:io';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 
+import '../../../../fileSystem/FileSystem.dart';
 import '../../../../fileTypeUtils/audio/wemToWavConverter.dart';
 import '../../../../stateManagement/openFiles/openFilesManager.dart';
 import '../../../../stateManagement/openFiles/types/WemFileData.dart';
@@ -45,20 +44,19 @@ class _WemFileEditorState extends ChangeNotifierState<WemFileEditor> {
   void _onOverrideApplied() => setState(() => refreshKey = UniqueKey());
 
   Future<void> _pickOverride() async {
-    var files = await FilePicker.platform.pickFiles(
+    var files = await FS.i.selectFiles(
       allowMultiple: false,
       allowedExtensions: ["wav", "wem"],
-      type: FileType.custom,
     );
-    if (files == null)
+    if (files.isEmpty)
       return;
-    var file = files.files.first;
+    var file = files.first;
     AudioFileData overrideData;
-    if (file.path!.endsWith(".wav")) {
-      overrideData = WavFileData(file.path!);
+    if (file.endsWith(".wav")) {
+      overrideData = WavFileData(file);
     }
-    else if (file.path!.endsWith(".wem")) {
-      overrideData = WemFileData("", file.path!);
+    else if (file.endsWith(".wem")) {
+      overrideData = WemFileData("", file);
     }
     else {
       throw Exception("Invalid file extension");
@@ -67,15 +65,14 @@ class _WemFileEditorState extends ChangeNotifierState<WemFileEditor> {
   }
 
   Future<void> _exportAsWav({ String? wavPath, bool displayToast = true }) async {
-    wavPath ??= await FilePicker.platform.saveFile(
+    wavPath ??= await FS.i.selectSaveFile(
       fileName: "${basenameWithoutExtension(widget.wem.path)}.wav",
       allowedExtensions: ["wav"],
-      type: FileType.custom,
     );
     if (wavPath == null)
       return;
     // fix for weird bug with long file names
-    if (!await Directory(dirname(wavPath)).exists())
+    if (!await FS.i.existsDirectory(dirname(wavPath)))
       wavPath = dirname(wavPath); 
     await wemToWav(widget.wem.path, wavPath);
     if (displayToast)

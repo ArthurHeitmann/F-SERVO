@@ -1,5 +1,4 @@
 
-import 'dart:io';
 import 'dart:math';
 import 'dart:ui' as ui;
 
@@ -11,6 +10,7 @@ import '../../../../fileTypeUtils/wta/wtaReader.dart';
 import '../../../../stateManagement/openFiles/types/McdFileData.dart';
 import '../../../../utils/utils.dart';
 import '../../../misc/ChangeNotifierWidget.dart';
+import '../../../../fileSystem/FileSystem.dart';
 
 
 class McdFontDebugger extends ChangeNotifierWidget {
@@ -47,7 +47,7 @@ class _McdFontDebuggerState extends ChangeNotifierState<McdFontDebugger> {
 
   Future<void> loadImage() async {
     if (widget.texturePath.endsWith(".png") || widget.texturePath.endsWith(".jpg")) {
-      var imgBytes = await File(widget.texturePath).readAsBytes();
+      var imgBytes = await FS.i.read(widget.texturePath);
       image = Image.memory(imgBytes, fit: BoxFit.contain);
       uiImage = await decodeImageFromList(imgBytes);
       imageSize = SizeInt(uiImage!.width, uiImage!.height);

@@ -31,6 +31,7 @@ import 'widgets/statusbar/statusbar.dart';
 import 'widgets/theme/customTheme.dart';
 import 'widgets/theme/nierTheme.dart';
 import 'widgets/titlebar/Titlebar.dart';
+import 'fileSystem/FileSystem.dart';
 
 void main(List<String> args) {
   loggingWrapper(() => init(args));
@@ -38,7 +39,7 @@ void main(List<String> args) {
 
 void init(List<String> args) async {
   if (args.isNotEmpty) {
-    var paths = args.where((arg) => FileSystemEntity.typeSync(arg) != FileSystemEntityType.notFound).toList();
+    var paths = args.where((arg) => FS.i.existsSync(arg)).toList();
     if (await trySendFileArgs(paths)) {
       exit(0);
     }
@@ -122,7 +123,7 @@ void init(List<String> args) async {
       }
     }
     for (var arg in args) {
-      if (!await File(arg).exists() && !await Directory(arg).exists())
+      if (!await FS.i.existsFile(arg) && !await FS.i.existsDirectory(arg))
         continue;
       await openHierarchyManager.openFile(arg);
       if (await canOpenAsFile(arg))

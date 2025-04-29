@@ -1,8 +1,8 @@
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 
+import '../../../fileSystem/FileSystem.dart';
 import '../../../fileTypeUtils/textures/ddsConverter.dart';
 import '../../../stateManagement/Property.dart';
 import '../../../stateManagement/events/statusInfo.dart';
@@ -80,14 +80,13 @@ class _TexturesTableConfig with CustomTableConfig {
   }
 
   Future<void> _selectTexture(int index) async {
-    var paths = await FilePicker.platform.pickFiles(
+    var paths = await FS.i.selectFiles(
       dialogTitle: "Select DDS",
-      type: FileType.custom,
       allowedExtensions: ["dds"],
     );
-    if (paths == null)
+    if (paths.isEmpty)
       return;
-    var path = paths.files.first.path!;
+    var path = paths.first;
     textures[index].path.updateWith(path);
   }
 
@@ -116,7 +115,7 @@ class _TexturesTableConfig with CustomTableConfig {
   }
 
   Future<void> patchFromFolder() async {
-    var paths = await FilePicker.platform.getDirectoryPath(
+    var paths = await FS.i.selectDirectory(
       dialogTitle: "Select folder with DDS files",
     );
     if (paths == null)
@@ -223,9 +222,8 @@ class __TexturePreviewState extends ChangeNotifierState<_TexturePreview> {
               cursor: SystemMouseCursors.click,
               child: GestureDetector(
                 onTap: () async {
-                  var savePath = await FilePicker.platform.saveFile(
+                  var savePath = await FS.i.selectSaveFile(
                     dialogTitle: "Save PNG",
-                    type: FileType.custom,
                     allowedExtensions: ["png"],
                     fileName: "${basenameWithoutExtension(widget.path.value)}.png",
                   );

@@ -1,13 +1,13 @@
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../background/IdLookup.dart';
+import '../fileSystem/FileSystem.dart';
 import '../utils/utils.dart';
 import '../widgets/filesView/FileType.dart';
 import '../widgets/theme/darkTheme.dart';
@@ -194,9 +194,7 @@ class PreferencesData extends OpenFileData {
     if (wwisePath.isNotEmpty)
       return;
     const searchPath = r"C:\Program Files (x86)\Audiokinetic";
-    var cliPaths = (await Directory(searchPath).list(recursive: true).toList())
-      .whereType<File>()
-      .map((file) => file.path)
+    var cliPaths = (await FS.i.listFiles(searchPath).toList())
       .where((file) => file.contains("Wwise v2012"))
       .where((file) => file.contains("x64"))
       .where((file) => basename(file) == "WwiseCLI.exe")

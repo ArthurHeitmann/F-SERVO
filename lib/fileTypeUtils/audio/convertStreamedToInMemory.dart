@@ -1,5 +1,4 @@
 
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:path/path.dart';
@@ -13,6 +12,7 @@ import '../utils/ByteDataWrapper.dart';
 import 'bnkExtractor.dart';
 import 'bnkIO.dart';
 import 'wemIdsToNames.dart';
+import '../../fileSystem/FileSystem.dart';
 
 Future<void> convertStreamedToInMemory(String bnkPath, int wemId) async {
   try {
@@ -68,16 +68,16 @@ Future<void> _convertStreamedToInMemory(String bnkPath, int wemId) async {
   _updateUsages(hirc.chunks, prefetchId, sourceId, newId, wemData.length);
 
   var extractDir = join(dirname(bnkPath), "${basename(bnkPath)}_extracted");
-  await for (var file in Directory(extractDir).list()) {
-    if (file is File && file.path.endsWith(".wem"))
-      await file.delete();
+  await for (var file in FS.i.listFiles(extractDir)) {
+    if (file.endsWith(".wem"))
+      await FS.i.delete(file);
   }
   await extractBnkWems(bnk, extractDir);
 
   await backupFile(bnkPath);
   var bnkBytes = ByteDataWrapper.allocate(bnk.calculateSize());
   bnk.write(bnkBytes);
-  await File(bnkPath).writeAsBytes(bnkBytes.buffer.asUint8List());
+  await FS.i.write(bnkPath, bnkBytes.buffer.asUint8List());
 
   showToast("WEM $wemId converted to in-memory");
 }
@@ -136,7 +136,7 @@ Future<Uint8List?> _getWemData(int sourceId, Uint8List? existingWemData) async {
       return null;
     }
   }
-  var data = await File(wemPath).readAsBytes();
+  var data = await FS.i.read(wemPath);
   return Uint8List.fromList(data);
 }
 

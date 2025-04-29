@@ -9,6 +9,7 @@ import '../../stateManagement/events/statusInfo.dart';
 import '../dat/datExtractor.dart';
 import '../utils/ByteDataWrapper.dart';
 import '../yax/yaxToXml.dart';
+import '../../fileSystem/FileSystem.dart';
 
 /*
 struct HeaderEntry
@@ -73,7 +74,7 @@ Future<List<String>> extractPakFiles(String pakPath, { bool yaxToXml = false }) 
   // extract dir is file path --> /pakExtracted/pakName/[index]/
   var pakDir = path.dirname(pakPath);
   var extractDir = path.join(pakDir, "pakExtracted", path.basename(pakPath));
-  await Directory(extractDir).create(recursive: true);
+  await FS.i.createDirectory(extractDir);
   for (int i = 0; i < fileCount; i++) {
     await _extractPakYax(headerEntries[i], fileSizes[i], bytes, extractDir, i);
   }
@@ -85,7 +86,7 @@ Future<List<String>> extractPakFiles(String pakPath, { bool yaxToXml = false }) 
     })
   };
   var pakInfoPath = path.join(extractDir, "pakInfo.json");
-  await File(pakInfoPath).writeAsString(const JsonEncoder.withIndent("\t").convert(meta));
+  await FS.i.writeAsString(pakInfoPath, const JsonEncoder.withIndent("\t").convert(meta));
 
   if (yaxToXml) {
     await Future.wait(Iterable<int>.generate(fileCount).map<Future<void>>((i) async {

@@ -1,5 +1,4 @@
 
-import 'dart:io';
 
 import 'package:path/path.dart';
 
@@ -11,6 +10,7 @@ import '../../../utils/utils.dart';
 import '../../../widgets/filesView/FileType.dart';
 import '../../undoable.dart';
 import '../openFileTypes.dart';
+import '../../../fileSystem/FileSystem.dart';
 
 class WaiFileData extends OpenFileData {
   Set<WemPatch> pendingPatches = {};
@@ -27,7 +27,7 @@ class WaiFileData extends OpenFileData {
     loadingState.value = LoadingState.loading;
 
     var bnkPath = join(dirname(path), "bgm", "BGM.bnk");
-    if (await File(bnkPath).exists()) {
+    if (await FS.i.existsFile(bnkPath)) {
       wemIdsToBnkPlaylists.addAll(await getWemIdsToBnkPlaylists(bnkPath));
     } else {
       showToast("BGM.bnk not found");

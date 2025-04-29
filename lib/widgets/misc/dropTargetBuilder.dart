@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
 
+import '../../fileSystem/FileSystem.dart';
 import 'indexedStackIsVisible.dart';
 
 class DropTargetBuilder extends StatefulWidget {
@@ -35,9 +36,11 @@ class _DropTargetBuilderState extends State<DropTargetBuilder> {
         isDropping = false;
         setState(() {});
       },
-      onDragDone: (details) {
+      onDragDone: (details) async {
         if (_dropping > 0)
           return;
+        for (var file in details.files)
+          FS.i.registerFile(file.path, await file.readAsBytes());
         widget.onDrop(details.files.map((f) => f.path).toList());
       },
       child: widget.builder(context, isDropping),

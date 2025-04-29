@@ -1,8 +1,6 @@
 
-import 'dart:io';
 
 import 'package:dotted_border/dotted_border.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 
@@ -18,6 +16,7 @@ import '../theme/customTheme.dart';
 import 'ChangeNotifierWidget.dart';
 import 'SmoothScrollBuilder.dart';
 import 'dropTargetBuilder.dart';
+import '../../fileSystem/FileSystem.dart';
 
 void showWwiseProjectGeneratorPopup(String bnkPath) {
   showDialog(
@@ -172,7 +171,7 @@ class __WwiseProjectGeneratorPopupState extends State<_WwiseProjectGeneratorPopu
             splashRadius: 17,
             padding: EdgeInsets.zero,
             onPressed: () async {
-              var dir = await FilePicker.platform.getDirectoryPath(
+              var dir = await FS.i.selectDirectory(
                 dialogTitle: "Select project save path",
               );
               if (dir == null)
@@ -327,15 +326,14 @@ class __WwiseProjectGeneratorPopupState extends State<_WwiseProjectGeneratorPopu
                       padding: EdgeInsets.zero,
                       constraints: BoxConstraints.tight(const Size(30, 30)),
                       onPressed: () async {
-                        var files = await FilePicker.platform.pickFiles(
-                          type: FileType.custom,
+                        var files = await FS.i.selectFiles(
                           allowedExtensions: ["bnk"],
                           allowMultiple: true,
                           dialogTitle: "Select BNKs",
                         );
-                        if (files == null)
+                        if (files.isEmpty)
                           return;
-                        bnkPaths.addAll(files.paths.whereType<String>());
+                        bnkPaths.addAll(files);
                         setState(() {});
                       },
                     ),
@@ -444,7 +442,7 @@ class __WwiseProjectGeneratorPopupState extends State<_WwiseProjectGeneratorPopu
   }
 
   void generate() async {
-    if (!await Directory(savePath.value).exists()) {
+    if (!await FS.i.existsDirectory(savePath.value)) {
       showToast("Project save path is invalid");
       return;
     }

@@ -1,4 +1,5 @@
 
+
 import 'dart:io';
 
 import 'package:archive/archive_io.dart';
@@ -12,13 +13,14 @@ import '../../utils/utils.dart';
 import '../utils/ByteDataWrapper.dart';
 import 'riffParser.dart';
 import '../xml/xmlExtension.dart';
+import '../../fileSystem/FileSystem.dart';
 
 const _defaultTemplateFile = "wavToWemTemplate_default.zip";
 const _bgmTemplateFile = "wavToWemTemplate_BGM.zip";
 
 Future<String> _makeWwiseProject(bool isBgm) async {
   String wwiseProjectTemplate = join(assetsDir!, isBgm ? _bgmTemplateFile : _defaultTemplateFile);
-  String tempProjectDir = (await Directory.systemTemp.createTemp("wwiseProject")).path;
+  String tempProjectDir = (await FS.i.createTempDirectory("wwiseProject"));
 
   var fs = InputFileStream(wwiseProjectTemplate);
   var archive = ZipDecoder().decodeBuffer(fs);
@@ -74,7 +76,7 @@ Future<void> wavToWem(String wavPath, String wemSavePath, bool isBgm, [bool enab
     XmlDocument wSourcesXml = _getWwiseSourcesXml(wavPath, enableVolumeNormalization);
     String wSourcesXmlPath = join(wavSrcDir, "ExtSourceList.wsources");
     var xmlStr = wSourcesXml.toPrettyString();
-    await File(wSourcesXmlPath).writeAsString(xmlStr);
+    await FS.i.writeAsString(wSourcesXmlPath, xmlStr);
 
     messageLog.add("Converting WAV to WEM");
     String wwiseCliPath = prefs.wwise2012CliPath!.value;
@@ -92,16 +94,16 @@ Future<void> wavToWem(String wavPath, String wemSavePath, bool isBgm, [bool enab
     print(result.stdout);
     print(result.stderr);
     var wemExportedPath = join(projectPath, "GeneratedSoundBanks", "Windows", "${basenameWithoutExtension(wavPath)}.wem");
-    if (!await File(wemExportedPath).exists()) {
+    if (!await FS.i.existsFile(wemExportedPath)) {
       showToast("Error converting WAV to WEM");
       throw Exception("Error converting WAV to WEM");
     }
 
-    await File(wemExportedPath).copy(wemSavePath);
+    await FS.i.copyFile(wemExportedPath, wemSavePath);
 
     print("WAV to WEM conversion successful");
     messageLog.add("WAV to WEM conversion successful");
   } finally {
-    await Directory(projectPath).delete(recursive: true);
+    await FS.i.deleteDirectory(projectPath, recursive: true);
   }
 }

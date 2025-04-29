@@ -1,9 +1,9 @@
 
-import 'dart:io';
 
 import 'package:path/path.dart';
 
 import '../utils/ByteDataWrapper.dart';
+import '../../fileSystem/FileSystem.dart';
 
 Future<List<String>> extractCtx(String path, String extractDir) async {
   var bytes = await ByteDataWrapper.fromFile(path);
@@ -13,7 +13,7 @@ Future<List<String>> extractCtx(String path, String extractDir) async {
   var fileCount = bytes.readUint32();
   var offsets = bytes.readUint32List(fileCount);
 
-  await Directory(extractDir).create();
+  await FS.i.createDirectory(extractDir);
   List<String> extractedFiles = [];
   for (int i = 0; i < fileCount; i++) {
     if (offsets[i] == 0)
@@ -23,7 +23,7 @@ Future<List<String>> extractCtx(String path, String extractDir) async {
     var size = nextOffset - offsets[i];
     bytes.position = offsets[i];
     var fileBytes = bytes.asUint8List(size);
-    File(filePath).writeAsBytesSync(fileBytes);
+    await FS.i.write(filePath, fileBytes);
     extractedFiles.add(filePath);
   }
   return extractedFiles;

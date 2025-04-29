@@ -1,10 +1,10 @@
 
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 import 'package:xml/xml.dart';
 
+import '../../../fileSystem/FileSystem.dart';
 import '../../../fileTypeUtils/yax/xmlToYax.dart';
 import '../../../utils/utils.dart';
 import '../../Property.dart';
@@ -34,8 +34,7 @@ class XmlScriptHierarchyEntry extends FileHierarchyEntry {
   Future<void> readMeta() async {
     if (_hasReadMeta) return;
 
-    var scriptFile = File(path);
-    var scriptContents = await scriptFile.readAsString();
+    var scriptContents = await FS.i.readAsString(path);
     var xmlRoot = XmlDocument.parse(scriptContents).firstElementChild!;
     var group = xmlRoot.findElements("group");
     if (group.isNotEmpty && group.first.text.startsWith("0x"))

@@ -1,11 +1,11 @@
 
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:archive/archive_io.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as path;
 
+import '../../fileSystem/FileSystem.dart';
 import '../../stateManagement/events/statusInfo.dart';
 import '../../utils/utils.dart';
 import '../utils/ByteDataWrapper.dart';
@@ -25,9 +25,9 @@ class _FileEntry {
 
   _FileEntry(this.offset) : uncompressedSize = 0, pakSize = 0, data = [], compressedData = [], compressedSize = -1;
 
-  Future<void> init(File file, int index) async {
-    uncompressedSize = await file.length();
-    data = await file.readAsBytes();
+  Future<void> init(String file, int index) async {
+    uncompressedSize = await FS.i.getSize(file);
+    data = await FS.i.read(file);
     var paddingEndLength = (4 - (uncompressedSize % 4)) % 4;
     pakSize = data.length + paddingEndLength;
 
@@ -88,15 +88,15 @@ class _FileEntry {
 Future<void> repackPak(String pakDir) async {
   messageLog.add("Repacking ${path.basename(pakDir)}...");
   
-  var infoJsonFile = File(path.join(pakDir, "pakInfo.json"));
-  var pakInfo = jsonDecode(await infoJsonFile.readAsString());
+  var infoJsonFile = path.join(pakDir, "pakInfo.json");
+  var pakInfo = jsonDecode(await FS.i.readAsString(infoJsonFile));
 
   var filesOffset = (pakInfo["files"] as List).length * 12 + 0x4;
   var lastFileOffset = filesOffset;
   var fileEntries = <_FileEntry>[];
   for (var i = 0; i < pakInfo["files"].length; i++) {
     var yaxFile = pakInfo["files"][i];
-    var yaxF = File(path.join(pakDir, yaxFile["name"]));
+    var yaxF = path.join(pakDir, yaxFile["name"]);
     var fileEntry = _FileEntry(lastFileOffset);
     await fileEntry.init(yaxF, i);
     fileEntries.add(fileEntry);

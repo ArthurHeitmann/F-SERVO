@@ -1,5 +1,4 @@
 
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
@@ -16,6 +15,7 @@ import '../../hasUuid.dart';
 import '../../undoable.dart';
 import '../openFileTypes.dart';
 import '../openFilesManager.dart';
+import '../../../fileSystem/FileSystem.dart';
 
 class UidFileData extends OpenFileData {
   UidFile? uid;
@@ -52,10 +52,10 @@ class UidFileData extends OpenFileData {
         var datName = "ui_${baseName}_us.dat";
         var datPath = join(dirname(dirname(dirname(path))), datName);
         var datDir = join(dirname(dirname(path)), datName);
-        if (!await Directory(datDir).exists())
+        if (!await FS.i.existsDirectory(datDir))
           await extractDatFiles(datPath);
         var mcdPath = join(datDir, "mess$baseName.mcd");
-        if (!await File(mcdPath).exists())
+        if (!await FS.i.existsFile(mcdPath))
           continue;
         await _loadMcdNames(mcdPath);
       }
@@ -68,7 +68,7 @@ class UidFileData extends OpenFileData {
   }
 
   Future<void> _loadMcdNames(String mcdPath) async {
-    if (!await File(mcdPath).exists())
+    if (!await FS.i.existsFile(mcdPath))
       return;
     var mcdBytes = await ByteDataWrapper.fromFile(mcdPath);
     var mcd = McdFile.read(mcdBytes);

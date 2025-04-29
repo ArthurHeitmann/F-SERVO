@@ -1,12 +1,12 @@
 
 // ignore_for_file: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
 
-import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 
+import '../../fileSystem/FileSystem.dart';
 import '../../utils/Disposable.dart';
 import '../../utils/utils.dart';
 import '../../widgets/filesView/FileType.dart';
@@ -71,7 +71,7 @@ abstract class OpenFileData with HasUuid, Undoable, Disposable, HasUndoHistory {
         var pathNoExt = withoutExtension(path);
         for (var ext in bxmExtensions) {
           var bxmPath = pathNoExt + ext;
-          if (File(bxmPath).existsSync())
+          if (FS.i.existsFileSync(bxmPath))
             return BxmFileData(name, bxmPath, secondaryName: secondaryName);
         }
       }

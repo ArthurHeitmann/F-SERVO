@@ -1,7 +1,5 @@
 
-import 'dart:io';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 
@@ -17,6 +15,7 @@ import '../../openFiles/openFilesManager.dart';
 import '../../openFiles/types/WemFileData.dart';
 import '../../undoable.dart';
 import '../HierarchyEntryTypes.dart';
+import '../../../fileSystem/FileSystem.dart';
 
 class WaiHierarchyEntry extends ExtractableHierarchyEntry {
   OpenFileId waiDataId;
@@ -115,11 +114,11 @@ class WspHierarchyEntry extends GenericFileHierarchyEntry {
   }
 
   Future<void> exportAsWav() async {
-    var saveDir = await FilePicker.platform.getDirectoryPath();
+    var saveDir = await FS.i.selectDirectory();
     if (saveDir == null)
       return;
     var wspDir = join(saveDir, basename(path));
-    await Directory(wspDir).create(recursive: true);
+    await FS.i.createDirectory(wspDir);
     await Future.wait(
       children.whereType<WemHierarchyEntry>()
           .map((e) => e.exportAsWav(
@@ -165,10 +164,9 @@ class WemHierarchyEntry extends GenericFileHierarchyEntry {
   }
 
   Future<void> exportAsWav({ String? wavPath, bool displayToast = true }) async {
-    wavPath ??= await FilePicker.platform.saveFile(
+    wavPath ??= await FS.i.selectSaveFile(
       fileName: "${basenameWithoutExtension(path)}.wav",
       allowedExtensions: ["wav"],
-      type: FileType.custom,
     );
     if (wavPath == null)
       return;

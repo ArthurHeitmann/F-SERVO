@@ -1,11 +1,11 @@
 
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
 import '../../fileTypeUtils/textures/ddsConverter.dart';
 import '../../utils/utils.dart';
+import '../../fileSystem/FileSystem.dart';
 
 enum ImagePreviewState {
   loading,
@@ -51,7 +51,7 @@ class _ImagePreviewBuilderState extends State<ImagePreviewBuilder> {
     lastPath = widget.path;
     image = Future.value(null);
     setState(() {});
-    if (widget.path.isEmpty || !await File(widget.path).exists()) {
+    if (widget.path.isEmpty || !await FS.i.existsFile(widget.path)) {
       exists = false;
       return;
     }

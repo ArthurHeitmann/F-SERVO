@@ -1,5 +1,4 @@
 
-import 'dart:io';
 
 import 'package:xml/xml.dart';
 
@@ -8,6 +7,7 @@ import 'guessedData.dart';
 import 'wwiseElement.dart';
 import 'wwiseProjectGenerator.dart';
 import 'wwiseUtils.dart';
+import '../../fileSystem/FileSystem.dart';
 
 abstract class WwiseElementBase {
   final String id;
@@ -36,7 +36,7 @@ abstract class WwiseElementBase {
       XmlProcessing("xml", "version=\"1.0\" encoding=\"utf-8\""),
       toXml(),
     ]);
-    await File(path).writeAsString(doc.toPrettyString());
+    await FS.i.writeAsString(path, doc.toPrettyString());
   }
 
   void addChild(WwiseElement child) {

@@ -1,10 +1,11 @@
 
+
 import 'dart:io';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 
+import '../../fileSystem/FileSystem.dart';
 import '../../stateManagement/Property.dart';
 import '../../utils/utils.dart';
 import '../misc/ChangeNotifierWidget.dart';
@@ -20,7 +21,7 @@ class ExtractFilesTool extends StatefulWidget {
 }
 
 class _ExtractFilesToolState extends State<ExtractFilesTool> {
-  List<File>? selectedFiles;
+  List<String>? selectedFiles;
   Directory? selectedDirectory;
   Directory? cpkExtractDirectory;
   bool hasCpkFilesSelected = false;
@@ -56,20 +57,19 @@ class _ExtractFilesToolState extends State<ExtractFilesTool> {
   }
 
   void selectFiles() async {
-    var files = await FilePicker.platform.pickFiles(
+    var files = await FS.i.selectFiles(
       allowMultiple: true,
-      type: FileType.any,
     );
-    if (files == null || files.files.isEmpty)
+    if (files.isEmpty)
       return;
-    selectedFiles = files.files.map((e) => File(e.path!)).toList();
+    selectedFiles = files;
     selectedDirectory = null;
-    hasCpkFilesSelected = selectedFiles!.any((e) => e.path.endsWith(".cpk"));
+    hasCpkFilesSelected = selectedFiles!.any((e) => e.endsWith(".cpk"));
     setState(() {});
   }
 
   void selectDirectory() async {
-    var directory = await FilePicker.platform.getDirectoryPath();
+    var directory = await FS.i.selectDirectory();
     if (directory == null)
       return;
     selectedFiles = null;
@@ -79,7 +79,7 @@ class _ExtractFilesToolState extends State<ExtractFilesTool> {
   }
 
   void selectExtractDirectory() async {
-    var directory = await FilePicker.platform.getDirectoryPath();
+    var directory = await FS.i.selectDirectory();
     if (directory == null)
       return;
     cpkExtractDirectory = Directory(directory);
@@ -123,7 +123,7 @@ class _ExtractFilesToolState extends State<ExtractFilesTool> {
     service?.dispose();
     service = FileExtractorService();
     service!.extract(ExtractFilesParam(
-      selectedFiles?.map((e) => e.path).toList(),
+      selectedFiles,
       selectedDirectory?.path,
       recursive.value,
       cpkExtractDirectory?.path,
@@ -208,7 +208,7 @@ class _ExtractFilesToolState extends State<ExtractFilesTool> {
                 children: [
                   const SizedBox(width: 10),
                   Expanded(
-                    child: Text(basename(file.path), overflow: TextOverflow.ellipsis, textScaler: const TextScaler.linear(0.9),)
+                    child: Text(basename(file), overflow: TextOverflow.ellipsis, textScaler: const TextScaler.linear(0.9),)
                   ),
                   const SizedBox(width: 10),
                   IconButton(

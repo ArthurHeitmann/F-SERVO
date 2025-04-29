@@ -1,9 +1,9 @@
 
 import 'dart:async';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
+import '../../fileSystem/FileSystem.dart';
 import '../../widgets/theme/customTheme.dart';
 import 'RowSeparated.dart';
 
@@ -54,13 +54,13 @@ Future<String?> fileSelectionDialog(BuildContext context, {
                       onPressed: () async {
                         String? path;
                         if (selectionType == SelectionType.file) {
-                          path = (await FilePicker.platform.pickFiles(
+                          path = (await FS.i.selectFiles(
                             dialogTitle: title,
                             allowMultiple: false,
                             initialDirectory: initialDirectory,
-                          ))?.files.first.path;
+                          )).firstOrNull;
                         } else if (selectionType == SelectionType.folder) {
-                          path = await FilePicker.platform.getDirectoryPath(
+                          path = await FS.i.selectDirectory(
                             dialogTitle: title,
                             initialDirectory: initialDirectory,
                           );

@@ -1,5 +1,4 @@
 
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:path/path.dart' as path;
@@ -10,6 +9,7 @@ import '../../utils/utils.dart';
 import '../utils/ByteDataWrapper.dart';
 import 'datFileOrder.dart';
 import 'datHashGenerator.dart';
+import '../../fileSystem/FileSystem.dart';
 
 Future<void> repackDat(String datDir, String exportPath) async {
   messageLog.add("Repacking ${path.basename(exportPath)}...");
@@ -17,7 +17,7 @@ Future<void> repackDat(String datDir, String exportPath) async {
   var fileList = await getDatFileList(datDir);
   var filePaths = sortDatFiles(fileList.files, fileList.originalFileOrder);
   var fileNames = filePaths.map((e) => path.basename(e)).toList();
-  var allFilesExists = (await Future.wait(filePaths.map((e) => File(e).exists())));
+  var allFilesExists = (await Future.wait(filePaths.map((e) => FS.i.existsFile(e))));
   var missingFiles = <String>[];
   for (var i = 0; i < allFilesExists.length; i++) {
     if (!allFilesExists[i]) {
@@ -30,7 +30,7 @@ Future<void> repackDat(String datDir, String exportPath) async {
     showToast("DAT is missing ${pluralStr(missingFiles.length, "file")}. Check log for details");
     return;
   }
-  var fileSizes = (await Future.wait(filePaths.map((e) => File(e).length()))).toList();
+  var fileSizes = (await Future.wait(filePaths.map((e) => FS.i.getSize(e)))).toList();
   var fileNumber = filePaths.length;
   var hashData = HashInfo(fileNames);
 
@@ -77,7 +77,7 @@ Future<void> repackDat(String datDir, String exportPath) async {
 
   // WRITE
   // Header
-  await Directory(path.dirname(exportPath)).create(recursive: true);
+  await FS.i.createDirectory(path.dirname(exportPath));
   var datSize = fileOffsets.last + fileSizes.last + 1;
   datSize = (datSize / 4096).ceil() * 4096;
   var datBytes = ByteDataWrapper.allocate(datSize);
@@ -137,7 +137,7 @@ Future<void> repackDat(String datDir, String exportPath) async {
   // Files
   for (var i = 0; i < filePaths.length; i++) {
     datBytes.position = fileOffsets[i];
-    var fileData = await File(filePaths[i]).readAsBytes();
+    var fileData = await FS.i.read(filePaths[i]);
     datBytes.writeBytes(fileData);
   }
 

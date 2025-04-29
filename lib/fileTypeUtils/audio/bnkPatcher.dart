@@ -1,10 +1,10 @@
 
-import 'dart:io';
 
 import 'package:mutex/mutex.dart';
 
 import '../utils/ByteDataWrapper.dart';
 import 'bnkIO.dart';
+import '../../fileSystem/FileSystem.dart';
 
 Map<String, Mutex> _patchLocks = {};
 
@@ -25,7 +25,7 @@ Future<void> patchBnk(String bnkPath, int wemId, String wemPath) async {
       throw Exception("Wem file with id $wemId not found in $bnkPath");
     
     // update bytes
-    var wemBytes = await File(wemPath).readAsBytes();
+    var wemBytes = await FS.i.read(wemPath);
     data.wemFiles[wemIndex] = wemBytes;
     didx.files[wemIndex].size = wemBytes.length;
     

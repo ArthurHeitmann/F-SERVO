@@ -1,5 +1,4 @@
 
-import 'dart:io';
 
 import 'package:path/path.dart';
 
@@ -11,10 +10,11 @@ import '../../widgets/misc/confirmDialog.dart';
 import '../utils/ByteDataWrapper.dart';
 import 'audioModsMetadata.dart';
 import 'waiIO.dart';
+import '../../fileSystem/FileSystem.dart';
 
 Future<void> revertAllAudioMods(String waiPath) async {
   var metadataPath = join(dirname(waiPath), audioModsMetadataFileName);
-  if (!await File(metadataPath).exists()) {
+  if (!await FS.i.existsFile(metadataPath)) {
     showToast("No audio mods metadata file found");
     return;
   }
@@ -44,13 +44,12 @@ Future<void> revertAllAudioMods(String waiPath) async {
     if (dir != null)
       wspExtractDir = join(wspExtractDir, dir);
     wspExtractDir = join(wspExtractDir, wspName);
-    var files = await Directory(wspExtractDir)
-      .list()
-      .where((f) => f.path.endsWith("$wemId.wem"))
+    var files = await FS.i.listFiles(wspExtractDir)
+      .where((f) => f.endsWith("$wemId.wem"))
       .toList();
     if (files.length != 1)
       print("Warning: found ${files.length} files for WEM $wemId");
-    changedFiles.add(files[0].path);
+    changedFiles.add(files[0]);
     // modded WSP
     var wspPath = join(dirname(waiPath), "stream");
     if (dir != null)
@@ -80,15 +79,15 @@ Future<void> revertAllAudioMods(String waiPath) async {
   int warningCount = 0;
   for (var changedFile in changedFiles) {
     var backupPath = "$changedFile.backup";
-    if (!await File(backupPath).exists()) {
+    if (!await FS.i.existsFile(backupPath)) {
       messageLog.add("Backup file not found for $changedFile");
       warningCount++;
       continue;
     }
     try {
-      if (await File(changedFile).exists())
-        await File(changedFile).delete();
-      await File(backupPath).rename(changedFile);
+      if (await FS.i.existsFile(changedFile))
+        await FS.i.delete(changedFile);
+      await FS.i.renameFile(backupPath, changedFile);
       restoreCount++;
     } catch (e, s) {
       messageLog.add("Failed to restore $changedFile");

@@ -1,7 +1,6 @@
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:convert/convert.dart';
 import 'package:path/path.dart';
@@ -13,6 +12,7 @@ import '../../fileTypeUtils/yax/yaxToXml.dart';
 import '../fileTypeUtils/pak/pakExtractor.dart';
 import '../fileTypeUtils/yax/hashToStringMap.dart';
 import '../utils/utils.dart';
+import '../fileSystem/FileSystem.dart';
 
 class IndexedIdData {
   final int id;
@@ -308,14 +308,14 @@ class IdsIndexer {
     foundXmlFiles = 0;
     int t1 = DateTime.now().millisecondsSinceEpoch;
 
-    if (await Directory(indexPath).exists()) {
+    if (await FS.i.existsDirectory(indexPath)) {
       if (indexPath.endsWith(".pak")) {
         String datExtractDir = dirname(dirname(indexPath));
         String datName = basename(datExtractDir);
         String datPath = join(dirname(dirname(datExtractDir)), datName);
         String pakFile = join(datExtractDir, basename(indexPath));
         String pakInfoPath = join(indexPath, "pakInfo.json");
-        if (await File(pakInfoPath).exists())
+        if (await FS.i.existsFile(pakInfoPath))
           await _indexPakInfo(datPath, pakFile, indexPath, pakInfoPath);
       }
       else if (indexPath.endsWith(".dat")) {
@@ -352,7 +352,7 @@ class IdsIndexer {
         unawaited(_indexYaxContents(datPath, pakPath, indexPath, yaxBytes));
       }
       else {
-        String xml = await File(indexPath).readAsString();
+        String xml = await FS.i.readAsString(indexPath);
         XmlDocument xmlDoc = XmlDocument.parse(xml);
         _indexXmlContents(datPath, pakPath, indexPath, xmlDoc.rootElement);
       }
@@ -366,12 +366,11 @@ class IdsIndexer {
   }
 
   Future<void> _indexAllIdsInDir(String dir) async {
-    var files = await Directory(dir)
-      .list(recursive: true)
-      .where((f) => f is File && f.path.endsWith(".dat"))
+    var files = await FS.i.listFiles(dir, recursive: true)
+      .where((f) => f.endsWith(".dat"))
       .toList();
     await futuresWaitBatched(
-      files.map((f) => _indexDatContents(f.path)),
+      files.map((f) => _indexDatContents(f)),
       10,
     );
   }
@@ -383,7 +382,7 @@ class IdsIndexer {
     var datFolder = dirname(datPath);
     var datExtractDir = join(datFolder, datSubExtractDir, fileName);
 
-    if (await Directory(datExtractDir).exists())
+    if (await FS.i.existsDirectory(datExtractDir))
       await _indexDatExtractDir(datPath, datExtractDir);
     else
       await _indexDatFile(datPath, datExtractDir);
@@ -416,13 +415,13 @@ class IdsIndexer {
       return;
     var pakInfoPath = join(pakExtractPath, "pakInfo.json");
 
-    if (await File(pakInfoPath).exists())
+    if (await FS.i.existsFile(pakInfoPath))
       await _indexPakInfo(datPath, pakPath, pakExtractPath, pakInfoPath);
     else
       await _indexPakFiles(datPath, pakPath, pakExtractPath, bytes);
   }
 
-  Future<void> _indexPakInfo(String datPath, String pakPath, String pakExtractPath, String pakInfoPath) async {var pakInfoJson = jsonDecode(await File(pakInfoPath).readAsString());
+  Future<void> _indexPakInfo(String datPath, String pakPath, String pakExtractPath, String pakInfoPath) async {var pakInfoJson = jsonDecode(await FS.i.readAsString(pakInfoPath));
     var pakFiles = (pakInfoJson["files"] as List)
                     .map((f) => f["name"])
                     .toList();
@@ -446,8 +445,8 @@ class IdsIndexer {
       return;
     var xmlPath = setExtension(yaxPath, ".xml");
     
-    if (await File(xmlPath).exists()) {
-      var xmlDoc = XmlDocument.parse(await File(xmlPath).readAsString());
+    if (await FS.i.existsFile(xmlPath)) {
+      var xmlDoc = XmlDocument.parse(await FS.i.readAsString(xmlPath));
       var xmlRoot = xmlDoc.rootElement;
       _indexXmlContents(datPath, pakPath, xmlPath, xmlRoot);
     }

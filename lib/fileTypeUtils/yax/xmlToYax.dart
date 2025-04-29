@@ -1,9 +1,9 @@
 
-import 'dart:io';
 
 import 'package:path/path.dart' as path;
 import 'package:xml/xml.dart';
 
+import '../../fileSystem/FileSystem.dart';
 import '../../stateManagement/events/statusInfo.dart';
 import '../../utils/utils.dart';
 import '../utils/ByteDataWrapper.dart';
@@ -84,8 +84,7 @@ Future<void> xmlFileToYaxFile(String xmlFilePath) async {
   print("Converting $xmlFilePath to yax");
   messageLog.add("Converting ${path.basename(xmlFilePath)}...");
 
-  var xmlFile = File(xmlFilePath);
-  var xmlString = await xmlFile.readAsString();
+  var xmlString = await FS.i.readAsString(xmlFilePath);
   var xml = XmlDocument.parse(xmlString);
   var yax = xmlToYax(xml.rootElement);
   var yaxFilePath = "${path.withoutExtension(xmlFilePath)}.yax";

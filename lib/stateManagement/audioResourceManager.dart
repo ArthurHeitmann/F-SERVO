@@ -1,5 +1,4 @@
 
-import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -10,6 +9,7 @@ import 'package:tuple/tuple.dart';
 import '../fileTypeUtils/audio/riffParser.dart';
 import '../fileTypeUtils/audio/wemToWavConverter.dart';
 import 'events/statusInfo.dart';
+import '../fileSystem/FileSystem.dart';
 
 class AudioResourcePreview {
   final int sampleRate;
@@ -98,9 +98,9 @@ class AudioResourcesManager {
   }
 
   Future<String> _copyToTmp(String path) async {
-    _tmpDir ??= (await Directory.systemTemp.createTemp("tmpWav")).path;
+    _tmpDir ??= await FS.i.createTempDirectory("tmpWav");
     var tmpPath = join(_tmpDir!, basename(path));
-    await File(path).copy(tmpPath);
+    await FS.i.copyFile(path, tmpPath);
     return tmpPath;
   }
 
@@ -130,12 +130,12 @@ class AudioResourcesManager {
       .toList();
 
     await Future.wait(allDeletableFiles.map((path) async {
-      if (await File(path).exists())
-        await File(path).delete();
+      if (await FS.i.existsFile(path))
+        await FS.i.delete(path);
     }));
 
-    if (_tmpDir != null && await Directory(_tmpDir!).exists())
-      await Directory(_tmpDir!).delete(recursive: true);
+    if (_tmpDir != null && await FS.i.existsDirectory(_tmpDir!))
+      await FS.i.deleteDirectory(_tmpDir!, recursive: true);
   }
 
   /// Disposes the reference to the audio file at the given path.
@@ -145,8 +145,8 @@ class AudioResourcesManager {
     if (resource._refCount <= 0) {
       _resources.removeWhere((key, value) => value == resource);
       if (resource._deleteOnDispose) {
-        if (await File(resource.wavPath).exists())
-          await File(resource.wavPath).delete();
+        if (await FS.i.existsFile(resource.wavPath))
+          await FS.i.delete(resource.wavPath);
         else
           print("Warning: Tried to delete file ${resource.wavPath} but it doesn't exist.");
       }

@@ -1,10 +1,9 @@
 
-import 'dart:io';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../fileSystem/FileSystem.dart';
 import '../../stateManagement/preferencesData.dart';
 import '../../utils/assetDirFinder.dart';
 import '../../utils/utils.dart';
@@ -56,7 +55,7 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
     return SmallButton(
       constraints: BoxConstraints.tight(const Size(30, 30)),
       onPressed: () async {
-        var dir = await FilePicker.platform.getDirectoryPath(
+        var dir = await FS.i.selectDirectory(
           dialogTitle: dialogTitle,
           initialDirectory: initialDir,
         );
@@ -92,7 +91,7 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
             child: PrimaryPropTextField(
               prop: exportPathProp,
               onValid: (value) => exportPathProp.value = value,
-              validatorOnChange: (value) => value.isEmpty || Directory(value).existsSync() ? null : "Directory does not exist",
+              validatorOnChange: (value) => value.isEmpty || FS.i.existsDirectorySync(value) ? null : "Directory does not exist",
               options: const PropTFOptions(constraints: BoxConstraints(minHeight: 30), isFolderPath: true),
             ),
           ),
@@ -178,7 +177,7 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
               child: PrimaryPropTextField(
                 prop: path,
                 onValid: (value) => widget.prefs.indexingPaths!.setPath(path, value),
-                validatorOnChange: (value) => Directory(value).existsSync() ? null : "Directory does not exist",
+                validatorOnChange: (value) => FS.i.existsDirectorySync(value) ? null : "Directory does not exist",
                 options: const PropTFOptions(constraints: BoxConstraints(minHeight: 30), isFolderPath: true),
               ),
             ),
@@ -198,7 +197,7 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
       SmallButton(
         constraints: BoxConstraints.tight(const Size(30, 30)),
         onPressed: () async {
-          var dir = await FilePicker.platform.getDirectoryPath(
+          var dir = await FS.i.selectDirectory(
             dialogTitle: "Select Indexing Directory",
           );
           if (dir != null) {
@@ -305,7 +304,7 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
             child: PrimaryPropTextField(
               prop: widget.prefs.wemExtractDir!,
               onValid: (value) => widget.prefs.wemExtractDir!.value = value,
-              validatorOnChange: (value) => value.isEmpty || Directory(value).existsSync() ? null : "Directory does not exist",
+              validatorOnChange: (value) => value.isEmpty || FS.i.existsDirectorySync(value) ? null : "Directory does not exist",
               options: const PropTFOptions(constraints: BoxConstraints(minHeight: 30), isFolderPath: true),
             ),
           ),

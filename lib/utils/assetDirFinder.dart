@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 
+import '../fileSystem/FileSystem.dart';
 import '../stateManagement/events/statusInfo.dart';
 
 String? assetsDir;
@@ -21,11 +22,7 @@ Future<bool> findAssetsDir() async {
   List<String> searchPathsQueue = [path];
   while (searchPathsQueue.isNotEmpty) {
     path = searchPathsQueue.removeAt(0);
-    var subDirs = await Directory(path)
-      .list()
-      .where((f) => f is Directory)
-      .map((f) => f.path)
-      .toList();
+    var subDirs = await FS.i.listDirectories(path).toList();
     var subDirNames = subDirs.map((p) => basename(p)).toSet();
     if (basename(path) == _assetsDirName && _assetsDirSubDirs.every((subDir) => subDirNames.contains(subDir))) {
       assetsDir = path;
@@ -46,8 +43,7 @@ Future<bool> hasMrubyAssets() async {
     return _hasMrubyAssets;
   await assetDirDone;
   var mrubyDir = join(assetsDir!, "MrubyDecompiler");
-  var mrubyFiles = await Directory(mrubyDir)
-    .list()
+  var mrubyFiles = await FS.i.list(mrubyDir)
     .map((f) => basename(f.path))
     .toList();
   _hasMrubyAssets = mrubyFiles.contains("__init__.py") && mrubyFiles.contains("bins");
@@ -84,10 +80,8 @@ Future<bool> hasMcdFonts() async {
     return _hasMcdFonts;
   await assetDirDone;
   var fontsDir = join(assetsDir!, "mcdFonts");
-  var fontDirs = await Directory(fontsDir)
-    .list()
-    .where((f) => f is Directory)
-    .map((f) => basename(f.path))
+  var fontDirs = await FS.i.listDirectories(fontsDir)
+    .map((f) => basename(f))
     .where((f) => fontIds.contains(f))
     .toList();
   fontDirs.sort((a, b) => int.parse(a).compareTo(int.parse(b)));
@@ -95,9 +89,8 @@ Future<bool> hasMcdFonts() async {
     return false;
   var allFontsComplete = await Future.wait(fontDirs.map((f) async {
     var fontDir = join(fontsDir, f);
-    var fontFiles = await Directory(fontDir)
-      .list()
-      .map((f) => basename(f.path))
+    var fontFiles = await FS.i.listFiles(fontDir)
+      .map((f) => basename(f))
       .toList();
     return fontFiles.contains("_atlas.png") && fontFiles.contains("_atlas.json");
   }));
@@ -176,10 +169,10 @@ String? findWwiseCliExe(String path, [int depth = 0]) {
     return null;
   const exeName = "WwiseCLI.exe";
   // best case, exe is directly selected
-  if (File(path).existsSync() && basename(path) == exeName)
+  if (FS.i.existsFileSync(path) && basename(path) == exeName)
     return path;
 
-  if (!Directory(path).existsSync())
+  if (!FS.i.existsDirectorySync(path))
     return null;
   
   List<FileSystemEntity> dirContents = Directory(path).listSync();

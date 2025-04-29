@@ -1,11 +1,10 @@
 
 
-import 'dart:io';
 import 'dart:math';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../fileSystem/FileSystem.dart';
 import '../../../../stateManagement/Property.dart';
 import '../../../../stateManagement/openFiles/types/McdFileData.dart';
 import '../../../misc/ChangeNotifierWidget.dart';
@@ -172,20 +171,19 @@ class _FontOverrideEditor extends StatelessWidget {
                 UnderlinePropTextField(
                   prop: fontOverride.fontPath,
                   options: const PropTFOptions(constraints: BoxConstraints(minWidth: 300)),
-                  validatorOnChange: (str) => str.isEmpty || File(str).existsSync() ? null : "File not found",
+                  validatorOnChange: (str) => str.isEmpty || FS.i.existsFileSync(str) ? null : "File not found",
                   onValid: (str) => fontOverride.fontPath.value = str,
                 ),
                 const SizedBox(width: 12),
                 IconButton(
                   onPressed: () async {
-                    var selectedFontFile = await FilePicker.platform.pickFiles(
-                      type: FileType.custom,
+                    var selectedFontFile = await FS.i.selectFiles(
                       allowedExtensions: ["ttf", "otf"],
                       allowMultiple: false,
                     );
-                    if (selectedFontFile == null)
+                    if (selectedFontFile.isEmpty)
                       return;
-                    var fontPath = selectedFontFile.files.first.path!;
+                    var fontPath = selectedFontFile.first;
                     fontOverride.fontPath.value = fontPath;
                   },
                   constraints: BoxConstraints.tight(const Size(30, 30)),

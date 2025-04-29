@@ -1,5 +1,4 @@
 
-import 'dart:io';
 
 import 'package:path/path.dart';
 
@@ -9,6 +8,7 @@ import '../../stateManagement/preferencesData.dart';
 import '../../widgets/misc/fileSelectionDialog.dart';
 import '../utils/ByteDataWrapperRA.dart';
 import 'cpk.dart';
+import '../../fileSystem/FileSystem.dart';
 
 Future<List<String>> extractCpk(String cpkPath, { String? extractDir, bool logProgress = true }) async {
   var bytes = await ByteDataWrapperRA.fromFile(cpkPath);
@@ -22,13 +22,13 @@ Future<List<String>> extractCpk(String cpkPath, { String? extractDir, bool logPr
       var file = cpk.files[i];
       print("Extracting ${file.name}");
       var folder = join(extractDir, basename(cpkPath));
-      if (await File(folder).exists())
+      if (await FS.i.existsFile(folder))
         folder += "_extracted";
       folder = join(folder, file.path);
       var filePath = join(folder, file.name);
       filePaths.add(filePath);
-      await Directory(folder).create(recursive: true);
-      await File(filePath).writeAsBytes(await file.readData(bytes));
+      await FS.i.createDirectory(folder);
+      await FS.i.write(filePath, await file.readData(bytes));
       if (logProgress && i % tenPercentIncrement == 0) {
         var percentProgress = ((i) / cpk.files.length * 100).toStringAsFixed(1);
         messageLog.add("Extracted $percentProgress% of files (${(i + 1)}/${cpk.files.length})");
@@ -45,7 +45,7 @@ Future<List<String>> extractCpk(String cpkPath, { String? extractDir, bool logPr
 Future<String?> extractCpkWithPrompt(String cpkPath) async {
   var prefs = PreferencesData();
   var lastExtractDir = prefs.lastCpkExtractDir;
-  bool useLastExtractDir = lastExtractDir != null && lastExtractDir.value.isNotEmpty && await Directory(lastExtractDir.value).exists();
+  bool useLastExtractDir = lastExtractDir != null && lastExtractDir.value.isNotEmpty && await FS.i.existsDirectory(lastExtractDir.value);
   var extractDirSel = await fileSelectionDialog(
     getGlobalContext(),
     selectionType: SelectionType.folder,

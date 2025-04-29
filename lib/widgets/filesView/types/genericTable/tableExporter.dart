@@ -1,11 +1,10 @@
 
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:csv/csv.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart';
 
+import '../../../../fileSystem/FileSystem.dart';
 import '../../../../utils/utils.dart';
 import 'tableEditor.dart';
 
@@ -23,15 +22,6 @@ List<List<String?>> _tablePropsToStrings(CustomTableConfig tableConfig) {
 }
 
 Future<void> saveTableAsJson(CustomTableConfig tableConfig) async {
-  var savePath = await FilePicker.platform.saveFile(
-    dialogTitle: "Save Table As JSON",
-    fileName: "${basenameWithoutExtension(tableConfig.name)}.json",
-    allowedExtensions: ["json"],
-    type: FileType.custom,
-  );
-  if (savePath == null)
-    return;
-  
   var stringsTable = _tablePropsToStrings(tableConfig);
   var json = const JsonEncoder.withIndent("\t").convert(
     {
@@ -39,41 +29,39 @@ Future<void> saveTableAsJson(CustomTableConfig tableConfig) async {
       "table": stringsTable,
     },
   );
-  var saveFile = File(savePath);
-  await saveFile.writeAsString(json);
+  await FS.i.saveFile(
+    text: json,
+    dialogTitle: "Save Table As JSON",
+    fileName: "${basenameWithoutExtension(tableConfig.name)}.json",
+    allowedExtensions: ["json"],
+  );
 }
 
 Future<void> saveTableAsCsv(CustomTableConfig tableConfig) async {
-  var savePath = await FilePicker.platform.saveFile(
-    dialogTitle: "Export Table As CSV",
-    fileName: "${basenameWithoutExtension(tableConfig.name)}.csv",
-    allowedExtensions: ["csv"],
-    type: FileType.custom,
-  );
-  if (savePath == null)
-    return;
-  
   var stringsTable = _tablePropsToStrings(tableConfig);
   const csvConverter = ListToCsvConverter(eol: "\n", convertNullTo: "\x00");
   var csv = csvConverter.convert([
     tableConfig.columnNames,
     ...stringsTable,
   ]);
-  var saveFile = File(savePath);
-  await saveFile.writeAsString(csv);
+  await FS.i.saveFile(
+    text: csv,
+    dialogTitle: "Export Table As CSV",
+    fileName: "${basenameWithoutExtension(tableConfig.name)}.csv",
+    allowedExtensions: ["csv"],
+  );
 }
 
 Future<void> loadTableFromJson(CustomTableConfig tableConfig) async {
-  var loadPath = await FilePicker.platform.pickFiles(
-    type: FileType.custom,
+  var loadPath = await FS.i.selectFiles(
     allowedExtensions: ["json"],
   );
-  if (loadPath == null)
+  if (loadPath.isEmpty)
     return;
   
-  var loadFile = File(loadPath.files.single.path!);
   try {
-    var json = await loadFile.readAsString();
+    var loadFile = loadPath.single;
+    var json = await FS.i.readAsString(loadFile);
     var decoded = jsonDecode(json);
     var table = (decoded["table"] as List)
       .map((row) => (row as List).cast<String?>())
@@ -88,16 +76,15 @@ Future<void> loadTableFromJson(CustomTableConfig tableConfig) async {
 }
 
 Future<void> loadTableFromCsv(CustomTableConfig tableConfig) async {
-  var loadPath = await FilePicker.platform.pickFiles(
-    type: FileType.custom,
+  var loadPath = await FS.i.selectFiles(
     allowedExtensions: ["csv"],
   );
-  if (loadPath == null)
+  if (loadPath.isEmpty)
     return;
   
-  var loadFile = File(loadPath.files.single.path!);
   try {
-    var csv = await loadFile.readAsString();
+    var loadFile = loadPath.single;
+    var csv = await FS.i.readAsString(loadFile);
     const csvConverter = CsvToListConverter(eol: "\n", convertEmptyTo: "");
     var table = csvConverter.convert(csv)
       .map((row) => row.cast<String?>().map((cell) => cell == "\x00" ? null : cell).toList())

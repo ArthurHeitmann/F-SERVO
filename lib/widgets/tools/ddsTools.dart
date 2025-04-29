@@ -1,9 +1,9 @@
 
 import 'package:dotted_border/dotted_border.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 
+import '../../fileSystem/FileSystem.dart';
 import '../../fileTypeUtils/textures/ddsConverter.dart';
 import '../../stateManagement/Property.dart';
 import '../misc/dropTargetBuilder.dart';
@@ -46,24 +46,22 @@ class _DdsToolState extends State<DdsTool> {
   final imageKey = const PageStorageKey("imgPreview");
 
   void pickSrcFile() async {
-    var paths = await FilePicker.platform.pickFiles(
+    var paths = await FS.i.selectFiles(
       dialogTitle: "Pick source image",
     );
-    if (paths == null)
+    if (paths.isEmpty)
       return;
-    setState(() => srcPath = paths.files.first.path!);
+    setState(() => srcPath = paths.first);
   }
 
   void convert() async {
-    var savePaths = await FilePicker.platform.saveFile(
+    var savePath = await FS.i.selectSaveFile(
       dialogTitle: "Save image as ${format.name}",
-      type: FileType.custom,
       allowedExtensions: [format.ext],
       fileName: "${basenameWithoutExtension(srcPath)}.${format.ext}",
     );
-    if (savePaths == null)
+    if (savePath == null)
       return;
-    var savePath = savePaths;
     switch (format) {
       case _TextureFormat.png:
         await texToPng(srcPath, pngPath: savePath);

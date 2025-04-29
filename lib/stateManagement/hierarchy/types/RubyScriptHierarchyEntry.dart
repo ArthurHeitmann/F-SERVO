@@ -1,6 +1,5 @@
 
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
@@ -12,6 +11,7 @@ import '../../undoable.dart';
 import '../FileHierarchy.dart';
 import '../HierarchyEntryTypes.dart';
 import 'DatHierarchyEntry.dart';
+import '../../../fileSystem/FileSystem.dart';
 
 class RubyScriptGroupHierarchyEntry extends HierarchyEntry {
   RubyScriptGroupHierarchyEntry()
@@ -37,8 +37,8 @@ class RubyScriptGroupHierarchyEntry extends HierarchyEntry {
   Future<void> addNewRubyScript(String datPath, String datExtractedPath) async {
     var datInfoPath = join(datExtractedPath, "dat_info.json");
     Map datInfo;
-    if (await File(datInfoPath).exists()) {
-      datInfo = jsonDecode(await File(datInfoPath).readAsString());
+    if (await FS.i.existsFile(datInfoPath)) {
+      datInfo = jsonDecode(await FS.i.readAsString(datInfoPath));
     } else {
       datInfo = {
         "version": 1,
@@ -72,9 +72,9 @@ end
 
 Fiber.new() { proxy.update() }
 """;
-    await File(newScriptPath).writeAsString(scriptTemplate);
+    await FS.i.writeAsString(newScriptPath, scriptTemplate);
     await rubyFileToBin(newScriptPath);
-    await File(datInfoPath).writeAsString(const JsonEncoder.withIndent("\t").convert(datInfo));
+    await FS.i.writeAsString(datInfoPath, const JsonEncoder.withIndent("\t").convert(datInfo));
 
     var newScriptEntry = RubyScriptHierarchyEntry(StringProp(newScriptRb, fileId: null), newScriptPath);
     add(newScriptEntry);

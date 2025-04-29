@@ -1,5 +1,4 @@
 
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:xml/xml.dart';
@@ -12,6 +11,7 @@ import '../../../hierarchy/types/XmlScriptHierarchyEntry.dart';
 import '../../../undoable.dart';
 import '../../openFileTypes.dart';
 import 'xmlProps/xmlProp.dart';
+import '../../../../fileSystem/FileSystem.dart';
 
 class XmlFileData extends OpenFileData {
   XmlProp? _root;
@@ -36,7 +36,7 @@ class XmlFileData extends OpenFileData {
     if (loadingState.value != LoadingState.notLoaded)
       return;
     loadingState.value = LoadingState.loading;
-    var text = await File(path).readAsString();
+    var text = await FS.i.readAsString(path);
     var doc = XmlDocument.parse(text);
     _root?.dispose();
     _root = XmlProp.fromXml(doc.firstElementChild!, file: uuid, parentTags: []);
@@ -59,7 +59,7 @@ class XmlFileData extends OpenFileData {
     doc.children.add(XmlDeclaration([XmlAttribute(XmlName("version"), "1.0"), XmlAttribute(XmlName("encoding"), "utf-8")]));
     doc.children.add(_root!.toXml());
     var xmlStr = doc.toPrettyString();
-    await File(path).writeAsString(xmlStr);
+    await FS.i.writeAsString(path, xmlStr);
     await super.save();
     changedXmlFiles.add(this);
   }

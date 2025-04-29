@@ -1,16 +1,18 @@
 
+
 import 'dart:io';
 
 import 'package:path/path.dart';
 
 import '../../utils/assetDirFinder.dart';
 import '../../utils/utils.dart';
+import '../../fileSystem/FileSystem.dart';
 
 Map<String, String> _tmpExtractDirs = {};
 
 Future<String> wemToWavTmp(String wemPath, [String folderPrefix = ""]) async {
   if (!_tmpExtractDirs.containsKey(folderPrefix))
-    _tmpExtractDirs[folderPrefix] = (await Directory.systemTemp.createTemp("wemToWav")).path;
+    _tmpExtractDirs[folderPrefix] = (await FS.i.createTempDirectory("wemToWav"));
   var tmpDir = _tmpExtractDirs[folderPrefix]!;
   var tempWavPath = join(tmpDir, "${basenameWithoutExtension(wemPath)}_${randomId().toRadixString(36)}.wav");
   await wemToWav(wemPath, tempWavPath);
@@ -25,7 +27,7 @@ Future<void> wemToWav(String wemPath, String wavPath) async {
     print("stderr: ${process.stderr}");
     throw Exception("WemToWav: Process exited with code ${process.exitCode}");
   }
-  if (!await File(wavPath).exists()) {
+  if (!await FS.i.existsFile(wavPath)) {
     print("stdout: ${process.stdout}");
     print("stderr: ${process.stderr}");
     throw Exception("WemToWav: File not found ($wavPath)");

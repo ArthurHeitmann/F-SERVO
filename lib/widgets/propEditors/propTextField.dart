@@ -1,6 +1,5 @@
 
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 
@@ -15,6 +14,7 @@ import 'UnderlinePropTextField.dart';
 import 'primaryPropTextField.dart';
 import 'textFieldAutocomplete.dart';
 import 'transparentPropTextField.dart';
+import '../../fileSystem/FileSystem.dart';
 
 class PropTFOptions {
   final Key? key;
@@ -205,11 +205,11 @@ abstract class PropTextFieldState<P extends Prop> extends ChangeNotifierState<Pr
     ? DropTargetBuilder(
         onDrop: (files) async {
           var file = files.first;
-          if (!widget.options.isFolderPath && await Directory(file).exists()) {
+          if (!widget.options.isFolderPath && await FS.i.existsDirectory(file)) {
             showToast("Expected a file, not a folder");
             return;
           }
-          if (!widget.options.isFilePath && await File(file).exists()) {
+          if (!widget.options.isFilePath && await FS.i.existsFile(file)) {
             showToast("Expected a folder, not a file");
             return;
           }
