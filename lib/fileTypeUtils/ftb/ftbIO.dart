@@ -12,7 +12,7 @@ class FtbFileHeader {
   FtbFileHeader(this.magic, this.texturesCount, this.unknown, this.charsCount, this.texturesOffset, this.charsOffset, this.charsOffset2);
 
   FtbFileHeader.read(ByteDataWrapper bytes) :
-    magic = bytes.readUint8List(118),
+    magic = bytes.asUint8List(118),
     texturesCount = bytes.readUint16(),
     unknown = bytes.readUint16(),
     charsCount = bytes.readUint16(),

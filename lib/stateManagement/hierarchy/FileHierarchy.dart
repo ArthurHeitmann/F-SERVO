@@ -478,7 +478,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
     else
       add(bxmEntry);
 
-    if (!await FS.i.existsFile(bxmEntry.xmlPath))
+    if (!await FS.i.existsFile(bxmEntry.xmlPath) && isDesktop)
       convertBxmFileToXml(bxmPath, bxmEntry.xmlPath);
     
     return bxmEntry;

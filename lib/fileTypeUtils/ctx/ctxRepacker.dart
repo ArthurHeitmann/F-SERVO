@@ -35,6 +35,6 @@ Future<void> repackCtx(String ctxPath, String extractDir) async {
   }
   
   await backupFile(ctxPath);
-  await FS.i.write(ctxPath, bytes.buffer.asUint8List());
+  await bytes.save(ctxPath);
   messageLog.add("Repacked ${basename(ctxPath)}");
 }

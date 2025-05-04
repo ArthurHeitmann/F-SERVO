@@ -39,9 +39,16 @@ class _DropTargetBuilderState extends State<DropTargetBuilder> {
       onDragDone: (details) async {
         if (_dropping > 0)
           return;
-        for (var file in details.files)
-          FS.i.registerFile(file.path, await file.readAsBytes());
-        widget.onDrop(details.files.map((f) => f.path).toList());
+        List<String> paths;
+        if (FS.i.useVirtualFs) {
+          paths = details.files.map((f) => "\$opened/${f.name}").toList();
+          for (var (i, file) in details.files.indexed)
+            FS.i.registerFile(paths[i], await file.readAsBytes());
+        }
+        else {
+          paths = details.files.map((f) => f.path).toList();
+        }
+        widget.onDrop(paths);
       },
       child: widget.builder(context, isDropping),
     );

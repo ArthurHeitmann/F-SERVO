@@ -73,7 +73,7 @@ class FormatChunkGeneric extends RiffChunk with FormatChunk {
       samplesPerBlock = bytes.readUint16();
     }
     if (size > bytes.position - pos) {
-      unknown = bytes.readUint8List(size - (bytes.position - pos));
+      unknown = bytes.asUint8List(size - (bytes.position - pos));
     }
     if (size & 1 == 1) {
       bytes.readUint8();
@@ -127,10 +127,10 @@ class WemFormatChunk extends RiffChunk with FormatChunk {
     zeroMaybe = bytes.readUint16();
     channelLayoutMask = bytes.readUint32();
     numSamples = bytes.readInt32();
-    extraUnknown = bytes.readUint8List(0x10 - 4);
+    extraUnknown = bytes.asUint8List(0x10 - 4);
     setupPacketOffset = bytes.readUint32();
     firstAudioPacketOffset = bytes.readUint32();
-    extraDataUnknown = bytes.readUint8List(0x28 - 0x10 - 0x08 - 0x04);
+    extraDataUnknown = bytes.asUint8List(0x28 - 0x10 - 0x08 - 0x04);
     uidMaybe = bytes.readUint32();
     blockSize0Exp = bytes.readUint8();
     blockSize1Exp = bytes.readUint8();
@@ -302,7 +302,7 @@ class CueChunk extends RiffChunk {
     cuePoints = bytes.readUint32();
     points = List.generate(cuePoints, (_) => CuePoint.read(bytes));
     if (size > (bytes.position - pos)) {
-      extra = bytes.readUint8List(size - (bytes.position - pos));
+      extra = bytes.asUint8List(size - (bytes.position - pos));
     }
   }
 
@@ -331,7 +331,7 @@ class RiffListGenericSubChunk extends RiffListSubChunk {
   RiffListGenericSubChunk(super.chunkID, super.size, this.data);
 
   RiffListGenericSubChunk.read(ByteDataWrapper bytes) : super.read(bytes) {
-    data = bytes.readUint8List(size);
+    data = bytes.asUint8List(size);
     if (size & 1 == 1 && bytes.position < bytes.length) {
       bytes.readUint8();
     }
@@ -396,7 +396,7 @@ class RiffListChunk extends RiffChunk {
         else
           subChunks.add(RiffListGenericSubChunk.read(bytes));
       } else {
-        bytes.readUint8List(nextSize - (bytes.position - pos));
+        bytes.asUint8List(nextSize - (bytes.position - pos));
       }
     }
     if (size & 1 == 1 && bytes.position < bytes.length) {
@@ -421,7 +421,7 @@ class RiffUnknownChunk extends RiffChunk {
 
   RiffUnknownChunk.read(ByteDataWrapper bytes) : super.read(bytes) {
     var bytesToRead = min(size, bytes.length - bytes.position);
-    unknownData = bytes.readUint8List(bytesToRead);
+    unknownData = bytes.asUint8List(bytesToRead);
     if (size & 1 == 1 && bytes.position < bytes.length) {
       bytes.readUint8();
     }

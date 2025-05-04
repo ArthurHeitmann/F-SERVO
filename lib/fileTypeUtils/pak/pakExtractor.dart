@@ -44,11 +44,11 @@ Future<void> _extractPakYax(_HeaderEntry meta, int size, ByteDataWrapper bytes, 
     readSize = size - paddingEndLength;
   }
   
-  var extractedFile = File(path.join(extractDir, "$index.yax"));
+  var extractedFile = path.join(extractDir, "$index.yax");
   var fileBytes = bytes.readUint8List(readSize);
   if (isCompressed)
     fileBytes = zlib.decode(fileBytes);
-  await extractedFile.writeAsBytes(fileBytes);
+  await FS.i.write(extractedFile, fileBytes);
 }
 
 Future<List<String>> extractPakFiles(String pakPath, { bool yaxToXml = false }) async {
@@ -143,11 +143,11 @@ Stream<ExtractedInnerFile> extractPakBytesAsStream(String pakPath, ByteDataWrapp
     var fileBytes = bytes.readUint8List(readSize);
     if (isCompressed)
       fileBytes = zlib.decode(fileBytes);
-    var buffer = ByteData(fileBytes.length).buffer;
-    buffer.asUint8List().setAll(0, fileBytes);
+    var buffer = Uint8List(fileBytes.length);
+    buffer.setAll(0, fileBytes);
     yield ExtractedInnerFile(
       path.join(extractDir, "$i.yax"),
-      ByteDataWrapper(buffer),
+      ByteDataWrapper.fromUint8List(buffer),
     );
   }
 }

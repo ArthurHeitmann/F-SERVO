@@ -15,7 +15,7 @@ Future<SizeInt> getImageSize(String path) async {
 }
 
 Future<SizeInt> getImageBytesSize(Uint8List bytes) async {
-  var byteWrapper = ByteDataWrapper(bytes.buffer);
+  var byteWrapper = ByteDataWrapper.fromUint8List(bytes);
   if (byteWrapper.readString(4) == _ddsMagic) {
     byteWrapper.position = 12;
     var height = byteWrapper.readUint32();

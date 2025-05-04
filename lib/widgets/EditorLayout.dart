@@ -48,11 +48,12 @@ class _EditorLayoutState extends ChangeNotifierState<EditorLayout> {
                 ],
               ),
             ),
-            SidebarEntryConfig(
-              name: "Search",
-              icon: Icons.search,
-              child: const SearchPanel(),
-            ),
+            if (isDesktop)
+              SidebarEntryConfig(
+                name: "Search",
+                icon: Icons.search,
+                child: const SearchPanel(),
+              ),
             SidebarEntryConfig(
               name: "Tools",
               icon: Icons.build,

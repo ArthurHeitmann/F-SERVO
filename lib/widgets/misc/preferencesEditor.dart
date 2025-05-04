@@ -16,6 +16,7 @@ import 'RowSeparated.dart';
 import 'SmoothScrollBuilder.dart';
 import 'smallButton.dart';
 import 'updater.dart';
+import 'virtualFsDebugger.dart';
 
 class PreferencesEditor extends ChangeNotifierWidget {
   final PreferencesData prefs;
@@ -43,8 +44,11 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
             ...makeDataExportEditor(context),
             // ...makeIndexingEditor(),
             ...makeThemeEditor(),
-            ...makeMusicEditor(),
-            ...makeUpdater(),
+            if (isDesktop)
+              ...makeMusicEditor(),
+            if (isDesktop)
+              ...makeUpdater(),
+            VirtualFsDebugger(),
           ],
         ),
       ),
@@ -82,63 +86,65 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
       return [];
 
     return [
-      const Text("Data export path", style: sectionHeaderStyle,),
-      const SizedBox(height: 10,),
-      RowSeparated(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(
-            child: PrimaryPropTextField(
-              prop: exportPathProp,
-              onValid: (value) => exportPathProp.value = value,
-              validatorOnChange: (value) => value.isEmpty || FS.i.existsDirectorySync(value) ? null : "Directory does not exist",
-              options: const PropTFOptions(constraints: BoxConstraints(minHeight: 30), isFolderPath: true),
-            ),
-          ),
-          makeFilePickerButton(
-            "Select Indexing Directory",
-            exportPathProp.value.isNotEmpty ? exportPathProp.value : null,
-            (dir) => widget.prefs.dataExportPath!.value = dir,
-          ),
-        ],
-      ),
-      const SizedBox(height: 10,),
-      Row(
-        children: [
-          const Text("ON SAVE:", overflow: TextOverflow.ellipsis,),
-          Expanded(
-            child: RowSeparated(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              separator: (_) => SizedBox(
-                height: 20,
-                child: VerticalDivider(color: getTheme(context).textColor!.withOpacity(0.25),),
+      if (!isWeb) ...[
+        const Text("Data export path", style: sectionHeaderStyle,),
+        const SizedBox(height: 10,),
+        RowSeparated(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: PrimaryPropTextField(
+                prop: exportPathProp,
+                onValid: (value) => exportPathProp.value = value,
+                validatorOnChange: (value) => value.isEmpty || FS.i.existsDirectorySync(value) ? null : "Directory does not exist",
+                options: const PropTFOptions(constraints: BoxConstraints(minHeight: 30), isFolderPath: true),
               ),
-              children: [
-                for (var i = 0; i < exportOptions.length; i++)
-                  Expanded(
-                    child: Row(
-                      children: [
-                        BoolPropSwitch(prop: exportOptions[i]!),
-                        Flexible(
-                          child: Text(exportOptionLabels[i], overflow: TextOverflow.ellipsis,)
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
             ),
-          )
-        ],
-      ),
-      const SizedBox(height: 10,),
-      Row(
-        children: [
-          const Text("When extracting DAT, overwrite all files:", overflow: TextOverflow.ellipsis,),
-          BoolPropSwitch(prop: widget.prefs.datReplaceOnExtract!),
-        ],
-      ),
-      const SizedBox(height: 10,),
+            makeFilePickerButton(
+              "Select Indexing Directory",
+              exportPathProp.value.isNotEmpty ? exportPathProp.value : null,
+              (dir) => widget.prefs.dataExportPath!.value = dir,
+            ),
+          ],
+        ),
+        const SizedBox(height: 10,),
+        Row(
+          children: [
+            const Text("ON SAVE:", overflow: TextOverflow.ellipsis,),
+            Expanded(
+              child: RowSeparated(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                separator: (_) => SizedBox(
+                  height: 20,
+                  child: VerticalDivider(color: getTheme(context).textColor!.withOpacity(0.25),),
+                ),
+                children: [
+                  for (var i = 0; i < exportOptions.length; i++)
+                    Expanded(
+                      child: Row(
+                        children: [
+                          BoolPropSwitch(prop: exportOptions[i]!),
+                          Flexible(
+                            child: Text(exportOptionLabels[i], overflow: TextOverflow.ellipsis,)
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            )
+          ],
+        ),
+        const SizedBox(height: 10,),
+        Row(
+          children: [
+            const Text("When extracting DAT, overwrite all files:", overflow: TextOverflow.ellipsis,),
+            BoolPropSwitch(prop: widget.prefs.datReplaceOnExtract!),
+          ],
+        ),
+        const SizedBox(height: 10,),
+      ],
       Row(
         children: [
           const Text("Show non editable DAT children:", overflow: TextOverflow.ellipsis,),
@@ -154,12 +160,13 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
           BoolPropSwitch(prop: widget.prefs.useMonacoEditor!),
         ],
       ),
-      Row(
-        children: [
-          const Text("Prefer opening text files in VS Code:", overflow: TextOverflow.ellipsis,),
-          BoolPropSwitch(prop: widget.prefs.preferVsCode!),
-        ],
-      ),
+      if (isDesktop)
+        Row(
+          children: [
+            const Text("Prefer opening text files in VS Code:", overflow: TextOverflow.ellipsis,),
+            BoolPropSwitch(prop: widget.prefs.preferVsCode!),
+          ],
+        ),
       const SizedBox(height: 40,),
     ];
   }
@@ -373,6 +380,7 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
       const Text("Updates:", style: sectionHeaderStyle,),
       const SizedBox(height: 10,),
       const VersionUpdaterUi(),
+      const SizedBox(height: 40,),
     ];
   }
 }

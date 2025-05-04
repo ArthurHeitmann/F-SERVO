@@ -45,11 +45,16 @@ dependencies:
   texture_rgba_renderer:
     git:
       url: https://github.com/ArthurHeitmann/flutter_texture_rgba_renderer
-      ref: 14ea023afda67ffb11d877deb7e5f3056ab865d6
+      ref: 7d98753826602d83005098d7d2d4528826735639
   tuple: ^2.0.0
+  universal_ffi:
+    git:
+      url: https://github.com/ArthurHeitmann/universal_ffi
+      ref: main
   url_launcher: ^6.2.2
   uuid: ^4.4.2
   # webview_windows: ^0.4.0
+  web: ^1.1.1
   webview_windows:
     git:
       url: https://github.com/Channing-dong/flutter-webview-windows
@@ -110,7 +115,7 @@ flutter:
     - assets/mcdFonts/10/
     - assets/mcdFonts/11/
     - assets/entityThumbnails/
-    - assets/rusty_platinum_utils/target/release/rusty_platinum_utils.dll
+    - assets/bins/rusty_platinum_utils/
     - assets/monaco_editor/
     - assets/monaco_editor/node_modules/monaco-editor/min/vs/
     - assets/monaco_editor/node_modules/monaco-editor/min/vs/base/browser/ui/codicons/codicon/
@@ -216,12 +221,13 @@ flutter_icons:
 
 ffigen:
   # > dart run ffigen
+  # replace `import 'dart:ffi' as ffi;` with `import 'package:universal_ffi/ffi.dart' as ffi;`
   name: RustyPlatinumUtils
   exclude-all-by-default: true
   output: lib/ffi/RustyPlatinumUtilsFfi.dart
   headers:
     entry-points:
-      - assets/rusty_platinum_utils/target/rusty_platinum_utils.h
+      - assets/bins/rusty_platinum_utils/rusty_platinum_utils.h
   functions:
     include:
       - "rpu_.*"

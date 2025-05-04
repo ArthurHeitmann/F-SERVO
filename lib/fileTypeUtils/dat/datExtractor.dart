@@ -67,7 +67,7 @@ Future<List<String>> extractDatFiles(String datPath, { bool shouldExtractPakFile
     bytes.position = fileOffsets[i];
     var extractedFile = path.join(extractDir, fileNames[i]);
     filePaths.add(extractedFile);
-    await FS.i.write(extractedFile, bytes.readUint8List(fileSizes[i]));
+    await FS.i.write(extractedFile, bytes.asUint8List(fileSizes[i]));
   }
 
   dynamic jsonMetadata = {

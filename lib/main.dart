@@ -11,7 +11,7 @@ import 'package:window_manager/window_manager.dart';
 
 import 'background/IdLookup.dart';
 import 'background/wemFilesIndexer.dart';
-import 'ffi/ffiImport.dart';
+import 'ffi/FfiHelper.dart';
 import 'keyboardEvents/globalShortcutsWrapper.dart';
 import 'stateManagement/beforeExitCleanup.dart';
 import 'stateManagement/hierarchy/FileHierarchy.dart';
@@ -32,6 +32,7 @@ import 'widgets/theme/customTheme.dart';
 import 'widgets/theme/nierTheme.dart';
 import 'widgets/titlebar/Titlebar.dart';
 import 'fileSystem/FileSystem.dart';
+import 'widgets/web/webImports.dart';
 
 void main(List<String> args) {
   loggingWrapper(() => init(args));
@@ -63,21 +64,23 @@ void init(List<String> args) async {
         await windowManager.setPosition(windowPos.translate(0, 50));
       // await windowManager.focus();
     }));
-    
     unawaited(FlutterWindowClose.setWindowShouldCloseHandler(beforeExitConfirmation));
   }
   else if (isMobile) {
     await SystemChrome.setEnabledSystemUIMode(SystemUiMode.leanBack);
-    await ensureHasStoragePermission();
+    await _ensureHasStoragePermission();
   }
-
+  else if (isWeb) {
+    webPreventEvents();
+    unawaited(FlutterWindowClose.setWebReturnValue("Are you sure you want to leave?"));
+  }
   if (isDesktop)
     startSyncServer();
+  unawaited(findAssetsDir().then((_) {
+    FfiHelper.init(assetsDir!);
+  }));
   await PreferencesData().load();
   if (isDesktop || isMobile) {
-    unawaited(findAssetsDir().then((_) {
-      FfiHelper.i = FfiHelper(assetsDir!);
-    }));
     unawaited(idLookup.init());
     unawaited(wemFilesLookup.updateIndex());
   }
@@ -152,7 +155,7 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     if (isMobile)
-      ensureHasStoragePermission().then((value) => setState(() => hasPermission = value));
+      _ensureHasStoragePermission().then((value) => setState(() => hasPermission = value));
   }
 
   @override
@@ -210,7 +213,7 @@ class MyAppBody extends StatelessWidget {
   }
 }
 
-Future<bool> ensureHasStoragePermission() async {
+Future<bool> _ensureHasStoragePermission() async {
   if (!isMobile)
     return true;
   var storagePermission = await Permission.storage.status;

@@ -284,9 +284,10 @@ class FtbData extends ChangeNotifier {
   //   var wtpBytes = ByteData(textureOffsets.last + wtpSizes.last);
   //   for (int i = 0; i < ddsPaths.length; i++) {
   //     var ddsBytes = await FS.i.read(ddsPaths[i]);
-  //     wtpBytes.buffer.asUint8List().setAll(textureOffsets[i], ddsBytes);
+  //     wtpBytes.position = textureOffsets[i];
+  //     wtpBytes.writeFrom(ddsBytes);
   //   }
-  //   await FS.i.write(wtpPath, wtpBytes.buffer.asUint8List());
+  //   await wtpBytes.save(wtpPath);
   //   // export dtt
   //   var dttPath = dirname(wtpPath);
   //   await exportDat(dttPath);

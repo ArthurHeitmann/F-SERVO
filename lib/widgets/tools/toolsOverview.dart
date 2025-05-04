@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../../utils/utils.dart';
 import '../misc/SmoothScrollBuilder.dart';
 import '../theme/customTheme.dart';
 import 'ExtractFileTool.dart';
@@ -22,16 +23,17 @@ class _ToolsOverviewState extends State<ToolsOverview> {
     return SmoothSingleChildScrollView(
       child: Column(
         children: [
-          ExpansionTile(
-            key: extractToolKey,
-            title: const Text("Extract Files"),
-            initiallyExpanded: true,
-            textColor: getTheme(context).textColor,
-            maintainState: true,
-            children: const [
-              ExtractFilesTool(),
-            ],
-          ),
+          if (isDesktop)
+            ExpansionTile(
+              key: extractToolKey,
+              title: const Text("Extract Files"),
+              initiallyExpanded: true,
+              textColor: getTheme(context).textColor,
+              maintainState: true,
+              children: const [
+                ExtractFilesTool(),
+              ],
+            ),
           ExpansionTile(
             key: textureToolKey,
             title: const Text("Convert Textures"),

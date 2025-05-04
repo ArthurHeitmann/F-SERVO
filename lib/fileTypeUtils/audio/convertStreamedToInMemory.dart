@@ -77,7 +77,7 @@ Future<void> _convertStreamedToInMemory(String bnkPath, int wemId) async {
   await backupFile(bnkPath);
   var bnkBytes = ByteDataWrapper.allocate(bnk.calculateSize());
   bnk.write(bnkBytes);
-  await FS.i.write(bnkPath, bnkBytes.buffer.asUint8List());
+  await bnkBytes.save(bnkPath);
 
   showToast("WEM $wemId converted to in-memory");
 }

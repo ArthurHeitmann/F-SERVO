@@ -61,8 +61,14 @@ class AudioResourcesManager {
     var wavPath = path;
     bool deleteOnDispose = false;
     if (path.endsWith(".wem")) {
-      wavPath = await wemToWavTmp(path);
-      deleteOnDispose = true;
+      try {
+        wavPath = await wemToWavTmp(path);
+        deleteOnDispose = true;
+      } catch (e, st) {
+        messageLog.add("Error converting WEM to WAV: $path\n$e\n$st");
+        _loadingMutexes[path]!.release();
+        return AudioResource(path, null, null, false);
+      }
     } else if (makeCopy) {
       wavPath = await _copyToTmp(path);
       deleteOnDispose = true;

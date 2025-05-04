@@ -456,7 +456,7 @@ class UidGenericData {
   UidGenericData(this.data);
 
   UidGenericData.read(ByteDataWrapper bytes, int size) :
-    data = bytes.readUint8List(size);
+    data = bytes.asUint8List(size);
 
   void write(ByteDataWrapper bytes) {
     for (var i in data)

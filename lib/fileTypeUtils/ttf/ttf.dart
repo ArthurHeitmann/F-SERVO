@@ -187,7 +187,7 @@ class CmapFormat0 implements CmapFormat {
     format = bytes.readUint16();
     length = bytes.readUint16();
     language = bytes.readUint16();
-    glyphIndexArray = bytes.readUint8List(256);
+    glyphIndexArray = bytes.asUint8List(256);
   }
 
   @override

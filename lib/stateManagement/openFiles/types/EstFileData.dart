@@ -226,8 +226,7 @@ class EstEntryWrapper<T extends EstTypeEntry> with HasUuid, Undoable implements 
         .split(" ")
         .map((byteStr) => int.parse(byteStr, radix: 16))
         .toList();
-    var byteBuffer = Uint8List.fromList(bytes).buffer;
-    var entry = EstTypeEntry.read(ByteDataWrapper(byteBuffer), header);
+    var entry = EstTypeEntry.read(ByteDataWrapper.fromUint8List(Uint8List.fromList(bytes)), header);
     return EstEntryWrapper.fromEntry(entry, fileId);
   }
 
@@ -239,8 +238,9 @@ class EstEntryWrapper<T extends EstTypeEntry> with HasUuid, Undoable implements 
     };
     var bytes = ByteDataWrapper.allocate(entry.header.size);
     entry.write(bytes);
+    bytes.position = 0;
     json["bytes"] = bytes
-        .buffer.asUint8List()
+        .asUint8List(bytes.length)
         .map((byte) => byte.toRadixString(16).padLeft(2, "0"))
         .join(" ");
     return json;

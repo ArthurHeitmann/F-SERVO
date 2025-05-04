@@ -96,7 +96,7 @@ class BnkUnknownChunk extends BnkChunkBase {
 
   BnkUnknownChunk.read(ByteDataWrapper bytes) :
     super.read(bytes) {
-    data = bytes.readUint8List(chunkSize);
+    data = bytes.asUint8List(chunkSize);
   }
 
   @override
@@ -131,7 +131,7 @@ class BnkHeader extends BnkChunkBase {
     }
     if (chunkSize < 16) {
       print("Warning: BnkHeader chunk size is less than 20 ($chunkSize)");
-      unknown = bytes.readUint8List(chunkSize);
+      unknown = bytes.asUint8List(chunkSize);
       return;
     }
     version = bytes.readUint32();
@@ -139,7 +139,7 @@ class BnkHeader extends BnkChunkBase {
     languageId = bytes.readUint32();
     isFeedbackInBnk = bytes.readUint32();
     // projectId = bytes.readUint32();
-    padding = bytes.readUint8List(chunkSize - 0x10);
+    padding = bytes.asUint8List(chunkSize - 0x10);
   }
 
   @override
@@ -383,7 +383,7 @@ class BnkHircUnknownChunk extends BnkHircChunkBase {
   BnkHircUnknownChunk(super.type, super.size, super.uid, this.data);
 
   BnkHircUnknownChunk.read(ByteDataWrapper bytes) : super.read(bytes) {
-    data = bytes.readUint8List(size - 4);
+    data = bytes.asUint8List(size - 4);
   }
 
   @override
@@ -1164,7 +1164,7 @@ class BnkSource {
     var pluginType = ulPluginID & 0x0F;
     if (pluginType == 2 || pluginType == 5) {
       gapSize = bytes.readUint32();
-      gap = bytes.readUint8List(gapSize!);
+      gap = bytes.asUint8List(gapSize!);
     }
   }
 

@@ -52,7 +52,7 @@ Future<List<({int id, String path, bool isPrefetched})>> extractBnkWems(BnkFile 
     if (noExtract)
       continue;
     var byteData = ByteDataWrapper.allocate(bytes.length);
-    byteData.buffer.asUint8List().setAll(0, bytes);
+    byteData.writeFrom(bytes);
     await byteData.save(savePath);
   }
 

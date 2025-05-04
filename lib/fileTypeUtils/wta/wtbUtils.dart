@@ -34,7 +34,8 @@ class WtbUtils {
     var bytesNew = ByteDataWrapper.allocate(wtb.textureOffsets[0] + texBytes.length);
     wtb.textureSizes[0] = texBytes.length;
     wtb.write(bytesNew);
-    bytesNew.buffer.asUint8List().setAll(wtb.textureOffsets[0], texBytes);
+    bytesNew.position = wtb.textureOffsets[0];
+    bytesNew.writeFrom(texBytes);
     await backupFile(wtbPath);
     await bytesNew.save(wtbPath);
   }

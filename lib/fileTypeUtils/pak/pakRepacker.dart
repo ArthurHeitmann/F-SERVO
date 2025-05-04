@@ -44,7 +44,7 @@ class _FileEntry {
       type = 1;
     }
     if (index > 0) {
-      var xml = yaxToXml(ByteDataWrapper(Uint8List.fromList(data).buffer));
+      var xml = yaxToXml(ByteDataWrapper.fromUint8List(Uint8List.fromList(data)));
       const specialTagNames = ["node", "text"];
       if (xml.childElements.any((e) => specialTagNames.contains(e.name.local)))
         type += 1;

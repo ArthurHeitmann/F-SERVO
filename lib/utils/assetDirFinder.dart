@@ -7,6 +7,7 @@ import 'package:path/path.dart';
 
 import '../fileSystem/FileSystem.dart';
 import '../stateManagement/events/statusInfo.dart';
+import 'utils.dart';
 
 String? assetsDir;
 Completer<void> _assetDirSearchCompleter = Completer();
@@ -17,6 +18,11 @@ const _assetsDirSubDirs = { "fonts", "MrubyDecompiler" };
 Future<bool> findAssetsDir() async {
   if (assetsDir != null)
     return true;
+  if (isWeb) {
+    assetsDir = "./assets/assets";
+    _assetDirSearchCompleter.complete();
+    return true;
+  }
   var path = dirname(Platform.resolvedExecutable);
   // search cwd breadth first
   List<String> searchPathsQueue = [path];

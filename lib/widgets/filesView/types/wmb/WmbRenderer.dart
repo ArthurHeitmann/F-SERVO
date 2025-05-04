@@ -3,7 +3,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
-import '../../../../ffi/ffiImport.dart';
 import '../../../../stateManagement/Property.dart';
 import '../../../../stateManagement/openFiles/openFileTypes.dart';
 import '../../../../stateManagement/openFiles/types/WmbFileData.dart';
@@ -12,7 +11,8 @@ import '../../../propEditors/UnderlinePropTextField.dart';
 import '../../../propEditors/propEditorFactory.dart';
 import '../../../propEditors/propTextField.dart';
 import '../../../theme/customTheme.dart';
-import 'WmbMeshState.dart';
+import '../../../../stateManagement/openFiles/types/wmb/TextureOutput.dart';
+import '../../../../stateManagement/openFiles/types/wmb/WmbMeshState.dart';
 
 class WmbRenderer extends StatefulWidget {
   final WmbFileData file;
@@ -24,20 +24,14 @@ class WmbRenderer extends StatefulWidget {
 }
 
 class _WmbRendererState extends State<WmbRenderer> {
-  WmbTextureManager textureManager = WmbTextureManager();
   final searchString = StringProp("", fileId: null);
+  WmbTextureManager get textureManager => widget.file.textureManager;
 
   @override
   void initState() {
     super.initState();
     if (widget.file.loadingState.value != LoadingState.loaded)
       widget.file.load().then((_) => setState(() {}));
-  }
-
-  @override
-  void dispose() {
-    textureManager.dispose();
-    super.dispose();
   }
 
   @override
@@ -51,7 +45,7 @@ class _WmbRendererState extends State<WmbRenderer> {
             textureManager.setSize(screenSize, maxSize);
           }
         } else if (!textureManager.isInitializing && widget.file.loadingState.value == LoadingState.loaded) {
-          textureManager.init(widget.file.path, screenSize, maxSize)
+          textureManager.init(widget.file.wmbName!, widget.file.wmbData!, widget.file.wtaWtbData, widget.file.wtpData, screenSize, maxSize)
             .whenComplete(() => setState(() {}));
         }
         if (!textureManager.isReady) {
@@ -86,13 +80,23 @@ class _WmbRendererState extends State<WmbRenderer> {
                   setState(() {});
                 }
               },
-              child: Texture(textureId: textureManager.textureId),
+              child: _makeTextureRenderer(textureManager.textureOutput),
             ),
             _makeOverlay(context, constraints),
           ],
         );
       },
     );
+  }
+
+  _makeTextureRenderer(TextureOutput textureOutput) {
+    if (textureOutput is TextureOutputTexture) {
+      return Texture(textureId: textureOutput.textureId);
+    } else if (textureOutput is TextureOutputImageStream) {
+      return _ImageStreamRenderer(imageStream: textureOutput.stream);
+    } else {
+      return Text("Unknown texture output type: ${textureOutput.runtimeType}");
+    }
   }
 
   Widget _makeOverlay(BuildContext context, BoxConstraints constraints) {
@@ -163,6 +167,35 @@ class _WmbRendererState extends State<WmbRenderer> {
           for (var child in meshState.children)
             _makeMeshStateWidget(context, child, indent + 1),
       ],
+    );
+  }
+}
+
+class _ImageStreamRenderer extends StatefulWidget {
+  final Stream<RawTexture> imageStream;
+
+  const _ImageStreamRenderer({required this.imageStream});
+
+  @override
+  State<_ImageStreamRenderer> createState() => _ImageStreamRendererState();
+}
+
+class _ImageStreamRendererState extends State<_ImageStreamRenderer> {
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<RawTexture>(
+      stream: widget.imageStream,
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          return RawImage(
+            image: snapshot.data!.image,
+            width: snapshot.data!.width.toDouble(),
+            height: snapshot.data!.height.toDouble(),
+          );
+        } else {
+          return Center(child: Text("Loading..."));
+        }
+      },
     );
   }
 }

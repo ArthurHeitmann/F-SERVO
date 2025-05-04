@@ -14,58 +14,50 @@ enum StringEncoding {
 }
 
 class ByteDataWrapper {
-  final ByteBuffer buffer;
   late final ByteData _data;
   Endian endian;
-  final int _parentOffset;
   final int length;
   int _position = 0;
-  
-  ByteDataWrapper(this.buffer, {
-    this.endian = Endian.little,
-    int parentOffset = 0,
-    int? length,
-  }) :
-    _parentOffset = parentOffset,
-    length = length ?? buffer.lengthInBytes - parentOffset {
-    _data = buffer.asByteData(0, buffer.lengthInBytes);
-    _position = _parentOffset;
-  }
 
   ByteDataWrapper.allocate(int size, { this.endian = Endian.little }) : 
-    buffer = ByteData(size).buffer,
-    _parentOffset = 0,
-    length = size,
-    _position = 0 {
-    _data = buffer.asByteData(0, buffer.lengthInBytes);
+    length = size {
+    _data = ByteData(size).buffer.asByteData(0, size);
   }
+
+  ByteDataWrapper.fromUint8List(Uint8List list, { this.endian = Endian.little }) :
+    length = list.lengthInBytes {
+    _data = list.buffer.asByteData(list.offsetInBytes, list.lengthInBytes);
+  }
+
+  ByteDataWrapper.fromByteData(this._data, { this.endian = Endian.little }) :
+    length = _data.lengthInBytes;
 
   static Future<ByteDataWrapper> fromFile(String path) async {
     const twoGB = 2 * 1024 * 1024 * 1024;
     var fileSize = await FS.i.getSize(path);
     if (fileSize < twoGB) {
       var buffer = await FS.i.read(path);
-      return ByteDataWrapper(buffer.buffer);
+      return ByteDataWrapper.fromUint8List(buffer);
     } else {
       print("File is over 2GB, loading in chunks");
-      var buffer = Uint8List(fileSize).buffer;
+      var buffer = Uint8List(fileSize);
       var file = FS.i.openRead(path);
       int position = 0;
       int i = 0;
       await for (var bytes in file) {
-        buffer.asUint8List().setRange(position, position + bytes.length, bytes);
+        buffer.setRange(position, position + bytes.length, bytes);
         position += bytes.length;
         if (i % 100 == 0)
           stdout.write("${(position / fileSize * 100).round()}%\r");
         i++;
       }
       print("Read $position bytes");
-      return ByteDataWrapper(buffer);
+      return ByteDataWrapper.fromUint8List(buffer);
     }
   }
 
   Future<void> save(String path) async {
-    await FS.i.write(path, buffer.asUint8List());
+    await FS.i.write(path, _data.buffer.asUint8List(_data.offsetInBytes, _data.lengthInBytes));
   }
 
   int get position => _position;
@@ -73,17 +65,17 @@ class ByteDataWrapper {
   set position(int value) {
     if (value < 0 || value > length)
       throw RangeError.range(value, 0, _data.lengthInBytes, "View size");
-    if (value > buffer.lengthInBytes)
-      throw RangeError.range(value, 0, buffer.lengthInBytes, "Buffer size");
+    if (value > _data.lengthInBytes)
+      throw RangeError.range(value, 0, _data.lengthInBytes, "Buffer size");
     
-    _position = value + _parentOffset;
+    _position = value;
   }
 
   bool equals(ByteDataWrapper other) {
     if (length != other.length)
       return false;
     for (var i = 0; i < length; i++) {
-      if (_data.getUint8(_parentOffset + i) != other._data.getUint8(other._parentOffset + i))
+      if (_data.getUint8(i) != other._data.getUint8(i))
         return false;
     }
     return true;
@@ -192,43 +184,43 @@ class ByteDataWrapper {
   }
 
   Uint8List asUint8List(int length) {
-    var list = Uint8List.view(buffer, _position, length);
+    var list = Uint8List.view(_data.buffer, _data.offsetInBytes + _position, length);
     _position += length;
     return list;
   }
 
   Uint16List asUint16List(int length) {
-    var list = Uint16List.view(buffer, _position, length);
+    var list = Uint16List.view(_data.buffer, _data.offsetInBytes + _position, length);
     _position += length * 2;
     return list;
   }
 
   Uint32List asUint32List(int length) {
-    var list = Uint32List.view(buffer, _position, length);
+    var list = Uint32List.view(_data.buffer, _data.offsetInBytes + _position, length);
     _position += length * 4;
     return list;
   }
 
   Uint64List asUint64List(int length) {
-    var list = Uint64List.view(buffer, _position, length);
+    var list = Uint64List.view(_data.buffer, _data.offsetInBytes + _position, length);
     _position += length * 8;
     return list;
   }
 
   Int8List asInt8List(int length) {
-    var list = Int8List.view(buffer, _position, length);
+    var list = Int8List.view(_data.buffer, _data.offsetInBytes + _position, length);
     _position += length;
     return list;
   }
 
   Int16List asInt16List(int length) {
-    var list = Int16List.view(buffer, _position, length);
+    var list = Int16List.view(_data.buffer, _data.offsetInBytes + _position, length);
     _position += length * 2;
     return list;
   }
 
   Int32List asInt32List(int length) {
-    var list = Int32List.view(buffer, _position, length);
+    var list = Int32List.view(_data.buffer, _data.offsetInBytes + _position, length);
     _position += length * 4;
     return list;
   }
@@ -273,7 +265,7 @@ class ByteDataWrapper {
   }
 
   ByteDataWrapper makeSubView(int length) {
-    return ByteDataWrapper(buffer, endian: endian, parentOffset: _position, length: length);
+    return ByteDataWrapper.fromByteData(_data.buffer.asByteData(_data.offsetInBytes + _position, length), endian: endian);
   }
 
   void writeFloat32(double value) {
@@ -351,6 +343,10 @@ class ByteDataWrapper {
       _data.setUint8(_position, byte);
       _position += 1;
     }
+  }
+
+  void writeFrom(List<int> value) {
+    _data.buffer.asUint8List(_data.offsetInBytes + _position, value.length).setAll(0, value);
   }
 }
 
