@@ -51,6 +51,10 @@ dependencies:
     git:
       url: https://github.com/ArthurHeitmann/universal_ffi
       ref: main
+  wasm_ffi:
+    git:
+      url: https://github.com/ArthurHeitmann/wasm_ffi.git
+      ref: main
   url_launcher: ^6.2.2
   uuid: ^4.4.2
   # webview_windows: ^0.4.0
@@ -61,6 +65,7 @@ dependencies:
       ref: 999601052534f30fb50045819ef3813dbb04b9b8
   window_manager: ^0.4.3
   xml: ^6.3.0
+  js_interop_utils: ^1.0.7
 
 dev_dependencies:
   flutter_test:
@@ -116,6 +121,7 @@ flutter:
     - assets/mcdFonts/11/
     - assets/entityThumbnails/
     - assets/bins/rusty_platinum_utils/
+    - assets/web_worker/dist/
     - assets/monaco_editor/
     - assets/monaco_editor/node_modules/monaco-editor/min/vs/
     - assets/monaco_editor/node_modules/monaco-editor/min/vs/base/browser/ui/codicons/codicon/

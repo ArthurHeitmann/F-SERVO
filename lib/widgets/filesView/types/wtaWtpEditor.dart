@@ -36,7 +36,7 @@ class _TexturesTableConfig with CustomTableConfig {
     this.name = name;
     subTitleWidget = _WtpDatPaths(wtpDatsPath: texData.wtpDatsPath);
     columnNames = [
-      "ID", "PNG", "Path", "", "",
+      "ID", "", "Path", "", "",
       if (texData.hasAnySimpleModeFlags)
         "Is Albedo?",
       if (!texData.useFlagsSimpleMode)

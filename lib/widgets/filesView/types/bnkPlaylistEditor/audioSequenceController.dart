@@ -4,6 +4,7 @@ import 'dart:math';
 
 import 'package:audioplayers/audioplayers.dart';
 
+import '../../../../fileSystem/FileSystem.dart';
 import '../../../../stateManagement/Property.dart';
 import '../../../../stateManagement/openFiles/types/BnkFilePlaylistData.dart';
 import '../../../../utils/Disposable.dart';
@@ -43,8 +44,12 @@ class ClipPlaybackController extends PlaybackController {
 
   ClipPlaybackController(this.clip, [super.onEnd]) {
     _duration = clip.srcDuration.value - clip.beginTrim.value + clip.endTrim.value.toDouble();
-    _player.setSourceDeviceFile(clip.resource!.wavPath)
-      .then((_) => _player.seek(Duration(microseconds: (clip.beginTrim.value * 1000).toInt())));
+    Future<void> loadSrcFuture;
+    if (FS.i.useVirtualFs)
+      loadSrcFuture = FS.i.read(clip.resource!.wavPath).then((bytes) => _player.setSourceBytes(bytes));
+    else
+      loadSrcFuture = _player.setSourceDeviceFile(clip.resource!.wavPath);
+    loadSrcFuture.then((_) => _player.seek(Duration(microseconds: (clip.beginTrim.value * 1000).toInt())));
     _subs.add(_player.onPositionChanged.listen((Duration position) {
       _positionStream.add(position.inMilliseconds.toDouble());
     }));

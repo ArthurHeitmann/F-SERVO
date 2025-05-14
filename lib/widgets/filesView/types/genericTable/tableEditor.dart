@@ -308,7 +308,7 @@ class _TableEditorState extends ChangeNotifierState<TableEditor> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Tooltip(
+                    widget.config.columnNames[i].isEmpty ? SizedBox(height: 28) : Tooltip(
                       message: widget.config.columnNames[i],
                       waitDuration: const Duration(seconds: 1),
                       child: TextButton(
@@ -346,7 +346,7 @@ class _TableEditorState extends ChangeNotifierState<TableEditor> {
                         ),
                       ),
                     ),
-                    Padding(
+                    widget.config.columnNames[i].isEmpty ? SizedBox(height: 36) : Padding(
                       padding: const EdgeInsets.only(bottom: 4, right: 6),
                       child: makePropEditor<UnderlinePropTextField>(
                         columnSearch[i],

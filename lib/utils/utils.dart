@@ -749,6 +749,8 @@ List<T> spaceListWith<T>(List<T> list, T Function() generator, [bool outer = fal
 }
 
 Future<void> backupFile(String file) async {
+  if (isWeb)
+    return;
   var backupName = "$file.backup";
   if (!await FS.i.existsFile(backupName) && await FS.i.existsFile(file))
     await FS.i.copyFile(file, backupName);

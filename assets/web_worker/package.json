@@ -1,0 +1,23 @@
+{
+  "name": "web_worker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "build": "node esbuild.js",
+    "watch": "node esbuild.js --watch"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@imagemagick/magick-wasm": "^0.0.35",
+    "@jgoz/esbuild-plugin-typecheck": "^4.0.3",
+    "esbuild": "^0.25.4",
+    "typescript": "^5.8.3"
+  },
+  "devDependencies": {
+    "@types/serviceworker": "^0.0.133"
+  }
+}

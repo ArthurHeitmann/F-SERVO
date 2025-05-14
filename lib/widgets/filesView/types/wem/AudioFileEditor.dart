@@ -6,6 +6,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../fileSystem/FileSystem.dart';
 import '../../../../stateManagement/openFiles/openFilesManager.dart';
 import '../../../../stateManagement/openFiles/types/WemFileData.dart';
 import '../../../../stateManagement/preferencesData.dart';
@@ -37,11 +38,16 @@ class _AudioFileEditorState extends State<AudioFileEditor> {
   void initState() {
     super.initState();
     _player = AudioPlayer();
-    widget.file.load().then((_) {
+    widget.file.load().then((_) async {
       if (!mounted)
         return;
-      _player!.setSourceDeviceFile(widget.file.resource!.wavPath);
       _viewEnd.value = widget.file.resource!.preview?.totalSamples ?? 0;
+      if (FS.i.useVirtualFs)
+        await _player!.setSourceBytes(await FS.i.read(widget.file.resource!.wavPath));
+      else
+        await _player!.setSourceDeviceFile(widget.file.resource!.wavPath);
+      if (!mounted)
+        return;
       setState(() {});
     });
     prefs = PreferencesData();

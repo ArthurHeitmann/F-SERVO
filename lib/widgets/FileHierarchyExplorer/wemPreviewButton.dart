@@ -3,6 +3,7 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 
+import '../../fileSystem/FileSystem.dart';
 import '../../stateManagement/audioResourceManager.dart';
 import '../../utils/utils.dart';
 import '../theme/customTheme.dart';
@@ -39,7 +40,10 @@ class _WemPreviewButtonState extends State<WemPreviewButton> {
         if (mounted)
           setState(() {});
       });
-      await player!.setSourceDeviceFile(resource!.wavPath);
+      if (FS.i.useVirtualFs)
+        await player!.setSourceBytes(await FS.i.read(resource!.wavPath));
+      else
+        await player!.setSourceDeviceFile(resource!.wavPath);
       setState(() => isLoading = false);
     } catch (e) {
       setState(() => isLoading = false);

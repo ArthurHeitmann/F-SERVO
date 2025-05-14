@@ -32,7 +32,7 @@ import 'widgets/theme/customTheme.dart';
 import 'widgets/theme/nierTheme.dart';
 import 'widgets/titlebar/Titlebar.dart';
 import 'fileSystem/FileSystem.dart';
-import 'widgets/web/webImports.dart';
+import 'web/webImports.dart';
 
 void main(List<String> args) {
   loggingWrapper(() => init(args));
@@ -70,15 +70,16 @@ void init(List<String> args) async {
     await SystemChrome.setEnabledSystemUIMode(SystemUiMode.leanBack);
     await _ensureHasStoragePermission();
   }
-  else if (isWeb) {
-    webPreventEvents();
-    unawaited(FlutterWindowClose.setWebReturnValue("Are you sure you want to leave?"));
-  }
-  if (isDesktop)
+  if (isDesktop) {
     startSyncServer();
+  }
   unawaited(findAssetsDir().then((_) {
     FfiHelper.init(assetsDir!);
   }));
+  if (isWeb) {
+    await initWeb();
+    unawaited(FlutterWindowClose.setWebReturnValue("Are you sure you want to leave?"));
+  }
   await PreferencesData().load();
   if (isDesktop || isMobile) {
     unawaited(idLookup.init());
