@@ -2,6 +2,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:pointer_interceptor/pointer_interceptor.dart';
 
 import '../../stateManagement/events/statusInfo.dart';
 import '../../utils/loggingWrapper.dart';
@@ -122,99 +123,101 @@ class _MessageLogDialogState extends ChangeNotifierState<_MessageLogDialog> {
           right: 20,
           width: 400,
           height: 250,
-          child: Container(
-            decoration: BoxDecoration(
-              color: getTheme(context).sidebarBackgroundColor,
-              borderRadius: const BorderRadius.all(Radius.circular(10)),
-              boxShadow: [
-                BoxShadow(
-                  color: shadowColor,
-                  spreadRadius: 0,
-                  blurRadius: 2,
-                  offset: const Offset(0, 1),
-                ),
-                BoxShadow(
-                  color: shadowColor,
-                  spreadRadius: 0,
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-                BoxShadow(
-                  color: shadowColor,
-                  spreadRadius: 0,
-                  blurRadius: 16,
-                  offset: const Offset(0, 4),
-                ),
-                BoxShadow(
-                  color: shadowColor,
-                  spreadRadius: 0,
-                  blurRadius: 32,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: Material(
-              color: Colors.transparent,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  SizedBox(
-                    height: 25,
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 10, top: 8),
-                      child: Row(
-                        children: [
-                          const Text(
-                            "Messages:",
-                            style: TextStyle(fontSize: 14),
-                          ),
-                          const Spacer(),
-                          Tooltip(
-                            message: "Clear all messages",
-                            waitDuration: const Duration(milliseconds: 500),
-                            child: IconButton(
-                              icon: const Icon(Icons.clear_all, size: 18,),
-                              padding: EdgeInsets.zero,
-                              splashRadius: 15,
-                              onPressed: () => messageLog.clear(),
-                            ),
-                          ),
-                          Tooltip(
-                            message: "Copy all messages to clipboard",
-                            waitDuration: const Duration(milliseconds: 500),
-                            child: IconButton(
-                              icon: const Icon(Icons.copy, size: 15,),
-                              padding: EdgeInsets.zero,
-                              splashRadius: 15,
-                              onPressed: () => copyToClipboard(messageLog.join("\n"))
-                                .then((_) => showToast("Copied ${pluralStr(messageLog.length, "message")} to clipboard")),
-                            ),
-                          ),
-                          Tooltip(
-                            message: "Open logs file",
-                            waitDuration: const Duration(milliseconds: 500),
-                            child: IconButton(
-                              icon: const Icon(Icons.open_in_new, size: 18,),
-                              padding: EdgeInsets.zero,
-                              splashRadius: 15,
-                              onPressed: () => openInTextEditor(logFileName),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+          child: PointerInterceptor(
+            child: Container(
+              decoration: BoxDecoration(
+                color: getTheme(context).sidebarBackgroundColor,
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
+                boxShadow: [
+                  BoxShadow(
+                    color: shadowColor,
+                    spreadRadius: 0,
+                    blurRadius: 2,
+                    offset: const Offset(0, 1),
                   ),
-                  const Divider(),
-                  Expanded(
-                    child: SelectionArea(
-                      child: ListView.builder(
-                        controller: controller,
-                        itemCount: messageLog.length,
-                        itemBuilder: (context, index) => _LogEntry(message: messageLog[index]),
-                      ),
-                    ),
+                  BoxShadow(
+                    color: shadowColor,
+                    spreadRadius: 0,
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                  BoxShadow(
+                    color: shadowColor,
+                    spreadRadius: 0,
+                    blurRadius: 16,
+                    offset: const Offset(0, 4),
+                  ),
+                  BoxShadow(
+                    color: shadowColor,
+                    spreadRadius: 0,
+                    blurRadius: 32,
+                    offset: const Offset(0, 8),
                   ),
                 ],
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    SizedBox(
+                      height: 25,
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 10, top: 8),
+                        child: Row(
+                          children: [
+                            const Text(
+                              "Messages:",
+                              style: TextStyle(fontSize: 14),
+                            ),
+                            const Spacer(),
+                            Tooltip(
+                              message: "Clear all messages",
+                              waitDuration: const Duration(milliseconds: 500),
+                              child: IconButton(
+                                icon: const Icon(Icons.clear_all, size: 18,),
+                                padding: EdgeInsets.zero,
+                                splashRadius: 15,
+                                onPressed: () => messageLog.clear(),
+                              ),
+                            ),
+                            Tooltip(
+                              message: "Copy all messages to clipboard",
+                              waitDuration: const Duration(milliseconds: 500),
+                              child: IconButton(
+                                icon: const Icon(Icons.copy, size: 15,),
+                                padding: EdgeInsets.zero,
+                                splashRadius: 15,
+                                onPressed: () => copyToClipboard(messageLog.join("\n"))
+                                  .then((_) => showToast("Copied ${pluralStr(messageLog.length, "message")} to clipboard")),
+                              ),
+                            ),
+                            Tooltip(
+                              message: "Open logs file",
+                              waitDuration: const Duration(milliseconds: 500),
+                              child: IconButton(
+                                icon: const Icon(Icons.open_in_new, size: 18,),
+                                padding: EdgeInsets.zero,
+                                splashRadius: 15,
+                                onPressed: () => openInTextEditor(logFileName),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const Divider(),
+                    Expanded(
+                      child: SelectionArea(
+                        child: ListView.builder(
+                          controller: controller,
+                          itemCount: messageLog.length,
+                          itemBuilder: (context, index) => _LogEntry(message: messageLog[index]),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

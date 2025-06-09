@@ -3,6 +3,7 @@
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
+import 'package:pointer_interceptor/pointer_interceptor.dart';
 
 import '../../main.dart';
 import '../../stateManagement/Property.dart';
@@ -24,11 +25,13 @@ void showWwiseProjectGeneratorPopup(String bnkPath) {
     builder: (context) => Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       backgroundColor: getTheme(context).sidebarBackgroundColor,
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: 600, maxHeight: MediaQuery.of(context).size.height - 100),
-          child: _WwiseProjectGeneratorPopup(bnkPath),
+      child: PointerInterceptor(
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: 600, maxHeight: MediaQuery.of(context).size.height - 100),
+            child: _WwiseProjectGeneratorPopup(bnkPath),
+          ),
         ),
       ),
     )
@@ -204,10 +207,11 @@ class __WwiseProjectGeneratorPopupState extends State<_WwiseProjectGeneratorPopu
                   child: Align(
                     alignment: Alignment.center,
                     child: DottedBorder(
-                      strokeWidth: 2,
-                      color: getTheme(context).textColor!.withOpacity(0.25),
-                      radius: const Radius.circular(12),
-                      borderType: BorderType.RRect,
+                      options: RoundedRectDottedBorderOptions(
+                        strokeWidth: 2,
+                        color: getTheme(context).textColor!.withOpacity(0.25),
+                        radius: const Radius.circular(12),
+                      ),
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                         decoration: BoxDecoration(

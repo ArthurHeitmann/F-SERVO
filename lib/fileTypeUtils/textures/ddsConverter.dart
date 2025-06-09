@@ -6,31 +6,29 @@ import '../../fileSystem/FileSystem.dart';
 import '../../stateManagement/events/statusInfo.dart';
 import '../../utils/assetDirFinder.dart';
 import '../../utils/utils.dart';
-import '../../web/serviceWorker.dart';
+import '../../web/webImports.dart';
 
-Future<void> texToDds(String srcPath, String dstPath, { String compression = "dxt5", int mipmaps = 0 }) async {
+Future<Uint8List?> texToDds(String srcPath, { String? dstPath, String compression = "dxt5", int mipmaps = 0 }) async {
   if (isDesktop) {
-    await _texToDdsDesktop(srcPath, dstPath, compression, mipmaps);
+    return await _texToDdsDesktop(srcPath, dstPath, compression, mipmaps);
   } else if (isWeb) {
-    await _texToDdsWeb(srcPath, dstPath, compression, mipmaps);
+    return await _texToDdsWeb(srcPath, dstPath, compression, mipmaps);
   } else {
     throw Exception("texToDds: Unsupported platform");
   }
 }
 
-Future<void> _texToDdsDesktop(String srcPath, String dstPath, String compression, int mipmaps) async {
+Future<Uint8List?> _texToDdsDesktop(String srcPath, String? dstPath, String compression, int mipmaps) async {
   var result = await Process.run(
     magickBinPath!,
     [
       srcPath,
-      if (dstPath.endsWith(".dds")) ...[
-        "-define",
-        "dds:compression=$compression",
-        "-define",
-        "dds:mipmaps=$mipmaps",
-      ],
-      dstPath
-      ]
+      "-define",
+      "dds:compression=$compression",
+      "-define",
+      "dds:mipmaps=$mipmaps",
+      dstPath != null ? "DDS:$dstPath" : "DDS:-",
+    ]
   );
   if (result.exitCode != 0) {
     messageLog.add("stdout: ${result.stdout}");
@@ -38,9 +36,12 @@ Future<void> _texToDdsDesktop(String srcPath, String dstPath, String compression
     messageLog.add("Failed to convert texture to DDS: ${result.stderr}");
     throw Exception("Failed to convert texture to DDS: ${result.stderr}");
   }
+  if (dstPath == null)
+    return Uint8List.fromList(result.stdout as List<int>);
+  return null;
 }
 
-Future<void> _texToDdsWeb(String srcPath, String dstPath, String compression, int mipmaps) async {
+Future<Uint8List?> _texToDdsWeb(String srcPath, String? dstPath, String compression, int mipmaps) async {
   var imgBytes = await FS.i.read(srcPath);
   var result = await ServiceWorkerHelper.i.imgToDds(imgBytes, compression, mipmaps);
   if (result.isOk) {
@@ -48,7 +49,64 @@ Future<void> _texToDdsWeb(String srcPath, String dstPath, String compression, in
       messageLog.add("Failed to convert texture to DDS. Invalid header.");
       throw Exception("Failed to convert texture to DDS. Invalid header.");
     }
-    await FS.i.write(dstPath, result.ok);
+    if (dstPath != null) {
+      await FS.i.write(dstPath, result.ok);
+      return null;
+    } else {
+      return result.ok;
+    }
+  } else {
+    throw Exception("WemToWav: ${result.errorMessage}");
+  }
+}
+
+Future<Uint8List?> texToDdsInMemory(Uint8List texBytes, { String? dstPath, String compression = "dxt5", int mipmaps = 0 }) async {
+  if (isDesktop) {
+    return await _texToDdsInMemoryDesktop(texBytes, dstPath, compression, mipmaps);
+  } else if (isWeb) {
+    return await _texToDdsInMemoryWeb(texBytes, dstPath, compression, mipmaps);
+  } else {
+    throw Exception("texToDds: Unsupported platform");
+  }
+}
+
+Future<Uint8List?> _texToDdsInMemoryDesktop(Uint8List texBytes, String? dstPath, String compression, int mipmaps) async {
+  var process = await Process.start(
+    magickBinPath!,
+    [
+      "PNG:-",
+      "-define",
+      "dds:compression=$compression",
+      "-define",
+      "dds:mipmaps=$mipmaps",
+      dstPath != null ? "DDS:$dstPath" : "DDS:-",
+    ],
+  );
+  process.stdin.add(texBytes);
+  await process.stdin.close();
+  var result = await process.stdout.expand((e) => e).toList();
+  if (await process.exitCode != 0) {
+    messageLog.add("Failed to convert texture to DDS: ${result}");
+    throw Exception("Failed to convert texture to DDS: ${result}");
+  }
+  if (dstPath == null)
+    return Uint8List.fromList(result);
+  return null;
+}
+
+Future<Uint8List?> _texToDdsInMemoryWeb(Uint8List texBytes, String? dstPath, String compression, int mipmaps) async {
+  var result = await ServiceWorkerHelper.i.imgToDds(texBytes, compression, mipmaps);
+  if (result.isOk) {
+    if (!_hasDdsHeader(result.ok)) {
+      messageLog.add("Failed to convert texture to DDS. Invalid header.");
+      throw Exception("Failed to convert texture to DDS. Invalid header.");
+    }
+    if (dstPath != null) {
+      await FS.i.write(dstPath, result.ok);
+      return null;
+    } else {
+      return result.ok;
+    }
   } else {
     throw Exception("WemToWav: ${result.errorMessage}");
   }
@@ -107,9 +165,6 @@ Future<Uint8List?> _texToPngWeb(String ddsPath, String? pngPath, int? maxHeight,
         showToast("Can't load texture because ImageMagick failed to convert DDS to PNG. Invalid header.");
       throw Exception("Can't load texture because ImageMagick failed to convert DDS to PNG.");
     }
-    var hexBytes = result.ok.sublist(0, 50).map((e) => e.toRadixString(16).padLeft(2, "0")).join(" ");
-    var asciiBytes = result.ok.sublist(0, 50).map((e) => e < 32 || e > 126 ? "." : String.fromCharCode(e)).join("");
-    print("$ddsPath\n$hexBytes...\n$asciiBytes...");
     return result.ok;
   } else {
     if (verbose)
@@ -158,7 +213,7 @@ Future<Uint8List?> _texToPngInMemoryDesktop(Uint8List texBytes, int? maxHeight, 
 }
 
 Future<Uint8List?> _texToPngInMemoryWeb(Uint8List texBytes, int? maxHeight, bool verbose) async {
-  var result = await ServiceWorkerHelper.i.imgToPng(texBytes, maxHeight!);
+  var result = await ServiceWorkerHelper.i.imgToPng(texBytes, maxHeight);
   if (result.isOk) {
     if (!_hasPngHeader(result.ok)) {
       if (verbose)

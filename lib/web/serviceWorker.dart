@@ -9,6 +9,7 @@ import 'package:path/path.dart';
 import 'package:web/web.dart';
 
 import '../utils/assetDirFinder.dart';
+import 'MsgResult.dart';
 
 @JS()
 extension type _FallbackModule._(JSObject _) implements JSObject {
@@ -75,11 +76,12 @@ class ServiceWorkerHelper {
     return MsgResultOk(wav);
   }
 
-  Future<MsgResult<Uint8List>> imgToPng(Uint8List wem, int maxHeight) async {
+  Future<MsgResult<Uint8List>> imgToPng(Uint8List wem, int? maxHeight) async {
     var buffer = _JSUint8Array2((wem as List<int>).toJS);
     var result = await _request("img_to_png", {
       "bytes": buffer,
-      "maxHeight": maxHeight.toJS,
+      if (maxHeight != null)
+        "maxHeight": maxHeight.toJS,
     });
     if (result.isError) {
       return result.error<Uint8List>();
@@ -174,42 +176,6 @@ class ServiceWorkerHelper {
     _requests.remove(id);
     _activeRequestId = null;
     _tryDequeueRequest();
-  }
-}
-
-class MsgResult<T> {
-  bool get isOk => this is MsgResultOk;
-  bool get isError => this is MsgResultError;
-  bool get isTimeoutError => this is MsgResultTimeoutError;
-
-  T get ok => (this as MsgResultOk).data;
-  String get errorMessage => (this as MsgResultError).message;
-  MsgResultError<U> error<U>() {
-    return (this as MsgResultError).cast<U>();
-  }
-}
-
-class MsgResultOk<T> extends MsgResult<T> {
-  final T data;
-
-  MsgResultOk(this.data);
-}
-
-class MsgResultError<T> extends MsgResult<T> {
-  final String message;
-
-  MsgResultError(this.message);
-
-  MsgResultError<U> cast<U>() {
-    return MsgResultError<U>(message);
-  }
-}
-class MsgResultTimeoutError<T> extends MsgResultError<T> {
-  MsgResultTimeoutError(super.message);
-
-  @override
-  MsgResultError<U> cast<U>() {
-    return MsgResultTimeoutError<U>(message);
   }
 }
 

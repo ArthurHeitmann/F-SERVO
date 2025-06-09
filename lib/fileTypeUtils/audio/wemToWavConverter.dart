@@ -7,7 +7,7 @@ import 'package:path/path.dart';
 import '../../utils/assetDirFinder.dart';
 import '../../utils/utils.dart';
 import '../../fileSystem/FileSystem.dart';
-import '../../web/serviceWorker.dart';
+import '../../web/webImports.dart';
 
 Map<String, String> _tmpExtractDirs = {};
 

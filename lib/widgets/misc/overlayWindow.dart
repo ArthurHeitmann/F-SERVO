@@ -2,6 +2,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:pointer_interceptor/pointer_interceptor.dart';
 
 import '../../utils/utils.dart';
 import '../theme/customTheme.dart';
@@ -128,51 +129,53 @@ class _OverlayWindowState extends State<OverlayWindow> {
           top: top,
           width: width,
           height: height,
-          child: Material(
-            elevation: 8,
-            color: getTheme(context).sidebarBackgroundColor,
-            child: Container(
-              decoration: BoxDecoration(
-                border: Border.all(color: getTheme(context).dividerColor!, width: 1),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  GestureDetector(
-                    onPanUpdate: (details) => onWindowDrag(details, screenSize),
-                    child: SizedBox(
-                      height: 30,
-                      child: Row(
-                        children: [
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              widget.title,
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
+          child: PointerInterceptor(
+            child: Material(
+              elevation: 8,
+              color: getTheme(context).sidebarBackgroundColor,
+              child: Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: getTheme(context).dividerColor!, width: 1),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    GestureDetector(
+                      onPanUpdate: (details) => onWindowDrag(details, screenSize),
+                      child: SizedBox(
+                        height: 30,
+                        child: Row(
+                          children: [
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                widget.title,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
-                          ),
-                          IconButton(
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            onPressed: close,
-                            splashRadius: 16,
-                            icon: const Icon(Icons.close, size: 18),
-                          ),
-                          const SizedBox(width: 4),
-                        ],
+                            IconButton(
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              onPressed: close,
+                              splashRadius: 16,
+                              icon: const Icon(Icons.close, size: 18),
+                            ),
+                            const SizedBox(width: 4),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  Container(
-                    height: 1,
-                    color: getTheme(context).dividerColor,
-                  ),
-                  Expanded(
-                    child: widget.child,
-                  ),
-                ],
+                    Container(
+                      height: 1,
+                      color: getTheme(context).dividerColor,
+                    ),
+                    Expanded(
+                      child: widget.child,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

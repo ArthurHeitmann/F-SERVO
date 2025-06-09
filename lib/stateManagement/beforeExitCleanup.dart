@@ -6,12 +6,7 @@ import 'audioResourceManager.dart';
 import 'openFiles/openFilesManager.dart';
 
 Future<bool> beforeExitConfirmation() async {
-  var unsavedFiles = areasManager
-    .areas
-    .followedBy([areasManager.hiddenArea])
-    .expand((area) => area.files)
-    .map((f) => f.hasUnsavedChanges.value ? 1 : 0)
-    .fold<int>(0, (a, b) => a + b);
+  var unsavedFiles = numberOfUnsavedFiles();
   
   if (unsavedFiles > 0) {
     var answer = await confirmOrCancelDialog(
@@ -30,6 +25,15 @@ Future<bool> beforeExitConfirmation() async {
   }
 
   return true;
+}
+
+int numberOfUnsavedFiles() {
+  return areasManager
+    .areas
+    .followedBy([areasManager.hiddenArea])
+    .expand((area) => area.files)
+    .map((f) => f.hasUnsavedChanges.value ? 1 : 0)
+    .fold<int>(0, (a, b) => a + b);
 }
 
 Future<void> beforeExitCleanup() async {

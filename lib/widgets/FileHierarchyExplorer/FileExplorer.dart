@@ -134,18 +134,19 @@ class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
             onPressed: openFilePicker,
           ),
         ),
-        Tooltip(
-          message: "Open recent file",
-          waitDuration: const Duration(milliseconds: 500),
-          child: IconButton(
-            icon: const Icon(Icons.history),
-            padding: const EdgeInsets.all(5),
-            constraints: const BoxConstraints(),
-            iconSize: 16,
-            splashRadius: 20,
-            onPressed: () => showMostRecentFiles(context),
+        if (!FS.i.useVirtualFs)
+          Tooltip(
+            message: "Open recent file",
+            waitDuration: const Duration(milliseconds: 500),
+            child: IconButton(
+              icon: const Icon(Icons.history),
+              padding: const EdgeInsets.all(5),
+              constraints: const BoxConstraints(),
+              iconSize: 16,
+              splashRadius: 20,
+              onPressed: () => showMostRecentFiles(context),
+            ),
           ),
-        ),
         Tooltip(
           message: "Expand all",
           waitDuration: const Duration(milliseconds: 500),

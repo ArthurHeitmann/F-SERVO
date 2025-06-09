@@ -1,11 +1,14 @@
 
+(() => {
 let wordWrap = true;
 
 let lang;
+let windowId;
 window.addEventListener("load", () => {
 	const params = new URLSearchParams(window.location.search);
 	lang = params.get("lang") || null;
 	const theme = params.get("theme") || "vs-dark";
+	windowId = params.get("windowId") || null;
 
 	require.config({ paths: { vs: "./node_modules/monaco-editor/min/vs" }});
 	require(["vs/editor/editor.main"], function () {
@@ -64,14 +67,31 @@ function jumpToLine(lineNumber) {
 }
 
 function postMessage(message) {
-	window.chrome?.webview?.postMessage(message);
+	console.log("postMessage", message);
+	if (window.chrome?.webview)
+		window.chrome.webview.postMessage(message);
+	else if (window.parent)
+		window.parent.postMessage({
+			...message,
+			windowId: windowId,
+		}, "*");
+	else
+		console.warn("No postMessage method available", message);
+		
 }
 
-window.chrome?.webview?.addEventListener("message", (e) => {
-	const message = e.data;
+(window.chrome?.webview ?? window.parent)?.addEventListener("message", (e) => {
+	let message = e.data;
+	if (typeof message === "string") {
+		try {
+			message = JSON.parse(message);
+		} catch (err) {
+			return;
+		}
+	}
 	const type = message.type;
-	if (type)
-		console.log("Message received", message);
+	if (message.windowId && windowId && message.windowId !== windowId)
+		return;
 	switch (type) {
 		case null:
 		case undefined:
@@ -79,8 +99,10 @@ window.chrome?.webview?.addEventListener("message", (e) => {
 		case "jumpToLine":
 			jumpToLine(message.line);
 			break;
+		case "setContent":
+			window.textEditor.setValue(message.value);
+			break;
 		default:
-			console.warn("Unknown message type", type);
 			break;
 	}
 });
@@ -142,3 +164,5 @@ function throttle(func, wait, options = { leading: true, trailing: true}) {
 		return result;
 	};
 }
+
+})();

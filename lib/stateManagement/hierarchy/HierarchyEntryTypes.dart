@@ -225,11 +225,18 @@ abstract class FileHierarchyEntry extends HierarchyEntry {
   @override
   List<HierarchyEntryAction> getContextMenuActions() {
     return [
-      HierarchyEntryAction(
-        name: "Show in Explorer",
-        icon: Icons.open_in_new,
-        action: () => revealFileInExplorer(path)
-      ),
+      if (isDesktop)
+        HierarchyEntryAction(
+          name: "Show in Explorer",
+          icon: Icons.open_in_new,
+          action: () => revealFileInExplorer(path)
+        ),
+      if (isWeb)
+        HierarchyEntryAction(
+          name: "Download",
+          icon: Icons.download,
+          action: () => downloadFile(path)
+        ),
       ...super.getContextMenuActions(),
     ];
   }

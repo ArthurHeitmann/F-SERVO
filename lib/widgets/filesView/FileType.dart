@@ -18,7 +18,7 @@ import '../../stateManagement/openFiles/types/xml/XmlFileData.dart';
 import '../../stateManagement/preferencesData.dart';
 import '../misc/preferencesEditor.dart';
 import 'types/SaveSlotDataEditor.dart';
-import 'types/TextFileEditor.dart';
+import 'types/text/TextFileEditor.dart';
 import 'types/uid/UidEditor.dart';
 import 'types/bnkPlaylistEditor/BnkPlaylistEditor.dart';
 import 'types/effect/EstFileEditor.dart';

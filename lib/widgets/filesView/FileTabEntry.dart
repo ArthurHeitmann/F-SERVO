@@ -123,16 +123,24 @@ class _FileTabEntryState extends ChangeNotifierState<FileTabEntry> {
             icon: const Icon(Icons.refresh, size: 15),
             action: () => areasManager.fromId(widget.file)!.reload(),
           ),
-        ContextMenuConfig(
-          label: "Copy path",
-          icon: const Icon(Icons.link, size: 15),
-          action: () => copyToClipboard(areasManager.fromId(widget.file)!.path),
-        ),
-        ContextMenuConfig(
-          label: "Show in Explorer",
-          icon: const Icon(Icons.folder_open, size: 14),
-          action: () => revealFileInExplorer(areasManager.fromId(widget.file)!.path),
-        ),
+        if (isDesktop)
+          ContextMenuConfig(
+            label: "Copy path",
+            icon: const Icon(Icons.link, size: 15),
+            action: () => copyToClipboard(areasManager.fromId(widget.file)!.path),
+          ),
+        if (isDesktop)
+          ContextMenuConfig(
+            label: "Show in Explorer",
+            icon: const Icon(Icons.folder_open, size: 14),
+            action: () => revealFileInExplorer(areasManager.fromId(widget.file)!.path),
+          ),
+        if (isWeb)
+          ContextMenuConfig(
+            label: "Download",
+            icon: const Icon(Icons.download, size: 14),
+            action: () => downloadFile(areasManager.fromId(widget.file)!.path),
+          ),
         ContextMenuConfig(
           label: "Close",
           icon: const Icon(Icons.close, size: 11),

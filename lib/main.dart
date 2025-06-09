@@ -78,7 +78,6 @@ void init(List<String> args) async {
   }));
   if (isWeb) {
     await initWeb();
-    unawaited(FlutterWindowClose.setWebReturnValue("Are you sure you want to leave?"));
   }
   await PreferencesData().load();
   if (isDesktop || isMobile) {

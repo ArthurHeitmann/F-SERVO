@@ -1186,7 +1186,7 @@ class McdData extends _McdFilePart {
 
     // update wtb
     var texDdsPath = "${texPngPath.substring(0, texPngPath.length - 3)}dds";
-    await texToDds(texPngPath, texDdsPath);
+    await texToDds(texPngPath, dstPath: texDdsPath);
     await WtbUtils.replaceSingle(textureWtbPath.value, texDdsPath);
 
     // export dat and dtt

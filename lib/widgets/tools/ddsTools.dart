@@ -6,6 +6,7 @@ import 'package:path/path.dart';
 import '../../fileSystem/FileSystem.dart';
 import '../../fileTypeUtils/textures/ddsConverter.dart';
 import '../../stateManagement/Property.dart';
+import '../../utils/utils.dart';
 import '../misc/dropTargetBuilder.dart';
 import '../misc/imagePreviewBuilder.dart';
 import '../misc/onHoverBuilder.dart';
@@ -55,20 +56,38 @@ class _DdsToolState extends State<DdsTool> {
   }
 
   void convert() async {
-    var savePath = await FS.i.selectSaveFile(
-      dialogTitle: "Save image as ${format.name}",
-      allowedExtensions: [format.ext],
-      fileName: "${basenameWithoutExtension(srcPath)}.${format.ext}",
-    );
-    if (savePath == null)
-      return;
-    switch (format) {
-      case _TextureFormat.png:
-        await texToPng(srcPath, pngPath: savePath);
-        break;
-      case _TextureFormat.dds:
-        await texToDds(srcPath, savePath, compression: compression.ext, mipmaps: mipmaps.value ? 10 : 0);
-        break;
+    if (isDesktop) {
+      var savePath = await FS.i.selectSaveFile(
+        dialogTitle: "Save image as ${format.name}",
+        allowedExtensions: [format.ext],
+        fileName: "${basenameWithoutExtension(srcPath)}.${format.ext}",
+      );
+      if (savePath == null)
+        return;
+      switch (format) {
+        case _TextureFormat.png:
+          await texToPng(srcPath, pngPath: savePath);
+          break;
+        case _TextureFormat.dds:
+          await texToDds(srcPath, dstPath: savePath, compression: compression.ext, mipmaps: mipmaps.value ? 10 : 0);
+          break;
+      }
+    }
+    else {
+      await FS.i.saveFile(
+        dialogTitle: "Save image as ${format.name}",
+        allowedExtensions: [format.ext],
+        fileName: "${basenameWithoutExtension(srcPath)}.${format.ext}",
+        getBytes: () async {
+          var srcBytes = await FS.i.read(srcPath);
+          switch (format) {
+            case _TextureFormat.png:
+              return (await texToPngInMemory(srcBytes))!;
+            case _TextureFormat.dds:
+              return (await texToDdsInMemory(srcBytes, compression: compression.ext, mipmaps: mipmaps.value ? 10 : 0))!;
+          }
+        },
+      );
     }
   }
 
@@ -141,10 +160,11 @@ class _DdsToolState extends State<DdsTool> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 child: DottedBorder(
-                  strokeWidth: 2,
-                  color: getTheme(context).textColor!.withOpacity(0.25),
-                  radius: const Radius.circular(12),
-                  borderType: BorderType.RRect,
+                  options: RoundedRectDottedBorderOptions(
+                    strokeWidth: 2,
+                    color: getTheme(context).textColor!.withOpacity(0.25),
+                    radius: const Radius.circular(12),
+                  ),
                   child: Container(
                     decoration: BoxDecoration(
                       color: Colors.black.withOpacity(0.25),

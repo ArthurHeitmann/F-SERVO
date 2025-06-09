@@ -272,7 +272,7 @@ class WmbTextureManager {
 
   void _render(Size widgetSize) {
     safetyCheck();
-    var sw = Stopwatch()..start();
+    // var sw = Stopwatch()..start();
     var texBufferSize = _safeCallInt(() => FfiHelper.i.rustyPlatinumUtils.rpu_render(
       _rendererState,
       _buffer,
@@ -284,7 +284,7 @@ class WmbTextureManager {
       backgroundColor.blue / 255.0,
       backgroundColor.opacity,
     ));
-    print("Render time: ${sw.elapsedMilliseconds}ms");
+    // print("Render time: ${sw.elapsedMilliseconds}ms");
     if (texBufferSize != -1) {
       textureOutput.onRgba(_buffer, texBufferSize, previousSize.width.toInt(), previousSize.height.toInt());
     }

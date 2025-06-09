@@ -906,3 +906,12 @@ Future<bool> canOpenAsFile(String path) async {
     return false;
   return await FS.i.existsFile(path);
 }
+
+Future<void> downloadFile(String path) async {
+  var bytes = await FS.i.read(path);
+  await FS.i.saveFile(
+    fileName: basename(path),
+    bytes: bytes,
+    dialogTitle: "Download ${basename(path)}",
+  );
+}

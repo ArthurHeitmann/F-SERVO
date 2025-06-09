@@ -1,4 +1,5 @@
 
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -353,22 +354,30 @@ class FS {
   Future<String?> saveFile({
     required String fileName,
     Uint8List? bytes,
+    Future<Uint8List> Function()? getBytes,
     String? text,
     String? initialDirectory,
     String? dialogTitle,
     List<String>? allowedExtensions,
   }) async {
-    bytes ??= utf8.encode(text!);
+    if (bytes == null && text != null)
+      bytes = utf8.encode(text);
+    if (bytes == null && isWeb)
+      bytes = await getBytes!();
+    if (bytes == null && isWeb)
+      throw Exception("No data to save");
     var file = await FilePicker.platform.saveFile(
       initialDirectory: initialDirectory,
       fileName: fileName,
       dialogTitle: dialogTitle,
       allowedExtensions: allowedExtensions,
       type: allowedExtensions != null ? FileType.custom : FileType.any,
-      bytes: bytes,
+      bytes: bytes != null ? Uint8List.fromList(bytes) : null,
     );
+    if (bytes == null && getBytes != null)
+      bytes = await getBytes();
     if (_platform == _Platform.desktop && file != null)
-      await write(file, bytes);
+      await write(file, bytes!);
     return file;
   }
 

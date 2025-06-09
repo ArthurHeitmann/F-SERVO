@@ -3,6 +3,7 @@ import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:pointer_interceptor/pointer_interceptor.dart';
 
 import '../../stateManagement/preferencesData.dart';
 import '../theme/customTheme.dart';
@@ -98,7 +99,6 @@ class _ContextMenu extends StatelessWidget {
         children.add(buildMenuItem(context, config, hide));
       }
     }
-
     return Stack(
       children: [
         Positioned.fill(
@@ -116,18 +116,20 @@ class _ContextMenu extends StatelessWidget {
               builder: (context) {
                 return CustomPaint(
                   foregroundPainter: Theme.of(context).brightness == Brightness.light ? const NierOverlayPainter(vignette: false) : null,
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 300, minWidth: 200),
-                    child: Material(
-                      color: getTheme(context).contextMenuBgColor,
-                      borderRadius: const BorderRadius.all(Radius.circular(8)),
-                      clipBehavior: Clip.antiAlias,
-                      elevation: 5,
-                      shadowColor: Colors.black,
-                      child: IntrinsicWidth(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: children,
+                  child: PointerInterceptor(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 300, minWidth: 200),
+                      child: Material(
+                        color: getTheme(context).contextMenuBgColor,
+                        borderRadius: const BorderRadius.all(Radius.circular(8)),
+                        clipBehavior: Clip.antiAlias,
+                        elevation: 5,
+                        shadowColor: Colors.black,
+                        child: IntrinsicWidth(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: children,
+                          ),
                         ),
                       ),
                     ),
