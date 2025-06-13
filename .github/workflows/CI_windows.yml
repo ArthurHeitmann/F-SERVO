@@ -35,7 +35,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.4'
+          flutter-version: '3.32.2'
 
       - name: Get Packages
         run: flutter pub get
@@ -58,5 +58,5 @@ jobs:
       - name: Archive Release
         uses: actions/upload-artifact@v4
         with:
-          name: windows
+          name: f-servo_windows
           path: build/windows/x64/runner/Release

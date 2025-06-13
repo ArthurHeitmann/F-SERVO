@@ -3,7 +3,7 @@ import 'dart:async';
 import 'dart:io' show File;
 import 'dart:isolate';
 
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as path;
 import 'package:xml/xml.dart';
 

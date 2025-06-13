@@ -1,0 +1,44 @@
+name: CI Web
+
+on:
+  push:
+    branches:
+      - master
+      - mgrr
+      - mgrr-web
+      - gh-actions
+
+jobs:
+  flutter-build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      
+      - name: Download assets
+        run: |
+          $url = "https://github.com/ArthurHeitmann/F-SERVO/releases/download/assetsV0.8.0-mgrr/assets.7z"
+          $output = "${{ runner.temp }}\assets.7z"
+          Invoke-WebRequest -Uri $url -OutFile $output
+      - name: Extract assets
+        shell: cmd
+        run: 7z x ${{ runner.temp }}/assets.7z -o.\assets
+          
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.32.2'
+
+      - name: Get Packages
+        run: flutter pub get
+
+      - name: Build Release
+        run: dart build_web.dart
+      
+      - name: Archive Release
+        uses: actions/upload-artifact@v4
+        with:
+          name: f-servo_web
+          path: build/web
