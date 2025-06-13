@@ -10,7 +10,10 @@ import '../../fileSystem/FileSystem.dart';
 import '../../utils/Disposable.dart';
 import '../../utils/utils.dart';
 import '../../widgets/filesView/FileType.dart';
+import '../changesExporter.dart';
 import '../hasUuid.dart';
+import '../hierarchy/FileHierarchy.dart';
+import '../hierarchy/HierarchyEntryTypes.dart';
 import '../miscValues.dart';
 import '../preferencesData.dart';
 import '../undoable.dart';
@@ -19,10 +22,10 @@ import 'types/BxmFileData.dart';
 import 'types/EstFileData.dart';
 import 'types/FtbFileData.dart';
 import 'types/McdFileData.dart';
+import 'types/PlainTextFileData.dart';
 import 'types/RubyFileData.dart';
 import 'types/SaveSlotData.dart';
 import 'types/SmdFileData.dart';
-import 'types/TextFileData.dart';
 import 'types/TmdFileData.dart';
 import 'types/UidFileData.dart';
 import 'types/WaiFileData.dart';
@@ -56,6 +59,7 @@ abstract class OpenFileData with HasUuid, Undoable, Disposable, HasUndoHistory {
   bool keepOpenAsHidden = false;
   final ChangeNotifier contentNotifier = ChangeNotifier();
   bool canBeReloaded = true;
+  bool repackNextParentDtt = false;
 
   OpenFileData(String name, this.path, { required this.type, String? secondaryName, this.icon, this.iconColor }) :
     name = ValueNotifier(name),
@@ -107,12 +111,12 @@ abstract class OpenFileData with HasUuid, Undoable, Disposable, HasUndoHistory {
     else if (path == "preferences")
       return PreferencesData();
     else
-      return TextFileData(name, path, secondaryName: secondaryName);
+      return PlainTextFileData(name, path, secondaryName: secondaryName);
   }
 
   String get displayName => secondaryName.value == null ? name.value : "${name.value} - ${secondaryName.value}";
 
-  setHasUnsavedChanges(bool value) {
+  void setHasUnsavedChanges(bool value) {
     if (value == _hasUnsavedChanges.value)
       return;
     if (disableFileChanges)
@@ -136,6 +140,24 @@ abstract class OpenFileData with HasUuid, Undoable, Disposable, HasUndoHistory {
   Future<void> save() async {
     setHasUnsavedChanges(false);
     onUndoableEvent();
+
+    var hierarchyEntry = openHierarchyManager.findRecWhere((e) => e is FileHierarchyEntry && e.path == path);
+    if (hierarchyEntry != null) {
+      if (FS.i.useVirtualFs)
+        hierarchyEntry.isDirty.value = true;
+      var parent = openHierarchyManager.parentOf(hierarchyEntry);
+      if (parent is ExtractableHierarchyEntry && strEndsWithDat(parent.path)) {
+        changedDatFiles.add(parent.extractedPath);
+        if (repackNextParentDtt) {
+          repackNextParentDtt = false;
+          var dttPath = "${withoutExtension(parent.extractedPath)}.dtt";
+          changedDatFiles.add(dttPath);
+        }
+      }
+      else if (parent == openHierarchyManager) {
+        await downloadFile(path);
+      }
+    }
   }
 
   @override

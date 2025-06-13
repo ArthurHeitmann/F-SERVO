@@ -7,7 +7,6 @@ import '../../../fileTypeUtils/ftb/ftbIO.dart';
 import '../../../fileTypeUtils/wta/wtaReader.dart';
 import '../../../utils/utils.dart';
 import '../../../widgets/filesView/FileType.dart';
-import '../../changesExporter.dart';
 import '../../undoable.dart';
 import '../openFileTypes.dart';
 import 'McdFileData.dart';
@@ -35,8 +34,6 @@ class FtbFileData extends OpenFileData {
   @override
   Future<void> save() async {
     await ftbData?.save();
-    var datDir = dirname(path);
-    changedDatFiles.add(datDir);
     await super.save();
   }
 

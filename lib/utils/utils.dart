@@ -23,6 +23,8 @@ import '../fileTypeUtils/yax/japToEng.dart';
 import '../main.dart';
 import '../stateManagement/Property.dart';
 import '../stateManagement/events/statusInfo.dart';
+import '../stateManagement/hierarchy/FileHierarchy.dart';
+import '../stateManagement/hierarchy/HierarchyEntryTypes.dart';
 import '../stateManagement/miscValues.dart';
 import '../stateManagement/openFiles/types/xml/xmlProps/xmlProp.dart';
 import '../stateManagement/preferencesData.dart';
@@ -584,7 +586,7 @@ Future<String?> exportDat(String datFolder, { bool checkForNesting = false, bool
   if (overwriteOriginal) {
     datExportDir = dirname(dirname(datFolder));
   }
-  if (checkForNesting && datExportDir.isEmpty) {
+  if (checkForNesting && (datExportDir.isEmpty || FS.i.useVirtualFs)) {
     var parentDirs = [dirname(datFolder), dirname(dirname(datFolder))];
     for (var parentDir in parentDirs) {
       if (!await FS.i.existsDirectory(parentDir))
@@ -595,17 +597,19 @@ Future<String?> exportDat(String datFolder, { bool checkForNesting = false, bool
       var ext = extension(dirName);
       if (!datExtensions.contains(ext))
         continue;
-      var exportToParent = await confirmOrCancelDialog(
-        getGlobalContext(),
-        title: "Export $datName to parent DAT folder?",
-        body: "Parent is ...\\$dirName\\",
-        yesText: "To $dirName",
-        noText: exportDir.isEmpty ? "Select export path" : "To export path",
-      );
-      if (exportToParent == null)
-        return null;
-      if (!exportToParent)
-        break;
+      if (!FS.i.useVirtualFs) {
+        var exportToParent = await confirmOrCancelDialog(
+          getGlobalContext(),
+          title: "Export $datName to parent DAT folder?",
+          body: "Parent is ...\\$dirName\\",
+          yesText: "To $dirName",
+          noText: exportDir.isEmpty ? "Select export path" : "To export path",
+        );
+        if (exportToParent == null)
+          return null;
+        if (!exportToParent)
+          break;
+      }
       datExportDir = parentDir;
       recursive = true;
     }
@@ -632,15 +636,38 @@ Future<String?> exportDat(String datFolder, { bool checkForNesting = false, bool
   datExportPath ??= join(datExportDir, datName);
   try {
     await repackDat(datFolder, datExportPath);
+    if (FS.i.useVirtualFs) {
+      await clearIsDirtyFlagForFolder(datFolder);
+      setIsDirtyFlagForFile(datExportPath);
+    }
   } catch (e) {
     messageLog.add("Failed to export $datName: $e");
     rethrow;
   }
 
   if (recursive)
-    await exportDat(datExportDir, checkForNesting: true);
+    await exportDat(datExportDir, checkForNesting: true, overwriteOriginal: true);
   
   return datExportPath;
+}
+
+void clearIsDirtyFlagForFile(String path) {
+  var hierarchyEntry = openHierarchyManager.findRecWhere((e) => e is FileHierarchyEntry && e.path == path);
+  hierarchyEntry?.isDirty.value = false;
+}
+
+Future<void> clearIsDirtyFlagForFolder(String path) async {
+  await for (var file in FS.i.listFiles(path)) {
+    clearIsDirtyFlagForFile(file);
+  }
+}
+
+void setIsDirtyFlagForFile(String path) {
+  var hierarchyEntry = openHierarchyManager.findRecWhere((e) => e is FileHierarchyEntry && e.path == path);
+  if (hierarchyEntry != null) {
+    hierarchyEntry.isDirty.value = true;
+    return;
+  }
 }
 
 String pluralStr(int number, String label, [String numberSuffix = ""]) {
@@ -914,4 +941,7 @@ Future<void> downloadFile(String path) async {
     bytes: bytes,
     dialogTitle: "Download ${basename(path)}",
   );
+  clearIsDirtyFlagForFile(path);
 }
+
+String getDownloadText() => isWeb ? "Download" : "Save as";

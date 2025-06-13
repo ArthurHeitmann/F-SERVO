@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../../fileSystem/FileSystem.dart';
 import '../../stateManagement/hierarchy/FileHierarchy.dart';
 import '../../stateManagement/hierarchy/HierarchyEntryTypes.dart';
 import '../../stateManagement/hierarchy/types/BnkHierarchyEntry.dart';
@@ -113,9 +114,11 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
   @override
   Widget build(BuildContext context) {
     Icon? icon = getEntryIcon(context);
-    return setupContextMenu(
-      child: optionallySetupSelectable(context,
-        Container(
+    return setupWrapper(
+      context: context,
+      builder: (context, isDirty) {
+        var isDirtyColor = getTheme(context).actionTypeBlockingAccent;
+        return Container(
           padding: const EdgeInsets.symmetric(vertical: 3),
           height: HierarchyEntryWidget.height,
           child: Row(
@@ -150,25 +153,42 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
                     textScaleFactor: 0.85,
                     overflow: TextOverflow.ellipsis,
                     text: TextSpan(
-                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: getTextColor(context)),
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: isDirty ? isDirtyColor : getTextColor(context)),
                       children: openHierarchyManager.search.value.isEmpty
                         ? [TextSpan(text: widget.entry.name.toString())]
                         : getHighlightedTextSpans(
                             widget.entry.name.toString(),
                             openHierarchyManager.search.value,
-                            Theme.of(context).textTheme.bodyMedium!.copyWith(color: getTextColor(context)),
+                            Theme.of(context).textTheme.bodyMedium!.copyWith(color: isDirty ? isDirtyColor : getTextColor(context)),
                           )
                     ),
                   ),
                 )
               ),
+              if (isDirty)
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: Icon(Icons.circle, size: 10, color: isDirtyColor),
+                ),
               if (widget.entry is WemHierarchyEntry)
                 WemPreviewButton(wemPath: (widget.entry as WemHierarchyEntry).path),
             ]
           ),
+        );
+      },
+	  );
+  }
+
+  Widget setupWrapper({required BuildContext context, required Widget Function(BuildContext context, bool isDirty) builder}) {
+    return setupContextMenu(
+      child: optionallySetupSelectable(
+        context: context,
+        child: optionallySetupIsDirtyListener(
+          context: context,
+          builder: builder,
         ),
       ),
-	  );
+    );
   }
 
   Widget setupContextMenu({ required Widget child }) {
@@ -184,7 +204,7 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
     );
   }
 
-  Widget optionallySetupSelectable(BuildContext context, Widget child) {
+  Widget optionallySetupSelectable({required BuildContext context, required Widget child}) {
     if (!widget.entry.isSelectable && !widget.entry.isCollapsible)
       return child;
     
@@ -199,6 +219,15 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
         highlightColor: getTextColor(context).withOpacity(0.1),
         child: child,
       ),
+    );
+  }
+
+  Widget optionallySetupIsDirtyListener({required BuildContext context, required Widget Function(BuildContext context, bool isDirty) builder}) {
+    if (!FS.i.useVirtualFs)
+      return builder(context, false);
+    return ChangeNotifierBuilder(
+      notifier: widget.entry.isDirty,
+      builder: (context) => builder(context, widget.entry.isDirty.value),
     );
   }
 

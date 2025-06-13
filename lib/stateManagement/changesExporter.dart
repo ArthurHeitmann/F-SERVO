@@ -82,9 +82,11 @@ Future<void> processChangedFiles() async {
   // }
 
   // repack DAT
-  if (prefs.exportDats?.value == true && (prefs.dataExportPath?.value ?? "") != "") {
+  if (prefs.exportDats?.value == true && ((prefs.dataExportPath?.value ?? "") != "" || FS.i.useVirtualFs)) {
     var datPaths = dats.where(strEndsWithDat);
-    await Future.wait(datPaths.map((dat) => exportDat(dat, checkForNesting: true)));
+    await Future.wait(datPaths.map((dat) {
+      return exportDat(dat, checkForNesting: true, overwriteOriginal: FS.i.isVirtual(dat));
+    }));
   }
 
   // save WAI

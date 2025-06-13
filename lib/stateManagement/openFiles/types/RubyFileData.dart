@@ -2,9 +2,10 @@
 import 'package:flutter/material.dart';
 
 import '../../changesExporter.dart';
+import 'PlainTextFileData.dart';
 import 'TextFileData.dart';
 
-class RubyFileData extends TextFileData {
+class RubyFileData extends PlainTextFileData {
   RubyFileData(super.name, super.path, { super.secondaryName, super.initText })
       : super(icon: Icons.code);
 

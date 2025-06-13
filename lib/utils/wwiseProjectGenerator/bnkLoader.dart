@@ -187,7 +187,7 @@ Future<void> _loadWems(Map<int, BnkContext<_AudioFileInfo>> usedAudioFiles, Wwis
     langPaths[language] = langPath;
   }
   var tempDir = await FS.i.createTempDirectory("wem_conversion");
-  var parallel = max(2, Platform.numberOfProcessors ~/ 2);
+  var parallel = isWeb ? 1 : max(2, Platform.numberOfProcessors ~/ 2);
   var bnkCache = _BnkCache(parallel + 1);
   var processed = 0;
   try {

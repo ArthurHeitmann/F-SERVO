@@ -164,15 +164,26 @@ class WemHierarchyEntry extends GenericFileHierarchyEntry {
   }
 
   Future<void> exportAsWav({ String? wavPath, bool displayToast = true }) async {
-    wavPath ??= await FS.i.selectSaveFile(
-      fileName: "${basenameWithoutExtension(path)}.wav",
-      allowedExtensions: ["wav"],
-    );
-    if (wavPath == null)
-      return;
-    await wemToWav(path, wavPath);
-    if (displayToast)
-      showToast("Saved as ${basename(wavPath)}");
+    if (FS.i.isVirtual(path)) {
+      var tmpWav = await wemToWavTmp(path);
+      var wavBytes = await FS.i.read(tmpWav);
+      await FS.i.saveFile(
+        fileName: "${basenameWithoutExtension(path)}.wav",
+        bytes: wavBytes,
+      );
+      await FS.i.delete(tmpWav);
+    }
+    else {
+      wavPath ??= await FS.i.selectSaveFile(
+        fileName: "${basenameWithoutExtension(path)}.wav",
+        allowedExtensions: ["wav"],
+      );
+      if (wavPath == null)
+        return;
+      await wemToWav(path, wavPath);
+      if (displayToast)
+        showToast("Saved as ${basename(wavPath)}");
+    }
   }
 
   @override

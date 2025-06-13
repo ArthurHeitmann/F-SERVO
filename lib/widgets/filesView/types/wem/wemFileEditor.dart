@@ -65,18 +65,29 @@ class _WemFileEditorState extends ChangeNotifierState<WemFileEditor> {
   }
 
   Future<void> _exportAsWav({ String? wavPath, bool displayToast = true }) async {
-    wavPath ??= await FS.i.selectSaveFile(
-      fileName: "${basenameWithoutExtension(widget.wem.path)}.wav",
-      allowedExtensions: ["wav"],
-    );
-    if (wavPath == null)
-      return;
-    // fix for weird bug with long file names
-    if (!await FS.i.existsDirectory(dirname(wavPath)))
-      wavPath = dirname(wavPath); 
-    await wemToWav(widget.wem.path, wavPath);
-    if (displayToast)
-      showToast("Saved as ${basename(wavPath)}");
+    if (FS.i.isVirtual(widget.wem.path)) {
+      var tmpWav = await wemToWavTmp(widget.wem.path);
+      var wavBytes = await FS.i.read(tmpWav);
+      await FS.i.saveFile(
+        fileName: "${basenameWithoutExtension(widget.wem.path)}.wav",
+        bytes: wavBytes,
+      );
+      await FS.i.delete(tmpWav);
+    }
+    else {
+      wavPath ??= await FS.i.selectSaveFile(
+        fileName: "${basenameWithoutExtension(widget.wem.path)}.wav",
+        allowedExtensions: ["wav"],
+      );
+      if (wavPath == null)
+        return;
+      // fix for weird bug with long file names
+      if (!await FS.i.existsDirectory(dirname(wavPath)))
+        wavPath = dirname(wavPath); 
+      await wemToWav(widget.wem.path, wavPath);
+      if (displayToast)
+        showToast("Saved as ${basename(wavPath)}");
+    }
   }
 
   @override

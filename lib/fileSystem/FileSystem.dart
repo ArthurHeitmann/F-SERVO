@@ -4,7 +4,9 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:archive/archive_io.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:path/path.dart';
 
 import '../utils/utils.dart';
 import 'VirtualEntities.dart';
@@ -36,12 +38,17 @@ class FS {
       throw Exception("Unsupported platform");
   }
   
-  bool get useVirtualFs => _platform != _Platform.desktop;
+  bool get needsVirtualFs => _platform != _Platform.desktop;
+  bool get useVirtualFs => needsVirtualFs;
 
   VirtualEntity get virtualRoot => _virtualFs.root;
 
+  bool isVirtual(String path) {
+    return useVirtualFs && (needsVirtualFs || _virtualFs.exists(path)) || path.startsWith(VirtualFileSystem.firstChar);
+  }
+
   Future<Uint8List> read(String path) async {
-    if (useVirtualFs) {
+    if (isVirtual(path)) {
       return _virtualFs.read(path);
     }
     else {
@@ -50,7 +57,7 @@ class FS {
   }
 
   Future<String> readAsString(String path, {Encoding encoding = utf8}) async {
-    if (useVirtualFs) {
+    if (isVirtual(path)) {
       return utf8.decode(_virtualFs.read(path));
     }
     else {
@@ -59,7 +66,7 @@ class FS {
   }
   
   Future<List<String>> readAsLines(String path) async {
-    if (useVirtualFs) {
+    if (isVirtual(path)) {
       return utf8.decode(_virtualFs.read(path)).split("\n").map((e) => e.endsWith("\r") ? e.substring(0, e.length - 1) : e).toList();
     }
     else {
@@ -68,7 +75,7 @@ class FS {
   }
 
   Future<RandomAccessFile> open(String path, {FileMode mode = FileMode.read}) async {
-    if (useVirtualFs) {
+    if (isVirtual(path)) {
       return VirtualRandomAccessFile(
         file: _virtualFs.getFile(path),
         allowRead: mode == FileMode.read || mode == FileMode.write,
@@ -83,7 +90,7 @@ class FS {
   }
 
   Stream<List<int>> openRead(String path) {
-    if (useVirtualFs) {
+    if (isVirtual(path)) {
       var bytes = _virtualFs.read(path);
       return Stream.fromIterable([bytes]);
     }
@@ -93,7 +100,7 @@ class FS {
   }
 
   IOSink openWrite(String path, {FileMode mode = FileMode.write}) {
-    if (useVirtualFs) {
+    if (isVirtual(path)) {
       return VirtualIOSink(
         file: _virtualFs.getFile(path),
         truncate: mode == FileMode.write || mode == FileMode.writeOnly,
@@ -105,7 +112,7 @@ class FS {
   }
 
   Future<void> write(String path, List<int> data) async {
-    if (useVirtualFs) {
+    if (isVirtual(path)) {
       _virtualFs.write(path, data);
     }
     else {
@@ -114,7 +121,7 @@ class FS {
   }
 
   Future<void> writeAsString(String path, String data, {Encoding encoding = utf8}) async {
-    if (useVirtualFs) {
+    if (isVirtual(path)) {
       _virtualFs.write(path, encoding.encode(data));
     }
     else {
@@ -123,7 +130,7 @@ class FS {
   }
 
   Future<void> delete(String path) async {
-    if (useVirtualFs) {
+    if (isVirtual(path)) {
       _virtualFs.deleteFile(path);
     }
     else {
@@ -132,7 +139,7 @@ class FS {
   }
 
   Future<void> deleteDirectory(String path, {bool recursive = false}) async {
-    if (useVirtualFs) {
+    if (isVirtual(path)) {
       _virtualFs.deleteFolder(path, recursive: recursive);
     }
     else {
@@ -141,7 +148,7 @@ class FS {
   }
 
   Future<void> createFile(String path) async {
-    if (useVirtualFs) {
+    if (isVirtual(path)) {
       _virtualFs.createFile(path);
     }
     else {
@@ -150,7 +157,7 @@ class FS {
   }
 
   Future<void> createDirectory(String path) async {
-    if (useVirtualFs) {
+    if (isVirtual(path)) {
       _virtualFs.createFolder(path);
     }
     else {
@@ -168,7 +175,7 @@ class FS {
   }
 
   Future<void> renameFile(String oldPath, String newPath) async {
-    if (useVirtualFs) {
+    if (isVirtual(oldPath)) {
       _virtualFs.moveFile(oldPath, newPath);
     }
     else {
@@ -186,7 +193,7 @@ class FS {
   // }
 
   Future<void> copyFile(String oldPath, String newPath) async {
-    if (useVirtualFs) {
+    if (isVirtual(oldPath)) {
       _virtualFs.copyFile(oldPath, newPath);
     }
     else {
@@ -195,7 +202,7 @@ class FS {
   }
 
   Future<bool> existsFile(String path) async {
-    if (useVirtualFs) {
+    if (isVirtual(path)) {
       return _virtualFs.existsFile(path);
     }
     else {
@@ -204,7 +211,7 @@ class FS {
   }
 
   bool existsFileSync(String path) {
-    if (useVirtualFs) {
+    if (isVirtual(path)) {
       return _virtualFs.existsFile(path);
     }
     else {
@@ -213,7 +220,7 @@ class FS {
   }
 
   Future<bool> existsDirectory(String path) async {
-    if (useVirtualFs) {
+    if (isVirtual(path)) {
       return _virtualFs.existsFolder(path);
     }
     else {
@@ -222,7 +229,7 @@ class FS {
   }
 
   bool existsDirectorySync(String path) {
-    if (useVirtualFs) {
+    if (isVirtual(path)) {
       return _virtualFs.existsFolder(path);
     }
     else {
@@ -231,7 +238,7 @@ class FS {
   }
 
   Future<bool> exists(String path) async {
-    if (useVirtualFs) {
+    if (isVirtual(path)) {
       return _virtualFs.exists(path);
     }
     else {
@@ -240,7 +247,7 @@ class FS {
   }
 
   bool existsSync(String path) {
-    if (useVirtualFs) {
+    if (isVirtual(path)) {
       return _virtualFs.exists(path);
     }
     else {
@@ -249,7 +256,7 @@ class FS {
   }
 
   Stream<FileSystemEntity> list(String path, {bool recursive = false}) {
-    if (useVirtualFs) {
+    if (isVirtual(path)) {
       return Stream.fromIterable(_virtualFs.list(path)).map((e) {
         if (e is VirtualFile) {
           return File(e.path);
@@ -266,8 +273,10 @@ class FS {
   }
 
   Stream<String> listFiles(String path, {bool recursive = false}) {
-    if (useVirtualFs) {
-      return Stream.fromIterable(_virtualFs.list(path)).where((e) => e is VirtualFile).map((e) => e.path);
+    if (isVirtual(path)) {
+      return Stream.fromIterable(_virtualFs.list(path, recursive: recursive))
+        .where((e) => e is VirtualFile)
+        .map((e) => e.path);
     }
     else {
       return Directory(path).list(recursive: recursive).where((e) => e is File).map((e) => e.path);
@@ -275,8 +284,10 @@ class FS {
   }
   
   Stream<String> listDirectories(String path, {bool recursive = false}) {
-    if (useVirtualFs) {
-      return Stream.fromIterable(_virtualFs.list(path)).where((e) => e is VirtualFolder).map((e) => e.path);
+    if (isVirtual(path)) {
+      return Stream.fromIterable(_virtualFs.list(path, recursive: recursive))
+        .where((e) => e is VirtualFolder)
+        .map((e) => e.path);
     }
     else {
       return Directory(path).list(recursive: recursive).where((e) => e is Directory).map((e) => e.path);
@@ -284,11 +295,94 @@ class FS {
   }
 
   Future<int> getSize(String path) async {
-    if (useVirtualFs) {
+    if (isVirtual(path)) {
       return _virtualFs.getFileSize(path);
     }
     else {
       return await File(path).length();
+    }
+  }
+
+  Future<Uint8List?> zipDirectory(String path, [String? zipPath]) async {
+    if (isVirtual(path)) {
+      var zipEncoder = ZipEncoder();
+      var outputStream = OutputMemoryStream();
+      zipEncoder.startEncode(outputStream);
+      for (var file in _virtualFs.list(path, recursive: true)) {
+        var relativePath = relative(file.path, from: path);
+        ArchiveFile archiveFile;
+        if (file is VirtualFile) {
+          archiveFile = ArchiveFile.bytes(relativePath, file.bytes);
+        }
+        else if (file is VirtualFolder) {
+          archiveFile = ArchiveFile.directory(relativePath);
+        }
+        else {
+          throw Exception("Unknown entity type: ${file.runtimeType}");
+        }
+        zipEncoder.add(archiveFile);
+      }
+      zipEncoder.endEncode();
+      var bytes = outputStream.getBytes();
+      await outputStream.close();
+      if (zipPath != null) {
+        await write(zipPath, bytes);
+      }
+      return bytes;
+    }
+    else {
+      var zipEncoder = ZipFileEncoder();
+      zipEncoder.create(zipPath!);
+      await zipEncoder.addDirectory(Directory(path), includeDirName: false);
+      await zipEncoder.close();
+      return null;
+    }
+  }
+
+  Future<void> unzipFile(String path, String folder) async {
+    if (isVirtual(path)) {
+      var zipBytes = _virtualFs.read(path);
+      var archive = ZipDecoder().decodeBytes(zipBytes);
+      for (var file in archive.files) {
+        var filePath = join(folder, file.name);
+        if (file.isDirectory) {
+          _virtualFs.createFolder(filePath);
+        }
+        else if (file.isFile) {
+          var outputStream = OutputMemoryStream();
+          file.writeContent(outputStream);
+          var bytes = outputStream.getBytes();
+          _virtualFs.write(filePath, bytes);
+          await outputStream.close();
+        }
+      }
+    }
+    else {
+      var archive = ZipDecoder().decodeStream(InputFileStream(path));
+      await extractArchiveToDisk(archive, folder);
+    }
+  }
+
+  Future<void> unzipBytes(Uint8List bytes, String folder) async {
+    if (FS.i.useVirtualFs) {
+      var archive = ZipDecoder().decodeBytes(bytes);
+      for (var file in archive.files) {
+        var filePath = join(folder, file.name);
+        if (file.isDirectory) {
+          _virtualFs.createFolder(filePath);
+        }
+        else if (file.isFile) {
+          var outputStream = OutputMemoryStream();
+          file.writeContent(outputStream);
+          var bytes = outputStream.getBytes();
+          _virtualFs.write(filePath, bytes);
+          await outputStream.close();
+        }
+      }
+    }
+    else {
+      var archive = ZipDecoder().decodeBytes(bytes);
+      await extractArchiveToDisk(archive, folder);
     }
   }
 
@@ -385,5 +479,17 @@ class FS {
     if (!useVirtualFs)
       return;
     _virtualFs.write(path, bytes);
+  }
+
+  void releaseFile(String path) {
+    if (!FS.i.isVirtual(path))
+      return;
+    _virtualFs.deleteFile(path);
+  }
+
+  void releaseFolder(String path) {
+    if (!FS.i.isVirtual(path))
+      return;
+    _virtualFs.deleteFolder(path, recursive: true);
   }
 }

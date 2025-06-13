@@ -22,7 +22,6 @@ import '../../../utils/assetDirFinder.dart';
 import '../../../utils/utils.dart';
 import '../../../widgets/filesView/FileType.dart';
 import '../../Property.dart';
-import '../../changesExporter.dart';
 import '../../events/statusInfo.dart';
 import '../../hasUuid.dart';
 import '../../listNotifier.dart';
@@ -52,8 +51,10 @@ class McdFileData extends OpenFileData {
   @override
   Future<void> save() async {
     await mcdData?.save();
-    var datDir = dirname(path);
-    changedDatFiles.add(datDir);
+    if (mcdData?.repackNextParentDtt ?? false) {
+      repackNextParentDtt = true;
+      mcdData!.repackNextParentDtt = false;
+    }
     await super.save();
   }
 
@@ -614,6 +615,7 @@ class McdData extends _McdFilePart {
   final int firstMsgSeqNum;
   ValueListNotifier<McdEvent> events;
   Map<int, McdLocalFont> usedFonts;
+  bool repackNextParentDtt = false;
 
   McdData(super.file, this.textureWtbPath, this.usedFonts, this.firstMsgSeqNum, this.events) {
     events.addListener(onDataChanged);
@@ -1189,11 +1191,8 @@ class McdData extends _McdFilePart {
     await texToDds(texPngPath, dstPath: texDdsPath);
     await WtbUtils.replaceSingle(textureWtbPath.value, texDdsPath);
 
-    // export dat and dtt
-    var dttPath = dirname(textureWtbPath.value);
-    changedDatFiles.add(dttPath);
-    var datPath = dirname(areasManager.fromId(file)!.path);
-    changedDatFiles.add(datPath);
+    // export dtt
+    repackNextParentDtt = true;
 
     // delete tmp
     if (localTexDdsTmp != null) {

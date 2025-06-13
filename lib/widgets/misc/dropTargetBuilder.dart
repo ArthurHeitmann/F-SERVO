@@ -40,7 +40,7 @@ class _DropTargetBuilderState extends State<DropTargetBuilder> {
         if (_dropping > 0)
           return;
         List<String> paths;
-        if (FS.i.useVirtualFs) {
+        if (FS.i.needsVirtualFs) {
           paths = details.files.map((f) => "\$opened/${f.name}").toList();
           for (var (i, file) in details.files.indexed)
             FS.i.registerFile(paths[i], await file.readAsBytes());

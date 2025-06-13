@@ -103,7 +103,7 @@ Future<void> packAudioMod(String waiPath) async {
   zipEncoder.create(savePath);
   // TODO use FS
   await zipEncoder.addDirectory(Directory(tempDir), includeDirName: false);
-  zipEncoder.close();
+  await zipEncoder.close();
   await FS.i.deleteDirectory(tempDir, recursive: true);
 
   showToast("Done");

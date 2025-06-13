@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 
+import '../../fileSystem/VirtualFileSystem.dart';
 import '../../main.dart';
 import '../../stateManagement/Property.dart';
 import '../../stateManagement/preferencesData.dart';
@@ -162,30 +163,32 @@ class __WwiseProjectGeneratorPopupState extends State<_WwiseProjectGeneratorPopu
         ],
       ),
       const SizedBox(height: 5),
-      const Text("Projects save path:"),
-      Row(
-        children: [
-          Expanded(
-            child: UnderlinePropTextField(prop: savePath)
-          ),
-          const SizedBox(width: 10),
-          IconButton(
-            constraints: BoxConstraints.tight(const Size(30, 30)),
-            splashRadius: 17,
-            padding: EdgeInsets.zero,
-            onPressed: () async {
-              var dir = await FS.i.selectDirectory(
-                dialogTitle: "Select project save path",
-              );
-              if (dir == null)
-                return;
-              savePath.value = dir;
-              PreferencesData().lastWwiseProjectDir!.value = dir;
-            },
-            icon: const Icon(Icons.folder, size: 17,),
-          )
-        ],
-      ),
+      if (!FS.i.useVirtualFs) ...[
+        const Text("Projects save path:"),
+        Row(
+          children: [
+            Expanded(
+              child: UnderlinePropTextField(prop: savePath)
+            ),
+            const SizedBox(width: 10),
+            IconButton(
+              constraints: BoxConstraints.tight(const Size(30, 30)),
+              splashRadius: 17,
+              padding: EdgeInsets.zero,
+              onPressed: () async {
+                var dir = await FS.i.selectDirectory(
+                  dialogTitle: "Select project save path",
+                );
+                if (dir == null)
+                  return;
+                savePath.value = dir;
+                PreferencesData().lastWwiseProjectDir!.value = dir;
+              },
+              icon: const Icon(Icons.folder, size: 17,),
+            )
+          ],
+        ),
+      ],
       const SizedBox(height: 5),
       const Text("Source BNKs:"),
       ConstrainedBox(
@@ -434,11 +437,16 @@ class __WwiseProjectGeneratorPopupState extends State<_WwiseProjectGeneratorPopu
           ),
           if (status.isDone.value)
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
+                if (FS.i.useVirtualFs) {
+                  await downloadAsZip();
+                }
                 Navigator.pop(context);
               },
-              style: getTheme(context).dialogSecondaryButtonStyle,
-              child: const Text("Close"),
+              style: FS.i.useVirtualFs
+                ? getTheme(context).dialogPrimaryButtonStyle
+                : getTheme(context).dialogSecondaryButtonStyle,
+              child: Text(FS.i.useVirtualFs ? "Save" : "Close"),
             ),
         ],
       )
@@ -446,9 +454,17 @@ class __WwiseProjectGeneratorPopupState extends State<_WwiseProjectGeneratorPopu
   }
 
   void generate() async {
-    if (!await FS.i.existsDirectory(savePath.value)) {
+    if (!FS.i.useVirtualFs && !await FS.i.existsDirectory(savePath.value)) {
       showToast("Project save path is invalid");
       return;
+    }
+    if (FS.i.useVirtualFs) {
+      if (await FS.i.existsDirectory(savePath.value) && FS.i.isVirtual(savePath.value))
+        await FS.i.deleteDirectory(savePath.value, recursive: true);
+      var tempDir = await FS.i.createTempDirectory("${VirtualFileSystem.firstChar}wwiseProject");
+      var projectDir = join(tempDir, projectName.value);
+      await FS.i.createDirectory(projectDir);
+      savePath.value = projectDir;
     }
     var options = WwiseProjectGeneratorOptions(
       audioHierarchy: optAudioHierarchy.value,
@@ -491,6 +507,15 @@ class __WwiseProjectGeneratorPopupState extends State<_WwiseProjectGeneratorPopu
     if (generator == null)
       return;
     setState(() {});
+  }
+
+  Future<void> downloadAsZip() async {
+    var zip = await FS.i.zipDirectory(join(savePath.value, projectName.value));
+    await FS.i.saveFile(
+      fileName: "${projectName.value}.zip",
+      bytes: zip
+    );
+    await FS.i.deleteDirectory(savePath.value, recursive: true);
   }
 
   void onNewLog() {

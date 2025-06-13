@@ -9,7 +9,6 @@ import '../../../widgets/filesView/FileType.dart';
 import '../../../widgets/filesView/types/genericTable/tableEditor.dart';
 import '../../../widgets/propEditors/propTextField.dart';
 import '../../Property.dart';
-import '../../changesExporter.dart';
 import '../../hasUuid.dart';
 import '../../listNotifier.dart';
 import '../../undoable.dart';
@@ -42,9 +41,6 @@ class SmdFileData extends OpenFileData {
   @override
   Future<void> save() async {
     await saveSmd(smdData!.toEntries(), path);
-
-    var datDir = dirname(path);
-    changedDatFiles.add(datDir);
 
     await super.save();
   }

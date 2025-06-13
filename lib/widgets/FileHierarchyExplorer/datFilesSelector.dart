@@ -5,6 +5,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
+import 'package:pointer_interceptor/pointer_interceptor.dart';
 
 import '../../main.dart';
 import '../../stateManagement/Property.dart';
@@ -22,10 +23,12 @@ void showDatSelectorPopup(DatHierarchyEntry datEntry) {
     builder: (context) => Dialog(
       backgroundColor: getTheme(context).sidebarBackgroundColor,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
-        padding: const EdgeInsets.all(12.0),
-        constraints: const BoxConstraints(maxWidth: 600),
-        child: _DatSelectorWidget(datEntry: datEntry),
+      child: PointerInterceptor(
+        child: Container(
+          padding: const EdgeInsets.all(12.0),
+          constraints: const BoxConstraints(maxWidth: 600),
+          child: _DatSelectorWidget(datEntry: datEntry),
+        ),
       ),
     ),
   );
@@ -34,7 +37,7 @@ void showDatSelectorPopup(DatHierarchyEntry datEntry) {
 class _DatSelectorWidget extends StatefulWidget {
   final DatHierarchyEntry datEntry;
 
-  const _DatSelectorWidget({super.key, required this.datEntry});
+  const _DatSelectorWidget({required this.datEntry});
 
   @override
   State<_DatSelectorWidget> createState() => _DatSelectorWidgetState();

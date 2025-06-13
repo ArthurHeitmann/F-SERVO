@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../fileSystem/FileSystem.dart';
 import '../../stateManagement/changesExporter.dart';
 import '../../stateManagement/openFiles/filesAreaManager.dart';
 import '../../stateManagement/openFiles/openFileTypes.dart';
@@ -106,6 +107,7 @@ class _FileTabEntryState extends ChangeNotifierState<FileTabEntry> {
   }
 
   Widget logicWrapper(OpenFileData file, Widget child) {
+    var filePath = areasManager.fromId(widget.file)!.path;
     return ContextMenu(
       config: [
         ContextMenuConfig(
@@ -123,23 +125,23 @@ class _FileTabEntryState extends ChangeNotifierState<FileTabEntry> {
             icon: const Icon(Icons.refresh, size: 15),
             action: () => areasManager.fromId(widget.file)!.reload(),
           ),
-        if (isDesktop)
+        if (!FS.i.isVirtual(filePath))
           ContextMenuConfig(
             label: "Copy path",
             icon: const Icon(Icons.link, size: 15),
-            action: () => copyToClipboard(areasManager.fromId(widget.file)!.path),
+            action: () => copyToClipboard(filePath),
           ),
         if (isDesktop)
           ContextMenuConfig(
             label: "Show in Explorer",
             icon: const Icon(Icons.folder_open, size: 14),
-            action: () => revealFileInExplorer(areasManager.fromId(widget.file)!.path),
+            action: () => revealFileInExplorer(filePath),
           ),
-        if (isWeb)
+        if (FS.i.isVirtual(filePath))
           ContextMenuConfig(
-            label: "Download",
+            label: getDownloadText(),
             icon: const Icon(Icons.download, size: 14),
-            action: () => downloadFile(areasManager.fromId(widget.file)!.path),
+            action: () => downloadFile(filePath),
           ),
         ContextMenuConfig(
           label: "Close",

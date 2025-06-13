@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 
+import '../../../fileSystem/FileSystem.dart';
 import '../../../main.dart';
 import '../../../utils/utils.dart';
 import '../../../widgets/FileHierarchyExplorer/datFilesSelector.dart';
@@ -136,23 +137,26 @@ class DatHierarchyEntry extends ExtractableHierarchyEntry {
     var scriptRelatedClasses = [RubyScriptGroupHierarchyEntry, RubyScriptHierarchyEntry, XmlScriptHierarchyEntry, PakHierarchyEntry];
     var prefs = PreferencesData();
     return [
-      HierarchyEntryAction(
-        name: "Repack DAT",
-        icon: Icons.file_upload,
-        action: repackDatAction,
-      ),
-      if (lastExportPath != null && (prefs.dataExportPath?.value ?? "").isEmpty)
-        HierarchyEntryAction(
-          name: "Repack DAT to last location",
-          icon: Icons.file_upload,
-          action: repackDatToLastAction,
-        ),
-      if (srcDatExists)
-        HierarchyEntryAction(
-          name: "Repack DAT (overwrite)",
-          icon: Icons.file_upload,
-          action: repackOverwriteDatAction,
-        ),
+      if (!FS.i.useVirtualFs)
+        ...[
+          HierarchyEntryAction(
+            name: "Repack DAT",
+            icon: Icons.file_upload,
+            action: repackDatAction,
+          ),
+          if (lastExportPath != null && (prefs.dataExportPath?.value ?? "").isEmpty)
+            HierarchyEntryAction(
+              name: "Repack DAT to last location",
+              icon: Icons.file_upload,
+              action: repackDatToLastAction,
+            ),
+          if (srcDatExists)
+            HierarchyEntryAction(
+              name: "Repack DAT (overwrite)",
+              icon: Icons.file_upload,
+              action: repackOverwriteDatAction,
+            ),
+        ],
       HierarchyEntryAction(
         name: "Change packed files",
         icon: Icons.folder_open,
@@ -172,11 +176,12 @@ class DatHierarchyEntry extends ExtractableHierarchyEntry {
   List<HierarchyEntryAction> getContextMenuActions() {
     return [
       ...getActions(),
-      HierarchyEntryAction(
-        name: "Reload children",
-        icon: Icons.refresh,
-        action: reloadChildren,
-      ),
+      if (!FS.i.useVirtualFs)
+        HierarchyEntryAction(
+          name: "Reload children",
+          icon: Icons.refresh,
+          action: reloadChildren,
+        ),
       ...super.getContextMenuActions()
     ];
   }

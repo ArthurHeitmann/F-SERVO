@@ -549,7 +549,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
   @override
   void add(HierarchyEntry child) {
     super.add(child);
-    if (child is FileHierarchyEntry) {
+    if (child is FileHierarchyEntry && !FS.i.isVirtual(child.path)) {
       var prefs = PreferencesData();
       var lastFiles = prefs.lastHierarchyFiles!.value.toList();
       lastFiles.remove(child.path);
@@ -563,6 +563,10 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
   void remove(HierarchyEntry child, { bool dispose = false }) {
     _removeRec(child, freeFiles: dispose);
     super.remove(child, dispose: dispose);
+    if (child is FileHierarchyEntry)
+      FS.i.releaseFile(child.path);
+    if (child is ExtractableHierarchyEntry)
+      FS.i.releaseFolder(child.extractedPath);
   }
 
   @override

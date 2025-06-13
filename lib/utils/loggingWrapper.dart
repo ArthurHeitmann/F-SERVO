@@ -10,7 +10,7 @@ import 'utils.dart';
 final logFileName = join(dirname(Platform.resolvedExecutable), "log.txt");
 
 void loggingWrapper(void Function() run) {
-  if (isWeb) {
+  if (!isDesktop) {
     run();
     return;
   }

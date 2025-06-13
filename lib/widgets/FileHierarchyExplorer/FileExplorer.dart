@@ -134,7 +134,7 @@ class _FileExplorerState extends ChangeNotifierState<FileExplorer> {
             onPressed: openFilePicker,
           ),
         ),
-        if (!FS.i.useVirtualFs)
+        if (!FS.i.needsVirtualFs)
           Tooltip(
             message: "Open recent file",
             waitDuration: const Duration(milliseconds: 500),

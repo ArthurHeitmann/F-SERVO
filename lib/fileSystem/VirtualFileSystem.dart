@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'VirtualEntities.dart';
 
 class VirtualFileSystem {
+  static const firstChar = "\$";
   final root = VirtualFolder("", "", []);
   final Map<String, VirtualEntity> _entities = {};
   final _random = Random();
@@ -62,6 +63,9 @@ class VirtualFileSystem {
 
   void createFolder(String path) {
     path = _normalizePath(path);
+    if (_entities.containsKey(path)) {
+      return;
+    }
     var (parts, name) = _splitPath(path);
     var folder = _getOrMakeFolder(parts);
     var newFolder = VirtualFolder(name, path, []);
@@ -128,14 +132,23 @@ class VirtualFileSystem {
     deleteFile(src);
   }
 
-  List<VirtualEntity> list(String path) {
+  Iterable<VirtualEntity> list(String path, {bool recursive = false}) sync* {
     path = _normalizePath(path);
     var folder = _entities[path];
     if (folder == null)
       throw Exception("Folder not found: $path");
     if (folder is! VirtualFolder)
       throw Exception("$path is a file, not a folder");
-    return folder.children;
+    
+    yield* folder.children;
+    
+    if (recursive) {
+      for (var child in folder.children) {
+        if (child is VirtualFolder) {
+          yield* list(child.path, recursive: true);
+        }
+      }
+    }
   }
 
   bool existsFile(String path) {
@@ -198,13 +211,17 @@ class VirtualFileSystem {
     return path.split("/").where((e) => e.isNotEmpty).toList();
   }
 
-  _parentPath(String path) {
+  String _parentPath(String path) {
     var parts = _split(path);
     if (parts.isEmpty) return root.name;
     return parts.sublist(0, parts.length - 1).join("/");
   }
 
   String _normalizePath(String path) {
-    return path.split("/").where((e) => e.isNotEmpty).map((e) => e.trim()).join("/");
+    path = path.split("/").where((e) => e.isNotEmpty).map((e) => e.trim()).join("/");
+    if (!path.startsWith(firstChar)) {
+      path = firstChar + path;
+    }
+    return path;
   }
 }

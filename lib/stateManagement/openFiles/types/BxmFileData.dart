@@ -55,7 +55,7 @@ class BxmFileData extends TextFileData {
       }
       showToast("Error in XML: ${e.toString()}");
     }
-    setHasUnsavedChanges(false);
+    await super.save();
   }
 
   Future<String> getXmlPath() async {

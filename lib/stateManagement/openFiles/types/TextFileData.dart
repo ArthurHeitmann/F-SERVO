@@ -31,12 +31,6 @@ class TextFileData extends OpenFileData {
     await super.load();
   }
 
-  @override
-  Future<void> save() async {
-    await FS.i.writeAsString(path, text.value);
-    setHasUnsavedChanges(false);
-  }
-
   @protected
   TextFileData copyBase() {
     return TextFileData(name.value, path, initText: text.value);

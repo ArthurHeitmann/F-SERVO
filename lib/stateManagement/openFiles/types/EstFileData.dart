@@ -3,7 +3,6 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:path/path.dart';
 
 import '../../../fileTypeUtils/effects/estEntryTypes.dart';
 import '../../../fileTypeUtils/effects/estIO.dart';
@@ -12,7 +11,6 @@ import '../../../utils/Disposable.dart';
 import '../../../utils/utils.dart';
 import '../../../widgets/filesView/FileType.dart';
 import '../../Property.dart';
-import '../../changesExporter.dart';
 import '../../hasUuid.dart';
 import '../../listNotifier.dart';
 import '../../undoable.dart';
@@ -75,9 +73,6 @@ class EstFileData extends OpenFileData {
     est.write(bytes);
     await backupFile(path);
     await bytes.save(path);
-
-    var datDir = dirname(path);
-    changedDatFiles.add(datDir);
 
     await super.save();
   }

@@ -1,7 +1,6 @@
 
 import 'dart:async';
 
-import 'package:archive/archive_io.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart';
@@ -132,8 +131,7 @@ class WwiseProjectGenerator {
       await FS.i.createDirectory(projectPath);
       // extract
       var projectZip = await rootBundle.load("assets/new_wwise_project.zip");
-      var archive = ZipDecoder().decodeBytes(projectZip.buffer.asUint8List());
-      await extractArchiveToDisk(archive, projectPath);
+      await FS.i.unzipBytes(projectZip.buffer.asUint8List(), projectPath);
       // rename
       var wprojPath = join(projectPath, "test_project.wproj");
       var wprojPathNew = join(projectPath, "$projectName.wproj");

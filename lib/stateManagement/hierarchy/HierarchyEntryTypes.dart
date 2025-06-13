@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../../fileSystem/FileSystem.dart';
 import '../../main.dart';
 import '../../utils/Disposable.dart';
 import '../../utils/assetDirFinder.dart';
@@ -124,6 +125,7 @@ abstract class HierarchyEntry with HasUuid, Undoable, HierarchyEntryBase {
   final ValueNotifier<bool> isCollapsed = ValueNotifier(false);
   final bool isOpenable;
   final int priority;
+  final ValueNotifier<bool> isDirty = ValueNotifier(false);
 
   HierarchyEntry(this.name, this.isSelectable, this.isCollapsible, this.isOpenable, { this.priority = 0 }) {
     children.addListener(() => openHierarchyManager.filteredTreeIsDirty.value = true);
@@ -142,6 +144,7 @@ abstract class HierarchyEntry with HasUuid, Undoable, HierarchyEntryBase {
     }
     isSelected.dispose();
     isCollapsed.dispose();
+    isDirty.dispose();
   }
 
   void onOpen() {
@@ -231,9 +234,9 @@ abstract class FileHierarchyEntry extends HierarchyEntry {
           icon: Icons.open_in_new,
           action: () => revealFileInExplorer(path)
         ),
-      if (isWeb)
+      if (FS.i.isVirtual(path))
         HierarchyEntryAction(
-          name: "Download",
+          name: getDownloadText(),
           icon: Icons.download,
           action: () => downloadFile(path)
         ),
@@ -276,11 +279,12 @@ abstract class ExtractableHierarchyEntry extends FileHierarchyEntry {
   @override
   List<HierarchyEntryAction> getContextMenuActions() {
     return [
-      HierarchyEntryAction(
-        name: "Set search path",
-        icon: Icons.search,
-        action: () => searchPathChangeStream.add(extractedPath)
-      ),
+      if (!FS.i.useVirtualFs)
+        HierarchyEntryAction(
+          name: "Set search path",
+          icon: Icons.search,
+          action: () => searchPathChangeStream.add(extractedPath)
+        ),
       ...super.getContextMenuActions(),
     ];
   }
