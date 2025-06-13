@@ -5,7 +5,7 @@ import 'package:path/path.dart';
 
 void main() async {
   var result = await Process.start(
-    "flutter", ["build", "web", "--pwa-strategy=none"],
+    "flutter", ["build", "web", "--release", "--pwa-strategy=none"],
     runInShell: true,
     mode: ProcessStartMode.inheritStdio,
   );
