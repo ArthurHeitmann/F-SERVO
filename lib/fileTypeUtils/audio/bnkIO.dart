@@ -1,4 +1,3 @@
-
 // ignore_for_file: constant_identifier_names
 
 import '../../utils/utils.dart';
@@ -28,7 +27,44 @@ abstract class BnkChunkBase extends ChunkBase {
   }
 }
 
-const _supportedBnkVersion = 113;
+class Varint {
+  late int value;
+
+  Varint(this.value);
+
+  Varint.read(ByteDataWrapper bytes) {
+    value = 0;
+    int byte;
+    do {
+      byte = bytes.readUint8();
+      value = (value << 7) | (byte & 0x7F);
+    } while ((byte & 0x80) != 0);
+  }
+
+  void write(ByteDataWrapper bytes) {
+    int v = value;
+    do {
+      int byte = v & 0x7F;
+      v >>= 7;
+      if (v != 0) {
+        byte |= 0x80;
+      }
+      bytes.writeUint8(byte);
+    } while (v != 0);
+  }
+
+  int calculateSize() {
+    int size = 0;
+    int v = value;
+    do {
+      size++;
+      v >>= 7;
+    } while (v != 0);
+    return size;
+  }
+}
+
+const _supportedBnkVersion = 134;
 class BnkFile extends ChunkWithSize {
   List<BnkChunkBase> chunks = [];
 
@@ -100,12 +136,12 @@ class BnkHeader extends BnkChunkBase {
   late int version;
   late int bnkId;
   late int languageId;
-  late int isFeedbackInBnk;
+  late int uAltValues; // Changed from isFeedbackInBnk for v134
   late int projectId;
   late List<int> padding;
   List<int>? unknown;
 
-  BnkHeader(super.chunkId, super.chunkSize, this.version, this.bnkId, this.languageId, this.isFeedbackInBnk, this.projectId, this.padding, [this.unknown]);
+  BnkHeader(super.chunkId, super.chunkSize, this.version, this.bnkId, this.languageId, this.uAltValues, this.projectId, this.padding, [this.unknown]);
 
   BnkHeader.read(ByteDataWrapper bytes) : super.read(bytes) {
     if (chunkSize < 20) {
@@ -116,7 +152,7 @@ class BnkHeader extends BnkChunkBase {
     version = bytes.readUint32();
     bnkId = bytes.readUint32();
     languageId = bytes.readUint32();
-    isFeedbackInBnk = bytes.readUint32();
+    uAltValues = bytes.readUint32(); // Changed from isFeedbackInBnk for v134
     projectId = bytes.readUint32();
     padding = bytes.readUint8List(chunkSize - 20);
   }
@@ -132,7 +168,7 @@ class BnkHeader extends BnkChunkBase {
     bytes.writeUint32(version);
     bytes.writeUint32(bnkId);
     bytes.writeUint32(languageId);
-    bytes.writeUint32(isFeedbackInBnk);
+    bytes.writeUint32(uAltValues); // Changed from isFeedbackInBnk for v134
     bytes.writeUint32(projectId);
     for (var i = 0; i < padding.length; i++)
       bytes.writeUint8(padding[i]);
@@ -1208,13 +1244,15 @@ class BnkMusicTransDstRule {
   late int eEntryType;
   late int bPlayPreEntry;
   late int bDestMatchSourceCueName;
+  late int eJumpToType; // Added for v134
 
-  BnkMusicTransDstRule(this.fadeParam, this.uCueFilterHash, this.uJumpToID, this.eEntryType, this.bPlayPreEntry, this.bDestMatchSourceCueName);
+  BnkMusicTransDstRule(this.fadeParam, this.uCueFilterHash, this.uJumpToID, this.eEntryType, this.bPlayPreEntry, this.bDestMatchSourceCueName, this.eJumpToType);
 
   BnkMusicTransDstRule.read(ByteDataWrapper bytes) {
     fadeParam = BnkFadeParams.read(bytes);
     uCueFilterHash = bytes.readUint32();
     uJumpToID = bytes.readUint32();
+    eJumpToType = bytes.readUint16(); // Added for v134
     eEntryType = bytes.readUint16();
     bPlayPreEntry = bytes.readUint8();
     bDestMatchSourceCueName = bytes.readUint8();
@@ -1224,6 +1262,7 @@ class BnkMusicTransDstRule {
     fadeParam.write(bytes);
     bytes.writeUint32(uCueFilterHash);
     bytes.writeUint32(uJumpToID);
+    bytes.writeUint16(eJumpToType); // Added for v134
     bytes.writeUint16(eEntryType);
     bytes.writeUint8(bPlayPreEntry);
     bytes.writeUint8(bDestMatchSourceCueName);
@@ -1234,6 +1273,7 @@ class BnkMusicTransDstRule {
       fadeParam.calcChunkSize() + // fadeParam
       4 + // uCueFilterHash
       4 + // uJumpToID
+      2 + // eJumpToType
       2 + // eEntryType
       1 + // bPlayPreEntry
       1 // bDestMatchSourceCueName
@@ -1470,16 +1510,18 @@ class BnkSource {
 class BnkPlaylist {
   late int trackID;
   late int sourceID;
+  late int eventID; // Added for v134
   late double fPlayAt;
   late double fBeginTrimOffset;
   late double fEndTrimOffset;
   late double fSrcDuration;
 
-  BnkPlaylist(this.trackID, this.sourceID, this.fPlayAt, this.fBeginTrimOffset, this.fEndTrimOffset, this.fSrcDuration);
+  BnkPlaylist(this.trackID, this.sourceID, this.eventID, this.fPlayAt, this.fBeginTrimOffset, this.fEndTrimOffset, this.fSrcDuration);
 
   BnkPlaylist.read(ByteDataWrapper bytes) {
     trackID = bytes.readUint32();
     sourceID = bytes.readUint32();
+    eventID = bytes.readUint32(); // Added for v134
     fPlayAt = bytes.readFloat64();
     fBeginTrimOffset = bytes.readFloat64();
     fEndTrimOffset = bytes.readFloat64();
@@ -1489,6 +1531,7 @@ class BnkPlaylist {
   void write(ByteDataWrapper bytes) {
     bytes.writeUint32(trackID);
     bytes.writeUint32(sourceID);
+    bytes.writeUint32(eventID); // Added for v134
     bytes.writeFloat64(fPlayAt);
     bytes.writeFloat64(fBeginTrimOffset);
     bytes.writeFloat64(fEndTrimOffset);
@@ -1496,7 +1539,7 @@ class BnkPlaylist {
   }
   
   int calcChunkSize() {
-    return 40;
+    return 4 + 4 + 4 + 8 + 8 + 8 + 8;
   }
 }
 
@@ -1909,7 +1952,6 @@ class BnkPositioningParams {
   late int uBitsPositioning;
   int has3D = 0;
   int? uBits3D;
-  int? attenuationID;
   bool hasAutomation = false;
   int? pathMode;
   int? transitionTime;
@@ -1919,18 +1961,20 @@ class BnkPositioningParams {
   List<PathListItemOffset>? playListItems;
   List<Bnk3DAutomationParams>? params;
 
-  BnkPositioningParams(this.uBitsPositioning, [this.uBits3D, this.attenuationID, this.pathMode, this.transitionTime, this.numVertices, this.vertices, this.numPlayListItem, this.playListItems, this.params]);
+  BnkPositioningParams(this.uBitsPositioning, [this.uBits3D, this.pathMode, this.transitionTime, this.numVertices, this.vertices, this.numPlayListItem, this.playListItems, this.params]);
 
   BnkPositioningParams.read(ByteDataWrapper bytes) {
     uBitsPositioning = bytes.readUint8();
     var hasPositioning = (uBitsPositioning >> 0) & 1;
-    has3D = hasPositioning == 1 ? (uBitsPositioning >> 3) & 1 : 0;
+    // For v134, has3D is bit 1. For v113 it was bit 3.
+    has3D = hasPositioning == 1 ? (uBitsPositioning >> 1) & 1 : 0;
     if (has3D == 1) {
       uBits3D = bytes.readUint8();
-      attenuationID = bytes.readUint32();
 
-      var e3DPositionType = (uBits3D! >> 0) & 3;
-      hasAutomation = e3DPositionType != 1;
+      // For v134, e3DPositionType is bits 5-6. For v113 it was bits 0-1.
+      var e3DPositionType = (uBits3D! >> 5) & 3;
+      // For v134, hasAutomation is true if e3DPositionType is not 0. For v113 it was not 1.
+      hasAutomation = e3DPositionType != 0;
 
       if (hasAutomation) {
         pathMode = bytes.readUint8();
@@ -1950,7 +1994,6 @@ class BnkPositioningParams {
     bytes.writeUint8(uBitsPositioning);
     if (has3D == 1) {
       bytes.writeUint8(uBits3D!);
-      bytes.writeUint32(attenuationID!);
 
       if (hasAutomation) {
         bytes.writeUint8(pathMode!);
@@ -1974,7 +2017,6 @@ class BnkPositioningParams {
       1 + // uBitsPositioning
       (has3D == 1 ? (
         1 + // uBits3D
-        4 + // attenuationID
         (hasAutomation ? (
           1 + // pathMode
           4 + // transitionTime
@@ -2054,31 +2096,71 @@ class BnkAdvSettingsParams {
   }
 }
 
-class BnkStateChunk {
-  late int ulNumStateGroups;
-  late List<BnkStateChunkGroup> stateGroup;
+// New class for v134 StateChunk structure
+class BnkStateProp {
+  late Varint propertyId;
+  late int accumType;
+  late int inDb;
 
-  BnkStateChunk(this.ulNumStateGroups, this.stateGroup);
+  BnkStateProp(this.propertyId, this.accumType, this.inDb);
 
-  BnkStateChunk.read(ByteDataWrapper bytes) {
-    ulNumStateGroups = bytes.readUint32();
-    stateGroup = List.generate(ulNumStateGroups, (index) => BnkStateChunkGroup.read(bytes));
+  BnkStateProp.read(ByteDataWrapper bytes) {
+    propertyId = Varint.read(bytes);
+    accumType = bytes.readUint8();
+    inDb = bytes.readUint8();
   }
 
   void write(ByteDataWrapper bytes) {
-    bytes.writeUint32(ulNumStateGroups);
-    for (var i = 0; i < ulNumStateGroups; i++)
-      stateGroup[i].write(bytes);
+    propertyId.write(bytes);
+    bytes.writeUint8(accumType);
+    bytes.writeUint8(inDb);
+  }
+
+  int calcChunkSize() {
+    return propertyId.calculateSize() + 1 + 1;
+  }
+}
+
+// Modified for v134
+class BnkStateChunk {
+  late Varint ulNumStateProps;
+  late List<BnkStateProp> stateProps;
+  late Varint ulNumStateGroups;
+  late List<BnkStateChunkGroup> stateGroup;
+
+  BnkStateChunk(this.ulNumStateProps, this.stateProps, this.ulNumStateGroups, this.stateGroup);
+
+  BnkStateChunk.read(ByteDataWrapper bytes) {
+    ulNumStateProps = Varint.read(bytes);
+    stateProps = List.generate(ulNumStateProps.value, (index) => BnkStateProp.read(bytes));
+    ulNumStateGroups = Varint.read(bytes);
+    stateGroup = List.generate(ulNumStateGroups.value, (index) => BnkStateChunkGroup.read(bytes));
+  }
+
+  void write(ByteDataWrapper bytes) {
+    ulNumStateProps.write(bytes);
+    for (var prop in stateProps) {
+      prop.write(bytes);
+    }
+    ulNumStateGroups.write(bytes);
+    for (var group in stateGroup) {
+      group.write(bytes);
+    }
   }
   
   int calcChunkSize() {
-    return 4 + stateGroup.fold<int>(0, (prev, group) => prev + group.calcChunkSize());
+    return ulNumStateProps.calculateSize() +
+           stateProps.fold<int>(0, (prev, prop) => prev + prop.calcChunkSize()) +
+           ulNumStateGroups.calculateSize() +
+           stateGroup.fold<int>(0, (prev, group) => prev + group.calcChunkSize());
   }
 }
+
+// Modified for v134
 class BnkStateChunkGroup {
   late int ulStateGroupID;
   late int eStateSyncType;
-  late int ulNumStates;
+  late Varint ulNumStates;
   late List<BnkStateChunkGroupState> state;
 
   BnkStateChunkGroup(this.ulStateGroupID, this.eStateSyncType, this.ulNumStates, this.state);
@@ -2086,20 +2168,20 @@ class BnkStateChunkGroup {
   BnkStateChunkGroup.read(ByteDataWrapper bytes) {
     ulStateGroupID = bytes.readUint32();
     eStateSyncType = bytes.readUint8();
-    ulNumStates = bytes.readUint16();
-    state = List.generate(ulNumStates, (index) => BnkStateChunkGroupState.read(bytes));
+    ulNumStates = Varint.read(bytes);
+    state = List.generate(ulNumStates.value, (index) => BnkStateChunkGroupState.read(bytes));
   }
 
   void write(ByteDataWrapper bytes) {
     bytes.writeUint32(ulStateGroupID);
     bytes.writeUint8(eStateSyncType);
-    bytes.writeUint16(ulNumStates);
-    for (var i = 0; i < ulNumStates; i++)
+    ulNumStates.write(bytes);
+    for (var i = 0; i < state.length; i++)
       state[i].write(bytes);
   }
   
   int calcChunkSize() {
-    return 7 + state.fold<int>(0, (prev, group) => prev + group.calcChunkSize());
+    return 4 + 1 + ulNumStates.calculateSize() + state.fold<int>(0, (prev, s) => prev + s.calcChunkSize());
   }
 }
 class BnkStateChunkGroupState {
@@ -2245,27 +2327,27 @@ class BnkNodeBaseParams {
 }
 
 class BnkEvent extends BnkHircChunkBase {
-  late int ulActionListSize;
+  late Varint ulActionListSize; // Changed to Varint for v134
   late List<int> ids;
 
   BnkEvent(super.type, super.size, super.uid, this.ulActionListSize, this.ids);
 
   BnkEvent.read(ByteDataWrapper bytes) : super.read(bytes) {
-    ulActionListSize = bytes.readUint32();
-    ids = List.generate(ulActionListSize, (index) => bytes.readUint32());
+    ulActionListSize = Varint.read(bytes); // Changed to Varint for v134
+    ids = List.generate(ulActionListSize.value, (index) => bytes.readUint32());
   }
 
   @override
   void write(ByteDataWrapper bytes) {
     super.write(bytes);
-    bytes.writeUint32(ulActionListSize);
-    for (var i = 0; i < ulActionListSize; i++)
+    ulActionListSize.write(bytes); // Changed to Varint for v134
+    for (var i = 0; i < ulActionListSize.value; i++)
       bytes.writeUint32(ids[i]);
   }
   
   @override
   int calculateSize() {
-    return 4 + ulActionListSize * 4;
+    return ulActionListSize.calculateSize() + ulActionListSize.value * 4;
   }
 }
 
@@ -2323,23 +2405,31 @@ class BnkSound extends BnkHircChunkBase with BnkHircChunkWithBaseParams {
 }
 
 class BnkState extends BnkHircChunkBase {
-  late BnkPropValue props;
+  late int cProps;
+  late List<int> pID;
+  late List<double> pValue;
 
-  BnkState(super.type, super.size, super.uid, this.props);
+  BnkState(super.type, super.size, super.uid, this.cProps, this.pID, this.pValue);
 
   BnkState.read(ByteDataWrapper bytes) : super.read(bytes) {
-    props = BnkPropValue.read(bytes);
+    cProps = bytes.readUint16();
+    pID = List.generate(cProps, (index) => bytes.readUint16());
+    pValue = List.generate(cProps, (index) => bytes.readFloat32());
   }
 
   @override
   void write(ByteDataWrapper bytes) {
     super.write(bytes);
-    props.write(bytes);
+    bytes.writeUint16(cProps);
+    for (var i = 0; i < cProps; i++)
+      bytes.writeUint16(pID[i]);
+    for (var i = 0; i < cProps; i++)
+      bytes.writeFloat32(pValue[i]);
   }
 
   @override
   int calculateSize() {
-    return props.calcChunkSize();
+    return 2 + cProps * 2 + cProps * 4;
   }
 }
 
@@ -2399,32 +2489,32 @@ class BnkMediaInformation {
 }
 
 class BnkExceptParams {
-  late int ulExceptionListSize;
+  late Varint ulExceptionListSize; // Changed to Varint for v134
   late List<int> ids;
   late List<int> isBus;
 
   BnkExceptParams(this.ulExceptionListSize, this.ids, this.isBus);
 
   BnkExceptParams.read(ByteDataWrapper bytes) {
-    ulExceptionListSize = bytes.readUint32();
-    ids = List.filled(ulExceptionListSize, 0);
-    isBus = List.filled(ulExceptionListSize, 0);
-    for (var i = 0; i < ulExceptionListSize; i++) {
+    ulExceptionListSize = Varint.read(bytes); // Changed to Varint for v134
+    ids = List.filled(ulExceptionListSize.value, 0);
+    isBus = List.filled(ulExceptionListSize.value, 0);
+    for (var i = 0; i < ulExceptionListSize.value; i++) {
       ids[i] = bytes.readUint32();
       isBus[i] = bytes.readUint8();
     }
   }
 
   void write(ByteDataWrapper bytes) {
-    bytes.writeUint32(ulExceptionListSize);
-    for (var i = 0; i < ulExceptionListSize; i++) {
+    ulExceptionListSize.write(bytes); // Changed to Varint for v134
+    for (var i = 0; i < ulExceptionListSize.value; i++) {
       bytes.writeUint32(ids[i]);
       bytes.writeUint8(isBus[i]);
     }
   }
   
   int calcChunkSize() {
-    return 4 + ulExceptionListSize * 5;
+    return ulExceptionListSize.calculateSize() + ulExceptionListSize.value * 5;
   }
 }
 
@@ -2577,9 +2667,9 @@ class BnkValueActionParams implements ActionSpecificParams {
   final int actionType;
   late int byBitVector;
   ActionSpecificParams? specificParams;
-  late int ulExceptionListSize;
+  late BnkExceptParams exceptions; // Changed from ulExceptionListSize for correctness
 
-  BnkValueActionParams(this.actionType, this.byBitVector, this.specificParams, this.ulExceptionListSize);
+  BnkValueActionParams(this.actionType, this.byBitVector, this.specificParams, this.exceptions);
 
   BnkValueActionParams.read(ByteDataWrapper bytes, this.actionType) {
     byBitVector = bytes.readUint8();
@@ -2588,7 +2678,7 @@ class BnkValueActionParams implements ActionSpecificParams {
     } else if (_propActionActionTypes.contains(actionType)) {
       specificParams = BnkPropActionParams.read(bytes);
     }
-    ulExceptionListSize = bytes.readUint32();
+    exceptions = BnkExceptParams.read(bytes); // Changed from reading a uint32
   }
 
   @override
@@ -2596,12 +2686,12 @@ class BnkValueActionParams implements ActionSpecificParams {
     bytes.writeUint8(byBitVector);
     if (specificParams != null)
       specificParams!.write(bytes);
-    bytes.writeUint32(ulExceptionListSize);
+    exceptions.write(bytes); // Changed
   }
   
   @override
   int calcChunkSize() {
-    return 1 + (specificParams?.calcChunkSize() ?? 0) + 4;
+    return 1 + (specificParams?.calcChunkSize() ?? 0) + exceptions.calcChunkSize(); // Changed
   }
 }
 

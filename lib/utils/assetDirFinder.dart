@@ -12,7 +12,7 @@ Completer<void> _assetDirSearchCompleter = Completer();
 Future<void> assetDirDone = _assetDirSearchCompleter.future;
 
 const _assetsDirName = "assets";
-const _assetsDirSubDirs = { "fonts", "MrubyDecompiler" };
+const _assetsDirSubDirs = { "fonts" };
 Future<bool> findAssetsDir() async {
   if (assetsDir != null)
     return true;

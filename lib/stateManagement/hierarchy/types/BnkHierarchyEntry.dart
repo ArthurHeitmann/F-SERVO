@@ -211,8 +211,8 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
         childIds = hirc.ids;
       else if (hirc is BnkActorMixer)
         childIds = hirc.childIDs;
-      else if (hirc is BnkState)
-        props.addAll(BnkHircHierarchyEntry.makePropsFromParams(hirc.props));
+      // else if (hirc is BnkState)
+      //   props.addAll(BnkHircHierarchyEntry.makePropsFromParams(hirc.props));
       else
         continue;
 

@@ -207,6 +207,7 @@ class BnkTrackClip with HasUuid, Undoable implements Disposable {
     return BnkPlaylist(
       srcPlaylist.trackID,
       sourceId,
+      0,
       xOff.value.toDouble(),
       beginTrim.value.toDouble(),
       endTrim.value.toDouble(),
