@@ -399,8 +399,17 @@ class BnkTrackData with HasUuid, Undoable implements Disposable {
       throw Exception("Can't update duration of a track with multiple sources");
     var srcId = srcTrack.sources.first.sourceID;
     var wemPath = wemFilesLookup.lookup[srcId];
-    if (wemPath == null)
-      return;
+    if (wemPath == null) {
+      var fileData = areasManager.fromId(fileId);
+      if (fileData == null || fileData is! BnkFilePlaylistData)
+        return;
+      var bnkPath = fileData.path;
+      var sourceId = srcTrack.sources.firstOrNull?.sourceID;
+      if (sourceId != null)
+        wemPath = await wemFilesLookup.lookupWithAdditionalDir(sourceId, dirname(bnkPath));
+      if (wemPath == null)
+        return;
+    }
     var wemBytes = await ByteDataWrapper.fromFile(wemPath);
     var wemRiff = RiffFile.fromBytes(wemBytes);
     var riffFormat = wemRiff.format;
