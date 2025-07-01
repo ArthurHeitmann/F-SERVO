@@ -5,6 +5,7 @@ on:
     branches:
       - master
       - mgrr
+      - nier-replicant
       - gh-actions
 
 jobs:
