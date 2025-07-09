@@ -166,11 +166,12 @@ class DatHierarchyEntry extends ExtractableHierarchyEntry {
         icon: Icons.add,
         action: _addFileToDat,
       ),
-      HierarchyEntryAction(
-        name: "Change packed files",
-        icon: Icons.folder_open,
-        action: () => showDatSelectorPopup(this),
-      ),
+      if (!FS.i.useVirtualFs)
+        HierarchyEntryAction(
+          name: "Change packed files",
+          icon: Icons.folder_open,
+          action: () => showDatSelectorPopup(this),
+        ),
       if (children.where((child) => scriptRelatedClasses.any((type) => child.runtimeType == type)).isNotEmpty)
         HierarchyEntryAction(
           name: "Add new Ruby script",

@@ -564,10 +564,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
   void remove(HierarchyEntry child, { bool dispose = false }) {
     _removeRec(child, freeFiles: dispose);
     super.remove(child, dispose: dispose);
-    if (child is FileHierarchyEntry)
-      FS.i.releaseFile(child.path);
-    if (child is ExtractableHierarchyEntry)
-      FS.i.releaseFolder(child.extractedPath);
+    _release(child);
   }
 
   @override
@@ -577,9 +574,17 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
     for (var child in children) {
       _removeRec(child, freeFiles: true);
       child.dispose();
+      _release(child);
     }
     super.clear();
     filteredTreeIsDirty.value = true;
+  }
+
+  void _release(HierarchyEntry child) {
+    if (child is FileHierarchyEntry)
+      FS.i.releaseFile(child.path);
+    if (child is ExtractableHierarchyEntry)
+      FS.i.releaseFolder(child.extractedPath);
   }
 
   void removeAny(HierarchyEntry child) {

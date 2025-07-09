@@ -1,5 +1,8 @@
 
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:path/path.dart';
 
 import '../../fileSystem/FileSystem.dart';
 import '../../main.dart';
@@ -8,7 +11,9 @@ import '../../utils/assetDirFinder.dart';
 import '../../utils/utils.dart';
 import '../../widgets/misc/confirmCancelDialog.dart';
 import '../Property.dart';
+import '../changesExporter.dart';
 import '../events/searchPanelEvents.dart';
+import '../events/statusInfo.dart';
 import '../hasUuid.dart';
 import '../listNotifier.dart';
 import '../openFiles/openFileTypes.dart';
@@ -16,6 +21,7 @@ import '../openFiles/openFilesManager.dart';
 import '../preferencesData.dart';
 import '../undoable.dart';
 import 'FileHierarchy.dart';
+import 'types/DatHierarchyEntry.dart';
 import 'types/PakHierarchyEntry.dart';
 
 class HierarchyEntryAction {
@@ -229,6 +235,8 @@ abstract class FileHierarchyEntry extends HierarchyEntry {
 
   @override
   List<HierarchyEntryAction> getContextMenuActions() {
+    var parent = openHierarchyManager.parentOf(this);
+    var parentIsDat = parent is DatHierarchyEntry;
     return [
       if (isDesktop)
         HierarchyEntryAction(
@@ -242,8 +250,50 @@ abstract class FileHierarchyEntry extends HierarchyEntry {
           icon: Icons.download,
           action: () => downloadFile(path)
         ),
+      if (parentIsDat)
+        HierarchyEntryAction(
+          name: "Remove from DAT",
+          icon: Icons.delete,
+          action: () => _removeSelfFromDat(parent)
+        ),
       ...super.getContextMenuActions(),
     ];
+  }
+
+  void _removeSelfFromDat(DatHierarchyEntry parent) async {
+    var datInfoPath = join(parent.extractedPath, "dat_info.json");
+    if (!await FS.i.existsFile(datInfoPath)) {
+      messageLog.add("File was not extracted with F-SERVO. Missing dat_info.json");
+      return;
+    }
+    var datInfo = jsonDecode(await FS.i.readAsString(datInfoPath));
+
+    var datFiles = (datInfo["files"] as List).cast<String>();
+    var prevLength = datFiles.length;
+    datFiles.removeWhere((file) => file.toLowerCase() == basename(path).toLowerCase());
+    datInfo["files"] = datFiles;
+    
+    var removedFiles = datFiles.length - prevLength;
+    if (removedFiles == 0) {
+      messageLog.add("Failed to find ${name.value} in DAT");
+      return;
+    }
+    print("removedFiles $removedFiles");
+
+    var datName = basename(parent.path);
+    if (await confirmOrCancelDialog(getGlobalContext(), title: "Removed ${name.value} from $datName?", yesText: "Remove") != true) {
+      return;
+    }
+
+    await FS.i.writeAsString(datInfoPath, const JsonEncoder.withIndent("\t").convert(datInfo));
+
+    parent.isDirty.value = true;
+    changedDatFiles.add(parent.extractedPath);
+    await processChangedFiles();
+
+    parent.remove(this, dispose: true);
+    
+    messageLog.add("Removed ${name.value} from $datName");
   }
 }
 
