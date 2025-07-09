@@ -100,4 +100,5 @@ Future<void> convertBxmFileToXml(String bxmPath, String xmlPath) async {
   doc.children.add(root);
   var xmlStr = doc.toPrettyString();
   await FS.i.writeAsString(xmlPath, xmlStr);
+  FS.i.associatedFileWith(bxmPath, xmlPath);
 }

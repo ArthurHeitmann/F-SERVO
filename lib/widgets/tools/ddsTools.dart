@@ -1,5 +1,4 @@
 
-import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 
@@ -7,10 +6,7 @@ import '../../fileSystem/FileSystem.dart';
 import '../../fileTypeUtils/textures/ddsConverter.dart';
 import '../../stateManagement/Property.dart';
 import '../../utils/utils.dart';
-import '../misc/dropTargetBuilder.dart';
-import '../misc/imagePreviewBuilder.dart';
-import '../misc/onHoverBuilder.dart';
-import '../theme/customTheme.dart';
+import '../misc/ImageDropTarget.dart';
 
 class DdsTool extends StatefulWidget {
   const DdsTool({super.key});
@@ -45,15 +41,6 @@ class _DdsToolState extends State<DdsTool> {
   var mipmaps = BoolProp(false, fileId: null);
 
   final imageKey = const PageStorageKey("imgPreview");
-
-  void pickSrcFile() async {
-    var paths = await FS.i.selectFiles(
-      dialogTitle: "Pick source image",
-    );
-    if (paths.isEmpty)
-      return;
-    setState(() => srcPath = paths.first);
-  }
 
   void convert() async {
     if (isDesktop) {
@@ -104,92 +91,10 @@ class _DdsToolState extends State<DdsTool> {
   }
 
   Widget makeSrcPicker(BuildContext context) {
-    return ConstrainedBox(
+    return ImageDropTarget(
+      imgPath: srcPath,
       constraints: const BoxConstraints.tightFor(height: 50),
-      child: DropTargetBuilder(
-        onDrop: (paths) => setState(() => srcPath = paths.first),
-        builder: (context, isDropping) {
-          return IndexedStack(
-            index: isDropping ? 1 : 0,
-            sizing: StackFit.expand,
-            children: [
-              GestureDetector(
-                key: imageKey,
-                onTap: pickSrcFile,
-                child: OnHoverBuilder(
-                  cursor: SystemMouseCursors.click,
-                  builder: (context, isHovering) {
-                    return AnimatedScale(
-                      scale: isHovering ? 1.02 : 1,
-                      duration: const Duration(milliseconds: 100),
-                      child: ImagePreviewBuilder(
-                        path: srcPath,
-                        maxHeight: 50,
-                        builder: (context, data, state) {
-                          return Row(
-                            mainAxisSize: MainAxisSize.max,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              const SizedBox(width: 5),
-                              if (state == ImagePreviewState.loading || state == ImagePreviewState.notFound)
-                                const Icon(Icons.file_download_outlined, size: 24)
-                              else if (state == ImagePreviewState.error)
-                                const Icon(Icons.error_outline, size: 24)
-                              else if (state == ImagePreviewState.loaded)
-                                ConstrainedBox(
-                                  constraints: const BoxConstraints(maxHeight: 44, maxWidth: 100),
-                                  child: Image.memory(data!)
-                                ),
-                              const SizedBox(width: 15),
-                              if (state == ImagePreviewState.loading || state == ImagePreviewState.notFound)
-                                const Text("Select or drop image")
-                              else if (state == ImagePreviewState.error)
-                                const Text("Error loading image")
-                              else if (state == ImagePreviewState.loaded)
-                                Text(basename(srcPath)),
-                              const SizedBox(width: 5),
-                            ],
-                          );
-                        }
-                      ),
-                    );
-                  }
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                child: DottedBorder(
-                  options: RoundedRectDottedBorderOptions(
-                    strokeWidth: 2,
-                    color: getTheme(context).textColor!.withOpacity(0.25),
-                    radius: const Radius.circular(12),
-                  ),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.25),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.max,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const Icon(Icons.file_download_outlined, size: 32),
-                        const SizedBox(width: 15),
-                        Align(
-                          alignment: Alignment.center,
-                          child: Text("Drop image file", style: Theme.of(context).textTheme.bodyLarge)
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          );
-        },
-      ),
+      onDrop: (path) => setState(() => srcPath = path),
     );
   }
 

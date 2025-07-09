@@ -1,16 +1,18 @@
 
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 
 import '../../../fileSystem/FileSystem.dart';
 import '../../../fileTypeUtils/textures/ddsConverter.dart';
 import '../../../stateManagement/Property.dart';
-import '../../../stateManagement/events/statusInfo.dart';
 import '../../../stateManagement/hierarchy/FileHierarchy.dart';
 import '../../../stateManagement/listNotifier.dart';
 import '../../../stateManagement/openFiles/types/WtaWtpData.dart';
 import '../../../utils/utils.dart';
 import '../../misc/ChangeNotifierWidget.dart';
+import '../../misc/ImageDropTarget.dart';
 import '../../misc/expandOnHover.dart';
 import '../../misc/imagePreviewBuilder.dart';
 import '../../propEditors/propTextField.dart';
@@ -33,42 +35,91 @@ class _TexturesTableConfig with CustomTableConfig {
 
   _TexturesTableConfig(this.file, String name, this.texData)
     : textures = texData.textures {
+    lazyBuild = false;
     this.name = name;
     subTitleWidget = _WtpDatPaths(wtpDatsPath: texData.wtpDatsPath);
     columnNames = [
-      "ID", "", "Path", "", "",
+      "ID",
+      if (FS.i.useVirtualFs) ...[
+        "Image",
+      ] else ...[
+        "", "Path", "",
+      ],
+      "", "", "",
       if (texData.hasAnySimpleModeFlags)
         "Is Albedo?",
       if (!texData.useFlagsSimpleMode)
         "Flags",
     ];
     columnFlex = [
-      3, 2, 14, 1, 1,
+      3,
+      if (FS.i.useVirtualFs) ...[
+        10,
+      ] else ...[
+        2, 12, 1,
+      ],
+      2, 2, 2,
       if (texData.hasAnySimpleModeFlags)
         3,
       if (!texData.useFlagsSimpleMode)
         3,
     ];
-    rowCount = NumberProp(textures.length, true, fileId: null);
-    textures.addListener(() => rowCount.value = textures.length);
+    rowCount = NumberProp(textures.length + 1, true, fileId: null);
+    textures.addListener(() => rowCount.value = textures.length + 1);
   }
 
   @override
   RowConfig rowPropsGenerator(int index) {
+    if (index == textures.length) {
+      return RowConfig(
+        key: ValueKey("PLACEHOLDER"),
+        cells: [
+          TextCellConfig(""),
+          if (FS.i.useVirtualFs) ...[
+            TextCellConfig(""),
+          ] else ...[
+            TextCellConfig(""),
+            TextCellConfig(""),
+            TextCellConfig(""),
+          ],
+          TextCellConfig(""),
+          TextCellConfig(""),
+          TextCellConfig(""),
+          if (texData.hasAnySimpleModeFlags)
+            TextCellConfig(""),
+          if (!texData.useFlagsSimpleMode)
+            TextCellConfig(""),
+        ]
+      );
+    }
     return RowConfig(
-      key: Key(textures[index].uuid),
+      key: ValueKey(textures[index].uuid),
       cells: [
         textures[index].id != null
           ? PropCellConfig(prop: textures[index].id!)
           : CustomWidgetCellConfig(const SizedBox.shrink()),
-        _TexturePreviewCell(textures[index].path),
-        PropCellConfig(prop: textures[index].path, options: const PropTFOptions(isFilePath: true)),
-        CustomWidgetCellConfig(IconButton(
-          icon: const Icon(Icons.folder, size: 20),
-          onPressed: () => _selectTexture(index),
+        if (FS.i.useVirtualFs) ...[
+          _FsImageSelectorCell(textures[index].path),
+        ] else ...[
+          _TexturePreviewCell(textures[index].path),
+          PropCellConfig(prop: textures[index].path, options: const PropTFOptions(isFilePath: true)),
+          CustomWidgetCellConfig(IconButton(
+            icon: const Icon(Icons.folder, size: 20),
+            splashRadius: 20,
+            onPressed: () => _selectTexture(index),
+          )),
+        ],
+        CustomWidgetCellConfig(_SaveImageButton(
+          ext: "png",
+          save: () => _savePng(textures[index].path.value),
+        )),
+        CustomWidgetCellConfig(_SaveImageButton(
+          ext: "dds",
+          save: () => _saveDds(textures[index].path.value),
         )),
         CustomWidgetCellConfig(IconButton(
           icon: const Icon(Icons.delete, size: 20),
+          splashRadius: 20,
           onPressed: () => onRowRemove(index),
         )),
         if (texData.hasAnySimpleModeFlags)
@@ -121,6 +172,53 @@ class _TexturesTableConfig with CustomTableConfig {
     if (paths == null)
       return;
     await file.textures!.patchFromFolder(paths);
+  }
+  
+  void _savePng(String srcPath) {
+    _saveImage(
+      srcPath,
+      ".png",
+      (destPath) => texToPng(srcPath, pngPath: destPath),
+      (bytes) => texToPngInMemory(bytes),
+    );
+  }
+  
+  void _saveDds(String srcPath) {
+    _saveImage(
+      srcPath,
+      extension(srcPath),
+      (destPath) => FS.i.copyFile(srcPath, destPath),
+      (bytes) async => bytes,
+    );
+  }
+  
+  void _saveImage(
+    String srcPath,
+    String ext,
+    Future Function(String destPath) desktopConvert,
+    Future<Uint8List?> Function(Uint8List bytes) inMemoryConvert,
+  ) async {
+    if (isDesktop) {
+      var savePath = await FS.i.selectSaveFile(
+        dialogTitle: "Save image as ${basename(srcPath)}",
+        allowedExtensions: [ext],
+        fileName: "${basenameWithoutExtension(srcPath)}$ext",
+      );
+      if (savePath == null)
+        return;
+      await desktopConvert(savePath);
+    }
+    else {
+      await FS.i.saveFile(
+        dialogTitle: "Save image as ${basename(srcPath)}",
+        allowedExtensions: [ext],
+        fileName: "${basenameWithoutExtension(srcPath)}$ext",
+        getBytes: () async {
+          var srcBytes = await FS.i.read(srcPath);
+          return (await inMemoryConvert(srcBytes))!;
+        },
+      );
+    }
   }
 }
 
@@ -216,31 +314,33 @@ class __TexturePreviewState extends ChangeNotifierState<_TexturePreview> {
           return const Icon(Icons.help_outline);
         return ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 100, maxHeight: 30),
-          child: ExpandOnHover(
-            size: 30,
-            builder: (context, isExpanded) => MouseRegion(
-              cursor: SystemMouseCursors.click,
-              child: GestureDetector(
-                onTap: () async {
-                  var savePath = await FS.i.selectSaveFile(
-                    dialogTitle: "Save PNG",
-                    allowedExtensions: ["png"],
-                    fileName: "${basenameWithoutExtension(widget.path.value)}.png",
-                  );
-                  if (savePath == null)
-                    return;
-                  await texToPng(widget.path.value, pngPath: savePath);
-                  messageLog.add("Saved PNG ${basename(savePath)}");
-                },
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(5),
-                  child: Image.memory(data!, filterQuality: FilterQuality.medium),
-                ),
-              ),
-            ),
+          child: _ExpandableImage(
+            path: widget.path.value,
+            data: data!,
           )
         );
       },
+    );
+  }
+}
+
+class _ExpandableImage extends StatelessWidget {
+  final String path;
+  final Uint8List data;
+
+  const _ExpandableImage({
+    required this.path,
+    required this.data,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ExpandOnHover(
+      size: 30,
+      builder: (context, isExpanded) => ClipRRect(
+        borderRadius: BorderRadius.circular(5),
+        child: Image.memory(data, filterQuality: FilterQuality.medium),
+      ),
     );
   }
 }
@@ -286,6 +386,78 @@ class __WtpDatPathsState extends ChangeNotifierState<_WtpDatPaths> {
               child: Text(basename(path), overflow: TextOverflow.ellipsis),
             ),
       ],
+    );
+  }
+}
+
+class _FsImageSelectorCell extends CellConfig {
+  final StringProp path;
+
+  _FsImageSelectorCell(this.path);
+
+  @override
+  Widget makeWidget() {
+    return _FsImageSelector(path);
+  }
+
+  @override
+  String toExportString() {
+    return "";
+  }
+}
+
+class _FsImageSelector extends ChangeNotifierWidget {
+  final StringProp path;
+
+  _FsImageSelector(this.path) : super(notifier: path);
+
+  @override
+  State<_FsImageSelector> createState() => __FsImageSelectorState();
+}
+
+class __FsImageSelectorState extends ChangeNotifierState<_FsImageSelector> {
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: ImageDropTarget(
+        imgPath: widget.path.value,
+        constraints: const BoxConstraints.tightFor(height: 50),
+        onDrop: (newPath) => widget.path.value = newPath,
+        imageBuilder: (context, image) => _ExpandableImage(
+          path: widget.path.value,
+          data: image,
+        ),
+      ),
+    );
+  }
+}
+
+class _SaveImageButton extends StatelessWidget {
+  final String ext;
+  final void Function() save;
+  
+  const _SaveImageButton({
+    required this.ext,
+    required this.save,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 45,
+      height: 45,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: save,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.download, size: 20),
+            Text(ext.toUpperCase(), style: Theme.of(context).textTheme.bodySmall),
+          ],
+        )
+      ),
     );
   }
 }

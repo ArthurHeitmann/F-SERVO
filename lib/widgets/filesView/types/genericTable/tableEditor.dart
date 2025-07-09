@@ -87,6 +87,7 @@ mixin CustomTableConfig {
   late final List<int> columnFlex;
   late final NumberProp rowCount;
   bool allowRowAddRemove = true;
+  bool lazyBuild = true;
 
   RowConfig rowPropsGenerator(int index);
   void onRowAdd();
@@ -382,13 +383,25 @@ class _TableEditorState extends ChangeNotifierState<TableEditor> {
             SmoothScrollBuilder(
               controller: scrollController,
               builder: (context, controller, physics) {
-                return ListView.builder(
-                  controller: controller,
-                  physics: physics,
-                  itemCount: rows.length,
-                  cacheExtent: 4000,
-                  itemBuilder: (context, i) => _TableRow(i % 2 == 1, rows[i].index, rows[i].rowConfig, widget.config),
-                );
+                if (widget.config.lazyBuild) {
+                  return ListView.builder(
+                    controller: controller,
+                    physics: physics,
+                    itemCount: rows.length,
+                    cacheExtent: 4000,
+                    itemBuilder: (context, i) => _TableRow(i % 2 == 1, rows[i].index, rows[i].rowConfig, widget.config),
+                  );
+                } else {
+                  return ListView(
+                    controller: controller,
+                    physics: physics,
+                    cacheExtent: 4000,
+                    children: [
+                      for (var i = 0; i < rows.length; i++)
+                        _TableRow(i % 2 == 1, rows[i].index, rows[i].rowConfig, widget.config)
+                    ],
+                  );
+                }
               }
             ),
             if (widget.config.allowRowAddRemove)

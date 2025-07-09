@@ -653,6 +653,8 @@ Future<String?> exportDat(String datFolder, { bool checkForNesting = false, bool
 
 void clearIsDirtyFlagForFile(String path) {
   var hierarchyEntry = openHierarchyManager.findRecWhere((e) => e is FileHierarchyEntry && e.path == path);
+  if (hierarchyEntry?.isDirty.value == true)
+    hierarchyEntry!.hasSavedChanges.value = true;
   hierarchyEntry?.isDirty.value = false;
 }
 

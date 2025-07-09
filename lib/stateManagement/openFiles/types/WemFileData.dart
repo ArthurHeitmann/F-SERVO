@@ -14,7 +14,10 @@ import '../../../utils/utils.dart';
 import '../../../widgets/filesView/FileType.dart';
 import '../../Property.dart';
 import '../../audioResourceManager.dart';
+import '../../changesExporter.dart';
 import '../../hasUuid.dart';
+import '../../hierarchy/FileHierarchy.dart';
+import '../../hierarchy/HierarchyEntryTypes.dart';
 import '../../undoable.dart';
 import '../openFileTypes.dart';
 import '../openFilesManager.dart';
@@ -123,6 +126,16 @@ class WemFileData extends OpenFileData with AudioFileData {
       wai.pendingPatches.add(WemPatch(path, wemId));
     } else if (wemInfo?.source == WemSource.bnk) {
       await patchBnk(wemInfo!.bnkPath, wemId, path);
+      var bnkEntry = openHierarchyManager.findRecWhere((e) => e is FileHierarchyEntry && e.path == wemInfo!.bnkPath);
+      if (bnkEntry != null) {
+        bnkEntry.hasSavedChanges.value = true;
+        var bnkParent = openHierarchyManager.parentOf(bnkEntry);
+        if (bnkParent is ExtractableHierarchyEntry && strEndsWithDat(bnkParent.path)) {
+          changedDatFiles.add(bnkParent.extractedPath);
+        } else {
+          bnkEntry.isDirty.value = true;
+        }
+      }
     } else {
       showToast("Unknown WEM source (not WSP or BNK)");
     }

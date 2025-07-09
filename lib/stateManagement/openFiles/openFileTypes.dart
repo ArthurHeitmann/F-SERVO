@@ -143,15 +143,16 @@ abstract class OpenFileData with HasUuid, Undoable, Disposable, HasUndoHistory {
 
     var hierarchyEntry = openHierarchyManager.findRecWhere((e) => e is FileHierarchyEntry && e.path == path);
     if (hierarchyEntry != null) {
-      if (FS.i.useVirtualFs)
-        hierarchyEntry.isDirty.value = true;
+      hierarchyEntry.hasSavedChanges.value = true;
       var parent = openHierarchyManager.parentOf(hierarchyEntry);
       if (parent is ExtractableHierarchyEntry && strEndsWithDat(parent.path)) {
+        hierarchyEntry.isDirty.value = true;
         changedDatFiles.add(parent.extractedPath);
         if (repackNextParentDtt) {
           repackNextParentDtt = false;
-          var dttPath = "${withoutExtension(parent.extractedPath)}.dtt";
-          changedDatFiles.add(dttPath);
+          var dttPath = parent.extractedPath.replaceAll(".dat", ".dtt").replaceAll(".eff", ".eft");
+          if (await FS.i.existsDirectory(dttPath))
+            changedDatFiles.add(dttPath);
         }
       }
       else if (parent == openHierarchyManager) {

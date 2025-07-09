@@ -442,6 +442,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
     if (await FS.i.existsFile(extractedFile))
       noExtract = true;
     var wemFiles = await extractBnkWems(bnk, bnkExtractDir, noExtract);
+    FS.i.associatedFileWith(bnkPath, bnkExtractDir);
     await FS.i.writeAsString(extractedFile, "Delete this file to re-extract files");
 
     var bnkEntry = BnkHierarchyEntry(StringProp(basename(bnkPath), fileId: null), bnkPath, bnkExtractDir, bnk);

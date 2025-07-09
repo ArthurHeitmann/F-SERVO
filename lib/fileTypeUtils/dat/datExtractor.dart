@@ -92,6 +92,8 @@ Future<List<String>> extractDatFiles(String datPath, { bool shouldExtractPakFile
 
   messageLog.add("Extracting ${path.basename(datPath)} done");
 
+  FS.i.associatedFileWith(datPath, extractDir);
+
   return filePaths;
 }
 

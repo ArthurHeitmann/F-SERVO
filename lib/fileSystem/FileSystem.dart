@@ -26,6 +26,7 @@ class FS {
 
   late final _Platform _platform;
   final _virtualFs = VirtualFileSystem();
+  final Map<String, Set<String>> _associatedFiles = {};
 
   FS._() {
     if (isMobile)
@@ -481,10 +482,27 @@ class FS {
     _virtualFs.write(path, bytes);
   }
 
-  void releaseFile(String path) {
+  void associatedFileWith(String srcFile, String associatedEntity) {
+    var otherFiles = _associatedFiles.putIfAbsent(srcFile, () => {});
+    otherFiles.add(associatedEntity);
+  }
+
+  void releaseFile(String path) async {
     if (!FS.i.isVirtual(path))
       return;
     _virtualFs.deleteFile(path);
+    var associated = _associatedFiles[path];
+    if (associated != null) {
+      for (var otherFile in associated) {
+        if (!FS.i.isVirtual(otherFile))
+          continue;
+        if (await existsFile(otherFile))
+          await delete(otherFile);
+        else if (await existsDirectory(otherFile))
+          await deleteDirectory(otherFile, recursive: true);
+      }
+      _associatedFiles.remove(path);
+    }
   }
 
   void releaseFolder(String path) {

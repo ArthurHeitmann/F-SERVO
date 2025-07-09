@@ -1,4 +1,6 @@
 
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 
@@ -8,6 +10,8 @@ import '../../../utils/utils.dart';
 import '../../../widgets/FileHierarchyExplorer/datFilesSelector.dart';
 import '../../../widgets/misc/confirmDialog.dart';
 import '../../Property.dart';
+import '../../changesExporter.dart';
+import '../../events/statusInfo.dart';
 import '../../preferencesData.dart';
 import '../../undoable.dart';
 import '../FileHierarchy.dart';
@@ -158,6 +162,11 @@ class DatHierarchyEntry extends ExtractableHierarchyEntry {
             ),
         ],
       HierarchyEntryAction(
+        name: "Add file to DAT",
+        icon: Icons.add,
+        action: _addFileToDat,
+      ),
+      HierarchyEntryAction(
         name: "Change packed files",
         icon: Icons.folder_open,
         action: () => showDatSelectorPopup(this),
@@ -184,5 +193,41 @@ class DatHierarchyEntry extends ExtractableHierarchyEntry {
         ),
       ...super.getContextMenuActions()
     ];
+  }
+
+  Future<void> _addFileToDat() async {
+    var files = await FS.i.selectFiles();
+    if (files.isEmpty)
+      return;
+    var file = files.first;
+    var fileName = basename(file);
+    if (extension(file).length > 4) {
+      showToast("File extension must be <= 3 characters");
+      return;
+    }
+
+    var newPath = join(extractedPath, fileName);
+    await FS.i.copyFile(file, newPath);
+
+    var datInfoPath = join(extractedPath, "dat_info.json");
+    if (!await FS.i.existsFile(datInfoPath)) {
+      messageLog.add("File was not extracted with F-SERVO. Missing dat_info.json");
+      return;
+    }
+    var datInfo = jsonDecode(await FS.i.readAsString(datInfoPath));
+
+    var datFiles = (datInfo["files"] as List).cast<String>();
+    datFiles.add(fileName);
+    datInfo["files"] = datFiles;
+
+    await FS.i.writeAsString(datInfoPath, const JsonEncoder.withIndent("\t").convert(datInfo));
+
+    isDirty.value = true;
+    changedDatFiles.add(extractedPath);
+    await processChangedFiles();
+
+    await openHierarchyManager.openFile(newPath, parent: this);
+    
+    showToast("Added $fileName to ${name.value}");
   }
 }

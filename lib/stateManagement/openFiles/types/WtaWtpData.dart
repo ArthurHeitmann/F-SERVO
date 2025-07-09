@@ -64,6 +64,7 @@ class WtaWtpData extends OpenFileData {
 
       String extractDir = join(dttDir ?? datDir, "${basename(path)}_extracted");
       await FS.i.createDirectory(extractDir);
+      FS.i.associatedFileWith(path, extractDir);
 
       textures?.dispose();
       textures = await WtaWtpTextures.fromWtaWtp(uuid, path, wtpPath, extractDir, isWtb);
@@ -86,6 +87,8 @@ class WtaWtpData extends OpenFileData {
       return;
 
     await textures!.save();
+
+    repackNextParentDtt = !isWtb;
 
     await super.save();
   }
@@ -216,11 +219,11 @@ class WtaWtpTextures with HasUuid, Undoable implements Disposable {
         var texturePathOld = getWtaTexturePathOld(wta, i, extractDir);
         if (await FS.i.existsFile(texturePathOld))
           await FS.i.renameFile(texturePathOld, texturePath);
-        if (!await FS.i.existsFile(texturePath)) {
+        // if (!await FS.i.existsFile(texturePath)) {
           await wtpFile.setPosition(wta.textureOffsets[i]);
           var textureBytes = await wtpFile.read(wta.textureSizes[i]);
           await FS.i.write(texturePath, textureBytes);
-        }
+        // }
         BoolProp? isAlbedo;
         HexProp? flag;
         if (wta.textureFlags[i] == WtaFile.albedoFlag || wta.textureFlags[i] == WtaFile.noAlbedoFlag)

@@ -126,6 +126,7 @@ abstract class HierarchyEntry with HasUuid, Undoable, HierarchyEntryBase {
   final bool isOpenable;
   final int priority;
   final ValueNotifier<bool> isDirty = ValueNotifier(false);
+  final ValueNotifier<bool> hasSavedChanges = ValueNotifier(false);
 
   HierarchyEntry(this.name, this.isSelectable, this.isCollapsible, this.isOpenable, { this.priority = 0 }) {
     children.addListener(() => openHierarchyManager.filteredTreeIsDirty.value = true);
@@ -145,6 +146,7 @@ abstract class HierarchyEntry with HasUuid, Undoable, HierarchyEntryBase {
     isSelected.dispose();
     isCollapsed.dispose();
     isDirty.dispose();
+    hasSavedChanges.dispose();
   }
 
   void onOpen() {

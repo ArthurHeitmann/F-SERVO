@@ -116,8 +116,9 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
     Icon? icon = getEntryIcon(context);
     return setupWrapper(
       context: context,
-      builder: (context, isDirty) {
+      builder: (context, isDirty, hasSavedChanges) {
         var isDirtyColor = getTheme(context).actionTypeBlockingAccent;
+        var hasSavedChangesColor = getTheme(context).textColor;
         return Container(
           padding: const EdgeInsets.symmetric(vertical: 3),
           height: HierarchyEntryWidget.height,
@@ -165,10 +166,17 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
                   ),
                 )
               ),
-              if (isDirty)
-                Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: Icon(Icons.circle, size: 10, color: isDirtyColor),
+              if (isDirty || hasSavedChanges)
+                Tooltip(
+                  message: isDirty ? "Unsaved changes" : "Changes saved",
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: Icon(
+                      isDirty ? Icons.circle : Icons.circle_outlined,
+                      size: 10,
+                      color: isDirty ? isDirtyColor : hasSavedChangesColor,
+                    ),
+                  ),
                 ),
               if (widget.entry is WemHierarchyEntry)
                 WemPreviewButton(wemPath: (widget.entry as WemHierarchyEntry).path),
@@ -179,7 +187,7 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
 	  );
   }
 
-  Widget setupWrapper({required BuildContext context, required Widget Function(BuildContext context, bool isDirty) builder}) {
+  Widget setupWrapper({required BuildContext context, required Widget Function(BuildContext context, bool isDirty, bool hasSavedChanges) builder}) {
     return setupContextMenu(
       child: optionallySetupSelectable(
         context: context,
@@ -222,12 +230,10 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
     );
   }
 
-  Widget optionallySetupIsDirtyListener({required BuildContext context, required Widget Function(BuildContext context, bool isDirty) builder}) {
-    if (!FS.i.useVirtualFs)
-      return builder(context, false);
+  Widget optionallySetupIsDirtyListener({required BuildContext context, required Widget Function(BuildContext context, bool isDirty, bool hasSavedChanges) builder}) {
     return ChangeNotifierBuilder(
-      notifier: widget.entry.isDirty,
-      builder: (context) => builder(context, widget.entry.isDirty.value),
+      notifiers: [widget.entry.isDirty, widget.entry.hasSavedChanges],
+      builder: (context) => builder(context, widget.entry.isDirty.value, widget.entry.hasSavedChanges.value),
     );
   }
 
