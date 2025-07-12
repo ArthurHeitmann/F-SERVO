@@ -56,7 +56,7 @@ class _TexturesTableConfig with CustomTableConfig {
       if (FS.i.useVirtualFs) ...[
         10,
       ] else ...[
-        2, 12, 1,
+        2, 12, 2,
       ],
       2, 2, 2,
       if (texData.hasAnySimpleModeFlags)

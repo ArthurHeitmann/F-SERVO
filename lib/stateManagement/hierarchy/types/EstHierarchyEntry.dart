@@ -2,12 +2,7 @@
 import '../../Property.dart';
 import '../HierarchyEntryTypes.dart';
 
-class EstHierarchyEntry extends GenericFileHierarchyEntry {
+class EstHierarchyEntry extends FileHierarchyEntry {
   EstHierarchyEntry(StringProp name, String path)
       : super(name, path, false, true, priority: 5);
-
-  @override
-  HierarchyEntry clone() {
-    return EstHierarchyEntry(name.takeSnapshot() as StringProp, path);
-  }
 }

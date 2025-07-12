@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 
 import '../../../fileTypeUtils/ctx/ctxRepacker.dart';
 import '../../Property.dart';
-import '../../undoable.dart';
 import '../HierarchyEntryTypes.dart';
 
 class CtxHierarchyEntry extends ExtractableHierarchyEntry {
@@ -29,24 +28,5 @@ class CtxHierarchyEntry extends ExtractableHierarchyEntry {
       ...getActions(),
       ...super.getContextMenuActions(),
     ];
-  }
-
-  @override
-  Undoable takeSnapshot() {
-    var entry = CtxHierarchyEntry(name, path, extractedPath);
-    entry.overrideUuid(uuid);
-    entry.isSelected.value = isSelected.value;
-    entry.isCollapsed.value = isCollapsed.value;
-    entry.replaceWith(children.map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
-    return entry;
-  }
-
-  @override
-  void restoreWith(Undoable snapshot) {
-    var entry = snapshot as HierarchyEntry;
-    name.restoreWith(entry.name);
-    isSelected.value = entry.isSelected.value;
-    isCollapsed.value = entry.isCollapsed.value;
-    updateOrReplaceWith(entry.children.toList(), (entry) => entry.takeSnapshot() as HierarchyEntry);
   }
 }

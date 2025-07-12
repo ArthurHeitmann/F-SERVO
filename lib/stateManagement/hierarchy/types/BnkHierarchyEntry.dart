@@ -13,12 +13,15 @@ import '../../../utils/utils.dart';
 import '../../../widgets/misc/wwiseProjectGeneratorPopup.dart';
 import '../../Property.dart';
 import '../../openFiles/types/WemFileData.dart';
-import '../../undoable.dart';
 import '../HierarchyEntryTypes.dart';
 import 'WaiHierarchyEntries.dart';
 import '../../../fileSystem/FileSystem.dart';
 
-class BnkHierarchyEntry extends GenericFileHierarchyEntry {
+mixin _Cloneable on HierarchyEntry {
+  HierarchyEntry clone();
+}
+
+class BnkHierarchyEntry extends FileHierarchyEntry with _Cloneable {
   final String extractedPath;
   final BnkFile bnk;
 
@@ -590,7 +593,7 @@ class BnkHierarchyEntry extends GenericFileHierarchyEntry {
   }
 }
 
-class BnkSubCategoryParentHierarchyEntry extends HierarchyEntry {
+class BnkSubCategoryParentHierarchyEntry extends HierarchyEntry with _Cloneable {
   final bool isFolder;
 
   BnkSubCategoryParentHierarchyEntry(String name, { bool isCollapsed = false, this.isFolder = false })
@@ -599,21 +602,14 @@ class BnkSubCategoryParentHierarchyEntry extends HierarchyEntry {
   }
 
   @override
-  Undoable takeSnapshot() {
+  HierarchyEntry clone() {
     var entry = BnkSubCategoryParentHierarchyEntry(name.value);
     entry.overrideUuid(uuid);
     entry.isSelected.value = isSelected.value;
     entry.isCollapsed.value = isCollapsed.value;
-    entry.replaceWith(children.map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
+    entry.clear();
+    entry.addAll(children.map((child) => child is _Cloneable ? child.clone() : child));
     return entry;
-  }
-
-  @override
-  void restoreWith(Undoable snapshot) {
-    var entry = snapshot as HierarchyEntry;
-    isSelected.value = entry.isSelected.value;
-    isCollapsed.value = entry.isCollapsed.value;
-    updateOrReplaceWith(entry.children.toList(), (entry) => entry.takeSnapshot() as HierarchyEntry);
   }
 
   @override
@@ -621,13 +617,13 @@ class BnkSubCategoryParentHierarchyEntry extends HierarchyEntry {
     if (uniqueChildren && child is BnkHircHierarchyEntry) {
       child.usages++;
       if (child.usages > 1)
-        child = child.takeSnapshot() as BnkHircHierarchyEntry;
+        child = (child as _Cloneable).clone();
     }
     super.add(child);
   }
 }
 
-class BnkHircHierarchyEntry extends GenericFileHierarchyEntry {
+class BnkHircHierarchyEntry extends FileHierarchyEntry with _Cloneable {
   static const nonCollapsibleTypes = { "WEM", "Group Entry", "Game Parameter", "State" };
   static const openableTypes = { "MusicPlaylist", "WEM" };
   final String type;
@@ -657,7 +653,7 @@ class BnkHircHierarchyEntry extends GenericFileHierarchyEntry {
     if (uniqueChildren && child is BnkHircHierarchyEntry) {
       child.usages++;
       if (child.usages > 1)
-        child = child.takeSnapshot() as BnkHircHierarchyEntry;
+        child = (child as _Cloneable).clone();
     }
     super.add(child);
   }

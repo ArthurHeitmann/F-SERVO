@@ -13,7 +13,6 @@ import '../../Property.dart';
 import '../../changesExporter.dart';
 import '../../events/statusInfo.dart';
 import '../../preferencesData.dart';
-import '../../undoable.dart';
 import '../FileHierarchy.dart';
 import '../HierarchyEntryTypes.dart';
 import 'PakHierarchyEntry.dart';
@@ -27,25 +26,6 @@ class DatHierarchyEntry extends ExtractableHierarchyEntry {
 
   DatHierarchyEntry(StringProp name, String path, String extractedPath, {this.srcDatExists = true})
       : super(name, path, extractedPath, true, false, priority: 1000);
-
-  @override
-  Undoable takeSnapshot() {
-    var entry = DatHierarchyEntry(name.takeSnapshot() as StringProp, path, extractedPath);
-    entry.overrideUuid(uuid);
-    entry.isSelected.value = isSelected.value;
-    entry.isCollapsed.value = isCollapsed.value;
-    entry.replaceWith(children.map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
-    return entry;
-  }
-
-  @override
-  void restoreWith(Undoable snapshot) {
-    var entry = snapshot as DatHierarchyEntry;
-    name.restoreWith(entry.name);
-    isSelected.value = entry.isSelected.value;
-    isCollapsed.value = entry.isCollapsed.value;
-    updateOrReplaceWith(entry.children.toList(), (entry) => entry.takeSnapshot() as HierarchyEntry);
-  }
 
   Future<void> loadChildren(List<String>? datFilePaths) async {
     var existingChildren = openHierarchyManager

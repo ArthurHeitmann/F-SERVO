@@ -8,18 +8,13 @@ import '../../../utils/utils.dart';
 import '../../Property.dart';
 import '../HierarchyEntryTypes.dart';
 
-class BxmHierarchyEntry extends GenericFileHierarchyEntry {
+class BxmHierarchyEntry extends FileHierarchyEntry {
   final String xmlPath;
 
   BxmHierarchyEntry(StringProp name, String path, {String? xmlPath})
       : xmlPath = xmlPath ?? "$path.xml",
         super(name, path, false, true, priority: 10) {
     supportsVsCodeEditing = true;
-  }
-
-  @override
-  HierarchyEntry clone() {
-    return BxmHierarchyEntry(name.takeSnapshot() as StringProp, path);
   }
 
   Future<void> toXml() async {

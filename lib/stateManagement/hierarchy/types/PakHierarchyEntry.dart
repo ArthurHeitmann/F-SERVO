@@ -91,26 +91,6 @@ class PakHierarchyEntry extends ExtractableHierarchyEntry {
   }
 
   @override
-  Undoable takeSnapshot() {
-    var snapshot = PakHierarchyEntry(name.takeSnapshot() as StringProp, path, extractedPath);
-    snapshot.overrideUuid(uuid);
-    snapshot.isSelected.value = isSelected.value;
-    snapshot.isCollapsed.value = isCollapsed.value;
-    snapshot._flatGroups.addAll(_flatGroups);
-    snapshot.replaceWith(children.map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
-    return snapshot;
-  }
-
-  @override
-  void restoreWith(Undoable snapshot) {
-    var entry = snapshot as PakHierarchyEntry;
-    name.restoreWith(entry.name);
-    isSelected.value = entry.isSelected.value;
-    isCollapsed.value = entry.isCollapsed.value;
-    updateOrReplaceWith(entry.children.toList(), (obj) => obj.takeSnapshot() as HierarchyEntry);
-  }
-
-  @override
   List<HierarchyEntryAction> getActions() {
     return [
       HierarchyEntryAction(
@@ -209,26 +189,6 @@ class HapGroupHierarchyEntry extends FileHierarchyEntry {
     countProp.value -= 1;
 
     openHierarchyManager.removeAny(this);
-  }
-
-  @override
-  Undoable takeSnapshot() {
-    var snapshot = HapGroupHierarchyEntry(name.takeSnapshot() as StringProp, prop.takeSnapshot() as XmlProp);
-    snapshot.overrideUuid(uuid);
-    snapshot.isSelected.value = isSelected.value;
-    snapshot.isCollapsed.value = isCollapsed.value;
-    snapshot.replaceWith(children.map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
-    return snapshot;
-  }
-
-  @override
-  void restoreWith(Undoable snapshot) {
-    var entry = snapshot as HapGroupHierarchyEntry;
-    name.restoreWith(entry.name);
-    isSelected.value = entry.isSelected.value;
-    isCollapsed.value = entry.isCollapsed.value;
-    prop.restoreWith(entry.prop);
-    updateOrReplaceWith(entry.children.toList(), (obj) => obj.takeSnapshot() as HierarchyEntry);
   }
 
   @override

@@ -19,7 +19,6 @@ import '../listNotifier.dart';
 import '../openFiles/openFileTypes.dart';
 import '../openFiles/openFilesManager.dart';
 import '../preferencesData.dart';
-import '../undoable.dart';
 import 'FileHierarchy.dart';
 import 'types/DatHierarchyEntry.dart';
 import 'types/PakHierarchyEntry.dart';
@@ -57,14 +56,6 @@ mixin HierarchyEntryBase implements Disposable {
 
   void clear() {
     _children.clear();
-  }
-
-  void replaceWith(List<HierarchyEntry> newChildren) {
-    _children.replaceWith(newChildren);
-  }
-
-  void updateOrReplaceWith(List<HierarchyEntry> newChildren, HierarchyEntry Function(Undoable) copy) {
-    _children.updateOrReplaceWith(newChildren, copy);
   }
 
   void sortChildren([int Function(HierarchyEntry, HierarchyEntry)? compare]) {
@@ -122,7 +113,7 @@ mixin HierarchyEntryBase implements Disposable {
   }
 }
 
-abstract class HierarchyEntry with HasUuid, Undoable, HierarchyEntryBase {
+abstract class HierarchyEntry with HasUuid, HierarchyEntryBase {
   OptionalFileInfo? optionalFileInfo;
   final StringProp name;
   final bool isSelectable;
@@ -294,31 +285,6 @@ abstract class FileHierarchyEntry extends HierarchyEntry {
     parent.remove(this, dispose: true);
     
     messageLog.add("Removed ${name.value} from $datName");
-  }
-}
-
-abstract class GenericFileHierarchyEntry extends FileHierarchyEntry {
-  GenericFileHierarchyEntry(super.name, super.path, super.isCollapsible, super.isOpenable, { super.priority = 1 });
-  
-  HierarchyEntry clone();
-
-  @override
-  Undoable takeSnapshot() {
-    var entry = clone();
-    entry.overrideUuid(uuid);
-    entry.isSelected.value = isSelected.value;
-    entry.isCollapsed.value = isCollapsed.value;
-    entry.optionalFileInfo = optionalFileInfo;
-    entry.replaceWith(children.map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
-    return entry;
-  }
-
-  @override
-  void restoreWith(Undoable snapshot) {
-    var entry = snapshot as HierarchyEntry;
-    isSelected.value = entry.isSelected.value;
-    isCollapsed.value = entry.isCollapsed.value;
-    updateOrReplaceWith(entry.children.toList(), (entry) => entry.takeSnapshot() as HierarchyEntry);
   }
 }
 

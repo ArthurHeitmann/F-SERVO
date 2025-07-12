@@ -9,7 +9,6 @@ import '../../../fileTypeUtils/yax/xmlToYax.dart';
 import '../../../utils/utils.dart';
 import '../../Property.dart';
 import '../../openFiles/openFilesManager.dart';
-import '../../undoable.dart';
 import '../FileHierarchy.dart';
 import '../HierarchyEntryTypes.dart';
 
@@ -60,30 +59,6 @@ class XmlScriptHierarchyEntry extends FileHierarchyEntry {
 
     String? secondaryName = tryToTranslate(hapName.value);
     areasManager.openFile(path, secondaryName: secondaryName, optionalInfo: optionalFileInfo);
-  }
-
-  @override
-  Undoable takeSnapshot() {
-    var snapshot = XmlScriptHierarchyEntry(name.takeSnapshot() as StringProp, path);
-    snapshot.overrideUuid(uuid);
-    snapshot.isSelected.value = isSelected.value;
-    snapshot.isCollapsed.value = isCollapsed.value;
-    snapshot._hasReadMeta = _hasReadMeta;
-    snapshot.hapName.value = hapName.value;
-    snapshot.groupId = groupId;
-    snapshot.replaceWith(children.map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
-    return snapshot;
-  }
-
-  @override
-  void restoreWith(Undoable snapshot) {
-    var entry = snapshot as XmlScriptHierarchyEntry;
-    name.restoreWith(entry.name);
-    isSelected.value = entry.isSelected.value;
-    isCollapsed.value = entry.isCollapsed.value;
-    _hasReadMeta = entry._hasReadMeta;
-    hapName.value = entry.hapName.value;
-    updateOrReplaceWith(entry.children.toList(), (obj) => obj.takeSnapshot() as HierarchyEntry);
   }
 
   @override

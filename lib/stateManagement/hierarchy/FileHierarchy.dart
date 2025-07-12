@@ -34,7 +34,6 @@ import '../openFiles/types/WaiFileData.dart';
 import '../openFiles/types/WemFileData.dart';
 import '../openFiles/types/xml/xmlProps/xmlProp.dart';
 import '../preferencesData.dart';
-import '../undoable.dart';
 import 'HierarchyEntryTypes.dart';
 import 'types/BnkHierarchyEntry.dart';
 import 'types/BxmHierarchyEntry.dart';
@@ -57,7 +56,7 @@ import 'types/XmlScriptHierarchyEntry.dart';
 import '../../fileSystem/FileSystem.dart';
 
 
-class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements Disposable {
+class OpenHierarchyManager with HasUuid, HierarchyEntryBase implements Disposable {
   final ValueNotifier<HierarchyEntry?> _selectedEntry = ValueNotifier(null);
   final StringProp search = StringProp("", fileId: null);
   ValueListenable<HierarchyEntry?> get selectedEntry => _selectedEntry;
@@ -78,7 +77,7 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
   }
 
   HierarchyEntryBase parentOf(HierarchyEntryBase entry) {
-    return (findRecWhere((e) => e.children.contains(entry)) ?? this) as HierarchyEntryBase;
+    return findRecWhere((e) => e.children.contains(entry)) ?? this;
   }
 
   Future<HierarchyEntry?> openFile(String filePath, { HierarchyEntry? parent }) async {
@@ -708,25 +707,6 @@ class OpenHierarchyManager with HasUuid, Undoable, HierarchyEntryBase implements
       generateTmpParentMapRec(entry);
     }
     return parentMap;
-  }
-
-  @override
-  Undoable takeSnapshot() {
-    var snapshot = OpenHierarchyManager();
-    snapshot.overrideUuid(uuid);
-    snapshot.replaceWith(children.map((e) => e.takeSnapshot() as HierarchyEntry).toList());
-    snapshot._selectedEntry.value = _selectedEntry.value != null ? _selectedEntry.value?.takeSnapshot() as HierarchyEntry : null;
-    return snapshot;
-  }
-  
-  @override
-  void restoreWith(Undoable snapshot) {
-    var entry = snapshot as OpenHierarchyManager;
-    updateOrReplaceWith(entry.children.toList(), (obj) => obj.takeSnapshot() as HierarchyEntry);
-    if (entry.selectedEntry.value != null)
-      setSelectedEntry(findRecWhere((e) => entry.selectedEntry.value!.uuid == e.uuid));
-    else
-      setSelectedEntry(null);
   }
 
   @override

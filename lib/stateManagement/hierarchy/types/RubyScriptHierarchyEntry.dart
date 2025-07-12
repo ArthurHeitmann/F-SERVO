@@ -7,7 +7,6 @@ import 'package:path/path.dart';
 import '../../../fileTypeUtils/ruby/pythonRuby.dart';
 import '../../../utils/utils.dart';
 import '../../Property.dart';
-import '../../undoable.dart';
 import '../FileHierarchy.dart';
 import '../HierarchyEntryTypes.dart';
 import 'DatHierarchyEntry.dart';
@@ -16,23 +15,6 @@ import '../../../fileSystem/FileSystem.dart';
 class RubyScriptGroupHierarchyEntry extends HierarchyEntry {
   RubyScriptGroupHierarchyEntry()
     : super(StringProp("Ruby Scripts", fileId: null), false, true, false, priority: 100);
-
-  @override
-  Undoable takeSnapshot() {
-    var snapshot = RubyScriptGroupHierarchyEntry();
-    snapshot.overrideUuid(uuid);
-    snapshot.isSelected.value = isSelected.value;
-    snapshot.isCollapsed.value = isCollapsed.value;
-    snapshot.replaceWith(children.map((entry) => entry.takeSnapshot() as HierarchyEntry).toList());
-    return snapshot;
-  }
-
-  @override
-  void restoreWith(Undoable snapshot) {
-    var entry = snapshot as RubyScriptGroupHierarchyEntry;
-    isCollapsed.value = entry.isCollapsed.value;
-    updateOrReplaceWith(entry.children.toList(), (obj) => obj.takeSnapshot() as HierarchyEntry);
-  }
 
   Future<void> addNewRubyScript(String datPath, String datExtractedPath) async {
     var datInfoPath = join(datExtractedPath, "dat_info.json");
@@ -82,15 +64,10 @@ Fiber.new() { proxy.update() }
   }
 }
 
-class RubyScriptHierarchyEntry extends GenericFileHierarchyEntry {
+class RubyScriptHierarchyEntry extends FileHierarchyEntry {
   RubyScriptHierarchyEntry(StringProp name, String path)
       : super(name, path, false, true) {
     supportsVsCodeEditing = true;
-  }
-
-  @override
-  HierarchyEntry clone() {
-    return RubyScriptHierarchyEntry(name.takeSnapshot() as StringProp, path);
   }
 
   @override
