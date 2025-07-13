@@ -42,7 +42,7 @@ class _AudioFileEditorState extends State<AudioFileEditor> {
       if (!mounted)
         return;
       _viewEnd.value = widget.file.resource!.preview?.totalSamples ?? 0;
-      if (FS.i.useVirtualFs)
+      if (FS.i.isVirtual(widget.file.resource!.wavPath))
         await _player!.setSourceBytes(await FS.i.read(widget.file.resource!.wavPath));
       else
         await _player!.setSourceDeviceFile(widget.file.resource!.wavPath);

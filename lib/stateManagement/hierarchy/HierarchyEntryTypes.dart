@@ -297,7 +297,7 @@ abstract class ExtractableHierarchyEntry extends FileHierarchyEntry {
   @override
   List<HierarchyEntryAction> getContextMenuActions() {
     return [
-      if (!FS.i.useVirtualFs)
+      if (!FS.i.isVirtual(extractedPath))
         HierarchyEntryAction(
           name: "Set search path",
           icon: Icons.search,

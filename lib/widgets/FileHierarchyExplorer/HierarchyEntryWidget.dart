@@ -1,11 +1,11 @@
 
 import 'package:flutter/material.dart';
 
-import '../../fileSystem/FileSystem.dart';
 import '../../stateManagement/hierarchy/FileHierarchy.dart';
 import '../../stateManagement/hierarchy/HierarchyEntryTypes.dart';
 import '../../stateManagement/hierarchy/types/BnkHierarchyEntry.dart';
 import '../../stateManagement/hierarchy/types/BxmHierarchyEntry.dart';
+import '../../stateManagement/hierarchy/types/CpkHierarchyEntry.dart';
 import '../../stateManagement/hierarchy/types/CtxHierarchyEntry.dart';
 import '../../stateManagement/hierarchy/types/DatHierarchyEntry.dart';
 import '../../stateManagement/hierarchy/types/EstHierarchyEntry.dart';
@@ -42,7 +42,7 @@ class HierarchyEntryWidget extends ChangeNotifierWidget {
 class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
   Icon? getEntryIcon(BuildContext context) {
     var iconColor = getTheme(context).colorOfFiletype(widget.entry);
-    if (widget.entry is DatHierarchyEntry || widget.entry is WaiFolderHierarchyEntry)
+    if (widget.entry is DatHierarchyEntry || widget.entry is WaiFolderHierarchyEntry || widget.entry is CpkHierarchyEntry || widget.entry is CpkFolderHierarchyEntry)
       return Icon(Icons.folder, color: iconColor, size: 15);
     else if (widget.entry is PakHierarchyEntry || widget.entry is WspHierarchyEntry || widget.entry is CtxHierarchyEntry)
       return Icon(Icons.source, color: iconColor, size: 15);
@@ -263,6 +263,8 @@ class _HierarchyEntryState extends ChangeNotifierState<HierarchyEntryWidget> {
   }
 
   void toggleCollapsed() {
+    if (widget.entry is DatHierarchyEntry)
+      (widget.entry as DatHierarchyEntry).allowLoadingChildren = true;
     widget.entry.isCollapsed.value = !widget.entry.isCollapsed.value;
   }
 

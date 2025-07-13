@@ -32,7 +32,22 @@ Future<void> wemToWav(String wemPath, String wavPath) async {
 
 Future<void> _wemToWavDesktop(String wemPath, String wavPath) async {
   var vgmStreamPath = join(assetsDir!, "bins", "vgmStream", "vgmStream.exe");
-  var process = await Process.run(vgmStreamPath, ["-o", wavPath, wemPath]);
+  ProcessResult process;
+  if (FS.i.isVirtual(wemPath) || FS.i.isVirtual(wavPath)) {
+    var tmpDir = await FS.i.createTempDirectory("wemToWav");
+    try {
+      String tmpWem = join(tmpDir, "tmp.wem");
+      String tmpWav = join(tmpDir, "tmp.wav");
+      await FS.i.copyFile(wemPath, tmpWem);
+      process = await Process.run(vgmStreamPath, ["-o", tmpWav, tmpWem]);
+      if (await FS.i.existsFile(tmpWav))
+        await FS.i.copyFile(tmpWav, wavPath);
+    } finally {
+      await FS.i.deleteDirectory(tmpDir, recursive: true);
+    }
+  } else {
+    process = await Process.run(vgmStreamPath, ["-o", wavPath, wemPath]);
+  }
   if (process.exitCode != 0) {
     print("stdout: ${process.stdout}");
     print("stderr: ${process.stderr}");

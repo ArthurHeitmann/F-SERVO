@@ -40,7 +40,7 @@ class _WemPreviewButtonState extends State<WemPreviewButton> {
         if (mounted)
           setState(() {});
       });
-      if (FS.i.useVirtualFs)
+      if (FS.i.isVirtual(resource!.wavPath))
         await player!.setSourceBytes(await FS.i.read(resource!.wavPath));
       else
         await player!.setSourceDeviceFile(resource!.wavPath);

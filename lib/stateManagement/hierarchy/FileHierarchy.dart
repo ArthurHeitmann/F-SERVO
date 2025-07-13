@@ -6,16 +6,19 @@ import 'package:path/path.dart';
 import 'package:tuple/tuple.dart';
 import 'package:xml/xml.dart';
 
+import '../../fileSystem/VirtualFileSystem.dart';
 import '../../fileTypeUtils/audio/bnkExtractor.dart';
 import '../../fileTypeUtils/audio/bnkIO.dart';
 import '../../fileTypeUtils/audio/waiExtractor.dart';
 import '../../fileTypeUtils/bxm/bxmReader.dart';
+import '../../fileTypeUtils/cpk/cpk.dart';
 import '../../fileTypeUtils/cpk/cpkExtractor.dart';
 import '../../fileTypeUtils/ctx/ctxExtractor.dart';
 import '../../fileTypeUtils/dat/datExtractor.dart';
 import '../../fileTypeUtils/pak/pakExtractor.dart';
 import '../../fileTypeUtils/ruby/pythonRuby.dart';
 import '../../fileTypeUtils/utils/ByteDataWrapper.dart';
+import '../../fileTypeUtils/utils/ByteDataWrapperRA.dart';
 import '../../fileTypeUtils/xml/xmlExtension.dart';
 import '../../fileTypeUtils/yax/xmlToYax.dart';
 import '../../fileTypeUtils/yax/yaxToXml.dart';
@@ -37,12 +40,14 @@ import '../preferencesData.dart';
 import 'HierarchyEntryTypes.dart';
 import 'types/BnkHierarchyEntry.dart';
 import 'types/BxmHierarchyEntry.dart';
+import 'types/CpkHierarchyEntry.dart';
 import 'types/CtxHierarchyEntry.dart';
 import 'types/DatHierarchyEntry.dart';
 import 'types/EstHierarchyEntry.dart';
 import 'types/FtbHierarchyEntry.dart';
 import 'types/McdHierarchyEntry.dart';
 import 'types/PakHierarchyEntry.dart';
+import 'types/PassiveFileHierarchyEntry.dart';
 import 'types/RubyScriptHierarchyEntry.dart';
 import 'types/SaveSlotDataHierarchyEntry.dart';
 import 'types/SmdHierarchyEntry.dart';
@@ -135,14 +140,14 @@ class OpenHierarchyManager with HasUuid, HierarchyEntryBase implements Disposabl
           [".ftb"],
           () async => openGenericFile<FtbHierarchyEntry>(filePath, parent, (n ,p) => FtbHierarchyEntry(n, p))
         ),
-        Tuple2(
-          [".wai"],
-          () async => await openWaiFile(filePath)
-        ),
-        Tuple2(
-          [".wsp"],
-          () async => openWspFile(filePath)
-        ),
+        // Tuple2(
+        //   [".wai"],
+        //   () async => await openWaiFile(filePath)
+        // ),
+        // Tuple2(
+        //   [".wsp"],
+        //   () async => openWspFile(filePath)
+        // ),
         Tuple2(
           [".bnk"],
           () async => openBnkFile(filePath, parent: parent)
@@ -513,10 +518,81 @@ class OpenHierarchyManager with HasUuid, HierarchyEntryBase implements Disposabl
   }
   
   Future<HierarchyEntry?> openCpkFile(String filePath, {HierarchyEntry? parent}) async {
-    var extractedDir = await extractCpkWithPrompt(filePath);
-    if (extractedDir != null)
-      revealFileInExplorer(extractedDir);
-    return null;
+    if (FS.i.useVirtualFs) {
+      var cpkFile = await ByteDataWrapperRA.fromFile(filePath);
+      var cpkEntry = CpkHierarchyEntry(StringProp(basename(filePath), fileId: null), filePath, cpkFile);
+      if (parent != null)
+        parent.add(cpkEntry);
+      else
+        add(cpkEntry);
+      
+      var cpk = await Cpk.read(cpkFile);
+      var cpkDir = "\$opened${VirtualFileSystem.separator}${basename(filePath)}";
+      FS.i.associatedFileWith(filePath, cpkDir);
+      unawaited((() async {
+        HierarchyEntry getOrMakeFolder(HierarchyEntry parent, List<String> path) {
+          if (path.isEmpty)
+            return parent;
+          var name = path[0];
+          var folder = parent.children
+            .whereType<CpkFolderHierarchyEntry>()
+            .where((e) => e.name.value == name)
+            .firstOrNull;
+          if (folder == null) {
+            folder = CpkFolderHierarchyEntry(StringProp(name, fileId: null));
+            parent.add(folder);
+          }
+          if (path.length == 1)
+            return folder;
+          return getOrMakeFolder(folder, path.sublist(1));
+        }
+        Future<void> extractDat(CpkFile datFile,String datPath) async {
+          var fileBytes = await datFile.readData(cpkFile);
+          await FS.i.write(datPath, fileBytes);
+          await extractDatFiles(datPath);
+        }
+        for (var file in cpk.files) {
+          var dir = join(cpkDir, file.path);
+          await FS.i.createDirectory(dir);
+          var filePath = join(dir, file.name);
+          var folderEntry = getOrMakeFolder(cpkEntry, file.path.split(VirtualFileSystem.separator).where((p) => p.isNotEmpty).toList());
+          if (strEndsWithDat(file.name)) {
+            var extractedDir = join(dir, datSubExtractDir, file.name);
+            var datEntry = DatHierarchyEntry(StringProp(file.name, fileId: null), filePath, extractedDir);
+            datEntry.beforeLoadChildren = () => extractDat(file, filePath);
+            datEntry.needsToLoadChildren = true;
+            datEntry.isCollapsed.value = true;
+            folderEntry.add(datEntry);
+          } else {
+            var fileBytes = await file.readData(cpkFile);
+            await FS.i.write(filePath, fileBytes);
+            var newEntry = await openFile(filePath, parent: folderEntry);
+            if (newEntry == null) {
+              newEntry = PassiveFileHierarchyEntry(StringProp(file.name, fileId: null), filePath);
+              folderEntry.add(newEntry);
+            }
+          }
+        }
+        void sortEntry(HierarchyEntry e) {
+          e.sortChildren((a, b) {
+            if (a.priority != b.priority)
+              return b.priority - a.priority;
+            return a.name.value.toLowerCase().compareTo(b.name.value.toLowerCase());
+          });
+          for (var child in e.children) {
+            sortEntry(child);
+          }
+        }
+        sortEntry(cpkEntry);
+      })());
+
+      return cpkEntry;
+    } else {
+      var extractedDir = await extractCpkWithPrompt(filePath);
+      if (extractedDir != null)
+        revealFileInExplorer(extractedDir);
+      return null;
+    }
   }
   
   Future<HierarchyEntry?> openCtxFile(String filePath, {HierarchyEntry? parent}) async {

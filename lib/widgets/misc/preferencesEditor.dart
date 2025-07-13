@@ -151,6 +151,16 @@ class _PreferencesEditorState extends ChangeNotifierState<PreferencesEditor> {
           BoolPropSwitch(prop: widget.prefs.showAllDatFiles!),
         ],
       ),
+      if (!FS.i.needsVirtualFs) ...[
+        const SizedBox(height: 10,),
+        Row(
+          children: [
+            const Text("Load files in memory only (no extraction to disk)", overflow: TextOverflow.ellipsis,),
+            BoolPropSwitch(prop: widget.prefs.useVirtualFs!),
+          ],
+        ),
+
+      ],
       const SizedBox(height: 40,),
       const Text("Text editor:", style: sectionHeaderStyle,),
       const SizedBox(height: 10,),

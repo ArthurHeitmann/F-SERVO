@@ -1,4 +1,5 @@
 
+import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -10,6 +11,7 @@ class VirtualFileSystem {
   final Map<String, VirtualEntity> _entities = {};
   final _random = Random();
   static const _tempDir = "\$";
+  static final separator = Platform.pathSeparator;
 
   VirtualFileSystem() {
     _entities[root.name] = root;
@@ -74,7 +76,7 @@ class VirtualFileSystem {
   }
 
   String createTempFolder(String prefix) {
-    var path = "$_tempDir/${prefix}_${_random.nextInt(1000000).toRadixString(16)}";
+    var path = "$_tempDir$separator${prefix}_${_random.nextInt(1000000).toRadixString(16)}";
     createFolder(path);
     return path;
   }
@@ -83,11 +85,11 @@ class VirtualFileSystem {
     path = _normalizePath(path);
     _entities.remove(path);
     var (parts, name) = _splitPath(path);
-    var folder = _entities[parts.join("/")];
+    var folder = _entities[parts.join(separator)];
     if (folder == null)
-      throw Exception("Folder not found: ${parts.join("/")}");
+      throw Exception("Folder not found: ${parts.join(separator)}");
     if (folder is! VirtualFolder)
-      throw Exception("${parts.join("/")} is a file, not a folder");
+      throw Exception("${parts.join(separator)} is a file, not a folder");
     folder.children.removeWhere((e) => e.name == name);
   }
 
@@ -99,7 +101,7 @@ class VirtualFileSystem {
     if (folder is! VirtualFolder)
       throw Exception("$path is a file, not a folder");
     if (recursive) {
-      for (var child in folder.children) {
+      for (var child in folder.children.toList()) {
         if (child is VirtualFile) {
           deleteFile(child.path);
         } else if (child is VirtualFolder) {
@@ -190,7 +192,7 @@ class VirtualFileSystem {
           throw Exception("$part is a file, not a folder");
         current = existing;
       } else {
-        var path = parts.sublist(0, i + 1).join("/");
+        var path = parts.sublist(0, i + 1).join(separator);
         var newFolder = VirtualFolder(part, path, []);
         current.children.add(newFolder);
         _entities[path] = newFolder;
@@ -208,17 +210,17 @@ class VirtualFileSystem {
   }
 
   List<String> _split(String path) {
-    return path.split("/").where((e) => e.isNotEmpty).toList();
+    return path.split(separator).where((e) => e.isNotEmpty).toList();
   }
 
   String _parentPath(String path) {
     var parts = _split(path);
     if (parts.isEmpty) return root.name;
-    return parts.sublist(0, parts.length - 1).join("/");
+    return parts.sublist(0, parts.length - 1).join(separator);
   }
 
   String _normalizePath(String path) {
-    path = path.split("/").where((e) => e.isNotEmpty).map((e) => e.trim()).join("/");
+    path = path.split(separator).where((e) => e.isNotEmpty).map((e) => e.trim()).join(separator);
     if (!path.startsWith(firstChar)) {
       path = firstChar + path;
     }

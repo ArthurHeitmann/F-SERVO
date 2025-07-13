@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../../stateManagement/hierarchy/HierarchyEntryTypes.dart';
 import '../../stateManagement/hierarchy/types/BnkHierarchyEntry.dart';
+import '../../stateManagement/hierarchy/types/CpkHierarchyEntry.dart';
 import '../../stateManagement/hierarchy/types/CtxHierarchyEntry.dart';
 import '../../stateManagement/hierarchy/types/DatHierarchyEntry.dart';
 import '../../stateManagement/hierarchy/types/PakHierarchyEntry.dart';
@@ -257,7 +258,7 @@ class NierThemeExtension extends ThemeExtension<NierThemeExtension> {
   Color colorOfFiletype(HierarchyEntry entry) {
     if (entry is XmlScriptHierarchyEntry || entry is RubyScriptHierarchyEntry || entry is TmdHierarchyEntry || entry is TmdHierarchyEntry)
       return filetypeDocColor!;
-    if (entry is PakHierarchyEntry || entry is WspHierarchyEntry || entry is BnkHierarchyEntry || entry is CtxHierarchyEntry)
+    if (entry is PakHierarchyEntry || entry is WspHierarchyEntry || entry is BnkHierarchyEntry || entry is CtxHierarchyEntry || entry is CpkHierarchyEntry || entry is CpkFolderHierarchyEntry)
       return filetypePakColor!;
     if (entry is DatHierarchyEntry || entry is WaiFolderHierarchyEntry)
       return filetypeDatColor!;

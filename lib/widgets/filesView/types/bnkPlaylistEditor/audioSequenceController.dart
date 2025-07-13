@@ -45,7 +45,7 @@ class ClipPlaybackController extends PlaybackController {
   ClipPlaybackController(this.clip, [super.onEnd]) {
     _duration = clip.srcDuration.value - clip.beginTrim.value + clip.endTrim.value.toDouble();
     Future<void> loadSrcFuture;
-    if (FS.i.useVirtualFs)
+    if (FS.i.isVirtual(clip.resource!.wavPath))
       loadSrcFuture = FS.i.read(clip.resource!.wavPath).then((bytes) => _player.setSourceBytes(bytes));
     else
       loadSrcFuture = _player.setSourceDeviceFile(clip.resource!.wavPath);

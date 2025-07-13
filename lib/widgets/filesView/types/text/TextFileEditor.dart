@@ -37,11 +37,13 @@ class _TextFileEditorState extends State<TextFileEditor> {
     useMonacoEditor = prefs.useMonacoEditor!.value;
     if (isDesktop) {
       webController = wv.WebviewController();
-      webController!.initialize().whenComplete(() {
-        isInitializing = false;
-        webController!.setBackgroundColor(Colors.transparent);
-        onComponentReady();
-      });
+      webController!.initialize()
+        .onError((e, st) => print("$e\n$st"))
+        .whenComplete(() {
+          isInitializing = false;
+          webController?.setBackgroundColor(Colors.transparent);
+          onComponentReady();
+        });
     }
     else {
       webController = null;

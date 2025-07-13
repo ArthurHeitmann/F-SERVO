@@ -102,6 +102,7 @@ class PreferencesData extends OpenFileData {
   SavableProp<List>? lastHierarchyFiles;
   SavableProp<int>? lastColorPickerMode;
   SavableProp<bool>? showAllDatFiles;
+  SavableProp<bool>? useVirtualFs;
 
   PreferencesData._() 
     : prefsFuture = SharedPreferences.getInstance(),
@@ -156,6 +157,10 @@ class PreferencesData extends OpenFileData {
     lastHierarchyFiles = SavableProp("lastHierarchyFiles", _prefs!, []);
     lastColorPickerMode = SavableProp("lastColorPickerMode", _prefs!, 0);
     showAllDatFiles = SavableProp("showAllDatFiles", _prefs!, false);
+    useVirtualFs = SavableProp("useVirtualFs", _prefs!, false);
+    useVirtualFs!.addListener(() => FS.i.useVirtualFs = useVirtualFs!.value);
+    FS.i.useVirtualFs = useVirtualFs!.value;
+
     unawaited(_tryAutoInitPaths());
     await super.load();
     _loadingState = LoadingState.loaded;

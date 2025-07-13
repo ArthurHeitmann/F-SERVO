@@ -40,7 +40,9 @@ class FS {
   }
   
   bool get needsVirtualFs => _platform != _Platform.desktop;
-  bool get useVirtualFs => needsVirtualFs;
+  bool _useVirtualFsOverride = false;
+  bool get useVirtualFs => needsVirtualFs || _useVirtualFsOverride;
+  set useVirtualFs(bool value) => _useVirtualFsOverride = value;
 
   VirtualEntity get virtualRoot => _virtualFs.root;
 
@@ -167,7 +169,7 @@ class FS {
   }
 
   Future<String> createTempDirectory(String prefix) async {
-    if (useVirtualFs) {
+    if (needsVirtualFs) {
       return _virtualFs.createTempFolder(prefix);
     }
     else {
@@ -195,10 +197,16 @@ class FS {
 
   Future<void> copyFile(String oldPath, String newPath) async {
     if (isVirtual(oldPath)) {
-      _virtualFs.copyFile(oldPath, newPath);
+      if (isVirtual(newPath))
+        _virtualFs.copyFile(oldPath, newPath);
+      else
+        await FS.i.write(newPath, await FS.i.read(oldPath));
     }
     else {
-      await File(oldPath).copy(newPath);
+      if (isVirtual(newPath))
+        await FS.i.write(newPath, await FS.i.read(oldPath));
+      else
+        await File(oldPath).copy(newPath);
     }
   }
 
@@ -365,7 +373,7 @@ class FS {
   }
 
   Future<void> unzipBytes(Uint8List bytes, String folder) async {
-    if (FS.i.useVirtualFs) {
+    if (FS.i.isVirtual(folder)) {
       var archive = ZipDecoder().decodeBytes(bytes);
       for (var file in archive.files) {
         var filePath = join(folder, file.name);
@@ -404,7 +412,7 @@ class FS {
       return [];
     List<String> paths;
     if (_platform == _Platform.web) {
-      paths = files.files.map((e) => "\$opened/${e.name}").toList();
+      paths = files.files.map((e) => "\$opened${VirtualFileSystem.separator}${e.name}").toList();
     } else {
       paths = files.paths.whereType<String>().toList();
     }
@@ -488,9 +496,8 @@ class FS {
   }
 
   void releaseFile(String path) async {
-    if (!FS.i.isVirtual(path))
-      return;
-    _virtualFs.deleteFile(path);
+    if (FS.i.isVirtual(path))
+      _virtualFs.deleteFile(path);
     var associated = _associatedFiles[path];
     if (associated != null) {
       for (var otherFile in associated) {

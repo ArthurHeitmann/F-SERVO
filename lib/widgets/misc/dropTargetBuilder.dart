@@ -5,6 +5,7 @@ import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
 
 import '../../fileSystem/FileSystem.dart';
+import '../../fileSystem/VirtualFileSystem.dart';
 import 'indexedStackIsVisible.dart';
 
 class DropTargetBuilder extends StatefulWidget {
@@ -41,7 +42,7 @@ class _DropTargetBuilderState extends State<DropTargetBuilder> {
           return;
         List<String> paths;
         if (FS.i.needsVirtualFs) {
-          paths = details.files.map((f) => "\$opened/${f.name}").toList();
+          paths = details.files.map((f) => "\$opened${VirtualFileSystem.separator}${f.name}").toList();
           for (var (i, file) in details.files.indexed)
             FS.i.registerFile(paths[i], await file.readAsBytes());
         }

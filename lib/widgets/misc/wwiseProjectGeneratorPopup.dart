@@ -163,7 +163,7 @@ class __WwiseProjectGeneratorPopupState extends State<_WwiseProjectGeneratorPopu
         ],
       ),
       const SizedBox(height: 5),
-      if (!FS.i.useVirtualFs) ...[
+      if (!FS.i.needsVirtualFs) ...[
         const Text("Projects save path:"),
         Row(
           children: [
@@ -438,15 +438,15 @@ class __WwiseProjectGeneratorPopupState extends State<_WwiseProjectGeneratorPopu
           if (status.isDone.value)
             ElevatedButton(
               onPressed: () async {
-                if (FS.i.useVirtualFs) {
+                if (FS.i.needsVirtualFs) {
                   await downloadAsZip();
                 }
                 Navigator.pop(context);
               },
-              style: FS.i.useVirtualFs
+              style: FS.i.needsVirtualFs
                 ? getTheme(context).dialogPrimaryButtonStyle
                 : getTheme(context).dialogSecondaryButtonStyle,
-              child: Text(FS.i.useVirtualFs ? "Save" : "Close"),
+              child: Text(FS.i.needsVirtualFs ? "Save" : "Close"),
             ),
         ],
       )
@@ -454,12 +454,12 @@ class __WwiseProjectGeneratorPopupState extends State<_WwiseProjectGeneratorPopu
   }
 
   void generate() async {
-    if (!FS.i.useVirtualFs && !await FS.i.existsDirectory(savePath.value)) {
+    if (!FS.i.needsVirtualFs && !await FS.i.existsDirectory(savePath.value)) {
       showToast("Project save path is invalid");
       return;
     }
-    if (FS.i.useVirtualFs) {
-      if (await FS.i.existsDirectory(savePath.value) && FS.i.isVirtual(savePath.value))
+    if (FS.i.needsVirtualFs) {
+      if (await FS.i.existsDirectory(savePath.value))
         await FS.i.deleteDirectory(savePath.value, recursive: true);
       var tempDir = await FS.i.createTempDirectory("${VirtualFileSystem.firstChar}wwiseProject");
       var projectDir = join(tempDir, projectName.value);

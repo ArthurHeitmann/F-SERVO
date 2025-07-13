@@ -23,11 +23,18 @@ import 'XmlScriptHierarchyEntry.dart';
 class DatHierarchyEntry extends ExtractableHierarchyEntry {
   final bool srcDatExists;
   String? lastExportPath;
+  Future<void> Function()? beforeLoadChildren;
+  bool needsToLoadChildren = false;
+  bool allowLoadingChildren = false;
 
   DatHierarchyEntry(StringProp name, String path, String extractedPath, {this.srcDatExists = true})
-      : super(name, path, extractedPath, true, false, priority: 1000);
+      : super(name, path, extractedPath, true, false, priority: 1000) {
+    isCollapsed.addListener(_firstTimeLoadChildren);
+  }
 
   Future<void> loadChildren(List<String>? datFilePaths) async {
+    await beforeLoadChildren?.call();
+    beforeLoadChildren = null;
     var existingChildren = openHierarchyManager
       .findAllRecWhere((entry) => entry is FileHierarchyEntry && dirname(entry.path) == extractedPath);
     for (var child in existingChildren)
@@ -121,7 +128,7 @@ class DatHierarchyEntry extends ExtractableHierarchyEntry {
     var scriptRelatedClasses = [RubyScriptGroupHierarchyEntry, RubyScriptHierarchyEntry, XmlScriptHierarchyEntry, PakHierarchyEntry];
     var prefs = PreferencesData();
     return [
-      if (!FS.i.useVirtualFs)
+      if (!FS.i.isVirtual(path))
         ...[
           HierarchyEntryAction(
             name: "Repack DAT",
@@ -146,7 +153,7 @@ class DatHierarchyEntry extends ExtractableHierarchyEntry {
         icon: Icons.add,
         action: _addFileToDat,
       ),
-      if (!FS.i.useVirtualFs)
+      if (!FS.i.isVirtual(path))
         HierarchyEntryAction(
           name: "Change packed files",
           icon: Icons.folder_open,
@@ -210,5 +217,20 @@ class DatHierarchyEntry extends ExtractableHierarchyEntry {
     await openHierarchyManager.openFile(newPath, parent: this);
     
     showToast("Added $fileName to ${name.value}");
+  }
+
+  Future<void> _firstTimeLoadChildren() async {
+    if (isCollapsed.value)
+      return;
+    if (!needsToLoadChildren) {
+      isCollapsed.removeListener(_firstTimeLoadChildren);
+      return;
+    }
+    if (!allowLoadingChildren) {
+      isCollapsed.value = true;
+      return;
+    }
+    isCollapsed.removeListener(_firstTimeLoadChildren);
+    await loadChildren(null);
   }
 }
