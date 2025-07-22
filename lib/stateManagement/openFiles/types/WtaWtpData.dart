@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 
+import '../../../fileSystem/ExtractedFilesManager.dart';
 import '../../../fileTypeUtils/wta/wtaExtractor.dart';
 import '../../../fileTypeUtils/wta/wtaReader.dart';
 import '../../../utils/Disposable.dart';
@@ -65,6 +66,7 @@ class WtaWtpData extends OpenFileData {
       String extractDir = join(dttDir ?? datDir, "${basename(path)}_extracted");
       await FS.i.createDirectory(extractDir);
       FS.i.associatedFileWith(path, extractDir);
+      ExtractedFilesManager.i.addExtracted(path, extractDir);
 
       textures?.dispose();
       textures = await WtaWtpTextures.fromWtaWtp(uuid, path, wtpPath, extractDir, isWtb);

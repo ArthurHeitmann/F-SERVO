@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:path/path.dart' as path;
 
+import '../../fileSystem/ExtractedFilesManager.dart';
 import '../../stateManagement/events/statusInfo.dart';
 import '../../utils/utils.dart';
 import '../pak/pakExtractor.dart';
@@ -58,10 +59,7 @@ Future<List<String>> extractDatFiles(String datPath, { bool shouldExtractPakFile
     .generate(header.fileNumber, (index) => 
     bytes.readString(nameLength).split("\u0000")[0]);
 
-  // extract dir is file path --> /nier2blender_extracted/[filename]/
-  var datDir = path.dirname(datPath);
-  var extractDir = path.join(datDir, datSubExtractDir, path.basename(datPath));
-  await FS.i.createDirectory(extractDir);
+  var extractDir = await ExtractedFilesManager.i.getOrMakeExtracted(datPath);
   List<String> filePaths = [];
   for (int i = 0; i < header.fileNumber; i++) {
     bytes.position = fileOffsets[i];

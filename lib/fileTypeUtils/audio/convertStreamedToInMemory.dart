@@ -1,9 +1,8 @@
 
 import 'dart:typed_data';
 
-import 'package:path/path.dart';
-
 import '../../background/wemFilesIndexer.dart';
+import '../../fileSystem/ExtractedFilesManager.dart';
 import '../../main.dart';
 import '../../stateManagement/events/statusInfo.dart';
 import '../../utils/utils.dart';
@@ -67,7 +66,7 @@ Future<void> _convertStreamedToInMemory(String bnkPath, int wemId) async {
   
   _updateUsages(hirc.chunks, prefetchId, sourceId, newId, wemData.length);
 
-  var extractDir = join(dirname(bnkPath), "${basename(bnkPath)}_extracted");
+  var extractDir = await ExtractedFilesManager.i.getOrMakeExtracted(bnkPath);
   await for (var file in FS.i.listFiles(extractDir)) {
     if (file.endsWith(".wem"))
       await FS.i.delete(file);

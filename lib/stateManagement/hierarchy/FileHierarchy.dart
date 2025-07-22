@@ -6,6 +6,7 @@ import 'package:path/path.dart';
 import 'package:tuple/tuple.dart';
 import 'package:xml/xml.dart';
 
+import '../../fileSystem/ExtractedFilesManager.dart';
 import '../../fileSystem/VirtualFileSystem.dart';
 import '../../fileTypeUtils/audio/bnkExtractor.dart';
 import '../../fileTypeUtils/audio/bnkIO.dart';
@@ -213,8 +214,7 @@ class OpenHierarchyManager with HasUuid, HierarchyEntryBase implements Disposabl
 
     // get DAT infos
     var fileName = basename(datPath);
-    var datFolder = dirname(datPath);
-    datExtractDir ??= join(datFolder, datSubExtractDir, fileName);
+    datExtractDir ??= await ExtractedFilesManager.i.getOrMakeExtracted(datPath, createIfMissing: false);
     DatFiles? datFilePaths;
     var srcDatExists = await FS.i.existsFile(datPath);
     if (!await FS.i.existsDirectory(datExtractDir) && srcDatExists) {
@@ -255,8 +255,7 @@ class OpenHierarchyManager with HasUuid, HierarchyEntryBase implements Disposabl
   }
 
   Future<HierarchyEntry> openExtractedDat(String datDirPath, { HierarchyEntry? parent }) {
-    var srcDatDir = dirname(dirname(datDirPath));
-    var srcDatPath = join(srcDatDir, basename(datDirPath));
+    var srcDatPath = ExtractedFilesManager.i.getSourceOf(datDirPath);
     return openDat(srcDatPath, parent: parent, datExtractDir: datDirPath, allowMissingInfoFile: true);
   }
   
@@ -437,10 +436,7 @@ class OpenHierarchyManager with HasUuid, HierarchyEntryBase implements Disposabl
     
     // extract BNK WEMs
     var bnk = BnkFile.read(await ByteDataWrapper.fromFile(bnkPath));
-    var bnkExtractDirName = "${basename(bnkPath)}_extracted";
-    var bnkExtractDir = join(dirname(bnkPath), bnkExtractDirName);
-    if (!await FS.i.existsDirectory(bnkExtractDir))
-      await FS.i.createDirectory(bnkExtractDir);
+    var bnkExtractDir = await ExtractedFilesManager.i.getOrMakeExtracted(bnkPath);
     bool noExtract = false;
     var extractedFile = join(bnkExtractDir, "EXTRACTION_COMPLETED");
     if (await FS.i.existsFile(extractedFile))
@@ -557,7 +553,7 @@ class OpenHierarchyManager with HasUuid, HierarchyEntryBase implements Disposabl
           var filePath = join(dir, file.name);
           var folderEntry = getOrMakeFolder(cpkEntry, file.path.split(VirtualFileSystem.separator).where((p) => p.isNotEmpty).toList());
           if (strEndsWithDat(file.name)) {
-            var extractedDir = join(dir, datSubExtractDir, file.name);
+            var extractedDir = await ExtractedFilesManager.i.getOrMakeExtracted(filePath, createIfMissing: false);
             var datEntry = DatHierarchyEntry(StringProp(file.name, fileId: null), filePath, extractedDir);
             datEntry.beforeLoadChildren = () => extractDat(file, filePath);
             datEntry.needsToLoadChildren = true;
@@ -597,7 +593,7 @@ class OpenHierarchyManager with HasUuid, HierarchyEntryBase implements Disposabl
   
   Future<HierarchyEntry?> openCtxFile(String filePath, {HierarchyEntry? parent}) async {
     List<String> wtbFiles = [];
-    var extractedDir = "${filePath}_extracted";
+    var extractedDir = await ExtractedFilesManager.i.getOrMakeExtracted(filePath, createIfMissing: false);
     bool shouldExtract = !await FS.i.existsDirectory(extractedDir);
     if (!shouldExtract) {
       wtbFiles = await FS.i.listFiles(extractedDir)

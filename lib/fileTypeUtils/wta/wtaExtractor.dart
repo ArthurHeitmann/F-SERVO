@@ -2,14 +2,13 @@
 
 import 'package:path/path.dart';
 
-import '../../utils/utils.dart';
+import '../../fileSystem/ExtractedFilesManager.dart';
 import 'wtaReader.dart';
 import '../../fileSystem/FileSystem.dart';
 
 Future<List<String>> extractWta(String wtaPath, String? wtpPath, bool isWtb) async {
   List<String> texturePaths = [];
-  var extractDir = join(dirname(wtaPath), datSubExtractDir, basename(wtaPath));
-  await FS.i.createDirectory(extractDir);
+  var extractDir = await ExtractedFilesManager.i.getOrMakeExtracted(wtaPath);
   var wta = await WtaFile.readFromFile(wtaPath);
   var wtpFile = await FS.i.open(isWtb ? wtaPath : wtpPath!);
   try {

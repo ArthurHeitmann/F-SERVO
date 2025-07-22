@@ -2,6 +2,7 @@
 
 import 'package:path/path.dart';
 
+import '../../fileSystem/ExtractedFilesManager.dart';
 import '../utils/ByteDataWrapper.dart';
 import 'bnkIO.dart';
 import 'wemIdsToNames.dart';
@@ -61,7 +62,7 @@ Future<List<({int id, String path, bool isPrefetched})>> extractBnkWems(BnkFile 
 
 Future<List<String>> extractBnkWemsFromPath(String bnkPath) async {
   var bnk = BnkFile.read(await ByteDataWrapper.fromFile(bnkPath));
-  var extractPath = join(dirname(bnkPath), "${basename(bnkPath)}_extracted");
+  var extractPath = await ExtractedFilesManager.i.getOrMakeExtracted(bnkPath);
   var wems = await extractBnkWems(bnk, extractPath);
   return wems.map((e) => e.path).toList();
 }
