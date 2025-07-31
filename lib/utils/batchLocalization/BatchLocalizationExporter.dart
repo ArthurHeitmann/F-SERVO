@@ -167,7 +167,7 @@ Future<void> _processRb(BatchLocalizationFileData locFile, String datDir, List<S
   hasChanges = newRbStr != rbStr;
 
   if (hasChanges) {
-    await File(rbPath).writeAsString(rbStr);
+    await File(rbPath).writeAsString(newRbStr);
     await rubyFileToBin(rbPath);
     datFilesToExport.add(locFile.datName);
   }
