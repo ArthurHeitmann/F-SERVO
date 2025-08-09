@@ -94,6 +94,12 @@ class _EstFileEditorState extends ChangeNotifierState<EstFileEditor> {
     }
   }
 
+  void setAllCollapsed(bool collapsed) {
+    for (var record in widget.file.records) {
+      record.isCollapsed.value = collapsed;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (widget.file.loadingState.value != LoadingState.loaded) {
@@ -107,55 +113,88 @@ class _EstFileEditorState extends ChangeNotifierState<EstFileEditor> {
         ],
       );
     }
-    return SmoothSingleChildScrollView(
-      child: ChangeNotifierBuilder(
-        notifier: widget.file.records,
-        builder: (context) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 35),
-              for (int i = 0; i < widget.file.records.length; i++) ...[
-                if (i == 0)
-                  const Divider(height: 1, thickness: 1,),
-                _EstRecordEditor(
-                  index: i,
-                  record: widget.file.records[i],
-                  typeNames: widget.file.typeNames,
-                  onRemove: () => widget.file.removeRecord(widget.file.records[i]),
-                  selectedEntry: widget.file.selectedEntry,
-                  // initiallyCollapsed: widget.file.records.length > 3,
-                  initiallyCollapsed: false,
-                  fileId: widget.file.uuid,
-                ),
-                const Divider(height: 1, thickness: 1,),
-              ],
-              Row(
+    return Stack(
+      children: [
+        SmoothSingleChildScrollView(
+          child: ChangeNotifierBuilder(
+            notifier: widget.file.records,
+            builder: (context) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: _EntryIconButton(
-                      icon: Icons.copy_all,
-                      onPressed: copyAllEntries,
-                      iconSize: 16,
-                      splashRadius: 18,
+                  const SizedBox(height: 35),
+                  for (int i = 0; i < widget.file.records.length; i++) ...[
+                    if (i == 0)
+                      const Divider(height: 1, thickness: 1,),
+                    _EstRecordEditor(
+                      index: i,
+                      record: widget.file.records[i],
+                      typeNames: widget.file.typeNames,
+                      onRemove: () => widget.file.removeRecord(widget.file.records[i]),
+                      selectedEntry: widget.file.selectedEntry,
+                      // initiallyCollapsed: widget.file.records.length > 3,
+                      initiallyCollapsed: false,
+                      fileId: widget.file.uuid,
                     ),
+                    const Divider(height: 1, thickness: 1,),
+                  ],
+                  Row(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: _EntryIconButton(
+                          icon: Icons.copy_all,
+                          onPressed: copyAllEntries,
+                          iconSize: 16,
+                          splashRadius: 18,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: _EntryIconButton(
+                          icon: Icons.paste,
+                          onPressed: pasteEntries,
+                          iconSize: 16,
+                          splashRadius: 18,
+                        ),
+                      ),
+                    ],
                   ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: _EntryIconButton(
-                      icon: Icons.paste,
-                      onPressed: pasteEntries,
-                      iconSize: 16,
-                      splashRadius: 18,
-                    ),
+                ],
+              );
+            }
+          )
+        ),
+        Positioned(
+          right: 12,
+          top: 20,
+          child: 
+            Material(
+              color: getTheme(context).editorBackgroundColor,
+              shape: RoundedRectangleBorder(
+                side: BorderSide(
+                  color: getTheme(context).textColor!.withOpacity(0.2),
+                  width: 1,
+                ),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.unfold_more, size: 20,),
+                    splashRadius: 20,
+                    onPressed: () => setAllCollapsed(false),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.unfold_less, size: 20,),
+                    splashRadius: 20,
+                    onPressed: () => setAllCollapsed(true),
                   ),
                 ],
               ),
-            ],
-          );
-        }
-      )
+            ),
+        )
+      ],
     );
   }
 }
@@ -177,21 +216,13 @@ class _EstRecordEditor extends ChangeNotifierWidget {
     required this.selectedEntry,
     required this.initiallyCollapsed,
     required this.fileId,
-  }) : super(notifiers: [record.entries, selectedEntry], key: Key(record.uuid));
+  }) : super(notifiers: [record.entries, selectedEntry, record.isCollapsed], key: Key(record.uuid));
 
   @override
   State<_EstRecordEditor> createState() => _EstRecordEditorState();
 }
 
 class _EstRecordEditorState extends ChangeNotifierState<_EstRecordEditor> {
-  late bool isCollapsed;
-
-  @override
-  void initState() {
-    isCollapsed = widget.initiallyCollapsed;
-    super.initState();
-  }
-
   void pasteEntry() async {
     var jsonStr = await getClipboardText();
     if (jsonStr == null) {
@@ -253,7 +284,13 @@ class _EstRecordEditorState extends ChangeNotifierState<_EstRecordEditor> {
             height: 35,
             child: Row(
               children: [
-                // Icon(isCollapsed ? Icons.keyboard_arrow_right_rounded : Icons.keyboard_arrow_down_rounded, size: 20,),
+                IconButton(
+                  icon: Icon(widget.record.isCollapsed.value ? Icons.keyboard_arrow_right_rounded : Icons.keyboard_arrow_down_rounded, size: 20,),
+                  splashRadius: 16,
+                  onPressed: () {
+                    widget.record.isCollapsed.value = !widget.record.isCollapsed.value;
+                  },
+                ),
                 Text("Record ${widget.index}"),
                 const SizedBox(width: 10),
                 _EntryIconButton(
@@ -274,7 +311,7 @@ class _EstRecordEditorState extends ChangeNotifierState<_EstRecordEditor> {
             ),
           ),
         ),
-        if (!isCollapsed) ...[
+        if (!widget.record.isCollapsed.value) ...[
           for (var entry in widget.record.entries)
             _EstEntryWidget(
               entry: entry,

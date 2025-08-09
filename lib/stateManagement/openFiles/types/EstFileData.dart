@@ -142,11 +142,13 @@ class EstFileData extends OpenFileData {
 class EstRecordWrapper with HasUuid, Undoable implements Disposable {
   final ValueListNotifier<EstEntryWrapper> entries;
   final BoolProp isEnabled;
+  final BoolProp isCollapsed;
   final onAnyChange = ChangeNotifier();
   final OpenFileId fileId;
 
   EstRecordWrapper(this.entries, this.fileId, [bool isEnabledB = true])
-      : isEnabled = BoolProp(isEnabledB, fileId: fileId) {
+      : isEnabled = BoolProp(isEnabledB, fileId: fileId),
+        isCollapsed = BoolProp(false, fileId: fileId) {
     entries.addListener(_onListChange);
     isEnabled.addListener(onAnyChange.notifyListeners);
     _onListChange();
@@ -168,12 +170,14 @@ class EstRecordWrapper with HasUuid, Undoable implements Disposable {
   void dispose() {
     entries.dispose();
     isEnabled.dispose();
+    isCollapsed.dispose();
     onAnyChange.dispose();
   }
 
   @override
   Undoable takeSnapshot() {
     var snapshot = EstRecordWrapper(entries.takeSnapshot() as ValueListNotifier<EstEntryWrapper>, fileId, isEnabled.value);
+    snapshot.isCollapsed.value = isCollapsed.value;
     snapshot.overrideUuid(uuid);
     return snapshot;
   }
@@ -182,6 +186,7 @@ class EstRecordWrapper with HasUuid, Undoable implements Disposable {
   void restoreWith(Undoable snapshot) {
     var recordSnapshot = snapshot as EstRecordWrapper;
     isEnabled.value = recordSnapshot.isEnabled.value;
+    isCollapsed.value = recordSnapshot.isCollapsed.value;
     entries.restoreWith(recordSnapshot.entries);
   }
 }

@@ -1061,7 +1061,7 @@ class McdData extends _McdFilePart {
           texId = srcTexPaths.length - 1;
         }
         else {
-          texId = srcTexPaths.length - 1;
+          texId = srcTexPaths.indexOf(localTexDdsTmp);
         }
         var font = usedFonts[fontId]!;
         var fontSymbol = font.supportedSymbols[symbol.code]!;
