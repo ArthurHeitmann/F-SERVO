@@ -72,7 +72,7 @@ Future<void> wavToWem(String wavPath, String wemSavePath, bool isBgm, bool enabl
       "-ConvertExternalSources",
       "Windows",
       wSourcesXmlPath,
-      "-NoWwiseDat"
+      "-NoWwiseDat",
       "-Verbose",
     ];
     var result = await Process.run(wwiseCliPath, args);
@@ -92,3 +92,4 @@ Future<void> wavToWem(String wavPath, String wemSavePath, bool isBgm, bool enabl
     await Directory(projectPath).delete(recursive: true);
   }
 }
+
