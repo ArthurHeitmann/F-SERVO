@@ -5,7 +5,10 @@ on:
     branches:
       - master
       - mgrr
-      - gh-actions
+  pull_request:
+    branches:
+      - master
+      - mgrr
 
 jobs:
   flutter-build:
@@ -35,7 +38,9 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.4'
+          channel: stable
+          flutter-version-file: pubspec.yaml
+          cache: true
 
       - name: Get Packages
         run: flutter pub get

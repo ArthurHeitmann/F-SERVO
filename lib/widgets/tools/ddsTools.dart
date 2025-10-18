@@ -143,10 +143,11 @@ class _DdsToolState extends State<DdsTool> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 child: DottedBorder(
-                  strokeWidth: 2,
-                  color: getTheme(context).textColor!.withOpacity(0.25),
-                  radius: const Radius.circular(12),
-                  borderType: BorderType.RRect,
+                  options: RoundedRectDottedBorderOptions(
+                    strokeWidth: 2,
+                    color: getTheme(context).textColor!.withOpacity(0.25),
+                    radius: const Radius.circular(12),
+                  ),
                   child: Container(
                     decoration: BoxDecoration(
                       color: Colors.black.withOpacity(0.25),

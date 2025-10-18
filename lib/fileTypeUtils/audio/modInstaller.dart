@@ -28,7 +28,7 @@ Future<void> installMod(String waiPath) async {
   List<String> changedFiles = [];
   try {
     var fs = InputFileStream(zipPath);
-    var archive = ZipDecoder().decodeBuffer(fs);
+    var archive = ZipDecoder().decodeStream(fs);
     await extractArchiveToDisk(archive, tmpDir.path);
     await fs.close();
 

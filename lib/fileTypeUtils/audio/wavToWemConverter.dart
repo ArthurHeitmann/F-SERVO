@@ -19,7 +19,7 @@ Future<String> _makeWwiseProject(bool isBgm) async {
   String tempProjectDir = (await Directory.systemTemp.createTemp("wwiseProject")).path;
 
   var fs = InputFileStream(wwiseProjectTemplate);
-  var archive = ZipDecoder().decodeBuffer(fs);
+  var archive = ZipDecoder().decodeStream(fs);
   await extractArchiveToDisk(archive, tempProjectDir);
   await fs.close();
 
