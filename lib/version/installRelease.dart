@@ -97,10 +97,9 @@ Future<void> installRelease(GitHubReleaseInfo release, StreamController<String> 
 
     var logFilePath = join(updateDirTemp, "update.log");
     await Process.start(
-      "$exeUpdater --app-dir $appDir --extracted-dir $extractDir --backup-dir $backupDir --exe-path ${Platform.resolvedExecutable} --restart-data $restartDataJsonString > $logFilePath 2>&1",
-      [],
-      runInShell: true,
-      mode: ProcessStartMode.detachedWithStdio,
+      exeUpdater,
+      ["--app-dir", appDir, "--extracted-dir", extractDir, "--backup-dir", backupDir, "--exe-path", Platform.resolvedExecutable, "--restart-data", restartDataJsonString, "--log-file", logFilePath],
+      mode: ProcessStartMode.detached,
     );
   } catch (e, st) {
     messageLog.add("$errorMessage: $e\n$st");
