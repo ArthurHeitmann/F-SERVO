@@ -13,6 +13,14 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   std::vector<std::string> command_line_arguments = GetCommandLineArguments();
   bool hasArgs = !command_line_arguments.empty();
 
+  bool hasFlags = false;
+  for (const auto& arg : command_line_arguments) {
+    if (arg.rfind("--", 0) == 0) {
+      hasFlags = true;
+      break;
+    }
+  }
+
   // with the mutex we check if another instance is already running
   HANDLE hMutex = CreateMutex(nullptr, TRUE, kMutexName);
   DWORD lastError = GetLastError();
@@ -20,8 +28,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
 
     // if F-SERVO is already running, just starts a new flutter engine
     // to send the command line args to the existing instance
-    // This fixes the issue that it opens a winndow for a split second
-  if (hasArgs && anotherInstanceRunning) {
+    // This fixes the issue that it opens a window for a split second
+  if (hasArgs && anotherInstanceRunning && !hasFlags) {
     if (hMutex) CloseHandle(hMutex);
 
     AttachConsole(ATTACH_PARENT_PROCESS);
