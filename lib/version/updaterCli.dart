@@ -4,13 +4,6 @@ import 'dart:io';
 import 'package:args/args.dart';
 import 'package:path/path.dart';
 
-IOSink? _logFile;
-
-void _log(String msg) {
-  print(msg);
-  _logFile?.writeln("[${DateTime.now()}] $msg");
-}
-
 void main(List<String> args) async {
   var parser = ArgParser();
   parser.addOption("app-dir", mandatory: true);
@@ -18,18 +11,12 @@ void main(List<String> args) async {
   parser.addOption("backup-dir", mandatory: true);
   parser.addOption("exe-path", mandatory: true);
   parser.addOption("restart-data", mandatory: true);
-  parser.addOption("log-file");
   var results = parser.parse(args);
   var appDir = results.option("app-dir")!;
   var extractedDir = results.option("extracted-dir")!;
   var backupDir = results.option("backup-dir")!;
   var exePath = results.option("exe-path")!;
   var restartData = results.option("restart-data")!;
-  var logFilePath = results.option("log-file");
-
-  if (logFilePath != null) {
-    _logFile = File(logFilePath).openWrite();
-  }
 
   const deletableExtensions = [".dll", ".exe"];
   const dataFolderName = "data";
@@ -40,57 +27,54 @@ void main(List<String> args) async {
 
   var newFiles = Directory(extractedDir).listSync();
 
-  _log("Killing F-SERVO.exe...");
+  print("Killing F-SERVO.exe...");
   Process.runSync("taskkill", ["/F", "/IM", "F-SERVO.exe"]);
 
   List<FileSystemEntity> movedOldFiles = [];
   List<FileSystemEntity> movedNewFiles = [];
   try {
-    _log("Moving files to backup directory...");
+    print("Moving files to backup directory...");
     for (var file in oldFilesToMove) {
       var newPath = join(backupDir, basename(file.path));
-      _log("Moving ${file.path} to $newPath");
+      print("Moving ${file.path} to $newPath");
       await _tryRename(file, newPath);
       movedOldFiles.add(file);
     }
-    _log("Moving extracted files to app directory...");
+    print("Moving extracted files to app directory...");
     for (var file in newFiles) {
       var newPath = join(appDir, basename(file.path));
-      _log("Moving ${file.path} to $newPath");
+      print("Moving ${file.path} to $newPath");
       await _tryRename(file, newPath);
       movedNewFiles.add(file);
     }
   } catch (e) {
     try {
-      _log("Error moving files, recovering...");
-      _log("Deleting new files...");
+      print("Error moving files, recovering...");
+      print("Deleting new files...");
       for (var file in movedNewFiles) {
-        _log("Deleting ${file.path}");
+        print("Deleting ${file.path}");
         await _tryDelete(file);
       }
-      _log("Moving old files back...");
+      print("Moving old files back...");
       for (var file in movedOldFiles) {
         var newPath = join(appDir, basename(file.path));
-        _log("Moving ${file.path} back to $newPath");
+        print("Moving ${file.path} back to $newPath");
         await _tryRename(file, newPath);
       }
-      _log("Recovery complete");
+      print("Recovery complete");
     } catch (e, st) {
-      _log("Error moving files back: $e\n$st");
+      print("Error moving files back: $e\n$st");
     }
-    _log("Update failed. Press enter to exit.");
-    await _logFile?.flush();
+    print("Update failed. Press enter to exit.");
     stdin.readLineSync();
     rethrow;
   }
 
-  _log("Restarting F-SERVO.exe...");
+  print("Restarting F-SERVO.exe...");
   var result = await Process.start(exePath, ["--update-data", restartData], mode: ProcessStartMode.detached);
   await result.exitCode;
 
-  _log("Update complete");
-  await _logFile?.flush();
-  await _logFile?.close();
+  print("Update complete");
 }
 
 const _maxAttempts = 5;

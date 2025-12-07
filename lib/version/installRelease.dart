@@ -95,10 +95,9 @@ Future<void> installRelease(GitHubReleaseInfo release, StreamController<String> 
     var restartDataJson = restartData.toJson();
     var restartDataJsonString = base64Encode(utf8.encode(jsonEncode(restartDataJson)));
 
-    var logFilePath = join(updateDirTemp, "update.log");
     await Process.start(
       exeUpdater,
-      ["--app-dir", appDir, "--extracted-dir", extractDir, "--backup-dir", backupDir, "--exe-path", Platform.resolvedExecutable, "--restart-data", restartDataJsonString, "--log-file", logFilePath],
+      ["--app-dir", appDir, "--extracted-dir", extractDir, "--backup-dir", backupDir, "--exe-path", Platform.resolvedExecutable, "--restart-data", restartDataJsonString],
       mode: ProcessStartMode.detached,
     );
   } catch (e, st) {
