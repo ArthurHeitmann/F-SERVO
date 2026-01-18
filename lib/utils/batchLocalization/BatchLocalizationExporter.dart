@@ -155,13 +155,13 @@ Future<void> _processRb(BatchLocalizationFileData locFile, String datDir, List<S
     throw Exception("Language not found in order: $lang");
   }
   var locMap = locFile.asMap();
-  var regex = RegExp(r'	(\w+) = \[\n(?:		"[^\n]+",\n){' + langIndex.toString() + r'}		"[^\n]+(?=")');
+  var regex = RegExp(r'(\w+) = \[(?:\s*"[^\n]*?(?<!\\)",){' + langIndex.toString() + r'}\s*"[^\n]*?(?<!\\)(?=")');
   var newRbStr = rbStr.replaceAllMapped(regex, (match) {
     var key = match.group(1)!;
     var fullMatch = match.group(0)!;
     if (!locMap.containsKey(key))
       return fullMatch;
-    var replaceStart = fullMatch.lastIndexOf('\n\t\t"') + 4;
+    var replaceStart = fullMatch.lastIndexOf(new RegExp(r'(?<!\\)"')) + 1;
     return fullMatch.replaceRange(replaceStart, fullMatch.length, locMap[key]!);
   });
   hasChanges = newRbStr != rbStr;

@@ -44,11 +44,11 @@ dependencies:
   tuple: ^2.0.0
   url_launcher: ^6.2.2
   uuid: ^4.4.2
-  # webview_windows: ^0.4.0
-  webview_windows:
-    git:
-      url: https://github.com/Channing-dong/flutter-webview-windows
-      ref: 999601052534f30fb50045819ef3813dbb04b9b8
+  webview_windows: ^0.4.0
+  # webview_windows:
+  #   git:
+  #     url: https://github.com/Channing-dong/flutter-webview-windows
+  #     ref: 999601052534f30fb50045819ef3813dbb04b9b8
   window_manager: ^0.5.1
   xml: ^6.3.0
 

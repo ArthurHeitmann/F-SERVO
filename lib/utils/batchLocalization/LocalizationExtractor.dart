@@ -207,11 +207,11 @@ Future<List<BatchLocalizationFileData>> _getRbData(String datDir, BatchLocalizat
     
     List<BatchLocalizationEntryData> entries = [];
     var rbText = await File(rbPath).readAsString();
-    var arrayRegex = RegExp(r'	(\w+) = \[\n(?:		".*",?\n){3,}	\]');
+    var arrayRegex = RegExp(r'	(\w+) = \[(?:\s+".*",?){3,}\s+\]');
     var matches = arrayRegex.allMatches(rbText);
     for (var match in matches) {
       var key = match.group(1);
-      var strRegex = RegExp(r'		"(.*)",?\n');
+      var strRegex = RegExp(r'"([^\n]*?(?<!\\))"');
       var strings = strRegex.allMatches(match.group(0)!);
       for (var (i, string) in strings.indexed) {
         if (i >= batchLocRbOrder.length)
